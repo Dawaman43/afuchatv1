@@ -11,7 +11,6 @@ interface Chat {
   name: string | null;
   is_group: boolean;
   updated_at: string;
-  // Placeholder for last message details
   last_message_content?: string; 
 }
 
@@ -37,8 +36,7 @@ const Chats = () => {
     if (!user) return;
 
     const fetchChats = async () => {
-      // NOTE: In a production app, you would fetch the last message content here too,
-      // likely using a database function or optimized query to keep the payload light.
+      // NOTE: In a production app, you would fetch the last message content here too.
       const { data: chatMembers } = await supabase
         .from('chat_members')
         .select('chat_id, chats(id, name, is_group, updated_at)')
@@ -85,9 +83,9 @@ const Chats = () => {
     };
   }, [user]);
   
-  // --- Rich Design: Chat Item Skeleton ---
+  // --- Rich Design: Chat Item Skeleton (Borders Removed) ---
   const ChatItemSkeleton = () => (
-    <div className="flex items-center space-x-4 p-4 rounded-xl bg-card shadow-md border border-border animate-pulse">
+    <div className="flex items-center space-x-4 p-4 rounded-xl bg-card shadow-md animate-pulse">
       <Skeleton className="h-10 w-10 rounded-full" /> 
       <div className="space-y-2 flex-1">
         <Skeleton className="h-4 w-3/4" />
@@ -105,7 +103,7 @@ const Chats = () => {
     );
   }
 
-  // --- Rich Design: Chat Card Component ---
+  // --- Rich Design: Chat Card Component (Borders Removed) ---
   const ChatCard = ({ chat }: { chat: Chat }) => {
     const chatName = chat.name || (chat.is_group ? 'New Group' : 'Direct Message');
     const Icon = chat.is_group ? Users : User;
@@ -115,8 +113,8 @@ const Chats = () => {
     return (
       <Card
         key={chat.id}
-        // Applying rich design styles
-        className="p-4 rounded-xl shadow-md border border-border hover:shadow-lg hover:bg-muted/30 cursor-pointer transition-all duration-200"
+        // Applying rich design styles: shadow-lg, no border
+        className="p-4 rounded-xl shadow-lg hover:shadow-xl hover:bg-muted/30 cursor-pointer transition-all duration-200"
         // Placeholder for navigation
         // onClick={() => navigate(`/chat/${chat.id}`)} 
       >
@@ -148,8 +146,8 @@ const Chats = () => {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header - Simple and clean to contrast the main feed items */}
-      <div className="p-4 border-b border-border bg-card shadow-sm flex items-center justify-between sticky top-0 z-10">
+      {/* Header - Defined by shadow, not border */}
+      <div className="p-4 bg-card shadow-sm flex items-center justify-between sticky top-0 z-10">
         <h1 className="text-xl font-extrabold text-foreground">Conversations</h1>
         <Button size="icon" variant="default" className="rounded-full shadow-md">
           <MessageSquarePlus className="h-5 w-5" />
@@ -165,6 +163,7 @@ const Chats = () => {
             </p>
           </div>
         ) : (
+          // Use space-y-3 for separation instead of a divider
           chats.map((chat) => (
             <ChatCard key={chat.id} chat={chat} />
           ))
