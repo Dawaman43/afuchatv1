@@ -8,11 +8,13 @@ import { Send, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card'; // Used for rich styling inside modal
 
+// NOTE: This interface syntax is valid in a .tsx file.
 interface NewPostModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
+// NOTE: Component declaration should use React.FC<NewPostModalProps>
 const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
     const { user } = useAuth();
     const [newPost, setNewPost] = useState('');
@@ -42,7 +44,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
         } else {
             setNewPost(''); 
             onClose(); // Close modal on success
-            // Success toast handled by the real-time subscription in Feed.jsx 
+            // Success toast handled by the real-time subscription in Feed.tsx 
         }
     };
 
