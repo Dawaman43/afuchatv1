@@ -19,6 +19,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
     const [isPosting, setIsPosting] = useState(false);
 
     const handlePost = async () => {
+        // Validation based on AfuChat project brief
         if (!newPost.trim() || !user || newPost.length > 280) {
             if (newPost.length > 280) toast.error('Post must be 280 characters or less');
             return;
@@ -27,6 +28,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
         setIsPosting(true);
         const postContent = newPost.trim();
 
+        // Database insert
         const { error } = await supabase.from('posts').insert({
             content: postContent,
             author_id: user.id,
@@ -35,17 +37,18 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
         setIsPosting(false);
 
         if (error) {
+            console.error("Supabase Post Error:", error);
             toast.error('Failed to post. Please try again.');
         } else {
             setNewPost(''); 
             onClose(); // Close modal on success
-            // Real-time update handled by Feed component's subscription
-            toast.success('Post sent instantly!'); 
+            // Success toast handled by the real-time subscription in Feed.jsx 
         }
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
+            {/* DialogContent: Rich design with rounded corners and high shadow */}
             <DialogContent className="sm:max-w-[425px] rounded-xl shadow-2xl p-0">
                 <DialogHeader className="p-4 border-b border-muted-foreground/10 flex flex-row items-center justify-between">
                     <DialogTitle className="text-xl font-extrabold text-foreground">Create New Post</DialogTitle>
@@ -54,8 +57,8 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                     </Button>
                 </DialogHeader>
                 
-                {/* Post Input Area (Rich Design Card Style) */}
-                <Card className="p-5 m-4 rounded-xl shadow-lg"> 
+                {/* Post Input Area: Elevated Card Style */}
+                <Card className="p-5 m-4 rounded-xl shadow-lg border-none"> 
                     <Textarea
                         placeholder="What's happening? (Text-only, max 280 characters)"
                         value={newPost}
@@ -66,6 +69,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                         disabled={isPosting}
                     />
                     <div className="flex justify-between items-center">
+                        {/* Character counter logic */}
                         <span className={`text-sm ${newPost.length > 250 ? 'text-destructive' : 'text-muted-foreground'}`}>
                             {280 - newPost.length} characters left
                         </span>
