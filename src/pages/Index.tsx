@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import Chats from './Chats';
 import Feed from './Feed';
 import { toast } from 'sonner';
-import { Skeleton } from '@/components/ui/skeleton'; // Assuming you have a Skeleton component
+import { Skeleton } from '@/components/ui/skeleton'; 
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -31,7 +31,7 @@ const Index = () => {
     }
   };
 
-  // --- IMPLEMENTED: Skeleton Loading ---
+  // --- Skeleton Loading ---
   if (loading) {
     return (
       <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto">
@@ -60,7 +60,7 @@ const Index = () => {
       </div>
     );
   }
-  // --- END: Skeleton Loading ---
+  // --- End Skeleton Loading ---
 
   if (!user) {
     return null;
@@ -86,15 +86,15 @@ const Index = () => {
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-4 max-w-4xl">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          {/* --- IMPLEMENTED: Tab Order (Chats left, Feed right) --- */}
+          {/* --- MODIFIED: Tab Order (Feed left, Chats right) --- */}
           <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="chats" className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Chats
-            </TabsTrigger>
             <TabsTrigger value="feed" className="flex items-center gap-2">
               <Radio className="h-4 w-4" />
               Feed
+            </TabsTrigger>
+            <TabsTrigger value="chats" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Chats
             </TabsTrigger>
           </TabsList>
           
@@ -106,7 +106,7 @@ const Index = () => {
               <Feed />
             </TabsContent>
           </div>
-          {/* --- END: Tab Order --- */}
+          {/* --- END: Tab Order Modification --- */}
         </Tabs>
       </main>
     </div>
