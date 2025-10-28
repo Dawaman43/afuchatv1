@@ -3,14 +3,30 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquarePlus } from 'lucide-react';
+import { MessageSquarePlus, Users, User, Clock } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
 
 interface Chat {
   id: string;
   name: string | null;
   is_group: boolean;
   updated_at: string;
+  // Placeholder for last message details
+  last_message_content?: string; 
 }
+
+// Function to format the time since the last update
+const formatTime = (isoString: string) => {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const now = new Date();
+  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+
+  if (diffInMinutes < 60) return `${diffInMinutes}m`;
+  if (diffInMinutes < 24 * 60) return `${Math.floor(diffInMinutes / 60)}h`;
+  
+  return date.toLocaleDateString('en-UG', { day: 'numeric', month: 'short' });
+};
 
 const Chats = () => {
   const { user } = useAuth();
@@ -21,15 +37,25 @@ const Chats = () => {
     if (!user) return;
 
     const fetchChats = async () => {
+      // NOTE: In a production app, you would fetch the last message content here too,
+      // likely using a database function or optimized query to keep the payload light.
       const { data: chatMembers } = await supabase
         .from('chat_members')
         .select('chat_id, chats(id, name, is_group, updated_at)')
         .eq('user_id', user.id);
 
       if (chatMembers) {
-        const chatsData = chatMembers
-          .map((member: any) => member.chats)
+        const chatsData: Chat[] = chatMembers
+          .map((member: any) => ({
+            ...member.chats,
+            // Mocking a last message to make the UI rich
+            last_message_content: member.chats.id.startsWith('group') ? 'Last group message...' : 'Last 1:1 message...' 
+          }))
           .filter(Boolean);
+        
+        // Sort by updated_at (most recent first)
+        chatsData.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+        
         setChats(chatsData);
       }
       setLoading(false);
@@ -47,8 +73,9 @@ const Chats = () => {
           schema: 'public',
           table: 'messages',
         },
+        // Re-fetch chats or update state on new message arrival
         () => {
-          fetchChats();
+          fetchChats(); 
         }
       )
       .subscribe();
@@ -57,52 +84,90 @@ const Chats = () => {
       supabase.removeChannel(channel);
     };
   }, [user]);
+  
+  // --- Rich Design: Chat Item Skeleton ---
+  const ChatItemSkeleton = () => (
+    <div className="flex items-center space-x-4 p-4 rounded-xl bg-card shadow-md border border-border animate-pulse">
+      <Skeleton className="h-10 w-10 rounded-full" /> 
+      <div className="space-y-2 flex-1">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-5/6" />
+      </div>
+      <Skeleton className="h-4 w-10" />
+    </div>
+  );
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-muted-foreground">Loading chats...</p>
+      <div className="h-full flex flex-col space-y-4 p-4">
+         {[...Array(5)].map((_, i) => <ChatItemSkeleton key={i} />)}
       </div>
     );
   }
 
+  // --- Rich Design: Chat Card Component ---
+  const ChatCard = ({ chat }: { chat: Chat }) => {
+    const chatName = chat.name || (chat.is_group ? 'New Group' : 'Direct Message');
+    const Icon = chat.is_group ? Users : User;
+    const timeDisplay = formatTime(chat.updated_at);
+    const lastMessagePreview = chat.last_message_content || 'Tap to start conversation...';
+
+    return (
+      <Card
+        key={chat.id}
+        // Applying rich design styles
+        className="p-4 rounded-xl shadow-md border border-border hover:shadow-lg hover:bg-muted/30 cursor-pointer transition-all duration-200"
+        // Placeholder for navigation
+        // onClick={() => navigate(`/chat/${chat.id}`)} 
+      >
+        <div className="flex items-center space-x-4">
+          {/* Visual Indicator (Text-only profile concept) */}
+          <div className={`h-10 w-10 rounded-full flex items-center justify-center text-primary-foreground shadow-sm ${chat.is_group ? 'bg-indigo-500' : 'bg-primary'}`}>
+            <Icon className="h-5 w-5" />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold truncate text-foreground">{chatName}</h3>
+            {/* Last Message Preview */}
+            <p className="text-sm text-muted-foreground truncate">{lastMessagePreview}</p>
+          </div>
+
+          <div className="flex flex-col items-end space-y-1">
+            {/* Timestamp */}
+            <span className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {timeDisplay}
+            </span>
+            {/* Placeholder for unread count badge */}
+            {/* <span className="text-xs font-bold bg-primary text-primary-foreground rounded-full h-5 w-5 flex items-center justify-center">2</span> */}
+          </div>
+        </div>
+      </Card>
+    );
+  };
+
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-border flex items-center justify-between">
-        <h1 className="text-xl font-bold">Chats</h1>
-        <Button size="icon" variant="ghost">
+      {/* Header - Simple and clean to contrast the main feed items */}
+      <div className="p-4 border-b border-border bg-card shadow-sm flex items-center justify-between sticky top-0 z-10">
+        <h1 className="text-xl font-extrabold text-foreground">Conversations</h1>
+        <Button size="icon" variant="default" className="rounded-full shadow-md">
           <MessageSquarePlus className="h-5 w-5" />
         </Button>
       </div>
       
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {chats.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-4">
-            <p className="text-muted-foreground mb-2">No chats yet</p>
+            <p className="text-muted-foreground mb-2">No conversations found.</p>
             <p className="text-sm text-muted-foreground">
-              Start a conversation to see it here
+              Tap the plus button to start a new chat!
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-border">
-            {chats.map((chat) => (
-              <Card
-                key={chat.id}
-                className="p-4 border-0 rounded-none hover:bg-muted cursor-pointer"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold">
-                      {chat.name || 'Direct Message'}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {chat.is_group ? 'Group' : '1:1'}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+          chats.map((chat) => (
+            <ChatCard key={chat.id} chat={chat} />
+          ))
         )}
       </div>
     </div>
