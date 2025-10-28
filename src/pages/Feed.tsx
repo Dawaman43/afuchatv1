@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { MessageSquare, ThumbsUp, User, Send } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
+import { Skeleton } from '@/components/ui/skeleton'; 
 
 interface Post {
   id: string;
@@ -40,14 +40,19 @@ const Feed = () => {
         },
         (payload) => {
           // Optimistically update the list by adding the new post data
-          const newPost = { ...payload.new, profiles: { display_name: user?.user_metadata?.display_name || 'User', handle: user?.user_metadata?.handle || 'user' } } as Post;
+          const newPost = { 
+            ...payload.new, 
+            profiles: { 
+              display_name: user?.user_metadata?.display_name || 'User', 
+              handle: user?.user_metadata?.handle || 'user' 
+            } 
+          } as Post;
           setPosts(currentPosts => [newPost, ...currentPosts]);
-          setNewPost(''); // Clear field on successful insert (optional)
+          setNewPost('');
         }
       )
       .subscribe();
       
-    // Re-fetch on channel connection or error (less aggressive than full fetch on every insert)
     channel.on('error', () => fetchPosts());
 
     return () => {
@@ -63,24 +68,19 @@ const Feed = () => {
       .limit(50);
 
     if (data) {
-      setPosts(data);
+      setPosts(data as Post[]);
     }
     setLoading(false);
   };
 
   const handlePost = async () => {
-    if (!newPost.trim() || !user) return;
-
-    if (newPost.length > 280) {
-      toast.error('Post must be 280 characters or less');
+    if (!newPost.trim() || !user || newPost.length > 280) {
+      if (newPost.length > 280) toast.error('Post must be 280 characters or less');
       return;
     }
 
-    // Client-side content validation is crucial for Instantaneous Utility
     const postContent = newPost.trim();
-
-    // Reset UI state immediately for faster perceived responsiveness
-    setNewPost(''); 
+    setNewPost(''); // Reset UI state immediately
     
     const { error } = await supabase.from('posts').insert({
       content: postContent,
@@ -88,16 +88,14 @@ const Feed = () => {
     });
 
     if (error) {
-      // Revert if API fails
       toast.error('Failed to post. Please try again.');
       setNewPost(postContent); 
     } else {
-      // Success toast is handled by the real-time channel updating the state
       toast.success('Post sent instantly!');
     }
   };
   
-  // --- Rich Design: Card Skeleton for a Text Post ---
+  // --- Rich Design: Card Skeleton ---
   const PostSkeleton = () => (
     <div className="p-4 border border-border rounded-xl bg-card shadow-lg space-y-3 animate-pulse">
       <div className="flex items-center space-x-3">
@@ -131,7 +129,7 @@ const Feed = () => {
     );
   }
 
-  // --- Rich Design: Post Card Component ---
+  // --- Rich Design: Post Card Component (Username/Handle Corrected) ---
   const PostCard = ({ post }: { post: Post }) => {
     const timeSince = new Date(post.created_at).toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit' });
 
@@ -139,13 +137,17 @@ const Feed = () => {
       <Card className="p-4 rounded-xl shadow-lg border border-border hover:shadow-xl transition-shadow duration-300">
         {/* Post Header */}
         <div className="flex items-center space-x-3 mb-3">
-          {/* User Icon - Rich placeholder emphasizing NO PROFILE PICTURES */}
+          {/* User Icon */}
           <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-md">
             <User className="h-4 w-4" />
           </div>
+          
+          {/* 🎯 CORRECTED: Display Name and Handle */}
           <div className="flex-1">
             <p className="font-semibold text-foreground text-md">{post.profiles.display_name}</p>
+            <p className="text-sm text-muted-foreground">@{post.profiles.handle}</p>
           </div>
+          
           <span className="text-xs text-muted-foreground whitespace-nowrap">{timeSince}</span>
         </div>
 
