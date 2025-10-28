@@ -28,7 +28,6 @@ const Feed = () => {
   useEffect(() => {
     fetchPosts();
 
-    // Subscribe to new posts
     const channel = supabase
       .channel('feed-updates')
       .on(
@@ -39,7 +38,6 @@ const Feed = () => {
           table: 'posts',
         },
         (payload) => {
-          // Optimistically update the list by adding the new post data
           const newPost = { 
             ...payload.new, 
             profiles: { 
@@ -80,7 +78,7 @@ const Feed = () => {
     }
 
     const postContent = newPost.trim();
-    setNewPost(''); // Reset UI state immediately
+    setNewPost(''); 
     
     const { error } = await supabase.from('posts').insert({
       content: postContent,
@@ -97,7 +95,7 @@ const Feed = () => {
   
   // --- Rich Design: Card Skeleton ---
   const PostSkeleton = () => (
-    <div className="p-4 border border-border rounded-xl bg-card shadow-lg space-y-3 animate-pulse">
+    <div className="p-4 rounded-xl bg-card shadow-xl space-y-3 animate-pulse"> 
       <div className="flex items-center space-x-3">
          <Skeleton className="h-8 w-8 rounded-full bg-muted" /> 
          <Skeleton className="h-4 w-1/4 bg-muted" />
@@ -116,7 +114,7 @@ const Feed = () => {
     return (
       <div className="flex flex-col h-full space-y-4 p-4">
         {/* Skeleton for the Post Input Card */}
-        <div className="p-4 border border-border rounded-xl bg-card shadow-lg space-y-3">
+        <div className="p-4 rounded-xl bg-card shadow-xl space-y-3">
           <Skeleton className="h-4 w-1/3" />
           <Skeleton className="h-16 w-full" />
           <div className="flex justify-end">
@@ -129,12 +127,12 @@ const Feed = () => {
     );
   }
 
-  // --- Rich Design: Post Card Component (Username/Handle Corrected) ---
+  // --- Rich Design: Post Card Component (Handle Positioned and Sized) ---
   const PostCard = ({ post }: { post: Post }) => {
     const timeSince = new Date(post.created_at).toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit' });
 
     return (
-      <Card className="p-4 rounded-xl shadow-lg border border-border hover:shadow-xl transition-shadow duration-300">
+      <Card className="p-4 rounded-xl shadow-xl hover:shadow-2xl transition-shadow duration-300">
         {/* Post Header */}
         <div className="flex items-center space-x-3 mb-3">
           {/* User Icon */}
@@ -142,10 +140,18 @@ const Feed = () => {
             <User className="h-4 w-4" />
           </div>
           
-          {/* 🎯 CORRECTED: Display Name and Handle */}
-          <div className="flex-1">
-            <p className="font-semibold text-foreground text-md">{post.profiles.display_name}</p>
-            <p className="text-sm text-muted-foreground">@{post.profiles.handle}</p>
+          {/* 🎯 MODIFIED: Handle positioned before Display Name and sized small */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline flex-wrap">
+                {/* Handle (very small and muted) */}
+                <span className="text-xs text-muted-foreground mr-1 whitespace-nowrap">
+                    @{post.profiles.handle}
+                </span>
+                {/* Display Name (larger and bold) */}
+                <span className="font-semibold text-foreground text-md truncate">
+                    {post.profiles.display_name}
+                </span>
+            </div>
           </div>
           
           <span className="text-xs text-muted-foreground whitespace-nowrap">{timeSince}</span>
@@ -157,7 +163,7 @@ const Feed = () => {
         </p>
 
         {/* Post Footer - Actions */}
-        <div className="flex justify-start space-x-6 text-sm text-muted-foreground border-t pt-3">
+        <div className="flex justify-start space-x-6 text-sm text-muted-foreground pt-3 border-t border-muted-foreground/10"> 
           <button className="flex items-center gap-1 hover:text-primary transition-colors">
             <MessageSquare className="h-4 w-4" />
             <span className="text-sm">Reply</span>
@@ -174,7 +180,7 @@ const Feed = () => {
   return (
     <div className="h-full flex flex-col">
       {/* Post Creation Area - Elevated and Richer Input */}
-      <Card className="p-4 rounded-xl shadow-lg mb-6 sticky top-0 z-10 bg-background/90 backdrop-blur-sm">
+      <Card className="p-4 rounded-xl shadow-xl mb-6 sticky top-0 z-10 bg-background/90 backdrop-blur-sm">
         <h3 className="text-lg font-semibold mb-3 text-foreground">Share an Update</h3>
         <Textarea
           placeholder="What's happening? (Text-only, max 280 characters)"
@@ -182,7 +188,7 @@ const Feed = () => {
           onChange={(e) => setNewPost(e.target.value)}
           maxLength={280}
           rows={3}
-          className="mb-3 resize-none border-input focus-visible:ring-primary"
+          className="mb-3 resize-none focus-visible:ring-primary" 
         />
         <div className="flex justify-between items-center">
           <span className={`text-sm ${newPost.length > 250 ? 'text-destructive' : 'text-muted-foreground'}`}>
