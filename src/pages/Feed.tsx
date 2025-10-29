@@ -3,8 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { MessageSquare, ThumbsUp, User } from 'lucide-react';
-import { Check } from 'lucide-react';
+import { MessageSquare, ThumbsUp, User, Check } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Post {
@@ -41,7 +40,7 @@ const Feed = () => {
               is_verified: user?.user_metadata?.is_verified || false,
             },
           } as Post;
-          setPosts((current) => [newPost, ...current]);
+          setPosts((cur) => [newPost, ...cur]);
         }
       )
       .subscribe();
@@ -109,10 +108,22 @@ const Feed = () => {
                 {post.profiles.display_name}
                 {post.profiles.is_verified && (
                   <span
-                    className="inline-flex items-center justify-center rounded-full bg-[#1D9BF0] 
-                    w-[14px] h-[14px] ml-[2px] shadow-sm"
+                    className="inline-flex items-center justify-center rounded-full shadow-sm"
+                    style={{
+                      backgroundColor: '#1DA1F2',
+                      width: '14px',
+                      height: '14px',
+                      marginLeft: '2px',
+                    }}
                   >
-                    <Check className="h-[8px] w-[8px] text-white stroke-[3]" />
+                    <Check
+                      className="text-white"
+                      style={{
+                        width: '8px',
+                        height: '8px',
+                        strokeWidth: 2.2,
+                      }}
+                    />
                   </span>
                 )}
               </span>
@@ -122,9 +133,7 @@ const Feed = () => {
             </div>
           </div>
 
-          <span className="text-xs text-muted-foreground whitespace-nowrap">
-            {timeSince}
-          </span>
+          <span className="text-xs text-muted-foreground whitespace-nowrap">{timeSince}</span>
         </div>
 
         <p className="text-foreground text-base mb-4 leading-relaxed whitespace-pre-wrap">
