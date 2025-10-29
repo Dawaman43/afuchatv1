@@ -15,24 +15,30 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 // --- FAB Components ---
 
-const NewPostFAB = ({ onClick }) => (
-    <Button 
-        size="lg" 
-        onClick={onClick}
-        className="fixed bottom-6 right-6 rounded-full shadow-2xl h-14 w-14 transition-transform duration-200 hover:scale-105 bg-primary z-50"
-    >
-        <Send className="h-6 w-6" />
-    </Button>
+const NewPostFAB = ({ onClick, visible }) => (
+  <Button 
+    size="lg" 
+    onClick={onClick}
+    aria-label="Create new post"
+    className={`fixed bottom-6 right-6 rounded-full shadow-2xl h-14 w-14 transition-transform duration-300 ease-in-out z-50 ${
+      visible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+    }`}
+  >
+    <Send className="h-6 w-6" />
+  </Button>
 );
 
-const NewChatFAB = ({ onClick }) => (
-    <Button 
-        size="lg" 
-        onClick={onClick}
-        className="fixed bottom-6 right-6 rounded-full shadow-2xl h-14 w-14 transition-transform duration-200 hover:scale-105 bg-primary z-50"
-    >
-        <MessageSquarePlus className="h-6 w-6" />
-    </Button>
+const NewChatFAB = ({ onClick, visible }) => (
+  <Button 
+    size="lg" 
+    onClick={onClick}
+    aria-label="Start new chat"
+    className={`fixed bottom-6 right-6 rounded-full shadow-2xl h-14 w-14 transition-transform duration-300 ease-in-out z-50 ${
+      visible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+    }`}
+  >
+    <MessageSquarePlus className="h-6 w-6" />
+  </Button>
 );
 // --- END FAB Components ---
 
@@ -43,12 +49,31 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('feed'); 
   const [isPostModalOpen, setIsPostModalOpen] = useState(false); 
   const [isChatModalOpen, setIsChatModalOpen] = useState(false); 
+  const [fabVisible, setFabVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Scrolling down beyond threshold, hide FAB
+        setFabVisible(false);
+      } else {
+        // Scrolling up or at top, show FAB
+        setFabVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -112,14 +137,18 @@ const Index = () => {
   }
 
   if (!user) {
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-muted-foreground">Redirecting...</p>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header - Defined by shadow, not borders */}
       <header className="bg-card shadow-md sticky top-0 z-20">
-        <div className="container mx-auto px-4 h-14 flex items-center justify-between">
+        <div className="container mx-auto px-2 sm:px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Logo size="sm" />
             <h1 className="text-xl font-extrabold text-primary tracking-wide">AfuChat</h1>
@@ -127,13 +156,14 @@ const Index = () => {
           <div className="flex items-center gap-1">
             <Button size="icon" variant="ghost" onClick={handleSignOut} className="text-foreground hover:bg-muted rounded-full">
               <LogOut className="h-5 w-5" />
+              <span className="sr-only">Sign out</span>
             </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-4 max-w-4xl">
+      <main className="flex-1 container mx-auto px-2 sm:px-4 py-4 max-w-4xl">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
           {/* Tabs - Rich Pill Tabs (3 tabs) */}
           <TabsList className="grid w-full grid-cols-3 mb-6 p-1 bg-muted/50 rounded-full shadow-inner">
@@ -176,24 +206,24 @@ const Index = () => {
       
       {/* --- FAB Renderer --- */}
       {/* Show the Send FAB on the Feed tab */}
-      {activeTab === 'feed' && <NewPostFAB onClick={() => setIsPostModalOpen(true)} />}
+      {activeTab === 'feed' && <NewPostFAB onClick={() => setIsPostModalOpen(true)} visible={fabVisible} />}
       
       {/* Show the New Chat FAB on the Chats tab */}
-      {activeTab === 'chats' && <NewChatFAB onClick={() => setIsChatModalOpen(true)} />}
+      {activeTab === 'chats' && <NewChatFAB onClick={() => setIsChatModalOpen(true)} visible={fabVisible} />}
       
       {/* Modals */}
       <NewPostModal 
-          isOpen={isPostModalOpen} 
-          onClose={() => setIsPostModalOpen(false)} 
+        isOpen={isPostModalOpen} 
+        onClose={() => setIsPostModalOpen(false)} 
       />
       
       {/* Placeholder for NewChatModal */}
       {isChatModalOpen && (
-          <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center" onClick={() => setIsChatModalOpen(false)}>
-              <div className="bg-card p-8 rounded-xl" onClick={(e) => e.stopPropagation()}>
-                  <p className="text-foreground">New Chat Modal Placeholder (To be built next)</p>
-              </div>
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setIsChatModalOpen(false)}>
+          <div className="bg-card p-8 rounded-xl max-w-md w-full max-h-[80vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <p className="text-foreground">New Chat Modal Placeholder (To be built next)</p>
           </div>
+        </div>
       )}
       {/* --- END FAB Renderer --- */}
     </div>
