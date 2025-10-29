@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { MessageSquare, ThumbsUp, User } from 'lucide-react';
+import { MessageSquare, Heart, User } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Post {
@@ -31,6 +31,20 @@ const TwitterVerifiedBadge = () => (
     />
   </svg>
 );
+
+const timeAgo = (dateString: string): string => {
+  const now = new Date();
+  const past = new Date(dateString);
+  const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return `${diffInSeconds}s`;
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes}m`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours}h`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays}d`;
+};
 
 const Feed = () => {
   const { user } = useAuth();
@@ -83,19 +97,27 @@ const Feed = () => {
   };
 
   const PostSkeleton = () => (
-    <div className="p-4 rounded-xl bg-card space-y-3 animate-pulse">
+    <div className="p-4 border-b border-border bg-card space-y-3 animate-pulse">
       <div className="flex items-center space-x-3">
-        <Skeleton className="h-8 w-8 rounded-full bg-muted" />
-        <Skeleton className="h-4 w-1/4 bg-muted" />
+        <Skeleton className="h-12 w-12 rounded-full bg-muted" />
+        <div className="flex-1 space-y-1">
+          <Skeleton className="h-4 w-1/3 bg-muted" />
+          <Skeleton className="h-3 w-1/4 bg-muted" />
+        </div>
+        <Skeleton className="h-3 w-12 bg-muted" />
       </div>
       <Skeleton className="h-4 w-full bg-muted" />
       <Skeleton className="h-4 w-5/6 bg-muted" />
+      <div className="flex space-x-8">
+        <Skeleton className="h-4 w-4 bg-muted rounded-full" />
+        <Skeleton className="h-4 w-4 bg-muted rounded-full" />
+      </div>
     </div>
   );
 
   if (loading) {
     return (
-      <div className="flex flex-col h-full space-y-4 p-4">
+      <div className="flex flex-col h-full space-y-0 p-4">
         {[...Array(5)].map((_, i) => (
           <PostSkeleton key={i} />
         ))}
@@ -104,66 +126,70 @@ const Feed = () => {
   }
 
   const PostCard = ({ post }: { post: Post }) => {
-    const timeSince = new Date(post.created_at).toLocaleTimeString('en-UG', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    const timeLabel = timeAgo(post.created_at);
 
     return (
-      <Card className="p-4 rounded-xl">
+      <div className="p-4 border-b border-border bg-card hover:bg-card/90 transition-colors">
         {/* Post Header */}
-        <div className="flex items-center space-x-3 mb-3">
-          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-            <User className="h-4 w-4" />
+        <div className="flex items-start space-x-3 mb-3">
+          <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground flex-shrink-0">
+            <User className="h-5 w-5" />
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-baseline flex-wrap gap-1">
-              <span className="font-semibold text-foreground text-md truncate flex items-center gap-0.5">
+            <div className="flex items-center gap-1 mb-1">
+              <span className="font-bold text-sm text-foreground truncate flex items-center gap-0.5">
                 {post.profiles.display_name}
                 {post.profiles.is_verified && <TwitterVerifiedBadge />}
               </span>
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">
                 @{post.profiles.handle}
               </span>
             </div>
+            <span className="text-xs text-muted-foreground">
+              {timeLabel}
+            </span>
           </div>
-
-          <span className="text-xs text-muted-foreground whitespace-nowrap">
-            {timeSince}
-          </span>
         </div>
 
         {/* Post Content */}
-        <p className="text-foreground text-base mb-4 leading-relaxed whitespace-pre-wrap">
+        <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap mb-3">
           {post.content}
         </p>
 
         {/* Post Footer */}
-        <div className="flex justify-start space-x-6 text-sm text-muted-foreground pt-3">
-          <button className="flex items-center gap-1 hover:text-primary transition-colors">
-            <MessageSquare className="h-4 w-4" />
-            <span className="text-sm">Reply</span>
-          </button>
-          <button className="flex items-center gap-1 hover:text-primary transition-colors">
-            <ThumbsUp className="h-4 w-4" />
-            <span className="text-sm">Acknowledge</span>
-          </button>
+        <div className="flex justify-between space-x-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-4">
+            <button className="flex items-center gap-1 hover:text-primary transition-colors p-1 -m-1 rounded-full hover:bg-primary/10">
+              <MessageSquare className="h-5 w-5" />
+              <span className="hidden sm:inline">Reply</span>
+            </button>
+            <button className="flex items-center gap-1 hover:text-primary transition-colors p-1 -m-1 rounded-full hover:bg-primary/10">
+              <Heart className="h-5 w-5" />
+              <span className="hidden sm:inline">Like</span>
+            </button>
+          </div>
+          <div className="flex items-center gap-4">
+            {/* Placeholder for views or other actions */}
+          </div>
         </div>
-      </Card>
+      </div>
     );
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-y-auto space-y-4 pb-4 px-2">
+    <div className="h-full flex flex-col bg-background">
+      <div className="flex-1 overflow-y-auto space-y-0 px-4 py-2">
         {posts.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            No posts yet. Tap the <User className="inline h-4 w-4" /> button to
-            share your first post!
+          <div className="text-center text-muted-foreground py-8 flex flex-col items-center">
+            <User className="h-12 w-12 mb-4 opacity-40" />
+            <p className="text-sm">No posts yet.</p>
+            <p className="text-xs mt-1">Tap the compose button to share your first post!</p>
           </div>
         ) : (
-          posts.map((post) => <PostCard key={post.id} post={post} />)
+          posts.map((post, index) => (
+            <PostCard key={post.id} post={post} />
+          ))
         )}
       </div>
     </div>
