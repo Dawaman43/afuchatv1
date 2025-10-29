@@ -48,8 +48,6 @@ const Feed = () => {
         }
       )
       .subscribe();
-      
-    channel.on('error', () => fetchPosts());
 
     return () => {
       supabase.removeChannel(channel);

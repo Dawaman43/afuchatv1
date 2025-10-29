@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import Logo from '@/components/Logo';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -59,10 +60,13 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">
+          <div className="flex justify-center mb-4">
+            <Logo size="lg" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-center">
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-center">
             {isSignUp
               ? 'Sign up for AfuChat - fast, text-only messaging'
               : 'Sign in to your AfuChat account'}
