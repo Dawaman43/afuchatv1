@@ -1,20 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageSquarePlus, Users, User, Clock } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Chat {
   id: string;
   name: string | null;
   is_group: boolean;
   updated_at: string;
-  last_message_content?: string; 
+  last_message_content?: string;
+  last_message_sender_id?: string;
+  unread_count?: number;
+  other_member?: {
+    display_name: string;
+    handle: string;
+    avatar_url?: string;
+  };
 }
 
-// Function to format the time since the last update
 const formatTime = (isoString: string) => {
   if (!isoString) return '';
   const date = new Date(isoString);
@@ -29,39 +36,94 @@ const formatTime = (isoString: string) => {
 
 const Chats = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchChats = useCallback(async () => {
     if (!user) return;
 
-    const fetchChats = async () => {
-      // NOTE: In a production app, you would fetch the last message content here too.
-      const { data: chatMembers } = await supabase
+    try {
+      // Fetch chat members for this user
+      const { data: chatMembers, error: membersError } = await supabase
         .from('chat_members')
-        .select('chat_id, chats(id, name, is_group, updated_at)')
-        .eq('user_id', user.id);
+        .select(`
+          chat_id,
+          chats (
+            id,
+            name,
+            is_group,
+            created_at,
+            updated_at,
+            chat_members (
+              user_id,
+              profiles (
+                display_name,
+                handle,
+                avatar_url
+              )
+            )
+          ),
+          messages (
+            id,
+            encrypted_content,
+            sent_at,
+            sender_id,
+            message_status (
+              read_at
+            )
+          ) !inner order(sent_at desc) limit(1)
+        `)
+        .eq('user_id', user.id)
+        .order('chats.updated_at', { ascending: false, referencedTable: 'chats' });
 
-      if (chatMembers) {
-        const chatsData: Chat[] = chatMembers
-          .map((member: any) => ({
-            ...member.chats,
-            // Mocking a last message to make the UI rich
-            last_message_content: member.chats.id.startsWith('group') ? 'Last group message...' : 'Last 1:1 message...' 
-          }))
-          .filter(Boolean);
-        
-        // Sort by updated_at (most recent first)
-        chatsData.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
-        
-        setChats(chatsData);
-      }
+      if (membersError) throw membersError;
+
+      const enrichedChats: Chat[] = chatMembers?.map((member: any) => {
+        const chat = member.chats;
+        const otherMembers = chat.chat_members.filter((m: any) => m.user_id !== user.id);
+        const otherMember = otherMembers.length > 0 ? otherMembers[0].profiles : null;
+        const lastMessage = member.messages?.[0];
+
+        // Calculate unread count: messages where read_at is null for this user
+        const unreadCount = member.messages?.filter((msg: any) => 
+          !msg.message_status?.some((status: any) => status.user_id === user.id && status.read_at)
+        ).length || 0;
+
+        let lastMessageContent = '';
+        if (lastMessage) {
+          // In production, decrypt encrypted_content here
+          lastMessageContent = lastMessage.encrypted_content.substring(0, 50) + (lastMessage.encrypted_content.length > 50 ? '...' : '');
+        } else if (chat.is_group) {
+          lastMessageContent = 'No messages yet';
+        } else {
+          lastMessageContent = `Say hi to ${otherMember?.display_name || 'someone'}`;
+        }
+
+        return {
+          ...chat,
+          other_member: otherMember,
+          last_message_content: lastMessageContent,
+          last_message_sender_id: lastMessage?.sender_id,
+          unread_count: unreadCount > 99 ? '99+' : unreadCount,
+        };
+      }) || [];
+
+      setChats(enrichedChats);
+    } catch (error) {
+      console.error('Error fetching chats:', error);
+      toast.error('Failed to load chats');
+    } finally {
       setLoading(false);
-    };
+    }
+  }, [user]);
 
+  useEffect(() => {
     fetchChats();
 
-    // Subscribe to new messages for real-time updates
+    if (!user) return;
+
+    // Realtime subscription for new messages in user's chats
     const channel = supabase
       .channel('chat-updates')
       .on(
@@ -70,10 +132,24 @@ const Chats = () => {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
+          filter: `chat_members.user_id=eq.${user.id}`, // Only user's chats
         },
-        // Re-fetch chats or update state on new message arrival
+        (payload) => {
+          // Update last message and unread on new message
+          fetchChats(); // Refetch for simplicity; optimize with direct state update if needed
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'message_status',
+          filter: `user_id=eq.${user.id}`,
+        },
         () => {
-          fetchChats(); 
+          // Update unread on status change
+          fetchChats();
         }
       )
       .subscribe();
@@ -81,9 +157,19 @@ const Chats = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
-  
-  // --- Rich Design: Chat Item Skeleton (Borders Removed) ---
+  }, [user, fetchChats]);
+
+  const handleNewChat = () => {
+    if (!user) {
+      toast.info('Sign in to start a new chat!', {
+        action: { label: 'Sign In', onClick: () => navigate('/auth') },
+      });
+      return;
+    }
+    // Navigate to new chat creation or open modal
+    navigate('/new-chat'); // Assuming a route for new chat
+  };
+
   const ChatItemSkeleton = () => (
     <div className="flex items-center space-x-4 p-4 rounded-xl bg-card shadow-md animate-pulse">
       <Skeleton className="h-10 w-10 rounded-full" /> 
@@ -98,46 +184,60 @@ const Chats = () => {
   if (loading) {
     return (
       <div className="h-full flex flex-col space-y-4 p-4">
-         {[...Array(5)].map((_, i) => <ChatItemSkeleton key={i} />)}
+        {[...Array(5)].map((_, i) => <ChatItemSkeleton key={i} />)}
       </div>
     );
   }
 
-  // --- Rich Design: Chat Card Component (Borders Removed) ---
   const ChatCard = ({ chat }: { chat: Chat }) => {
-    const chatName = chat.name || (chat.is_group ? 'New Group' : 'Direct Message');
+    const chatName = chat.name || (chat.is_group ? 'Group Chat' : chat.other_member?.display_name || 'Direct Message');
     const Icon = chat.is_group ? Users : User;
     const timeDisplay = formatTime(chat.updated_at);
-    const lastMessagePreview = chat.last_message_content || 'Tap to start conversation...';
+    const lastMessagePreview = chat.last_message_content || (chat.is_group ? 'No messages yet' : `Say hi to ${chat.other_member?.display_name || 'someone'}`);
+    const hasUnread = (chat.unread_count as number) > 0;
+
+    const handleChatClick = () => {
+      if (!user) {
+        toast.info('Sign in to open chat!', {
+          action: { label: 'Sign In', onClick: () => navigate('/auth') },
+        });
+        return;
+      }
+      navigate(`/chat/${chat.id}`);
+    };
 
     return (
       <Card
-        key={chat.id}
-        // Applying rich design styles: shadow-lg, no border
         className="p-4 rounded-xl shadow-lg hover:shadow-xl hover:bg-muted/30 cursor-pointer transition-all duration-200"
-        // Placeholder for navigation
-        // onClick={() => navigate(`/chat/${chat.id}`)} 
+        onClick={handleChatClick}
       >
         <div className="flex items-center space-x-4">
-          {/* Visual Indicator (Text-only profile concept) */}
-          <div className={`h-10 w-10 rounded-full flex items-center justify-center text-primary-foreground shadow-sm ${chat.is_group ? 'bg-indigo-500' : 'bg-primary'}`}>
-            <Icon className="h-5 w-5" />
+          {/* Avatar/Indicator */}
+          <div className={`h-10 w-10 rounded-full flex items-center justify-center text-primary-foreground shadow-sm overflow-hidden ${
+            chat.is_group ? 'bg-indigo-500' : 'bg-primary'
+          }`}>
+            {chat.other_member?.avatar_url ? (
+              <img src={chat.other_member.avatar_url} alt={chatName} className="h-full w-full rounded-full object-cover" />
+            ) : (
+              <Icon className="h-5 w-5" />
+            )}
           </div>
 
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold truncate text-foreground">{chatName}</h3>
-            {/* Last Message Preview */}
             <p className="text-sm text-muted-foreground truncate">{lastMessagePreview}</p>
           </div>
 
-          <div className="flex flex-col items-end space-y-1">
-            {/* Timestamp */}
+          <div className="flex flex-col items-end space-y-1 min-w-[60px]">
             <span className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1">
               <Clock className="h-3 w-3" />
               {timeDisplay}
             </span>
-            {/* Placeholder for unread count badge */}
-            {/* <span className="text-xs font-bold bg-primary text-primary-foreground rounded-full h-5 w-5 flex items-center justify-center">2</span> */}
+            {hasUnread && (
+              <span className="text-xs font-bold bg-primary text-primary-foreground rounded-full h-5 w-5 flex items-center justify-center">
+                {chat.unread_count}
+              </span>
+            )}
           </div>
         </div>
       </Card>
@@ -146,10 +246,14 @@ const Chats = () => {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header - Defined by shadow, not border */}
       <div className="p-4 bg-card shadow-sm flex items-center justify-between sticky top-0 z-10">
         <h1 className="text-xl font-extrabold text-foreground">Conversations</h1>
-        <Button size="icon" variant="default" className="rounded-full shadow-md">
+        <Button 
+          size="icon" 
+          variant="default" 
+          className="rounded-full shadow-md"
+          onClick={handleNewChat}
+        >
           <MessageSquarePlus className="h-5 w-5" />
         </Button>
       </div>
@@ -157,13 +261,13 @@ const Chats = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {chats.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-4">
+            <Users className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-muted-foreground mb-2">No conversations found.</p>
             <p className="text-sm text-muted-foreground">
-              Tap the plus button to start a new chat!
+              {!user ? 'Sign in to start chatting!' : 'Tap the plus button to start a new chat!'}
             </p>
           </div>
         ) : (
-          // Use space-y-3 for separation instead of a divider
           chats.map((chat) => (
             <ChatCard key={chat.id} chat={chat} />
           ))
