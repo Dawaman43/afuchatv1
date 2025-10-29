@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { MessageSquare, ThumbsUp, User } from 'lucide-react';
+import { MessageSquare, ThumbsUp, User, Check } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton'; 
 
 interface Post {
@@ -14,6 +14,7 @@ interface Post {
   profiles: {
     display_name: string;
     handle: string;
+    verified?: boolean; // ✅ Added verified field
   };
 }
 
@@ -36,12 +37,12 @@ const Feed = () => {
           table: 'posts',
         },
         (payload) => {
-          // Construct the new post with profile data for immediate display
           const newPost = { 
             ...payload.new, 
             profiles: { 
               display_name: user?.user_metadata?.display_name || 'User', 
-              handle: user?.user_metadata?.handle || 'user' 
+              handle: user?.user_metadata?.handle || 'user',
+              verified: user?.user_metadata?.verified || false, // ✅ Include verified metadata if available
             } 
           } as Post;
           setPosts(currentPosts => [newPost, ...currentPosts]);
@@ -55,15 +56,19 @@ const Feed = () => {
   }, [user]);
 
   const fetchPosts = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('posts')
-      .select('*, profiles(display_name, handle)')
+      .select('*, profiles(display_name, handle, verified)') // ✅ Fetch verified
       .order('created_at', { ascending: false })
       .limit(50);
 
-    if (data) {
+    if (error) {
+      console.error(error);
+      toast.error('Failed to load posts');
+    } else if (data) {
       setPosts(data as Post[]);
     }
+
     setLoading(false);
   };
   
@@ -92,42 +97,44 @@ const Feed = () => {
     );
   }
 
-  // --- Rich Design: Post Card Component (Display Name First) ---
+  // --- Rich Design: Post Card Component (Rounded Verified Badge) ---
   const PostCard = ({ post }: { post: Post }) => {
     const timeSince = new Date(post.created_at).toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit' });
 
     return (
-      // Borderless card defined by shadow
       <Card className="p-4 rounded-xl shadow-xl hover:shadow-2xl transition-shadow duration-300">
         {/* Post Header */}
         <div className="flex items-center space-x-3 mb-3">
-          {/* User Icon (Text-only placeholder) */}
           <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-md">
             <User className="h-4 w-4" />
           </div>
           
           <div className="flex-1 min-w-0">
             <div className="flex items-baseline flex-wrap">
-                {/* 1. Display Name (Primary, bold, large) */}
-                <span className="font-semibold text-foreground text-md truncate mr-1">
-                    {post.profiles.display_name}
-                </span>
-                {/* 2. @handle (Secondary, muted, small) */}
-                <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    @{post.profiles.handle}
-                </span>
+              {/* Display Name + Blue Rounded Check Badge */}
+              <span className="font-semibold text-foreground text-md truncate mr-1 flex items-center gap-1">
+                {post.profiles.display_name}
+                {post.profiles.verified && (
+                  <span className="inline-flex items-center justify-center bg-sky-500 rounded-full w-4 h-4">
+                    <Check className="h-3 w-3 text-white" />
+                  </span>
+                )}
+              </span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                @{post.profiles.handle}
+              </span>
             </div>
           </div>
           
           <span className="text-xs text-muted-foreground whitespace-nowrap">{timeSince}</span>
         </div>
 
-        {/* Post Content (Text-Only) */}
+        {/* Post Content */}
         <p className="text-foreground text-base mb-4 leading-relaxed whitespace-pre-wrap">
           {post.content}
         </p>
 
-        {/* Post Footer - Actions (Faint divider, no harsh border) */}
+        {/* Post Footer */}
         <div className="flex justify-start space-x-6 text-sm text-muted-foreground pt-3 border-t border-muted-foreground/10"> 
           <button className="flex items-center gap-1 hover:text-primary transition-colors">
             <MessageSquare className="h-4 w-4" />
@@ -144,7 +151,6 @@ const Feed = () => {
 
   return (
     <div className="h-full flex flex-col">
-      {/* The posting area is now integrated into the FAB/Modal in Index.tsx */}
       <div className="flex-1 overflow-y-auto space-y-4 pb-4 px-2">
         {posts.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
