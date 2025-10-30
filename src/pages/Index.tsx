@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-// FIX: Added 'User' icon for profile, removed unused 'Settings' icon
 import { MessageSquare, Radio, LogOut, Send, MessageSquarePlus, Search as SearchIcon, LogIn, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import Chats from './Chats';
@@ -53,11 +52,6 @@ const Index = () => {
   const [fabVisible, setFabVisible] = useState(true);
   const [forceLoaded, setForceLoaded] = useState(false);
   const lastScrollYRef = useRef(0);
-  
-  // FIX: Removed refs and state related to swipe navigation
-  // const touchStartXRef = useRef(0);
-  // const touchEndXRef = useRef(0);
-  // const tabOrder = ['feed', 'search', 'chats'];
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -72,10 +66,13 @@ const Index = () => {
   useEffect(() => {
     let ticking = false;
 
+    // This scroll handler controls the visibility of the Header and FAB
     const handleScroll = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
+          // This uses the main window scroll. If your tabs scroll internally,
+          // this logic might need to be moved inside each tab component.
+          const currentScrollY = window.scrollY; 
           if (currentScrollY > lastScrollYRef.current && currentScrollY > 100) {
             setHeaderVisible(false);
             setFabVisible(false);
@@ -94,10 +91,6 @@ const Index = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // FIX: Removed handleTouchStart, handleTouchEnd, and handleSwipe
-  // const handleTouchStart = ...
-  // const handleTouchEnd = ...
-  // const handleSwipe = ...
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -113,7 +106,6 @@ const Index = () => {
     navigate('/auth');
   };
   
-  // --- NEW: Handler for profile navigation ---
   const handleViewProfile = () => {
     if (user) {
       navigate(`/profile/${user.id}`);
@@ -137,7 +129,7 @@ const Index = () => {
   };
 
   if (effectiveLoading) {
-    // Skeleton loading state (unchanged, but still correct)
+    // Skeleton loading state
     return (
       <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto">
         {/* Header Skeleton */}
@@ -150,7 +142,7 @@ const Index = () => {
         </div>
         
         {/* Tabs Skeleton */}
-        <div className="grid grid-cols-3 gap-4 mb-6 pt-4"> {/* Changed to 3 cols */}
+        <div className="grid grid-cols-3 gap-4 mb-6 pt-4">
           <Skeleton className="h-10 w-full rounded-full" /> 
           <Skeleton className="h-10 w-full rounded-full" /> 
           <Skeleton className="h-10 w-full rounded-full" /> 
@@ -202,7 +194,6 @@ const Index = () => {
             <h1 className="text-xl font-extrabold text-primary tracking-wide">AfuChat</h1>
           </div>
           
-          {/* --- FIX: Updated Header Buttons --- */}
           <div className="flex items-center gap-1">
             {user ? (
               <>
@@ -222,18 +213,12 @@ const Index = () => {
               </Button>
             )}
           </div>
-          {/* --- END FIX --- */}
           
         </div>
       </header>
 
       {/* Main Content */}
-      <main 
-        className="flex-1 container mx-auto px-2 sm:px-4 py-4 max-w-4xl overflow-y-auto"
-        // FIX: Removed swipe handlers
-        // onTouchStart={handleTouchStart}
-        // onTouchEnd={handleTouchEnd}
-      >
+      <main className="flex-1 container mx-auto px-2 sm:px-4 py-4 max-w-4xl overflow-y-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
           <TabsList className="grid w-full grid-cols-3 mb-6 p-1 bg-muted/50 rounded-full shadow-inner">
             <TabsTrigger 
@@ -259,6 +244,10 @@ const Index = () => {
             </TabsTrigger>
           </TabsList>
           
+          {/* This is where the persistence happens.
+            All three components are rendered, but two are hidden with CSS.
+            This keeps their state (data, scroll position) alive.
+          */}
           <div className="flex-1 relative">
             <TabsContent value="feed" className={`${activeTab === 'feed' ? 'block' : 'hidden'} h-full mt-0`}>
               <Feed />
@@ -273,11 +262,11 @@ const Index = () => {
         </Tabs>
       </main>
       
-      {/* FAB Renderer (Unchanged) */}
+      {/* FAB Renderer */}
       {activeTab === 'feed' && <NewPostFAB onClick={handleNewPost} visible={fabVisible} />}
       {activeTab === 'chats' && <NewChatFAB onClick={handleNewChat} visible={fabVisible} />}
       
-      {/* Modals (Unchanged) */}
+      {/* Modals */}
       <NewPostModal 
         isOpen={isPostModalOpen} 
         onClose={() => setIsPostModalOpen(false)} 
