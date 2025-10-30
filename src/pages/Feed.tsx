@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
+// FIX: Import useNavigate to handle navigation
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
@@ -69,6 +71,8 @@ const Feed = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [forceLoaded, setForceLoaded] = useState(false);
+  // FIX: Initialize useNavigate
+  const navigate = useNavigate(); 
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -211,7 +215,6 @@ const Feed = () => {
     } catch (err) {
       console.error('Error fetching posts:', err);
       // Do not toast error to avoid user frustration; just show empty state
-      // toast.error('Failed to load posts'); // Commented out
     } finally {
       setLoading(false);
     }
@@ -238,7 +241,8 @@ const Feed = () => {
     );
   }
 
-  const PostCard = ({ post, addReply, user }: { post: Post; addReply: (postId: string, reply: Reply) => void; user: any }) => {
+  // FIX: PostCard now receives 'navigate'
+  const PostCard = ({ post, addReply, user, navigate }: { post: Post; addReply: (postId: string, reply: Reply) => void; user: any; navigate: any }) => {
     const [showReply, setShowReply] = useState(false);
     const [replyText, setReplyText] = useState('');
 
@@ -246,6 +250,11 @@ const Feed = () => {
       hour: '2-digit',
       minute: '2-digit',
     });
+    
+    // FIX: Navigation handler
+    const handleViewProfile = (userId: string) => {
+        navigate(`/profile/${userId}`);
+    };
 
     const handleReplySubmit = async () => {
       if (!replyText.trim()) return;
@@ -296,7 +305,11 @@ const Feed = () => {
     return (
       <Card className="p-4 rounded-xl">
         {/* Post Header */}
-        <div className="flex items-center space-x-3 mb-3">
+        {/* FIX: Made the entire header clickable to navigate to the profile */}
+        <div 
+            className="flex items-center space-x-3 mb-3 cursor-pointer hover:bg-muted/10 p-1 -m-1 rounded-lg transition-colors"
+            onClick={() => handleViewProfile(post.author_id)}
+        >
           <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
             <User className="h-4 w-4" />
           </div>
@@ -319,6 +332,7 @@ const Feed = () => {
         </div>
 
         {/* Post Content */}
+        {/* NOTE: You may want to add a separate click handler here if clicking the content should go to post detail */}
         <p className="text-foreground text-base mb-4 leading-relaxed whitespace-pre-wrap">
           {post.content}
         </p>
@@ -333,21 +347,25 @@ const Feed = () => {
               });
               return (
                 <div key={reply.id} className="pl-6 border-l border-muted-foreground/20">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="font-semibold text-sm truncate flex items-center gap-0.5">
-                      {reply.profiles.display_name}
-                      {renderVerifiedBadge(reply.profiles)}
-                    </span>
+                    {/* FIX: Made reply author clickable */}
+                    <div 
+                        className="flex items-center space-x-2 mb-1 cursor-pointer"
+                        onClick={() => handleViewProfile(reply.author_id)}
+                    >
+                        <span className="font-semibold text-sm truncate flex items-center gap-0.5">
+                            {reply.profiles.display_name}
+                            {renderVerifiedBadge(reply.profiles)}
+                        </span>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            @{reply.profiles.handle}
+                        </span>
+                    </div>
+                    <p className="text-sm text-foreground mb-1 leading-relaxed whitespace-pre-wrap">
+                        {reply.content}
+                    </p>
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      @{reply.profiles.handle}
+                        {replyTime}
                     </span>
-                  </div>
-                  <p className="text-sm text-foreground mb-1 leading-relaxed whitespace-pre-wrap">
-                    {reply.content}
-                  </p>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {replyTime}
-                  </span>
                 </div>
               );
             })}
@@ -426,6 +444,7 @@ const Feed = () => {
               post={post}
               addReply={addReply}
               user={user}
+              navigate={navigate} // FIX: Pass navigate to the PostCard
             />
           ))
         )}
