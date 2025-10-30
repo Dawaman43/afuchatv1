@@ -5,7 +5,8 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search as SearchIcon, User, CheckCircle2, MessageSquare, Loader2, Users, FileText } from 'lucide-react';
+// FIX: Added 'Clock' to the lucide-react import
+import { Search as SearchIcon, User, MessageSquare, Loader2, FileText, Clock } from 'lucide-react'; 
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -101,26 +102,36 @@ const Search = () => {
   }, [query]);
 
   useEffect(() => {
+    // Only run search if debouncedQuery has a value
     if (debouncedQuery.trim()) {
       handleSearch();
     } else {
       setResults([]);
     }
+    // Added activeTab as a dependency to trigger search when switching tabs
   }, [debouncedQuery, activeTab]);
 
   const handleSearch = async () => {
-    if (!debouncedQuery.trim()) return;
+    // Added a safeguard check just in case
+    if (!debouncedQuery.trim()) {
+        setResults([]);
+        return;
+    }
     
     setLoading(true);
+    setResults([]); // Clear previous results immediately
+
     try {
       let searchData = [];
       if (activeTab === 'users') {
         // Search users
-        const { data: userData } = await supabase
+        const { data: userData, error: userError } = await supabase
           .from('profiles')
           .select('id, display_name, handle, bio, is_verified, is_organization_verified, is_private')
           .or(`display_name.ilike.%${debouncedQuery}%,handle.ilike.%${debouncedQuery}%`)
           .limit(10);
+        
+        if (userError) throw userError;
 
         searchData = (userData || []).map((u: any) => ({
           type: 'user' as const,
@@ -128,14 +139,20 @@ const Search = () => {
         }));
       } else {
         // Search posts
-        const { data: postData } = await supabase
+        const { data: postData, error: postError } = await supabase
           .from('posts')
           .select(`
             id, content, created_at, author_id,
-            profiles!author_id(id, display_name, handle, is_verified, is_organization_verified)
+            profiles!author_id(display_name, handle, is_verified, is_organization_verified)
           `)
+          // Using a case-insensitive LIKE search as a fallback if FTS is not configured, 
+          // or you can stick to textSearch if FTS is guaranteed:
           .textSearch('content', debouncedQuery, { type: 'plain', config: 'english' })
+          // Alternatively, if you need a simpler search:
+          // .ilike('content', `%${debouncedQuery}%`)
           .limit(10);
+
+        if (postError) throw postError;
 
         searchData = (postData || []).map((p: any) => ({
           type: 'post' as const,
@@ -143,13 +160,16 @@ const Search = () => {
           content: p.content,
           created_at: p.created_at,
           author_id: p.author_id,
-          author_profiles: p.profiles,
+          // Supabase returns the single related profile object directly
+          author_profiles: p.profiles as SearchResult['author_profiles'],
         }));
       }
 
       setResults(searchData);
     } catch (error) {
-      console.error('Search error:', error);
+      console.error(`Search ${activeTab} error:`, error);
+      // You might want to show an error message to the user here
+      setResults([]); 
     } finally {
       setLoading(false);
     }
@@ -299,16 +319,19 @@ const Search = () => {
                         )}
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleStartChat(result.id)}
-                      disabled={result.is_private}
-                      className="ml-4 rounded-full shadow-md hover:shadow-lg transition-all duration-200"
-                    >
-                      <MessageSquare className="h-4 w-4 mr-1" />
-                      Message
-                    </Button>
+                    {/* Only show Message button if it's not the current user */}
+                    {result.id !== user?.id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleStartChat(result.id)}
+                        disabled={result.is_private}
+                        className="ml-4 rounded-full shadow-md hover:shadow-lg transition-all duration-200"
+                      >
+                        <MessageSquare className="h-4 w-4 mr-1" />
+                        Message
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div 
@@ -337,7 +360,8 @@ const Search = () => {
                     </p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <Clock className="h-3 w-3" />
-                      {new Date(result.created_at).toLocaleDateString('en-UG')}
+                      {/* Check for created_at before formatting to prevent errors */}
+                      {result.created_at ? new Date(result.created_at).toLocaleDateString('en-UG', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown Date'}
                     </p>
                   </div>
                 )}
