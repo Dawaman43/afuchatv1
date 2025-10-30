@@ -51,10 +51,27 @@ const Index = () => {
   const [isChatModalOpen, setIsChatModalOpen] = useState(false); 
   const [headerVisible, setHeaderVisible] = useState(true);
   const [fabVisible, setFabVisible] = useState(true);
+  const [forceLoaded, setForceLoaded] = useState(false);
   const lastScrollYRef = useRef(0);
   const touchStartXRef = useRef(0);
   const touchEndXRef = useRef(0);
   const tabOrder = ['feed', 'search', 'chats'];
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setForceLoaded(true);
+    }, 3000); // Force load after 3 seconds to prevent hanging
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const effectiveLoading = loading && !forceLoaded;
+
+  useEffect(() => {
+    if (!effectiveLoading && !user) {
+      // No redirect, just allow viewing
+    }
+  }, [user, effectiveLoading]);
 
   useEffect(() => {
     let ticking = false;
@@ -144,7 +161,7 @@ const Index = () => {
   };
 
   // --- Skeleton Loading (Rich UI simulation for instantaneous utility) ---
-  if (loading) {
+  if (effectiveLoading) {
     return (
       <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto">
         {/* Header Skeleton */}
