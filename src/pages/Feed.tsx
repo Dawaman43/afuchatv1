@@ -330,7 +330,6 @@ const Feed = () => {
 
   if (effectiveLoading) {
     return (
-      // FIX: Removed header div, skeleton list starts at the top
       <div className="flex flex-col h-full">
         {[...Array(5)].map((_, i) => (
           <PostSkeleton key={i} />
@@ -393,10 +392,7 @@ const Feed = () => {
         <div className="flex-1 min-w-0">
           {/* Post Header (X-Style) */}
           <div className="flex items-center justify-between">
-            {/* FIX: Single-line header. `min-w-0` on container is critical. */}
             <div className="flex items-center gap-x-1 min-w-0">
-              
-              {/* Display Name (will not shrink or truncate easily) */}
               <span 
                 className="font-bold text-foreground text-sm cursor-pointer hover:underline whitespace-nowrap" 
                 onClick={() => handleViewProfile(post.author_id)}
@@ -405,7 +401,6 @@ const Feed = () => {
               </span>
               <VerifiedBadge isVerified={post.profiles.is_verified} isOrgVerified={post.profiles.is_organization_verified} />
               
-              {/* Handle (WILL shrink and truncate) */}
               <span 
                 className="text-muted-foreground text-sm hover:underline cursor-pointer truncate flex-shrink min-w-0" 
                 onClick={() => handleViewProfile(post.author_id)}
@@ -413,14 +408,12 @@ const Feed = () => {
                 @{post.profiles.handle}
               </span>
               
-              {/* Time (will not shrink) */}
               <span className="text-muted-foreground text-sm flex-shrink-0">·</span>
-              <span className="text-muted-foreground text-sm whitespace-nowrap flex-shrink-0">
+              <span className="text-muted-foreground text-sm whitespace-nowlrap flex-shrink-0">
                 {formatTime(post.created_at)}
               </span>
             </div>
             
-            {/* More Options Button */}
             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full flex-shrink-0 ml-2">
               <Ellipsis className="h-4 w-4 text-muted-foreground" />
             </Button>
@@ -476,7 +469,8 @@ const Feed = () => {
                 </div>
             )}
 
-            {user && (
+            {/* FIX: Comment input and login prompt are now conditional on 'showComments' */}
+            {showComments && user && (
                 <div className="mt-3 flex items-center gap-2">
                     <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
                       <User className="h-4 w-4 text-muted-foreground" />
@@ -498,7 +492,7 @@ const Feed = () => {
                     </Button>
                 </div>
             )}
-            {!user && (
+            {showComments && !user && (
                 <div className="mt-3 text-sm text-muted-foreground">
                     Please <a href="/auth" className="text-primary underline">log in</a> to comment.
                 </div>
@@ -512,9 +506,8 @@ const Feed = () => {
 
   return (
     <div className="h-full flex flex-col">
-      {/* FIX: Header Removed */}
+      {/* Header Removed */}
       
-      {/* The main content area now fills the whole component */}
       <div className="flex-1 overflow-y-auto">
         {posts.length === 0 && !effectiveLoading ? (
           <div className="text-center text-muted-foreground py-8">
