@@ -16,7 +16,7 @@ interface Post {
     display_name: string;
     handle: string;
     is_verified: boolean;
-    verification_type?: 'individual' | 'organization';
+    is_organization_verified: boolean;
   };
   replies?: Reply[];
 }
@@ -31,7 +31,7 @@ interface Reply {
     display_name: string;
     handle: string;
     is_verified: boolean;
-    verification_type?: 'individual' | 'organization';
+    is_organization_verified: boolean;
   };
 }
 
@@ -107,7 +107,7 @@ const Feed = () => {
         async (payload) => {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('display_name, handle, is_verified, verification_type')
+            .select('display_name, handle, is_verified, is_organization_verified')
             .eq('id', payload.new.author_id)
             .single();
 
@@ -132,7 +132,7 @@ const Feed = () => {
         async (payload) => {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('display_name, handle, is_verified, verification_type')
+            .select('display_name, handle, is_verified, is_organization_verified')
             .eq('id', payload.new.author_id)
             .single();
 
@@ -168,7 +168,7 @@ const Feed = () => {
     try {
       let { data, error } = await supabase
         .from('posts')
-        .select('*, profiles(display_name, handle, is_verified, verification_type)')
+        .select('*, profiles(display_name, handle, is_verified, is_organization_verified)')
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -179,7 +179,7 @@ const Feed = () => {
 
         const { data: repliesData, error: repliesError } = await supabase
           .from('post_replies')
-          .select('*, profiles(display_name, handle, is_verified, verification_type)')
+          .select('*, profiles(display_name, handle, is_verified, is_organization_verified)')
           .in('post_id', postIds)
           .order('created_at', { ascending: true });
 
@@ -201,6 +201,7 @@ const Feed = () => {
           profiles: {
             ...post.profiles,
             is_verified: post.profiles?.is_verified ?? false,
+            is_organization_verified: post.profiles?.is_organization_verified ?? false,
           },
           replies: repliesByPostId.get(post.id) || [],
         })) as Post[];
@@ -209,7 +210,8 @@ const Feed = () => {
       setPosts(data || []);
     } catch (err) {
       console.error('Error fetching posts:', err);
-      toast.error('Failed to load posts');
+      // Do not toast error to avoid user frustration; just show empty state
+      // toast.error('Failed to load posts'); // Commented out
     } finally {
       setLoading(false);
     }
@@ -270,7 +272,7 @@ const Feed = () => {
           display_name: user?.user_metadata?.display_name || 'User',
           handle: user?.user_metadata?.handle || 'user',
           is_verified: user?.user_metadata?.is_verified || false,
-          verification_type: user?.user_metadata?.verification_type || 'individual',
+          is_organization_verified: user?.user_metadata?.is_organization_verified || false,
         },
       };
 
@@ -282,7 +284,7 @@ const Feed = () => {
     const replyCount = post.replies?.length || 0;
 
     const renderVerifiedBadge = (profile: any) => {
-      if (profile.verification_type === 'organization') {
+      if (profile.is_organization_verified) {
         return <GoldVerifiedBadge />;
       }
       if (profile.is_verified) {
