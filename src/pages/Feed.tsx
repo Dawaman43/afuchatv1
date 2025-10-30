@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { MessageSquare, Heart, Repeat2, Share, User, Ellipsis } from 'lucide-react'; // Changed ThumbsUp to Heart for 'Like'
+// Updated icons for X-style actions
+import { MessageSquare, Heart, Repeat2, Share, User, Ellipsis } from 'lucide-react'; 
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button'; // Re-importing Button for action icons
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // Using Shadcn Avatar for consistent styling
+import { Button } from '@/components/ui/button'; 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; 
 
 interface Post {
   id: string;
@@ -19,11 +20,11 @@ interface Post {
     handle: string;
     is_verified: boolean;
     is_organization_verified: boolean;
-    avatar_url?: string; // Assuming an avatar_url might exist
+    avatar_url?: string; 
   };
   replies?: Reply[];
-  like_count?: number; // Added for mock interaction
-  repost_count?: number; // Added for mock interaction
+  like_count?: number; 
+  repost_count?: number;
 }
 
 interface Reply {
@@ -37,12 +38,14 @@ interface Reply {
     handle: string;
     is_verified: boolean;
     is_organization_verified: boolean;
-    avatar_url?: string; // Assuming an avatar_url might exist
+    avatar_url?: string;
   };
-  like_count?: number; // Added for mock interaction
+  like_count?: number;
 }
 
-// --- Twitter Verified Badge (Blue) ---
+// --- Verified Badge Logic ---
+
+// Twitter Verified Badge (Blue)
 const TwitterVerifiedBadge = () => (
   <svg
     viewBox="0 0 22 22"
@@ -55,7 +58,7 @@ const TwitterVerifiedBadge = () => (
   </svg>
 );
 
-// --- Gold Verified Badge (for Organizations) ---
+// Gold Verified Badge (for Organizations)
 const GoldVerifiedBadge = () => (
   <svg
     viewBox="0 0 22 22"
@@ -68,6 +71,15 @@ const GoldVerifiedBadge = () => (
   </svg>
 );
 
+const VerifiedBadge = ({ isVerified, isOrgVerified }: { isVerified: boolean; isOrgVerified: boolean }) => {
+  if (isOrgVerified) {
+    return <GoldVerifiedBadge />;
+  }
+  if (isVerified) {
+    return <TwitterVerifiedBadge />;
+  }
+  return null;
+};
 
 // Helper to format time like X (e.g., "5m", "2h", "Feb 23")
 const formatTime = (isoString: string) => {
@@ -79,7 +91,6 @@ const formatTime = (isoString: string) => {
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
-  const months = Math.floor(days / 30); // Approximate
 
   if (seconds < 60) return `${seconds}s`;
   if (minutes < 60) return `${minutes}m`;
@@ -97,11 +108,11 @@ const Feed = () => {
   const [forceLoaded, setForceLoaded] = useState(false);
   const navigate = useNavigate(); 
 
+  // Force load check to prevent eternal skeleton state
   useEffect(() => {
     const timer = setTimeout(() => {
       setForceLoaded(true);
     }, 5000); 
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -122,17 +133,17 @@ const Feed = () => {
     );
   }, []);
 
+  // Mock acknowledge handler to update post counts
   const updatePostCounts = useCallback(async (postId: string) => {
-    // In a real app, you'd fetch actual counts. Here, we'll just mock.
     setPosts(prevPosts => prevPosts.map(post => 
       post.id === postId ? {
         ...post,
-        like_count: (post.like_count || 0) + 1, // Mock increment
+        like_count: (post.like_count || 0) + 1,
       } : post
     ));
     toast.success('Post acknowledged!');
+    // NOTE: In a real app, this would include an API call to record the 'like'
   }, []);
-
 
   useEffect(() => {
     fetchPosts();
@@ -183,7 +194,7 @@ const Feed = () => {
               profiles: profile,
               like_count: 0,
             } as Reply;
-            addReply(payload.new.post_id, newReply); // Use the callback
+            addReply(payload.new.post_id, newReply);
           }
         }
       )
@@ -193,7 +204,7 @@ const Feed = () => {
       supabase.removeChannel(postsChannel);
       supabase.removeChannel(repliesChannel);
     };
-  }, [user, addReply]); // Dependency on addReply
+  }, [user, addReply]);
 
   const fetchPosts = async () => {
     try {
@@ -236,8 +247,9 @@ const Feed = () => {
             avatar_url: post.profiles?.avatar_url,
           },
           replies: repliesByPostId.get(post.id) || [],
-          like_count: Math.floor(Math.random() * 500), // MOCK DATA
-          repost_count: Math.floor(Math.random() * 100), // MOCK DATA
+          // Mocking interaction counts if not available from a dedicated table/RPC
+          like_count: Math.floor(Math.random() * 500), 
+          repost_count: Math.floor(Math.random() * 100),
         })) as Post[];
       }
 
@@ -302,7 +314,7 @@ const Feed = () => {
       }
 
       const optimisticReply: Reply = {
-        id: '', 
+        id: new Date().getTime().toString(), // Use temp ID until real-time updates it
         post_id: post.id,
         author_id: user.id,
         content: replyText,
@@ -321,52 +333,73 @@ const Feed = () => {
       setReplyText('');
       setShowReplyInput(false);
     };
+    
+    // Function to render reply author metadata
+    const renderReplyAuthor = (reply: Reply) => (
+        <div 
+            className="flex items-center flex-wrap gap-x-1 cursor-pointer"
+            onClick={(e) => {
+                e.stopPropagation(); // Prevent navigating to post detail if this is wrapped
+                handleViewProfile(reply.author_id);
+            }}
+        >
+            <span className="font-bold text-foreground text-sm hover:underline">
+                {reply.profiles.display_name}
+            </span>
+            <VerifiedBadge 
+                isVerified={reply.profiles.is_verified} 
+                isOrgVerified={reply.profiles.is_organization_verified} 
+            />
+            <span className="text-muted-foreground text-sm hover:underline">
+                @{reply.profiles.handle}
+            </span>
+            <span className="text-muted-foreground text-sm">·</span>
+            <span className="text-muted-foreground text-sm whitespace-nowrap">
+                {formatTime(reply.created_at)}
+            </span>
+        </div>
+    );
 
-    const renderVerifiedBadge = (profile: any) => {
-      if (profile.is_organization_verified) {
-        return <GoldVerifiedBadge />;
-      }
-      if (profile.is_verified) {
-        return <TwitterVerifiedBadge />;
-      }
-      return null;
-    };
 
     return (
       <div className="flex border-b border-border py-3 px-4 transition-colors hover:bg-muted/5">
-        {/* Avatar */}
+        {/* Avatar Area */}
         <div className="mr-3 flex-shrink-0">
           <Avatar className="h-10 w-10 cursor-pointer" onClick={() => handleViewProfile(post.author_id)}>
             <AvatarImage src={post.profiles.avatar_url} />
             <AvatarFallback>
-              <User className="h-5 w-5 text-muted-foreground" />
+              {post.profiles.display_name[0]}
             </AvatarFallback>
           </Avatar>
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {/* Post Header */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center flex-wrap gap-x-1">
+            <div className="flex items-center flex-wrap gap-x-1 min-w-0">
+              {/* Author Info */}
               <span 
-                className="font-bold text-foreground text-sm cursor-pointer hover:underline"
+                className="font-bold text-foreground text-sm cursor-pointer hover:underline truncate"
                 onClick={() => handleViewProfile(post.author_id)}
               >
                 {post.profiles.display_name}
               </span>
-              {renderVerifiedBadge(post.profiles)}
+              <VerifiedBadge 
+                isVerified={post.profiles.is_verified} 
+                isOrgVerified={post.profiles.is_organization_verified} 
+              />
               <span 
-                className="text-muted-foreground text-sm hover:underline cursor-pointer"
+                className="text-muted-foreground text-sm hover:underline cursor-pointer truncate"
                 onClick={() => handleViewProfile(post.author_id)}
               >
                 @{post.profiles.handle}
               </span>
-              <span className="text-muted-foreground text-sm">·</span>
-              <span className="text-muted-foreground text-sm whitespace-nowrap">
+              <span className="text-muted-foreground text-sm flex-shrink-0">·</span>
+              <span className="text-muted-foreground text-sm whitespace-nowrap flex-shrink-0">
                 {formatTime(post.created_at)}
               </span>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full flex-shrink-0">
               <Ellipsis className="h-4 w-4 text-muted-foreground" />
             </Button>
           </div>
@@ -377,8 +410,8 @@ const Feed = () => {
           </p>
 
           {/* Post Actions */}
-          <div className="flex justify-between items-center text-sm text-muted-foreground mt-3 -ml-2">
-            <Button variant="ghost" size="sm" className="flex items-center gap-1 group">
+          <div className="flex justify-between items-center text-sm text-muted-foreground mt-3 -ml-2 max-w-[420px]">
+            <Button variant="ghost" size="sm" className="flex items-center gap-1 group" onClick={() => setShowReplyInput(!showReplyInput)}>
               <MessageSquare className="h-4 w-4 group-hover:text-primary transition-colors" />
               <span className="group-hover:text-primary transition-colors text-xs">
                 {post.replies?.length > 0 ? post.replies.length : ''}
@@ -394,7 +427,7 @@ const Feed = () => {
                 variant="ghost" 
                 size="sm" 
                 className="flex items-center gap-1 group"
-                onClick={() => onAcknowledge(post.id)} // Call the acknowledge handler
+                onClick={() => onAcknowledge(post.id)}
             >
               <Heart className="h-4 w-4 group-hover:text-red-500 transition-colors" />
               <span className="group-hover:text-red-500 transition-colors text-xs">
@@ -406,108 +439,86 @@ const Feed = () => {
             </Button>
           </div>
 
-          {/* Reply Input Area */}
-          {user && (
-            <div className="mt-4 flex space-x-2">
-              <Avatar className="h-8 w-8 flex-shrink-0">
-                <AvatarImage src={user.user_metadata?.avatar_url} />
-                <AvatarFallback>
-                  <User className="h-4 w-4 text-muted-foreground" />
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <textarea
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="Tweet your reply..."
-                  className="w-full p-2 border-b border-input bg-transparent text-foreground resize-none focus:outline-none focus:ring-0 focus:border-primary text-sm"
-                  rows={1}
-                  maxLength={280}
-                  onFocus={() => setShowReplyInput(true)}
-                />
-                {showReplyInput && (
-                  <div className="flex justify-end mt-2 space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => { setShowReplyInput(false); setReplyText(''); }}
-                      className="text-sm text-muted-foreground hover:bg-muted"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleReplySubmit}
-                      disabled={!replyText.trim()}
-                      className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Reply
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          {!user && (
-            <div className="mt-4 text-center text-sm text-muted-foreground">
-              Please <a href="/auth" className="text-primary underline">log in</a> to reply.
-            </div>
-          )}
-
-          {/* Replies */}
-          {post.replies && post.replies.length > 0 && (
-            <div className="mt-4 space-y-4">
-              {post.replies.map((reply) => (
-                <div key={reply.id} className="flex relative">
-                  {/* Vertical line connecting reply to post */}
-                  <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-border -z-10" style={{ height: 'calc(100% + 8px)', top: '-4px' }}></div>
-                  <div className="flex-shrink-0 mr-3">
-                    <Avatar className="h-8 w-8 cursor-pointer" onClick={() => handleViewProfile(reply.author_id)}>
-                      <AvatarImage src={reply.profiles.avatar_url} />
-                      <AvatarFallback>
-                        <User className="h-4 w-4 text-muted-foreground" />
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
+          {/* Replies & Reply Input */}
+          <div className="mt-4">
+            {/* Reply Input Area */}
+            {showReplyInput && user && (
+                <div className="flex space-x-2 pb-4 border-b border-border">
+                  <Avatar className="h-8 w-8 flex-shrink-0">
+                    <AvatarImage src={user.user_metadata?.avatar_url} />
+                    <AvatarFallback><User className="h-4 w-4 text-muted-foreground" /></AvatarFallback>
+                  </Avatar>
                   <div className="flex-1">
-                    <div className="flex items-center flex-wrap gap-x-1">
-                      <span 
-                        className="font-bold text-foreground text-sm cursor-pointer hover:underline"
-                        onClick={() => handleViewProfile(reply.author_id)}
+                    <textarea
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      placeholder="Post your reply..."
+                      className="w-full p-2 border-b border-input bg-transparent text-foreground resize-none focus:outline-none focus:ring-0 focus:border-primary text-sm"
+                      rows={1}
+                      maxLength={280}
+                    />
+                    <div className="flex justify-end mt-2 space-x-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => { setShowReplyInput(false); setReplyText(''); }}
+                        className="text-sm text-muted-foreground hover:bg-muted"
                       >
-                        {reply.profiles.display_name}
-                      </span>
-                      {renderVerifiedBadge(reply.profiles)}
-                      <span 
-                        className="text-muted-foreground text-sm hover:underline cursor-pointer"
-                        onClick={() => handleViewProfile(reply.author_id)}
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleReplySubmit}
+                        disabled={!replyText.trim()}
+                        className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        @{reply.profiles.handle}
-                      </span>
-                      <span className="text-muted-foreground text-sm">·</span>
-                      <span className="text-muted-foreground text-sm whitespace-nowrap">
-                        {formatTime(reply.created_at)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-foreground mt-1 leading-relaxed whitespace-pre-wrap">
-                      {reply.content}
-                    </p>
-                    {/* Reply actions - simplified for now */}
-                    <div className="flex justify-start items-center text-xs text-muted-foreground mt-2 -ml-2">
-                        <Button variant="ghost" size="sm" className="flex items-center gap-1 group">
-                            <Heart className="h-3 w-3 group-hover:text-red-500 transition-colors" />
-                            <span className="group-hover:text-red-500 transition-colors">
-                                {reply.like_count || ''}
-                            </span>
-                        </Button>
-                        <Button variant="ghost" size="sm" className="flex items-center gap-1 group">
-                            <MessageSquare className="h-3 w-3 group-hover:text-primary transition-colors" />
-                        </Button>
+                        Reply
+                      </Button>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+            )}
+            
+            {/* Replies List */}
+            {post.replies && post.replies.length > 0 && (
+                <div className="space-y-3 pt-4">
+                    {post.replies.map((reply) => (
+                        <div key={reply.id} className="flex">
+                            <div className="flex-shrink-0 mr-3">
+                                <Avatar className="h-8 w-8 cursor-pointer" onClick={() => handleViewProfile(reply.author_id)}>
+                                    <AvatarImage src={reply.profiles.avatar_url} />
+                                    <AvatarFallback>{reply.profiles.display_name[0]}</AvatarFallback>
+                                </Avatar>
+                            </div>
+                            <div className="flex-1">
+                                {renderReplyAuthor(reply)}
+                                <p className="text-sm text-foreground mt-1 leading-relaxed whitespace-pre-wrap">
+                                    {reply.content}
+                                </p>
+                                {/* Reply actions - simplified */}
+                                <div className="flex justify-start items-center text-xs text-muted-foreground mt-2 -ml-2">
+                                    <Button variant="ghost" size="sm" className="flex items-center gap-1 group">
+                                        <Heart className="h-3 w-3 group-hover:text-red-500 transition-colors" />
+                                        <span className="group-hover:text-red-500 transition-colors">
+                                            {reply.like_count || ''}
+                                        </span>
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className="flex items-center gap-1 group">
+                                        <MessageSquare className="h-3 w-3 group-hover:text-primary transition-colors" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+            
+            {/* Login prompt for replies */}
+            {!showReplyInput && !user && (
+                <div className="mt-3 text-center text-sm text-muted-foreground">
+                    Please <a href="/auth" className="text-primary underline">log in</a> to reply.
+                </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -515,17 +526,15 @@ const Feed = () => {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Optional: A fixed header for 'Home' or 'For you/Following' tabs */}
+      {/* Home Header */}
       <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b border-border py-3 px-4">
         <h2 className="text-xl font-bold">Home</h2>
-        {/* Could add tabs here for 'For you'/'Following' */}
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {posts.length === 0 && !effectiveLoading ? (
           <div className="text-center text-muted-foreground py-8">
-            No posts yet. Tap the <User className="inline h-4 w-4" /> button to
-            share your first post!
+            No posts yet. Tap the post button to share your first post!
           </div>
         ) : (
           posts.map((post) => (
@@ -535,7 +544,7 @@ const Feed = () => {
               addReply={addReply}
               user={user}
               navigate={navigate}
-              onAcknowledge={updatePostCounts} // Pass the acknowledge handler
+              onAcknowledge={updatePostCounts} 
             />
           ))
         )}
