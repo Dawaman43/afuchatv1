@@ -31,32 +31,50 @@ const Chats = () => {
   const { user } = useAuth();
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
+  const [forceLoaded, setForceLoaded] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setForceLoaded(true);
+    }, 5000); // Force load after 5 seconds to prevent hanging
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const effectiveLoading = loading && !forceLoaded;
 
   useEffect(() => {
     if (!user) return;
 
     const fetchChats = async () => {
-      // NOTE: In a production app, you would fetch the last message content here too.
-      const { data: chatMembers } = await supabase
-        .from('chat_members')
-        .select('chat_id, chats(id, name, is_group, updated_at)')
-        .eq('user_id', user.id);
+      try {
+        // NOTE: In a production app, you would fetch the last message content here too.
+        const { data: chatMembers, error } = await supabase
+          .from('chat_members')
+          .select('chat_id, chats(id, name, is_group, updated_at)')
+          .eq('user_id', user.id);
 
-      if (chatMembers) {
-        const chatsData: Chat[] = chatMembers
-          .map((member: any) => ({
-            ...member.chats,
-            // Mocking a last message to make the UI rich
-            last_message_content: member.chats.id.startsWith('group') ? 'Last group message...' : 'Last 1:1 message...' 
-          }))
-          .filter(Boolean);
-        
-        // Sort by updated_at (most recent first)
-        chatsData.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
-        
-        setChats(chatsData);
+        if (error) throw error;
+
+        if (chatMembers && chatMembers.length > 0) {
+          const chatsData: Chat[] = chatMembers
+            .map((member: any) => ({
+              ...member.chats,
+              // Mocking a last message to make the UI rich
+              last_message_content: member.chats.id.startsWith('group') ? 'Last group message...' : 'Last 1:1 message...' 
+            }))
+            .filter(Boolean);
+          
+          // Sort by updated_at (most recent first)
+          chatsData.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+          
+          setChats(chatsData);
+        }
+      } catch (err) {
+        console.error('Error fetching chats:', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchChats();
@@ -95,7 +113,7 @@ const Chats = () => {
     </div>
   );
 
-  if (loading) {
+  if (effectiveLoading) {
     return (
       <div className="h-full flex flex-col space-y-4 p-4">
          {[...Array(5)].map((_, i) => <ChatItemSkeleton key={i} />)}
