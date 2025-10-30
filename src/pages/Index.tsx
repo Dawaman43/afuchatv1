@@ -234,16 +234,11 @@ const Index = () => {
             >
               <MessageSquare className="h-4 w-4" />
               Chats
-            </Example
+            {/* --- THE FIX: Replaced '</Example' with '</TabsTrigger>' --- */}
             </TabsTrigger>
           </TabsList>
           
           <div className="flex-1 relative">
-            {/* --- THE FIX ---
-              The problematic comment that was here has been removed.
-              The 'className' prop was also removed from all TabsContent
-              to let the component handle its own visibility.
-            */}
             <TabsContent value="feed" className="h-full mt-0">
               <Feed />
             </TabsContent>
