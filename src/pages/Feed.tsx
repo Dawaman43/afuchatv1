@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-// FIX: Reverted to react-router-dom
+// Using react-router-dom as requested
 import { useNavigate } from 'react-router-dom'; 
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,7 +7,8 @@ import { toast } from 'sonner';
 import { MessageSquare, Heart, Share, User, Ellipsis } from 'lucide-react'; 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button'; 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; 
+// FIX: Removed Avatar components
+// import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; 
 
 interface Post {
   id: string;
@@ -96,7 +97,6 @@ const Feed = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [forceLoaded, setForceLoaded] = useState(false);
-  // FIX: Use react-router-dom's useNavigate
   const navigate = useNavigate(); 
 
   useEffect(() => {
@@ -193,11 +193,9 @@ const Feed = () => {
 
 
   useEffect(() => {
-    // Moved fetchPosts inside useEffect as it's only called here
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        // 1. Fetch posts and their authors
         let { data: postData, error: postsError } = await supabase
           .from('posts')
           .select('*, profiles(display_name, handle, is_verified, is_organization_verified)')
@@ -209,7 +207,6 @@ const Feed = () => {
   
         const postIds = postData.map((p) => p.id);
   
-        // 2. Fetch all replies for these posts
         const { data: repliesData, error: repliesError } = await supabase
           .from('post_replies')
           .select('*, profiles(display_name, handle, is_verified, is_organization_verified)')
@@ -218,7 +215,6 @@ const Feed = () => {
   
         if (repliesError) throw repliesError;
   
-        // 3. Fetch all acknowledgments (likes) for these posts
         const { data: ackData, error: ackError } = await supabase
           .from('post_acknowledgments')
           .select('post_id, user_id')
@@ -226,7 +222,6 @@ const Feed = () => {
         
         if (ackError) throw ackError;
   
-        // 4. Map replies and acknowledgments for efficient lookup
         const repliesByPostId = new Map<string, Reply[]>();
         (repliesData || []).forEach((r) => {
           if (!repliesByPostId.has(r.post_id)) {
@@ -235,7 +230,7 @@ const Feed = () => {
           repliesByPostId.get(r.post_id)!.push(r as Reply);
         });
 
-        const acksByPostId = new Map<string, string[]>(); // Map<postId, userId[]>
+        const acksByPostId = new Map<string, string[]>();
         (ackData || []).forEach((ack) => {
             if (!acksByPostId.has(ack.post_id)) {
                 acksByPostId.set(ack.post_id, []);
@@ -243,7 +238,6 @@ const Feed = () => {
             acksByPostId.get(ack.post_id)!.push(ack.user_id);
         });
   
-        // 5. Combine all data
         const finalPosts: Post[] = postData.map((post) => {
           const replies = repliesByPostId.get(post.id) || [];
           const acks = acksByPostId.get(post.id) || [];
@@ -253,9 +247,9 @@ const Feed = () => {
             ...post,
             profiles: post.profiles || { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false },
             replies: replies,
-            reply_count: replies.length, // REAL count
-            like_count: acks.length, // REAL count
-            has_liked: acks.includes(currentUserId), // REAL check
+            reply_count: replies.length,
+            like_count: acks.length,
+            has_liked: acks.includes(currentUserId),
           } as Post;
         });
   
@@ -338,6 +332,7 @@ const Feed = () => {
     };
   }, [user, addReply]); 
 
+  // FIX: Skeleton updated to use a div instead of Avatar skeleton
   const PostSkeleton = () => (
     <div className="flex p-4 border-b border-border">
       <Skeleton className="h-10 w-10 rounded-full mr-3" />
@@ -376,7 +371,6 @@ const Feed = () => {
     const [replyText, setReplyText] = useState('');
 
     const handleViewProfile = (userId: string) => {
-        // FIX: Use navigate
         navigate(`/profile/${userId}`);
     };
 
@@ -412,11 +406,12 @@ const Feed = () => {
 
     return (
       <div className="flex border-b border-border py-3 px-4 transition-colors hover:bg-muted/5">
-        {/* Avatar Area */}
-        <div className="mr-3 flex-shrink-0">
-          <Avatar className="h-10 w-10 cursor-pointer" onClick={() => handleViewProfile(post.author_id)}>
-            <AvatarFallback>{post.profiles.display_name ? post.profiles.display_name[0].toUpperCase() : <User />}</AvatarFallback>
-          </Avatar>
+        {/* FIX: Avatar Area Replaced */}
+        <div 
+          className="mr-3 flex-shrink-0 h-10 w-10 rounded-full bg-secondary flex items-center justify-center cursor-pointer" 
+          onClick={() => handleViewProfile(post.author_id)}
+        >
+          <User className="h-5 w-5 text-muted-foreground" />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -493,9 +488,10 @@ const Feed = () => {
             {/* 3. "Add a comment" Input (IG Style) */}
             {user && (
                 <div className="mt-3 flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                        <AvatarFallback><User size={16} /></AvatarFallback>
-                    </Avatar>
+                    {/* FIX: Avatar Replaced */}
+                    <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                    </div>
                     <input
                         value={replyText}
                         onChange={(e) => setReplyText(e.target.value)}
@@ -532,8 +528,6 @@ const Feed = () => {
         {/* "Home" text removed */}
       </div>
 
-      {/* Stories component removed */}
-
       <div className="flex-1 overflow-y-auto">
         {posts.length === 0 && !effectiveLoading ? (
           <div className="text-center text-muted-foreground py-8">
@@ -546,7 +540,7 @@ const Feed = () => {
               post={post}
               addReply={addReply}
               user={user}
-              navigate={navigate} // Pass navigate
+              navigate={navigate} 
               onAcknowledge={handleAcknowledge} 
             />
           ))
@@ -556,4 +550,4 @@ const Feed = () => {
   );
 };
 
-export default
+export default Feed;
