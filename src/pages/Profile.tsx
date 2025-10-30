@@ -5,12 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-// FIX: Added 'Lock' icon which was used but not imported
 import { User, ArrowLeft, MessageSquare, UserPlus, Pencil, Calendar, Lock } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-// NEW: Import Popover components
+// Import Popover components
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 
 // --- Extended Profile and Post Interfaces ---
@@ -20,7 +19,7 @@ interface Profile {
   handle: string;
   bio?: string;
   is_verified?: boolean;
-  is_organization_verified?: boolean;
+  is_organization_verified?: boolean; 
   is_private?: boolean;
   created_at?: string;
 }
@@ -60,49 +59,15 @@ const TwitterVerifiedBadge = ({ size = 'w-5 h-5' }: { size?: string }) => (
   </svg>
 );
 
-// --- NEW: Unified Badge Component with Popover ---
-const VerifiedBadge = ({ isVerified, isOrgVerified, handle }: { isVerified?: boolean; isOrgVerified?: boolean; handle?: string }) => {
-  if (!isVerified && !isOrgVerified) {
-    return null;
+// --- NEW: Simplified Badge Icon Component (No Popover) ---
+const VerifiedBadgeIcon = ({ isVerified, isOrgVerified }: { isVerified?: boolean; isOrgVerified?: boolean }) => {
+  if (isOrgVerified) {
+    return <GoldVerifiedBadge />;
   }
-
-  const trigger = isOrgVerified ? <GoldVerifiedBadge /> : <TwitterVerifiedBadge />;
-  
-  const content = isOrgVerified ? (
-    // Gold Badge Content
-    <div className="p-4 max-w-sm">
-      <GoldVerifiedBadge size="w-6 h-6" />
-      <h3 className="font-bold text-lg mt-2 text-foreground">Verified Organization</h3>
-      <p className="text-sm text-muted-foreground mt-1">
-        This account is verified because it's a notable organization on AfuChat.
-        {handle && <span className="block mt-2 font-bold text-foreground">@{handle}</span>}
-      </p>
-    </div>
-  ) : (
-    // Blue Badge Content
-    <div className="p-4 max-w-sm">
-      <TwitterVerifiedBadge size="w-6 h-6" />
-      <h3 className="font-bold text-lg mt-2 text-foreground">Verified Account</h3>
-      <p className="text-sm text-muted-foreground mt-1">
-        This account is verified because it’s notable in government, news, entertainment, or another designated category.
-        {handle && <span className="block mt-2 font-bold text-foreground">@{handle}</span>}
-      </p>
-    </div>
-  );
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <span className="cursor-pointer" onClick={(e) => e.stopPropagation()}>
-          {trigger}
-        </span>
-      </PopoverTrigger>
-      {/* Added stopPropagation to prevent clicks inside popover from closing other UI */}
-      <PopoverContent className="w-auto p-0 border-none shadow-xl rounded-2xl" onClick={(e) => e.stopPropagation()}>
-        {content}
-      </PopoverContent>
-    </Popover>
-  );
+  if (isVerified) {
+    return <TwitterVerifiedBadge />;
+  }
+  return null;
 };
 // --- END NEW BADGE ---
 
@@ -206,14 +171,12 @@ const Profile = () => {
     }
     const currentIsFollowing = isFollowing;
 
-    // Optimistic UI Update
     setIsFollowing(!currentIsFollowing);
     setFollowCount(prev => ({
       ...prev,
       followers: prev.followers + (currentIsFollowing ? -1 : 1)
     }));
     
-    // API Call
     if (currentIsFollowing) {
       const { error } = await supabase
         .from('follows')
@@ -222,7 +185,6 @@ const Profile = () => {
         .eq('following_id', userId);
 
       if (error) {
-        // Rollback on error
         setIsFollowing(true);
         setFollowCount(prev => ({ ...prev, followers: prev.followers + 1 }));
         toast.error('Failed to unfollow');
@@ -235,7 +197,6 @@ const Profile = () => {
         .insert({ follower_id: user.id, following_id: userId });
 
       if (error) {
-        // Rollback on error
         setIsFollowing(false);
         setFollowCount(prev => ({ ...prev, followers: prev.followers - 1 }));
         toast.error('Failed to follow');
@@ -410,19 +371,60 @@ const Profile = () => {
             )}
           </div>
 
-          {/* Name and Handle */}
+          {/* --- FIX: Name and Handle Section --- */}
           <div className="mt-3">
-            <div className="flex items-center gap-1">
-              <h1 className="text-xl font-extrabold leading-tight">{profile.display_name}</h1>
-              {/* FIX: Using the Unified VerifiedBadge Component and passing handle */}
-              <VerifiedBadge 
-                isVerified={profile.is_verified} 
-                isOrgVerified={profile.is_organization_verified} 
-                handle={profile.handle}
-              />
-            </div>
+            
+            {/* Check if verified to decide whether to wrap in Popover */}
+            {(profile.is_verified || profile.is_organization_verified) ? (
+              <Popover>
+                <PopoverTrigger asChild>
+                  {/* This entire div is now the clickable trigger */}
+                  <div className="flex items-center gap-1 cursor-pointer w-fit">
+                    <h1 className="text-xl font-extrabold leading-tight">{profile.display_name}</h1>
+                    <VerifiedBadgeIcon 
+                      isVerified={profile.is_verified} 
+                      isOrgVerified={profile.is_organization_verified} 
+                    />
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 border-none shadow-xl rounded-2xl" onClick={(e) => e.stopPropagation()}>
+                  
+                  {/* Popover Content Logic */}
+                  {profile.is_organization_verified ? (
+                    // Gold Badge Content
+                    <div className="p-4 max-w-sm">
+                      <GoldVerifiedBadge size="w-6 h-6" />
+                      <h3 className="font-bold text-lg mt-2 text-foreground">Verified Organization</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        This account is verified because it's a notable organization on AfuChat.
+                        <span className="block mt-2 font-bold text-foreground">@{profile.handle}</span>
+                      </p>
+                    </div>
+                  ) : (
+                    // Blue Badge Content
+                    <div className="p-4 max-w-sm">
+                      <TwitterVerifiedBadge size="w-6 h-6" />
+                      <h3 className="font-bold text-lg mt-2 text-foreground">Verified Account</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        This account is verified because it’s notable in government, news, entertainment, or another designated category.
+                        <span className="block mt-2 font-bold text-foreground">@{profile.handle}</span>
+                      </p>
+                    </div>
+                  )}
+                  {/* End Popover Content Logic */}
+
+                </PopoverContent>
+              </Popover>
+            ) : (
+              // Not verified, just show the name
+              <div className="flex items-center gap-1">
+                <h1 className="text-xl font-extrabold leading-tight">{profile.display_name}</h1>
+              </div>
+            )}
+            
             <p className="text-muted-foreground text-sm">@{profile.handle}</p>
           </div>
+          {/* --- END FIX --- */}
 
           {/* Bio */}
           {profile.bio && <p className="mt-3 text-sm">{profile.bio}</p>}
