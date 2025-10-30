@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { MessageSquare, Heart, Share, User, Ellipsis } from 'lucide-react'; 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button'; 
-// Avatars are not used, so Avatar components are removed.
+// No Avatar components, as requested.
 
 interface Post {
   id: string;
@@ -122,24 +122,17 @@ const Feed = () => {
     );
   }, []);
 
-  // --- Real Acknowledge (Like/Unlike) Function (Unchanged) ---
   const handleAcknowledge = useCallback(async (postId: string, currentHasLiked: boolean) => {
     if (!user) {
       toast.error('You must be logged in to like a post');
       return;
     }
-
     const currentUserId = user.id;
 
-    // Optimistic UI Update
     setPosts((currentPosts) =>
       currentPosts.map((p) =>
         p.id === postId
-          ? {
-              ...p,
-              has_liked: !currentHasLiked,
-              like_count: p.like_count + (!currentHasLiked ? 1 : -1),
-            }
+          ? { ...p, has_liked: !currentHasLiked, like_count: p.like_count + (!currentHasLiked ? 1 : -1) }
           : p
       )
     );
@@ -149,10 +142,8 @@ const Feed = () => {
         .from('post_acknowledgments')
         .delete()
         .match({ post_id: postId, user_id: currentUserId });
-
       if (error) {
         toast.error('Failed to unacknowledge post');
-        // Rollback
         setPosts((currentPosts) =>
           currentPosts.map((p) =>
             p.id === postId
@@ -165,10 +156,8 @@ const Feed = () => {
       const { error } = await supabase
         .from('post_acknowledgments')
         .insert({ post_id: postId, user_id: currentUserId });
-
       if (error) {
         toast.error('Failed to acknowledge post');
-        // Rollback
         setPosts((currentPosts) =>
           currentPosts.map((p) =>
             p.id === postId
@@ -405,25 +394,35 @@ const Feed = () => {
         <div className="flex-1 min-w-0">
           {/* Post Header (X-Style) */}
           <div className="flex items-center justify-between">
-            {/* FIX: Removed flex-wrap, spans will now truncate */}
+            {/* FIX: Single-line header. `min-w-0` on container is critical. */}
             <div className="flex items-center gap-x-1 min-w-0">
+              
+              {/* Display Name (will not shrink or truncate easily) */}
               <span 
-                className="font-bold text-foreground text-sm cursor-pointer hover:underline truncate" 
+                className="font-bold text-foreground text-sm cursor-pointer hover:underline whitespace-nowrap" 
                 onClick={() => handleViewProfile(post.author_id)}
               >
                 {post.profiles.display_name}
               </span>
               <VerifiedBadge isVerified={post.profiles.is_verified} isOrgVerified={post.profiles.is_organization_verified} />
+              
+              {/* Handle (WILL shrink and truncate) */}
               <span 
-                className="text-muted-foreground text-sm hover:underline cursor-pointer truncate" 
+                className="text-muted-foreground text-sm hover:underline cursor-pointer truncate flex-shrink min-w-0" 
                 onClick={() => handleViewProfile(post.author_id)}
               >
                 @{post.profiles.handle}
               </span>
+              
+              {/* Time (will not shrink) */}
               <span className="text-muted-foreground text-sm flex-shrink-0">·</span>
-              <span className="text-muted-foreground text-sm whitespace-nowrap flex-shrink-0">{formatTime(post.created_at)}</span>
+              <span className="text-muted-foreground text-sm whitespace-nowrap flex-shrink-0">
+                {formatTime(post.created_at)}
+              </span>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full flex-shrink-0">
+            
+            {/* More Options Button */}
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full flex-shrink-0 ml-2">
               <Ellipsis className="h-4 w-4 text-muted-foreground" />
             </Button>
           </div>
@@ -480,7 +479,6 @@ const Feed = () => {
 
             {user && (
                 <div className="mt-3 flex items-center gap-2">
-                    {/* User Icon (No Avatar) */}
                     <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
                       <User className="h-4 w-4 text-muted-foreground" />
                     </div>
