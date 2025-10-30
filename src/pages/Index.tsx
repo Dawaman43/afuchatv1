@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Radio, Settings, LogOut, Send, MessageSquarePlus, Search as SearchIcon, LogIn } from 'lucide-react';
+// FIX: Added 'User' icon for profile, removed unused 'Settings' icon
+import { MessageSquare, Radio, LogOut, Send, MessageSquarePlus, Search as SearchIcon, LogIn, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import Chats from './Chats';
 import Feed from './Feed';
@@ -13,7 +14,7 @@ import Logo from '@/components/Logo';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// --- FAB Components ---
+// --- FAB Components (Unchanged) ---
 
 const NewPostFAB = ({ onClick, visible }) => (
   <Button 
@@ -45,7 +46,6 @@ const NewChatFAB = ({ onClick, visible }) => (
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  // Active Tab defaults to 'feed'
   const [activeTab, setActiveTab] = useState('feed'); 
   const [isPostModalOpen, setIsPostModalOpen] = useState(false); 
   const [isChatModalOpen, setIsChatModalOpen] = useState(false); 
@@ -53,25 +53,21 @@ const Index = () => {
   const [fabVisible, setFabVisible] = useState(true);
   const [forceLoaded, setForceLoaded] = useState(false);
   const lastScrollYRef = useRef(0);
-  const touchStartXRef = useRef(0);
-  const touchEndXRef = useRef(0);
-  const tabOrder = ['feed', 'search', 'chats'];
+  
+  // FIX: Removed refs and state related to swipe navigation
+  // const touchStartXRef = useRef(0);
+  // const touchEndXRef = useRef(0);
+  // const tabOrder = ['feed', 'search', 'chats'];
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setForceLoaded(true);
-    }, 3000); // Force load after 3 seconds to prevent hanging
+    }, 3000); 
 
     return () => clearTimeout(timer);
   }, []);
 
   const effectiveLoading = loading && !forceLoaded;
-
-  useEffect(() => {
-    if (!effectiveLoading && !user) {
-      // No redirect, just allow viewing
-    }
-  }, [user, effectiveLoading]);
 
   useEffect(() => {
     let ticking = false;
@@ -81,11 +77,9 @@ const Index = () => {
         requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
           if (currentScrollY > lastScrollYRef.current && currentScrollY > 100) {
-            // Scrolling down beyond threshold, hide header and FAB
             setHeaderVisible(false);
             setFabVisible(false);
           } else {
-            // Scrolling up or near top, show header and FAB
             setHeaderVisible(true);
             setFabVisible(true);
           }
@@ -100,35 +94,10 @@ const Index = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleTouchStart = (e) => {
-    touchStartXRef.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = (e) => {
-    touchEndXRef.current = e.changedTouches[0].clientX;
-    handleSwipe();
-  };
-
-  const handleSwipe = () => {
-    const deltaX = touchEndXRef.current - touchStartXRef.current;
-    const absDeltaX = Math.abs(deltaX);
-    if (absDeltaX < 50) return; // Threshold for swipe
-
-    const currentIndex = tabOrder.indexOf(activeTab);
-    let newIndex = currentIndex;
-
-    if (deltaX > 0) {
-      // Swipe right - go to previous tab
-      newIndex = Math.max(0, currentIndex - 1);
-    } else {
-      // Swipe left - go to next tab
-      newIndex = Math.min(tabOrder.length - 1, currentIndex + 1);
-    }
-
-    if (newIndex !== currentIndex) {
-      setActiveTab(tabOrder[newIndex]);
-    }
-  };
+  // FIX: Removed handleTouchStart, handleTouchEnd, and handleSwipe
+  // const handleTouchStart = ...
+  // const handleTouchEnd = ...
+  // const handleSwipe = ...
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -142,6 +111,13 @@ const Index = () => {
 
   const handleSignIn = () => {
     navigate('/auth');
+  };
+  
+  // --- NEW: Handler for profile navigation ---
+  const handleViewProfile = () => {
+    if (user) {
+      navigate(`/profile/${user.id}`);
+    }
   };
 
   const handleNewPost = () => {
@@ -160,8 +136,8 @@ const Index = () => {
     }
   };
 
-  // --- Skeleton Loading (Rich UI simulation for instantaneous utility) ---
   if (effectiveLoading) {
+    // Skeleton loading state (unchanged, but still correct)
     return (
       <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto">
         {/* Header Skeleton */}
@@ -173,13 +149,14 @@ const Index = () => {
           </div>
         </div>
         
-        {/* Tabs Skeleton (Rich pill shape) */}
-        <div className="grid grid-cols-2 gap-4 mb-6 pt-4">
+        {/* Tabs Skeleton */}
+        <div className="grid grid-cols-3 gap-4 mb-6 pt-4"> {/* Changed to 3 cols */}
+          <Skeleton className="h-10 w-full rounded-full" /> 
           <Skeleton className="h-10 w-full rounded-full" /> 
           <Skeleton className="h-10 w-full rounded-full" /> 
         </div>
 
-        {/* Content/List Skeleton (Simulating rich post/chat items) */}
+        {/* Content/List Skeleton */}
         <div className="space-y-6 pt-2">
           <div className="p-4 rounded-xl shadow-xl space-y-3">
              <div className="flex items-center space-x-3">
@@ -213,7 +190,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header - Defined by shadow, not borders */}
+      {/* Header */}
       <header 
         className={`bg-card shadow-md sticky top-0 z-20 transition-all duration-300 ease-in-out ${
           headerVisible ? 'translate-y-0' : '-translate-y-full'
@@ -224,12 +201,20 @@ const Index = () => {
             <Logo size="sm" />
             <h1 className="text-xl font-extrabold text-primary tracking-wide">AfuChat</h1>
           </div>
+          
+          {/* --- FIX: Updated Header Buttons --- */}
           <div className="flex items-center gap-1">
             {user ? (
-              <Button size="icon" variant="ghost" onClick={handleSignOut} className="text-foreground hover:bg-muted rounded-full">
-                <LogOut className="h-5 w-5" />
-                <span className="sr-only">Sign out</span>
-              </Button>
+              <>
+                <Button size="icon" variant="ghost" onClick={handleViewProfile} className="text-foreground hover:bg-muted rounded-full">
+                  <User className="h-5 w-5" />
+                  <span className="sr-only">Profile</span>
+                </Button>
+                <Button size="icon" variant="ghost" onClick={handleSignOut} className="text-foreground hover:bg-muted rounded-full">
+                  <LogOut className="h-5 w-5" />
+                  <span className="sr-only">Sign out</span>
+                </Button>
+              </>
             ) : (
               <Button size="icon" variant="ghost" onClick={handleSignIn} className="text-foreground hover:bg-muted rounded-full">
                 <LogIn className="h-5 w-5" />
@@ -237,17 +222,19 @@ const Index = () => {
               </Button>
             )}
           </div>
+          {/* --- END FIX --- */}
+          
         </div>
       </header>
 
       {/* Main Content */}
       <main 
         className="flex-1 container mx-auto px-2 sm:px-4 py-4 max-w-4xl overflow-y-auto"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
+        // FIX: Removed swipe handlers
+        // onTouchStart={handleTouchStart}
+        // onTouchEnd={handleTouchEnd}
       >
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          {/* Tabs - Rich Pill Tabs (3 tabs) */}
           <TabsList className="grid w-full grid-cols-3 mb-6 p-1 bg-muted/50 rounded-full shadow-inner">
             <TabsTrigger 
               value="feed" 
@@ -286,20 +273,16 @@ const Index = () => {
         </Tabs>
       </main>
       
-      {/* --- FAB Renderer --- */}
-      {/* Show the Send FAB on the Feed tab */}
+      {/* FAB Renderer (Unchanged) */}
       {activeTab === 'feed' && <NewPostFAB onClick={handleNewPost} visible={fabVisible} />}
-      
-      {/* Show the New Chat FAB on the Chats tab */}
       {activeTab === 'chats' && <NewChatFAB onClick={handleNewChat} visible={fabVisible} />}
       
-      {/* Modals */}
+      {/* Modals (Unchanged) */}
       <NewPostModal 
         isOpen={isPostModalOpen} 
         onClose={() => setIsPostModalOpen(false)} 
       />
       
-      {/* Placeholder for NewChatModal */}
       {isChatModalOpen && (
         <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setIsChatModalOpen(false)}>
           <div className="bg-card p-8 rounded-xl max-w-md w-full max-h-[80vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
@@ -307,7 +290,6 @@ const Index = () => {
           </div>
         </div>
       )}
-      {/* --- END FAB Renderer --- */}
     </div>
   );
 };
