@@ -6,13 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArrowLeft, Send, User, Loader2, Phone, Video, MoreVertical, Check, MessageSquare, HelpCircle, Info, Mic, MicOff, Play, Pause, Volume2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress'; // Assume shadcn Progress component
+import { ArrowLeft, Send, User, Loader2, Phone, Video, MoreVertical, Check, MessageSquare, HelpCircle, Info, Mic, MicOff, Play, Pause, Volume2, Waveform } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Message {
   id: string;
   encrypted_content: string;
-  audio_url?: string; // New: For voice messages
+  audio_url?: string;
+  audio_duration?: number; // In seconds
   sender_id: string;
   sent_at: string;
   profiles: {
@@ -38,12 +40,15 @@ const ChatRoom = () => {
   const [online, setOnline] = useState(false);
   const [showHelp, setShowHelp] = useState(true);
   const [recording, setRecording] = useState(false);
+  const [recordedDuration, setRecordedDuration] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [audioPlayers, setAudioPlayers] = useState<{ [key: string]: { isPlaying: boolean; audio: HTMLAudioElement | null } }>({});
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [audioPlayers, setAudioPlayers] = useState<{ [key: string]: { isPlaying: boolean; audio: HTMLAudioElement | null; duration: number; currentTime: number } }>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const recordIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!chatId || !user) return;
@@ -89,6 +94,7 @@ const ChatRoom = () => {
     return () => {
       supabase.removeChannel(channel);
       stopRecording();
+      Object.values(audioPlayers).forEach(player => player.audio?.pause());
     };
   }, [chatId, user]);
 
@@ -126,16 +132,29 @@ const ChatRoom = () => {
       toast.error('Failed to load messages');
     }
     if (data) {
-      setMessages(data as Message[]);
+      // Preload audio durations
+      const messagesWithDuration = await Promise.all(
+        data.map(async (msg) => {
+          if (msg.audio_url) {
+            const audio = new Audio(msg.audio_url);
+            return new Promise<Message>((resolve) => {
+              audio.onloadedmetadata = () => resolve({ ...msg as Message, audio_duration: Math.round(audio.duration) });
+              audio.onerror = () => resolve(msg as Message);
+            });
+          }
+          return msg as Message;
+        })
+      );
+      setMessages(messagesWithDuration);
     }
     setLoading(false);
   };
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 44100, echoCancellation: true } });
       streamRef.current = stream;
-      const mediaRecorder = new MediaRecorder(stream);
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
       mediaRecorderRef.current = mediaRecorder;
 
       const chunks: BlobPart[] = [];
@@ -146,11 +165,17 @@ const ChatRoom = () => {
         stream.getTracks().forEach(track => track.stop());
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(1000); // Chunk every second for progress
       setRecording(true);
-      toast.success('Recording... Tap to stop');
+      setRecordedDuration(0);
+
+      recordIntervalRef.current = setInterval(() => {
+        setRecordedDuration((prev) => prev + 1);
+      }, 1000);
+
+      toast.success('Recording voice message...', { duration: 2000 });
     } catch (err) {
-      toast.error('Microphone access denied');
+      toast.error('Microphone access denied. Check permissions.');
       console.error('Recording error:', err);
     }
   };
@@ -158,8 +183,9 @@ const ChatRoom = () => {
   const stopRecording = async () => {
     if (mediaRecorderRef.current && recording) {
       mediaRecorderRef.current.stop();
+      recordIntervalRef.current && clearInterval(recordIntervalRef.current);
       setRecording(false);
-      toast.success('Recorded! Tap send to share.');
+      toast.success(`Recorded ${recordedDuration}s voice message. Tap to send.`);
     }
   };
 
@@ -167,29 +193,45 @@ const ChatRoom = () => {
     if (!audioBlob || !user || !chatId) return;
 
     setUploading(true);
+    setUploadProgress(0);
     try {
       const fileName = `voice-${Date.now()}.webm`;
       const { data, error } = await supabase.storage
-        .from('voice-messages') // Assume bucket created
-        .upload(fileName, audioBlob, { contentType: 'audio/webm' });
+        .from('voice-messages')
+        .upload(fileName, audioBlob, {
+          contentType: 'audio/webm',
+          upsert: true,
+        });
 
       if (error) throw error;
+
+      // Simulate progress (replace with real if Supabase supports)
+      const interval = setInterval(() => setUploadProgress((prev) => Math.min(prev + 20, 90)), 200);
+      setTimeout(() => clearInterval(interval), 1000);
+
+      const publicUrl = supabase.storage.from('voice-messages').getPublicUrl(data.path).data.publicUrl;
 
       const { data: inserted, error: insertError } = await supabase
         .from('messages')
         .insert({
           chat_id: chatId,
           sender_id: user.id,
-          encrypted_content: '[Voice Message]', // Placeholder text
-          audio_url: supabase.storage.from('voice-messages').getPublicUrl(data.path).data.publicUrl,
+          encrypted_content: '[Voice Message]',
+          audio_url: publicUrl,
+          audio_duration: recordedDuration,
         })
         .select()
         .single();
+
+      setUploadProgress(100);
+      setTimeout(() => setUploadProgress(0), 1000);
 
       if (insertError) throw insertError;
 
       setMessages((prev) => [...prev, { ...inserted, profiles: { display_name: user.display_name || 'You', handle: user.handle || '@you' } }]);
       setAudioBlob(null);
+      setRecordedDuration(0);
+      toast.success('Voice message sent!');
     } catch (err) {
       toast.error('Failed to send voice message');
       console.error(err);
@@ -197,19 +239,27 @@ const ChatRoom = () => {
     setUploading(false);
   };
 
-  const toggleAudio = (messageId: string, audioUrl: string) => {
+  const toggleAudio = (messageId: string, audioUrl: string, duration: number) => {
     setAudioPlayers((prev) => {
       const current = prev[messageId];
       if (current?.isPlaying) {
         current.audio?.pause();
-        return { ...prev, [messageId]: { ...current, isPlaying: false } };
+        return { ...prev, [messageId]: { ...current, isPlaying: false, currentTime: current.audio?.currentTime || 0 } };
       } else {
         const audio = new Audio(audioUrl);
+        audio.volume = 0.5; // Default volume
         audio.play();
+        audio.ontimeupdate = () => setAudioPlayers((p) => ({ ...p, [messageId]: { ...p[messageId], currentTime: audio.currentTime } }));
         audio.onended = () => setAudioPlayers((p) => ({ ...p, [messageId]: { ...p[messageId], isPlaying: false } }));
-        return { ...prev, [messageId]: { audio, isPlaying: true } };
+        return { ...prev, [messageId]: { audio, isPlaying: true, duration, currentTime: 0 } };
       }
     });
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleSend = async () => {
@@ -325,7 +375,7 @@ const ChatRoom = () => {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ paddingBottom: '120px' }}> {/* Extra for voice UI */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ paddingBottom: '120px' }}>
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground space-y-2 px-4">
               <MessageSquare className="h-12 w-12 opacity-50" />
@@ -339,6 +389,7 @@ const ChatRoom = () => {
               const isVoice = !!message.audio_url;
               const playerKey = message.id;
               const playerState = audioPlayers[playerKey];
+              const progress = playerState ? (playerState.currentTime / (playerState.duration || 1)) * 100 : 0;
               return (
                 <div
                   key={message.id}
@@ -361,12 +412,21 @@ const ChatRoom = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="flex items-center gap-2 w-full justify-start text-left"
-                              onClick={() => toggleAudio(playerKey, message.audio_url!)}
+                              className="flex items-center gap-2 w-full justify-start text-left rounded-lg hover:bg-muted"
+                              onClick={() => toggleAudio(playerKey, message.audio_url!, message.audio_duration || 0)}
                             >
+                              <div className="relative">
+                                <Waveform className="h-4 w-4 opacity-50" />
+                                {playerState?.isPlaying && (
+                                  <div className="absolute inset-0 bg-primary/20 rounded animate-pulse" />
+                                )}
+                              </div>
+                              <Volume2 className={`h-4 w-4 ${playerState?.isPlaying ? 'text-primary' : 'text-muted-foreground'}`} />
+                              <div className="flex-1 text-left">
+                                <div className="text-xs text-muted-foreground">Voice message • {formatDuration(message.audio_duration || 0)}</div>
+                                <Progress value={progress} className="h-1 mt-1 bg-muted" />
+                              </div>
                               {playerState?.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                              <Volume2 className="h-4 w-4" />
-                              <span className="text-sm text-muted-foreground">Voice message ({Math.round((new Blob([message.audio_url!]).size / 1024))} KB)</span>
                             </Button>
                           </div>
                         ) : (
@@ -385,12 +445,21 @@ const ChatRoom = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="flex items-center gap-2 w-full justify-end text-right"
-                            onClick={() => toggleAudio(playerKey, message.audio_url!)}
+                            className="flex items-center gap-2 w-full justify-end text-right rounded-lg hover:bg-primary/80"
+                            onClick={() => toggleAudio(playerKey, message.audio_url!, message.audio_duration || 0)}
                           >
                             {playerState?.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                            <Volume2 className="h-4 w-4" />
-                            <span className="text-sm text-primary-foreground/90">Voice message ({Math.round((new Blob([message.audio_url!]).size / 1024))} KB)</span>
+                            <Volume2 className={`h-4 w-4 ${playerState?.isPlaying ? 'text-primary-foreground' : 'text-primary-foreground/70'}`} />
+                            <div className="flex-1 text-right">
+                              <div className="text-xs text-primary-foreground/90">Voice message • {formatDuration(message.audio_duration || 0)}</div>
+                              <Progress value={progress} className="h-1 mt-1 bg-primary/20" />
+                            </div>
+                            <div className="relative">
+                              <Waveform className="h-4 w-4 text-primary-foreground/70" />
+                              {playerState?.isPlaying && (
+                                <div className="absolute inset-0 bg-primary/30 rounded animate-pulse" />
+                              )}
+                            </div>
                           </Button>
                         </div>
                       ) : (
@@ -428,11 +497,11 @@ const ChatRoom = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <Badge variant="secondary" className="flex-shrink-0 mt-0.5">2</Badge>
-                  <span>Tap the mic icon to record voice messages.</span>
+                  <span>Tap the mic icon to record voice messages—tap again to stop.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Badge variant="secondary" className="flex-shrink-0 mt-0.5">3</Badge>
-                  <span>Use the back arrow to return to your chats.</span>
+                  <span>Tap voice messages to play; use the back arrow to return.</span>
                 </li>
               </ul>
               <div className="flex gap-2">
@@ -454,37 +523,61 @@ const ChatRoom = () => {
           </div>
         )}
 
-        {/* Input: Fixed bottom, with voice recording */}
+        {/* Input: Fixed bottom, with polished voice recording */}
         <div className="fixed bottom-0 left-0 right-0 z-20 bg-card border-t border-border px-4 py-3 pb-[env(safe-area-inset-bottom)]">
           <div className="flex items-end gap-2">
             {recording ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 p-0 bg-destructive/10 text-destructive hover:bg-destructive/20"
-                onClick={stopRecording}
-              >
-                <MicOff className="h-5 w-5" />
-              </Button>
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-12 w-12 p-0 bg-destructive/20 text-destructive hover:bg-destructive/30 rounded-full shadow-md"
+                  onClick={stopRecording}
+                >
+                  <MicOff className="h-5 w-5" />
+                </Button>
+                <div className="absolute -top-1 -right-1">
+                  <div className="w-3 h-3 bg-destructive rounded-full animate-ping" />
+                  <div className="w-3 h-3 bg-destructive rounded-full" />
+                </div>
+                <Badge variant="destructive" className="absolute -bottom-1 -right-1 text-xs px-1.5">
+                  {recordedDuration}s
+                </Badge>
+              </div>
             ) : audioBlob ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 p-0 bg-primary/10 text-primary hover:bg-primary/20"
-                onClick={sendVoiceMessage}
-                disabled={uploading}
-              >
-                {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-              </Button>
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-12 w-12 p-0 bg-primary/20 text-primary hover:bg-primary/30 rounded-full shadow-md"
+                  onClick={sendVoiceMessage}
+                  disabled={uploading}
+                >
+                  {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                </Button>
+                {uploading && (
+                  <div className="absolute inset-0 rounded-full bg-primary/30 animate-pulse" />
+                )}
+                <Badge variant="secondary" className="absolute -bottom-1 -right-1 text-xs px-1.5">
+                  {recordedDuration}s
+                </Badge>
+              </div>
             ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-                onClick={startRecording}
-              >
-                <Mic className="h-5 w-5" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-12 w-12 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full shadow-md"
+                    onClick={startRecording}
+                  >
+                    <Mic className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Record voice message</p>
+                </TooltipContent>
+              </Tooltip>
             )}
             <div className="flex-1 relative min-w-0">
               <Input
@@ -503,13 +596,20 @@ const ChatRoom = () => {
                 <MessageSquare className="h-4 w-4" />
               </Button>
             </div>
-            <Button
-              onClick={handleSend}
-              disabled={!newMessage.trim() || sending || uploading}
-              className="h-12 w-12 min-h-[44px] flex-shrink-0"
-            >
-              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={handleSend}
+                  disabled={!newMessage.trim() || sending || uploading}
+                  className="h-12 w-12 min-h-[44px] flex-shrink-0"
+                >
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p>Send message (or press Enter)</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
       </div>
