@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react'; // 🎯 Added useMemo
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { MessageSquare, Heart, Share, User, Ellipsis, ChevronDown, ChevronUp } from 'lucide-react'; // 🎯 ADDED Chevron icons
+import { MessageSquare, Heart, Share, User, Ellipsis, ChevronDown, ChevronUp } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -150,7 +150,10 @@ const parsePostContent = (content: string, navigate: (path: string) => void) => 
 const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
   { post: Post; addReply: (postId: string, reply: Reply) => void; user: any; navigate: any; onAcknowledge: (postId: string, hasLiked: boolean) => void }) => {
 
-  const [showComments, setShowComments] = useState(false);
+  // 🎯 INITIAL STATE: Check if post has more than 3 replies to set initial collapse state
+  const initiallyCollapsed = useMemo(() => post.replies.length > 3, [post.replies.length]);
+  const [isCollapsed, setIsCollapsed] = useState(initiallyCollapsed);
+  const [isReplying, setIsReplying] = useState(false); // New state for input visibility
   const [replyText, setReplyText] = useState('');
   
   const handleViewProfile = (userId: string) => {
@@ -181,8 +184,10 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
       },
     };
     addReply(post.id, optimisticReply);
-    setShowComments(true);
-
+    
+    // Ensure the list is expanded after a new comment
+    setIsCollapsed(false); 
+    
     // Database Write
     const { error } = await supabase.from('post_replies').insert({
       post_id: post.id,
@@ -196,11 +201,12 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
     }
   };
 
-  // 🎯 NEW LOGIC: Determine which replies to show
-  const hasTooManyReplies = post.replies.length > 3;
-  const repliesToShow = showComments || !hasTooManyReplies
-    ? post.replies 
-    : post.replies.slice(-3); // Show the 3 most recent replies when collapsed
+  // 🎯 LOGIC: Determine which replies to show (the last 3 if collapsed)
+  const repliesToDisplay = isCollapsed && post.replies.length > 3
+    ? post.replies.slice(-3) 
+    : post.replies;
+
+  const showCollapseExpandButtons = post.replies.length > 3;
 
 
   return (
@@ -253,7 +259,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
 
         {/* Post Actions (Unchanged) */}
         <div className="flex justify-between items-center text-sm text-muted-foreground mt-3 -ml-2 max-w-[420px]">
-          <Button variant="ghost" size="sm" className="flex items-center gap-1 group" onClick={() => setShowComments(!showComments)}>
+          {/* 🎯 CHANGED: Toggle the reply INPUT only */}
+          <Button variant="ghost" size="sm" className="flex items-center gap-1 group" onClick={() => setIsReplying(!isReplying)}>
             <MessageSquare className="h-4 w-4 group-hover:text-primary transition-colors" />
             <span className="group-hover:text-primary transition-colors text-xs">{post.reply_count > 0 ? post.reply_count : ''}</span>
           </Button>
@@ -269,11 +276,11 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
         {/* --- COMMENT SECTION --- */}
         <div className="mt-3">
           
-          {/* 🎯 TOGGLE BUTTON: Show only if replies exist and are collapsed */}
-          {post.reply_count > 0 && hasTooManyReplies && !showComments && (
+          {/* 🎯 EXPAND BUTTON */}
+          {isCollapsed && showCollapseExpandButtons && (
             <span
-              className="text-sm text-primary cursor-pointer hover:underline flex items-center gap-1"
-              onClick={() => setShowComments(true)}
+              className="text-sm text-primary cursor-pointer hover:underline flex items-center gap-1 mb-2"
+              onClick={() => setIsCollapsed(false)}
             >
               <ChevronDown className="h-4 w-4" />
               View all {post.reply_count} replies
@@ -281,9 +288,9 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
           )}
 
           {/* 🎯 REPLIES LIST */}
-          {repliesToShow.length > 0 && (
-            <div className="space-y-2 pt-2">
-              {repliesToShow.map((reply) => (
+          {post.reply_count > 0 && (
+            <div className="space-y-2 pt-1">
+              {repliesToDisplay.map((reply) => (
                 <div key={reply.id} className="text-sm flex items-center">
                   <span
                     className="font-bold text-muted-foreground cursor-pointer hover:underline flex-shrink-0"
@@ -299,11 +306,11 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
                 </div>
               ))}
               
-              {/* 🎯 COLLAPSE BUTTON: Show if expanded and has many replies */}
-              {showComments && hasTooManyReplies && (
+              {/* 🎯 COLLAPSE BUTTON */}
+              {!isCollapsed && showCollapseExpandButtons && (
                 <span
                   className="text-sm text-primary cursor-pointer hover:underline flex items-center gap-1 pt-1"
-                  onClick={() => setShowComments(false)}
+                  onClick={() => setIsCollapsed(true)}
                 >
                   <ChevronUp className="h-4 w-4" />
                   Collapse replies
@@ -312,8 +319,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
             </div>
           )}
 
-          {/* Comment input (Unchanged) */}
-          {showComments && user && (
+          {/* Comment input */}
+          {isReplying && user && (
             <div className="mt-3 flex items-center gap-2 border-t pt-2 border-border">
               <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
                 <User className="h-4 w-4 text-muted-foreground" />
@@ -338,13 +345,14 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
               </Button>
             </div>
           )}
-          {showComments && !user && (
+          {isReplying && !user && (
             <div className="mt-3 text-sm text-muted-foreground">
               Please <a href="/auth" className="text-primary underline">log in</a> to comment.
             </div>
           )}
           
-          {post.reply_count === 0 && showComments && (
+          {/* 🎯 Message for 0 replies */}
+          {post.reply_count === 0 && isReplying && (
             <p className="text-sm text-muted-foreground pt-2">No replies yet. Be the first!</p>
           )}
 
