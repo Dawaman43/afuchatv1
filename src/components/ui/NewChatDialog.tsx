@@ -95,61 +95,23 @@ const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
     }
   };
 
+  // --- THIS IS THE UPDATED FUNCTION ---
   const handleStartChat = async (targetUserId: string) => {
-    if (!user) return;
-
     setCreating(true);
     try {
-      // Check for existing 1-1 chat
-      const { data: memberData } = await supabase
-        .from('chat_members')
-        .select('chat_id, chats!inner(id, is_group)')
-        .eq('user_id', user.id)
-        .eq('chats.is_group', false);
+      // Just call the one function!
+      const { data: chatId, error } = await supabase
+        .rpc('get_or_create_chat', {
+          other_user_id: targetUserId
+        });
 
-      let chatId = null;
-      
-      if (memberData) {
-        for (const member of memberData) {
-          const { data: otherMembers } = await supabase
-            .from('chat_members')
-            .select('user_id')
-            .eq('chat_id', member.chat_id)
-            .neq('user_id', user.id);
-
-          if (otherMembers && otherMembers.length === 1 && otherMembers[0].user_id === targetUserId) {
-            chatId = member.chat_id;
-            break;
-          }
-        }
-      }
-
-      if (!chatId) {
-        // Create new 1-1 chat
-        const { data: newChat, error: createError } = await supabase
-          .from('chats')
-          .insert({ is_group: false, created_by: user.id })
-          .select()
-          .single();
-
-        if (createError) throw createError;
-
-        chatId = newChat.id;
-        
-        const { error: memberError } = await supabase
-          .from('chat_members')
-          .insert([
-            { chat_id: chatId, user_id: user.id },
-            { chat_id: chatId, user_id: targetUserId },
-          ]);
-
-        if (memberError) throw memberError;
-      }
+      if (error) throw error;
 
       onClose();
       navigate(`/chat/${chatId}`);
+
     } catch (error) {
-      console.error('Error creating chat:', error);
+      console.error('Error starting chat:', error);
       toast.error('Failed to start chat');
     } finally {
       setCreating(false);
