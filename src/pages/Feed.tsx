@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-// --- Type Definitions ---
+// --- Type Definitions (Unchanged) ---
 interface Post {
   id: string;
   content: string;
@@ -41,7 +41,8 @@ interface Reply {
   };
 }
 
-// --- Verified Badge Logic (Unchanged) ---
+// --- Verified Badge & Format Time Logic (Unchanged) ---
+// ... (The code for TwitterVerifiedBadge, GoldVerifiedBadge, VerifiedBadge, and formatTime remains here)
 const TwitterVerifiedBadge = () => (
   <svg
     viewBox="0 0 22 22"
@@ -72,7 +73,6 @@ const VerifiedBadge = ({ isVerified, isOrgVerified }: { isVerified: boolean; isO
   return null;
 };
 
-// Helper to format time (Unchanged)
 const formatTime = (isoString: string) => {
   const date = new Date(isoString);
   const now = new Date();
@@ -89,6 +89,50 @@ const formatTime = (isoString: string) => {
   if (days < 365) return date.toLocaleString('en-US', { month: 'short', day: 'numeric' });
   return date.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
+
+
+// 🆕 NEW: Utility to parse content and create clickable links for mentions
+const parsePostContent = (content: string, navigate: (path: string) => void) => {
+  if (!content) return null;
+  
+  // Regex: @ followed by alphanumeric characters, dashes, or underscores
+  const mentionRegex = /@([a-zA-Z0-9_-]+)/g; 
+  const parts: (string | JSX.Element)[] = [];
+  let lastIndex = 0;
+  
+  content.replace(mentionRegex, (match, handle, index) => {
+    // 1. Add the text before the mention
+    if (index > lastIndex) {
+      parts.push(content.substring(lastIndex, index));
+    }
+
+    // 2. Add the clickable mention element
+    const MentionComponent = (
+      <span
+        key={`mention-${index}-${handle}`}
+        className="text-blue-500 font-medium cursor-pointer hover:underline"
+        onClick={(e) => {
+          e.stopPropagation(); // Stop click from bubbling up (e.g., to a PostCard click handler)
+          // Navigate to a dedicated profile URL using the handle
+          navigate(`/profile-by-handle/${handle}`); 
+        }}
+      >
+        {match}
+      </span>
+    );
+    parts.push(MentionComponent);
+    lastIndex = index + match.length;
+    return match;
+  });
+
+  // 3. Add any remaining text after the last mention
+  if (lastIndex < content.length) {
+    parts.push(content.substring(lastIndex));
+  }
+  
+  return <>{parts}</>;
+};
+// --- END NEW UTILITY ---
 
 
 // --- PostCard Component ---
@@ -142,8 +186,10 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
   };
 
   return (
+    // Note: If clicking the post card navigates to a single post page, 
+    // you might need to handle click propagation on the mentions (already done in parsePostContent).
     <div className="flex border-b border-border py-3 px-4 transition-colors hover:bg-muted/5">
-      {/* Author Icon (No Avatar) */}
+      {/* Author Icon */}
       <div
         className="mr-3 flex-shrink-0 h-10 w-10 rounded-full bg-secondary flex items-center justify-center cursor-pointer"
         onClick={() => handleViewProfile(post.author_id)}
@@ -152,7 +198,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
       </div>
 
       <div className="flex-1 min-w-0">
-        {/* Post Header (X-Style) */}
+        {/* Post Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-x-1 min-w-0">
             <span
@@ -163,7 +209,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
             </span>
             <VerifiedBadge isVerified={post.profiles.is_verified} isOrgVerified={post.profiles.is_organization_verified} />
 
-            {/* 🎯 UPDATED: Blue and clickable handle for Post Author */}
+            {/* Post Author Handle (Blue and clickable) */}
             <span
               className="text-blue-500 text-sm hover:underline cursor-pointer truncate flex-shrink min-w-0"
               onClick={() => handleViewProfile(post.author_id)}
@@ -182,12 +228,12 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
           </Button>
         </div>
 
-        {/* Post Content (X-Style) */}
+        {/* 🎯 UPDATED: Post Content - Now uses parser for inline mentions */}
         <p className="text-foreground text-base mt-1 mb-2 leading-relaxed whitespace-pre-wrap">
-          {post.content}
+          {parsePostContent(post.content, navigate)}
         </p>
 
-        {/* Post Actions (X-Style) */}
+        {/* Post Actions (Unchanged) */}
         <div className="flex justify-between items-center text-sm text-muted-foreground mt-3 -ml-2 max-w-[420px]">
           <Button variant="ghost" size="sm" className="flex items-center gap-1 group" onClick={() => setShowComments(!showComments)}>
             <MessageSquare className="h-4 w-4 group-hover:text-primary transition-colors" />
@@ -217,7 +263,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
             <div className="space-y-2 pt-2">
               {post.replies.map((reply) => (
                 <div key={reply.id} className="text-sm flex items-center">
-                  {/* 🎯 UPDATED: Blue and clickable handle for Reply Author */}
+                  {/* Reply Author Handle (Blue and clickable) */}
                   <span
                     className="font-bold text-blue-500 cursor-pointer hover:underline flex-shrink-0"
                     onClick={() => handleViewProfile(reply.author_id)}
@@ -225,15 +271,17 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
                     {reply.profiles.handle}
                   </span>
                   <VerifiedBadge isVerified={reply.profiles.is_verified} isOrgVerified={reply.profiles.is_organization_verified} />
+                  
+                  {/* 🎯 UPDATED: Reply Content - Now uses parser for inline mentions */}
                   <p className="text-foreground ml-1.5 whitespace-pre-wrap break-words">
-                    {reply.content}
+                    {parsePostContent(reply.content, navigate)}
                   </p>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Comment input and login prompt are conditional on 'showComments' */}
+          {/* Comment input (Unchanged) */}
           {showComments && user && (
             <div className="mt-3 flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
@@ -492,7 +540,7 @@ const Feed = () => {
     };
   }, [user, addReply, fetchPosts]);
 
-  // --- Post Skeleton Component ---
+  // --- Post Skeleton Component (Unchanged) ---
   const PostSkeleton = () => (
     <div className="flex p-4 border-b border-border">
       <Skeleton className="h-10 w-10 rounded-full mr-3" />
@@ -513,7 +561,7 @@ const Feed = () => {
   );
 
 
-  // --- Render Logic ---
+  // --- Render Logic (Unchanged) ---
   if (effectiveLoading) {
     return (
       <div className="flex flex-col h-full">
