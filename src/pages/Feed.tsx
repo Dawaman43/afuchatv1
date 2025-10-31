@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // 🎯 ADDED LINK
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-// --- Type Definitions ---
+// --- Type Definitions (Unchanged) ---
 interface Post {
   id: string;
   content: string;
@@ -91,13 +91,11 @@ const formatTime = (isoString: string) => {
 };
 
 
-// 🎯 UPDATED: Utility to parse content and create clickable links for mentions with ID lookup
+// Utility to parse content and create clickable links for mentions with ID lookup (Unchanged)
 const parsePostContent = (content: string, navigate: (path: string) => void) => {
   if (!content) return null;
   
-  // Asynchronous function to look up user ID and navigate
   const lookupAndNavigateByHandle = async (handle: string) => {
-    // 1. Look up the profile ID using the handle
     const { data, error } = await supabase
       .from('profiles')
       .select('id')
@@ -110,22 +108,18 @@ const parsePostContent = (content: string, navigate: (path: string) => void) => 
       return;
     }
 
-    // 2. Navigate using the unique user ID
     navigate(`/profile/${data.id}`); 
   };
   
-  // Regex: @ followed by alphanumeric characters, dashes, or underscores
   const mentionRegex = /@([a-zA-Z0-9_-]+)/g; 
   const parts: (string | JSX.Element)[] = [];
   let lastIndex = 0;
   
   content.replace(mentionRegex, (match, handle, index) => {
-    // 1. Add the text before the mention
     if (index > lastIndex) {
       parts.push(content.substring(lastIndex, index));
     }
 
-    // 2. Add the clickable mention element (BLUE)
     const MentionComponent = (
       <span
         key={`mention-${index}-${handle}`}
@@ -143,14 +137,13 @@ const parsePostContent = (content: string, navigate: (path: string) => void) => 
     return match;
   });
 
-  // 3. Add any remaining text after the last mention
   if (lastIndex < content.length) {
     parts.push(content.substring(lastIndex));
   }
   
   return <>{parts}</>;
 };
-// --- END UPDATED UTILITY ---
+// --- END UTILITY ---
 
 
 // --- PostCard Component ---
@@ -159,7 +152,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
 
   const [showComments, setShowComments] = useState(false);
   const [replyText, setReplyText] = useState('');
-
+  
   const handleViewProfile = (userId: string) => {
     navigate(`/profile/${userId}`);
   };
@@ -171,7 +164,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
     }
 
     const trimmedReplyText = replyText.trim();
-    setReplyText(''); // Clear input immediately
+    setReplyText(''); 
 
     // Optimistic Update
     const optimisticReply: Reply = {
@@ -225,7 +218,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
             </span>
             <VerifiedBadge isVerified={post.profiles.is_verified} isOrgVerified={post.profiles.is_organization_verified} />
 
-            {/* 🎯 REVERTED: Post Author Handle is now text-muted-foreground (gray) and still clickable */}
+            {/* Post Author Handle and Time */}
             <span
               className="text-muted-foreground text-sm hover:underline cursor-pointer truncate flex-shrink min-w-0"
               onClick={() => handleViewProfile(post.author_id)}
@@ -244,10 +237,14 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
           </Button>
         </div>
 
-        {/* Post Content (Uses parser for blue/clickable inline mentions) */}
-        <p className="text-foreground text-base mt-1 mb-2 leading-relaxed whitespace-pre-wrap">
-          {parsePostContent(post.content, navigate)}
-        </p>
+        {/* 🎯 POST CONTENT WRAPPED IN LINK TO DETAIL PAGE */}
+        <Link to={`/post/${post.id}`} className="block">
+          <p className="text-foreground text-base mt-1 mb-2 leading-relaxed whitespace-pre-wrap">
+            {parsePostContent(post.content, navigate)}
+          </p>
+        </Link>
+        {/* END POST CONTENT LINK */}
+
 
         {/* Post Actions */}
         <div className="flex justify-between items-center text-sm text-muted-foreground mt-3 -ml-2 max-w-[420px]">
@@ -264,7 +261,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
           </Button>
         </div>
 
-        {/* --- IG-STYLE COMMENT SECTION --- */}
+        {/* --- IG-STYLE COMMENT SECTION (Unchanged) --- */}
         <div className="mt-3">
           {post.reply_count > 0 && !showComments && (
             <span
@@ -279,7 +276,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
             <div className="space-y-2 pt-2">
               {post.replies.map((reply) => (
                 <div key={reply.id} className="text-sm flex items-center">
-                  {/* 🎯 REVERTED: Reply Author Handle is now text-muted-foreground (gray) and still clickable */}
                   <span
                     className="font-bold text-muted-foreground cursor-pointer hover:underline flex-shrink-0"
                     onClick={() => handleViewProfile(reply.author_id)}
@@ -288,7 +284,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
                   </span>
                   <VerifiedBadge isVerified={reply.profiles.is_verified} isOrgVerified={reply.profiles.is_organization_verified} />
                   
-                  {/* Reply Content (Uses parser for blue/clickable inline mentions) */}
                   <p className="text-foreground ml-1.5 whitespace-pre-wrap break-words">
                     {parsePostContent(reply.content, navigate)}
                   </p>
@@ -334,22 +329,13 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
   );
 };
 
-// --- Feed Component (Unchanged from previous versions) ---
+// --- Feed Component (Unchanged) ---
 const Feed = () => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [forceLoaded, setForceLoaded] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setForceLoaded(true);
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const effectiveLoading = loading && !forceLoaded;
 
   const addReply = useCallback((postId: string, newReply: Reply) => {
     setPosts((cur) =>
@@ -578,6 +564,14 @@ const Feed = () => {
 
 
   // --- Render Logic ---
+  const effectiveLoading = loading && !forceLoaded;
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setForceLoaded(true);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
   if (effectiveLoading) {
     return (
       <div className="flex flex-col h-full">
