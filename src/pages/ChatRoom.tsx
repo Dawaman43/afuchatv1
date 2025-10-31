@@ -6,27 +6,37 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Progress } from '@/components/ui/progress'; // Assume shadcn Progress component
-import { ArrowLeft, Send, User, Loader2, Phone, Video, MoreVertical, Check, MessageSquare, HelpCircle, Info, Mic, MicOff, Play, Pause, Volume2, Waveform } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { ArrowLeft, Send, User, Loader2, Phone, Video, MoreVertical, Check, MessageSquare, HelpCircle, Info, Mic, MicOff, Play, Pause, Volume2, Waveform, ThumbsUp, Heart, Laugh, Surprised, Sad, Angry } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Message {
   id: string;
   encrypted_content: string;
   audio_url?: string;
-  audio_duration?: number; // In seconds
+  audio_duration?: number;
   sender_id: string;
   sent_at: string;
   profiles: {
     display_name: string;
     handle: string;
   };
+  reactions?: { reaction: string; count: number; users: string[] }[];
 }
 
 interface ChatInfo {
   name: string | null;
   is_group: boolean;
 }
+
+const EMOJIS = [
+  { emoji: '👍', icon: ThumbsUp },
+  { emoji: '❤️', icon: Heart },
+  { emoji: '😂', icon: Laugh },
+  { emoji: '😮', icon: Surprised },
+  { emoji: '😢', icon: Sad },
+  { emoji: '😡', icon: Angry },
+]; // With icons for polish
 
 const ChatRoom = () => {
   const { chatId } = useParams();
@@ -44,6 +54,7 @@ const ChatRoom = () => {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [showReactions, setShowReactions] = useState<{ messageId: string; x: number; y: number } | null>(null);
   const [audioPlayers, setAudioPlayers] = useState<{ [key: string]: { isPlaying: boolean; audio: HTMLAudioElement | null; duration: number; currentTime: number } }>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -54,7 +65,7 @@ const ChatRoom = () => {
     if (!chatId || !user) return;
 
     fetchChatInfo();
-    fetchMessages();
+    fetchMessagesWithReactions();
 
     const channel = supabase
       .channel(`chat-${chatId}`)
@@ -78,16 +89,21 @@ const ChatRoom = () => {
                 return;
               }
               if (profile) {
-                setMessages((prev) => [
-                  ...prev,
-                  {
-                    ...payload.new,
-                    profiles: profile,
-                  },
-                ]);
+                const newMsg = { ...payload.new, profiles: profile, reactions: [] };
+                setMessages((prev) => [...prev, newMsg]);
               }
             });
         }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'message_reactions',
+          filter: `message_id=eq.${chatId}`,
+        },
+        () => fetchMessagesWithReactions() // Refetch reactions
       )
       .subscribe();
 
@@ -117,35 +133,44 @@ const ChatRoom = () => {
     }
   };
 
-  const fetchMessages = async () => {
+  const fetchMessagesWithReactions = async () => {
     console.log('Fetching messages for chatId:', chatId);
-    const { data, error } = await supabase
+    const { data: msgData, error: msgError } = await supabase
       .from('messages')
       .select('*, profiles(display_name, handle)')
       .eq('chat_id', chatId)
       .order('sent_at', { ascending: true });
 
-    console.log('Fetched messages:', data, 'Error:', error);
-
-    if (error) {
-      console.error('Fetch messages error:', error);
+    if (msgError) {
+      console.error('Fetch messages error:', msgError);
       toast.error('Failed to load messages');
+      setLoading(false);
+      return;
     }
-    if (data) {
-      // Preload audio durations
-      const messagesWithDuration = await Promise.all(
-        data.map(async (msg) => {
-          if (msg.audio_url) {
-            const audio = new Audio(msg.audio_url);
-            return new Promise<Message>((resolve) => {
-              audio.onloadedmetadata = () => resolve({ ...msg as Message, audio_duration: Math.round(audio.duration) });
-              audio.onerror = () => resolve(msg as Message);
-            });
+
+    if (msgData) {
+      // Fetch reactions
+      const messagesWithReactions = await Promise.all(
+        msgData.map(async (msg) => {
+          const { data: reactionsData } = await supabase
+            .from('message_reactions')
+            .select('*')
+            .eq('message_id', msg.id);
+
+          if (reactionsData) {
+            const reactionsMap = reactionsData.reduce((acc, r) => {
+              if (!acc[r.reaction]) acc[r.reaction] = { count: 0, users: [] };
+              acc[r.reaction].count++;
+              acc[r.reaction].users.push(r.user_id);
+              return acc;
+            }, {} as Record<string, { count: number; users: string[] }>);
+
+            return { ...msg, reactions: Object.entries(reactionsMap).map(([reaction, data]) => ({ reaction, count: data.count, users: data.users })) };
           }
-          return msg as Message;
+          return { ...msg, reactions: [] };
         })
       );
-      setMessages(messagesWithDuration);
+      setMessages(messagesWithReactions as Message[]);
     }
     setLoading(false);
   };
@@ -165,13 +190,11 @@ const ChatRoom = () => {
         stream.getTracks().forEach(track => track.stop());
       };
 
-      mediaRecorder.start(1000); // Chunk every second for progress
+      mediaRecorder.start(1000);
       setRecording(true);
       setRecordedDuration(0);
 
-      recordIntervalRef.current = setInterval(() => {
-        setRecordedDuration((prev) => prev + 1);
-      }, 1000);
+      recordIntervalRef.current = setInterval(() => setRecordedDuration((prev) => prev + 1), 1000);
 
       toast.success('Recording voice message...', { duration: 2000 });
     } catch (err) {
@@ -205,7 +228,7 @@ const ChatRoom = () => {
 
       if (error) throw error;
 
-      // Simulate progress (replace with real if Supabase supports)
+      // Progress simulation
       const interval = setInterval(() => setUploadProgress((prev) => Math.min(prev + 20, 90)), 200);
       setTimeout(() => clearInterval(interval), 1000);
 
@@ -247,7 +270,7 @@ const ChatRoom = () => {
         return { ...prev, [messageId]: { ...current, isPlaying: false, currentTime: current.audio?.currentTime || 0 } };
       } else {
         const audio = new Audio(audioUrl);
-        audio.volume = 0.5; // Default volume
+        audio.volume = 0.5;
         audio.play();
         audio.ontimeupdate = () => setAudioPlayers((p) => ({ ...p, [messageId]: { ...p[messageId], currentTime: audio.currentTime } }));
         audio.onended = () => setAudioPlayers((p) => ({ ...p, [messageId]: { ...p[messageId], isPlaying: false } }));
@@ -276,7 +299,7 @@ const ChatRoom = () => {
 
     if (error) {
       console.error('Send error details:', error);
-      toast.error(`Failed to send: ${error.message}`);
+      toast.error(`Failed to load: ${error.message}`);
     } else {
       setNewMessage('');
       const optimisticMsg: Message = {
@@ -297,6 +320,41 @@ const ChatRoom = () => {
 
   const dismissHelp = () => {
     setShowHelp(false);
+  };
+
+  const handleLongPress = (e: React.MouseEvent | React.TouchEvent, messageId: string) => {
+    e.preventDefault();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setShowReactions({ messageId, x: rect.left + window.scrollX, y: rect.top + window.scrollY });
+  };
+
+  const handleReact = async (messageId: string, reaction: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('message_reactions')
+      .upsert({ message_id: messageId, user_id: user.id, reaction }, { ignoreDuplicates: false });
+
+    if (error) {
+      toast.error('Failed to react');
+    } else {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId
+            ? {
+                ...msg,
+                reactions: msg.reactions
+                  ? [
+                      ...(msg.reactions.filter((r) => r.reaction !== reaction) || []),
+                      { reaction, count: (msg.reactions?.find((r) => r.reaction === reaction)?.count || 0) + 1, users: [...(msg.reactions?.find((r) => r.reaction === reaction)?.users || []), user.id] },
+                    ]
+                  : [{ reaction, count: 1, users: [user.id] }],
+              }
+            : msg
+        )
+      );
+    }
+    setShowReactions(null);
   };
 
   if (loading) {
@@ -335,7 +393,7 @@ const ChatRoom = () => {
               {chatInfo?.name || (chatInfo?.is_group ? 'Group Chat' : 'Direct Message')}
             </h1>
             {chatInfo && !chatInfo.is_group && (
-              <p className={`text-xs ${online ? 'text-green-600' : 'text-muted-foreground'}`}>
+              <p className="text-xs {online ? 'text-green-600' : 'text-muted-foreground'}">
                 {online ? 'online' : 'last seen recently'}
               </p>
             )}
@@ -394,6 +452,8 @@ const ChatRoom = () => {
                 <div
                   key={message.id}
                   className={`flex ${isOwn ? 'justify-end' : 'justify-start'} w-full py-1`}
+                  onTouchStart={(e) => handleLongPress(e, message.id)}
+                  onContextMenu={(e) => handleLongPress(e, message.id)}
                 >
                   {!isOwn ? (
                     <div className="flex items-end gap-2 max-w-[85%]">
@@ -436,6 +496,15 @@ const ChatRoom = () => {
                             </p>
                           </div>
                         )}
+                        {message.reactions && message.reactions.length > 0 && (
+                          <div className="flex gap-1 mt-1">
+                            {message.reactions.map((r) => (
+                              <Badge key={r.reaction} variant="outline" className="text-xs">
+                                {r.reaction} {r.count}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -473,6 +542,15 @@ const ChatRoom = () => {
                         <span className="text-xs text-primary-foreground/70"> {time}</span>
                         <Check className="h-3 w-3 text-primary-foreground/70" />
                       </div>
+                      {message.reactions && message.reactions.length > 0 && (
+                        <div className="flex gap-1 mt-1">
+                          {message.reactions.map((r) => (
+                            <Badge key={r.reaction} variant="secondary" className="text-xs text-primary-foreground">
+                              {r.reaction} {r.count}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -497,7 +575,7 @@ const ChatRoom = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <Badge variant="secondary" className="flex-shrink-0 mt-0.5">2</Badge>
-                  <span>Tap the mic icon to record voice messages—tap again to stop.</span>
+                  <span>Tap the mic to record voice messages—tap again to stop, then send.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Badge variant="secondary" className="flex-shrink-0 mt-0.5">3</Badge>
@@ -523,7 +601,33 @@ const ChatRoom = () => {
           </div>
         )}
 
-        {/* Input: Fixed bottom, with polished voice recording */}
+        {/* Reaction Picker */}
+        {showReactions && (
+          <div
+            className="fixed bg-card border border-border rounded-lg p-2 shadow-lg z-30 flex gap-1"
+            style={{ left: showReactions.x, top: showReactions.y }}
+          >
+            {EMOJIS.map(({ emoji, icon: Icon }) => (
+              <Tooltip key={emoji}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 hover:bg-muted"
+                    onClick={() => handleReact(showReactions.messageId, emoji)}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>React with {emoji}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </div>
+        )}
+
+        {/* Input: Fixed bottom, with polished voice */}
         <div className="fixed bottom-0 left-0 right-0 z-20 bg-card border-t border-border px-4 py-3 pb-[env(safe-area-inset-bottom)]">
           <div className="flex items-end gap-2">
             {recording ? (
@@ -556,7 +660,7 @@ const ChatRoom = () => {
                   {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
                 </Button>
                 {uploading && (
-                  <div className="absolute inset-0 rounded-full bg-primary/30 animate-pulse" />
+                  <Progress value={uploadProgress} className="absolute -bottom-1 left-1 right-1 h-1" />
                 )}
                 <Badge variant="secondary" className="absolute -bottom-1 -right-1 text-xs px-1.5">
                   {recordedDuration}s
