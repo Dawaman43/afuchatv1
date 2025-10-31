@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { MessageSquare, Heart, Share, User, Ellipsis } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input'; // Assuming you have an Input component for the reply text field
+import { Input } from '@/components/ui/input'; // Corrected and ensured import
 
 // --- Type Definitions ---
 interface Post {
@@ -41,7 +41,7 @@ interface Reply {
   };
 }
 
-// --- Verified Badge Logic (Unchanged) ---
+// --- Verified Badge Logic ---
 const TwitterVerifiedBadge = () => (
   <svg
     viewBox="0 0 22 22"
@@ -72,7 +72,7 @@ const VerifiedBadge = ({ isVerified, isOrgVerified }: { isVerified: boolean; isO
   return null;
 };
 
-// Helper to format time (Unchanged)
+// Helper to format time
 const formatTime = (isoString: string) => {
   const date = new Date(isoString);
   const now = new Date();
@@ -109,7 +109,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
     }
 
     const trimmedReplyText = replyText.trim();
-    setReplyText(''); // Clear input immediately for better UX
+    setReplyText(''); // Clear input immediately
 
     // Optimistic Update
     const optimisticReply: Reply = {
@@ -126,7 +126,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
       },
     };
     addReply(post.id, optimisticReply);
-    setShowComments(true); // Ensure comments are shown after replying
+    setShowComments(true);
 
     // Database Write
     const { error } = await supabase.from('post_replies').insert({
@@ -137,10 +137,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
 
     if (error) {
       toast.error('Failed to post reply');
-      // A more robust implementation would reverse the optimistic update here.
       console.error(error);
-      // For simplicity, we rely on the realtime subscription to correct the state
-      // if the optimistic update was wrong, or you can implement a rollback.
     }
   };
 
@@ -240,7 +237,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
               <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
                 <User className="h-4 w-4 text-muted-foreground" />
               </div>
-              <input
+              <Input
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 onKeyDown={(e) => {
@@ -280,7 +277,7 @@ const Feed = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Timeout to stop showing skeleton after 5 seconds, even if loading fails
+    // Timeout to stop showing skeleton after 5 seconds
     const timer = setTimeout(() => {
       setForceLoaded(true);
     }, 5000);
@@ -336,7 +333,7 @@ const Feed = () => {
         setPosts((currentPosts) =>
           currentPosts.map((p) =>
             p.id === postId
-              ? { ...p, has_liked: currentHasLiked, like_count: p.like_count + 1 } // Revert counts
+              ? { ...p, has_liked: currentHasLiked, like_count: p.like_count + 1 }
               : p
           )
         );
@@ -352,7 +349,7 @@ const Feed = () => {
         setPosts((currentPosts) =>
           currentPosts.map((p) =>
             p.id === postId
-              ? { ...p, has_liked: currentHasLiked, like_count: p.like_count - 1 } // Revert counts
+              ? { ...p, has_liked: currentHasLiked, like_count: p.like_count - 1 }
               : p
           )
         );
@@ -445,7 +442,6 @@ const Feed = () => {
 
     // --- Realtime Subscriptions ---
 
-    // New Posts: Prepend the new post to the list (requires fetching profile)
     const postsChannel = supabase
       .channel('feed-updates')
       .on(
@@ -473,7 +469,6 @@ const Feed = () => {
       )
       .subscribe();
 
-    // New Replies: Optimistically add the reply to the specific post (requires fetching profile)
     const repliesChannel = supabase
       .channel('replies-updates')
       .on(
@@ -494,15 +489,13 @@ const Feed = () => {
       )
       .subscribe();
 
-    // Likes/Acks: Re-fetch all posts to update like counts and 'has_liked' status accurately
     const acksChannel = supabase
       .channel('acks-updates')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'post_acknowledgments' },
         (payload) => {
-          // A debounce/throttle might be useful here in a high-traffic app, but a full re-fetch is simple and effective.
-          fetchPosts();
+          fetchPosts(); // Re-fetch all to get accurate counts and has_liked status
         }
       )
       .subscribe();
@@ -512,7 +505,7 @@ const Feed = () => {
       supabase.removeChannel(repliesChannel);
       supabase.removeChannel(acksChannel);
     };
-  }, [user, addReply, fetchPosts]); // Added fetchPosts to dependency array for acksChannel's call
+  }, [user, addReply, fetchPosts]);
 
   // --- Post Skeleton Component ---
   const PostSkeleton = () => (
