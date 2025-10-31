@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -51,15 +51,18 @@ const Index = () => {
   const [isChatModalOpen, setIsChatModalOpen] = useState(false); 
   const [headerVisible, setHeaderVisible] = useState(true);
   const [fabVisible, setFabVisible] = useState(true);
-  const [contentVisible, setContentVisible] = useState(false); // New: For smooth unhide
+  const [contentVisible, setContentVisible] = useState(false);
   const lastScrollYRef = useRef(0);
 
-  // Remove forced timeout; unhide immediately when auth ready
+  // Memoize tab components to prevent re-renders/fetches on switch
+  const MemoizedFeed = useMemo(() => <Feed />, []);
+  const MemoizedSearch = useMemo(() => <Search />, []);
+  const MemoizedChats = useMemo(() => <Chats />, []);
+
+  // Unhide content as soon as auth is ready—no loading after initial
   useEffect(() => {
     if (!loading) {
-      // Small delay for smooth fade-in (optional; remove if instant preferred)
-      const timer = setTimeout(() => setContentVisible(true), 100);
-      return () => clearTimeout(timer);
+      setContentVisible(true);
     }
   }, [loading]);
 
@@ -125,7 +128,7 @@ const Index = () => {
   };
 
   if (loading) {
-    // Skeleton loading state (shows only during real auth loading, no forced delay)
+    // Brief skeleton only for initial auth—vanishes instantly when ready
     return (
       <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto">
         <div className="h-14 flex items-center justify-between shadow-md rounded-b-lg">
@@ -208,11 +211,11 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main Content - Unhide with fade-in */}
+      {/* Main Content - Always visible post-load, no re-mounts */}
       <main 
-        className={`flex-1 container mx-auto px-2 sm:px-4 py-4 max-w-4xl overflow-y-auto transition-all duration-300 ease-in-out ${
-          contentVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-        }`}
+        className={`flex-1 container mx-auto px-2 sm:px-4 py-4 max-w-4xl overflow-y-auto ${
+          contentVisible ? 'opacity-100' : 'opacity-0'
+        }`} // Removed translate for instant feel; just opacity fade
       >
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
           <TabsList className="grid w-full grid-cols-3 mb-6 p-1 bg-muted/50 rounded-full shadow-inner">
@@ -239,17 +242,20 @@ const Index = () => {
             </TabsTrigger>
           </TabsList>
           
-          <div className="flex-1 relative">
-            {/* All TabsContent always mounted for no-reload switching */}
-            <TabsContent value="feed" className="h-full mt-0 absolute inset-0">
-              <Feed />
-            </TabsContent>
-            <TabsContent value="search" className="h-full mt-0 absolute inset-0">
-              <Search />
-            </TabsContent>
-            <TabsContent value="chats" className="h-full mt-0 absolute inset-0">
-              <Chats />
-            </TabsContent>
+          {/* Persistent container: All tabs mounted forever—no unmount/reload on switch */}
+          <div className="relative h-full">
+            <div className="absolute inset-0 opacity-0 pointer-events-none">
+              {MemoizedFeed}
+            </div>
+            <div className={`absolute inset-0 transition-opacity duration-200 ${activeTab === 'feed' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+              {MemoizedFeed}
+            </div>
+            <div className={`absolute inset-0 transition-opacity duration-200 ${activeTab === 'search' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+              {MemoizedSearch}
+            </div>
+            <div className={`absolute inset-0 transition-opacity duration-200 ${activeTab === 'chats' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+              {MemoizedChats}
+            </div>
           </div>
         </Tabs>
       </main>
