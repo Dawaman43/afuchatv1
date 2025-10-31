@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Link } in 'react-router-dom';
+import { Link } from 'react-router-dom'; // <-- THE FIX IS HERE
 import { Heart, MessageSquare, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils'; // Assuming you have a cn utility for classnames
 
@@ -144,7 +144,7 @@ const Notifications = () => {
             <Skeleton className="h-10 w-10 rounded-full" />
             <div className="space-y-2">
               <Skeleton className="h-4 w-[250px]" />
-              <Skeleton className="h-4 w-[200px]"M" />
+              <Skeleton className="h-4 w-[200px]" />
             </div>
           </div>
         ))}
