@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState, useCallback } from 'react';
+import { useNavigate, Link } from 'react-router-dom'; // 🎯 ADDED LINK
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -150,30 +150,10 @@ const parsePostContent = (content: string, navigate: (path: string) => void) => 
 const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
   { post: Post; addReply: (postId: string, reply: Reply) => void; user: any; navigate: any; onAcknowledge: (postId: string, hasLiked: boolean) => void }) => {
 
-  // 🎯 NEW STATE: Controls the main post text collapse
-  const [isTextExpanded, setIsTextExpanded] = useState(false);
-  
-  // 🎯 NEW STATE: Controls the visibility of the replies list/input
-  const [isReplying, setIsReplying] = useState(false); 
-  
+  const [showComments, setShowComments] = useState(false);
+  const [showAllReplies, setShowAllReplies] = useState(false);
   const [replyText, setReplyText] = useState('');
   
-  // Ref for checking if the text has truly overflowed
-  const contentRef = useRef<HTMLParagraphElement>(null);
-  const [isContentOverflowing, setIsContentOverflowing] = useState(false);
-
-  useEffect(() => {
-    // Check if scrollHeight (total content height) is greater than clientHeight (visible height)
-    if (contentRef.current && !isTextExpanded) {
-      setIsContentOverflowing(
-        contentRef.current.scrollHeight > contentRef.current.clientHeight
-      );
-    } else {
-       setIsContentOverflowing(false);
-    }
-  }, [post.content, isTextExpanded]); // Recalculate if post or expanded state changes
-
-
   const handleViewProfile = (userId: string) => {
     navigate(`/profile/${userId}`);
   };
@@ -202,7 +182,9 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
       },
     };
     addReply(post.id, optimisticReply);
-    
+    setShowComments(true);
+    setShowAllReplies(true); // Expand to show the new reply
+
     // Database Write
     const { error } = await supabase.from('post_replies').insert({
       post_id: post.id,
@@ -216,14 +198,11 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
     }
   };
 
-  
-  // 🎯 REPLIES: Show all replies if 'isReplying' is true (no internal collapse logic needed here)
-  const repliesToDisplay = post.replies;
-
+  const hasMoreReplies = post.replies.length > 3;
 
   return (
     <div className="flex border-b border-border py-3 px-4 transition-colors hover:bg-muted/5">
-      {/* Author Icon (Unchanged) */}
+      {/* Author Icon */}
       <div
         className="mr-3 flex-shrink-0 h-10 w-10 rounded-full bg-secondary flex items-center justify-center cursor-pointer"
         onClick={() => handleViewProfile(post.author_id)}
@@ -232,7 +211,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
       </div>
 
       <div className="flex-1 min-w-0">
-        {/* Post Header (Unchanged) */}
+        {/* Post Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-x-1 min-w-0">
             <span
@@ -243,6 +222,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
             </span>
             <VerifiedBadge isVerified={post.profiles.is_verified} isOrgVerified={post.profiles.is_organization_verified} />
 
+            {/* Post Author Handle and Time */}
             <span
               className="text-muted-foreground text-sm hover:underline cursor-pointer truncate flex-shrink min-w-0"
               onClick={() => handleViewProfile(post.author_id)}
@@ -251,7 +231,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
             </span>
 
             <span className="text-muted-foreground text-sm flex-shrink-0">·</span>
-            <span className="text-muted-foreground text-sm whitespace-nowlrap flex-shrink-0">
+            <span className="text-muted-foreground text-sm whitespace-nowrap flex-shrink-0">
               {formatTime(post.created_at)}
             </span>
           </div>
@@ -261,46 +241,18 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
           </Button>
         </div>
 
-        {/* 🎯 POST CONTENT with Collapse/Expand */}
-        <Link to={`/post/${post.id}`} className="block relative">
-          <p
-            ref={contentRef}
-            className={`
-              text-foreground text-base mt-1 mb-2 leading-relaxed whitespace-pre-wrap 
-              ${!isTextExpanded ? 'max-h-[120px] overflow-hidden relative' : ''}
-            `}
-            // Set max height style explicitly for the initial overflow check
-            style={!isTextExpanded ? { maxHeight: '120px' } : {}}
-          >
+        {/* 🎯 POST CONTENT WRAPPED IN LINK TO DETAIL PAGE */}
+        <Link to={`/post/${post.id}`} className="block">
+          <p className="text-foreground text-base mt-1 mb-2 leading-relaxed whitespace-pre-wrap">
             {parsePostContent(post.content, navigate)}
           </p>
-
-          {/* Read More/Less Button */}
-          {(isContentOverflowing || isTextExpanded) && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault(); // Prevent navigating to post detail when clicking Read More
-                e.stopPropagation();
-                setIsTextExpanded(!isTextExpanded);
-              }}
-              className="text-primary text-sm font-semibold hover:underline mt-1 block"
-            >
-              {isTextExpanded ? 'Show Less' : 'Read More...'}
-            </button>
-          )}
-
-          {/* Overlay to create the blur effect when collapsed */}
-          {!isTextExpanded && isContentOverflowing && (
-            <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent pointer-events-none"></div>
-          )}
         </Link>
+        {/* END POST CONTENT LINK */}
 
 
-        {/* Post Actions (Unchanged) */}
+        {/* Post Actions */}
         <div className="flex justify-between items-center text-sm text-muted-foreground mt-3 -ml-2 max-w-[420px]">
-          {/* 🎯 CHANGED: Toggle the reply INPUT and visible replies */}
-          <Button variant="ghost" size="sm" className="flex items-center gap-1 group" onClick={() => setIsReplying(!isReplying)}>
+          <Button variant="ghost" size="sm" className="flex items-center gap-1 group" onClick={() => setShowComments(!showComments)}>
             <MessageSquare className="h-4 w-4 group-hover:text-primary transition-colors" />
             <span className="group-hover:text-primary transition-colors text-xs">{post.reply_count > 0 ? post.reply_count : ''}</span>
           </Button>
@@ -313,34 +265,88 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
           </Button>
         </div>
 
-        {/* --- COMMENT SECTION --- */}
+        {/* --- IG-STYLE COMMENT SECTION WITH COLLAPSE/EXPAND --- */}
         <div className="mt-3">
-          
-          {/* 🎯 REPLIES LIST: Show ONLY if 'isReplying' is true */}
-          {isReplying && post.reply_count > 0 && (
-            <div className="space-y-2 pt-1">
-              {repliesToDisplay.map((reply) => (
-                <div key={reply.id} className="text-sm flex items-center">
-                  <span
-                    className="font-bold text-muted-foreground cursor-pointer hover:underline flex-shrink-0"
-                    onClick={() => handleViewProfile(reply.author_id)}
-                  >
-                    {reply.profiles.handle}
-                  </span>
-                  <VerifiedBadge isVerified={reply.profiles.is_verified} isOrgVerified={reply.profiles.is_organization_verified} />
-                  
-                  <p className="text-foreground ml-1.5 whitespace-pre-wrap break-words">
-                    {parsePostContent(reply.content, navigate)}
-                  </p>
-                </div>
-              ))}
-            </div>
+          {post.reply_count > 0 && !showComments && (
+            <span
+              className="text-sm text-muted-foreground cursor-pointer hover:underline"
+              onClick={() => setShowComments(true)}
+            >
+              View all {post.reply_count} {post.reply_count === 1 ? 'comment' : 'comments'}
+            </span>
           )}
 
+          {showComments && post.replies && post.replies.length > 0 && (
+            <>
+              <div className="space-y-2 pt-2">
+                {post.replies.slice(0, 3).map((reply) => (
+                  <div key={reply.id} className="text-sm flex items-start">
+                    <span
+                      className="font-bold text-muted-foreground cursor-pointer hover:underline flex-shrink-0"
+                      onClick={() => handleViewProfile(reply.author_id)}
+                    >
+                      {reply.profiles.handle}
+                    </span>
+                    <VerifiedBadge isVerified={reply.profiles.is_verified} isOrgVerified={reply.profiles.is_organization_verified} />
+                    
+                    <p className="text-foreground ml-1.5 whitespace-pre-wrap break-words">
+                      {parsePostContent(reply.content, navigate)}
+                    </p>
+                  </div>
+                ))}
+                {hasMoreReplies && (
+                  <div 
+                    className={`overflow-hidden transition-all duration-300 ease-in-out -mt-2 ${
+                      showAllReplies 
+                        ? 'max-h-[1000px] opacity-100' 
+                        : 'max-h-0 opacity-0'
+                    }`}
+                  >
+                    {post.replies.slice(3).map((reply) => (
+                      <div key={reply.id} className="text-sm flex items-start p-0">
+                        <span
+                          className="font-bold text-muted-foreground cursor-pointer hover:underline flex-shrink-0"
+                          onClick={() => handleViewProfile(reply.author_id)}
+                        >
+                          {reply.profiles.handle}
+                        </span>
+                        <VerifiedBadge isVerified={reply.profiles.is_verified} isOrgVerified={reply.profiles.is_organization_verified} />
+                        
+                        <p className="text-foreground ml-1.5 whitespace-pre-wrap break-words">
+                          {parsePostContent(reply.content, navigate)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {hasMoreReplies && (
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="p-0 h-auto text-muted-foreground text-sm -ml-1.5 mt-1"
+                  onClick={() => setShowAllReplies(!showAllReplies)}
+                >
+                  {showAllReplies ? (
+                    <>
+                      <ChevronUp className="h-3 w-3 inline mr-1" />
+                      View {post.replies.length - 3} fewer replies
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-3 w-3 inline mr-1" />
+                      View {post.replies.length - 3} more replies
+                    </>
+                  )}
+                </Button>
+              )}
+            </>
+          )}
 
           {/* Comment input */}
-          {isReplying && user && (
-            <div className={`mt-3 flex items-center gap-2 pt-2 ${post.reply_count > 0 ? 'border-t border-border' : ''}`}>
+          {showComments && user && (
+            <div className="mt-3 flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
                 <User className="h-4 w-4 text-muted-foreground" />
               </div>
@@ -364,18 +370,13 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
               </Button>
             </div>
           )}
-          {isReplying && !user && (
+          {showComments && !user && (
             <div className="mt-3 text-sm text-muted-foreground">
               Please <a href="/auth" className="text-primary underline">log in</a> to comment.
             </div>
           )}
-          
-          {/* 🎯 Message for 0 replies */}
-          {post.reply_count === 0 && isReplying && (
-            <p className="text-sm text-muted-foreground pt-2">No replies yet. Be the first!</p>
-          )}
-
         </div>
+        {/* --- END COMMENT SECTION --- */}
       </div>
     </div>
   );
@@ -594,7 +595,7 @@ const Feed = () => {
     };
   }, [user, addReply, fetchPosts]);
 
-  // --- Post Skeleton Component (Unchanged) ---
+  // --- Post Skeleton Component ---
   const PostSkeleton = () => (
     <div className="flex p-4 border-b border-border">
       <Skeleton className="h-10 w-10 rounded-full mr-3" />
@@ -615,7 +616,7 @@ const Feed = () => {
   );
 
 
-  // --- Render Logic (Unchanged) ---
+  // --- Render Logic ---
   const effectiveLoading = loading && !forceLoaded;
   useEffect(() => {
     const timer = setTimeout(() => {
