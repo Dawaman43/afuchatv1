@@ -14,6 +14,11 @@ import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import NewChatDialog from '@/components/ui/NewChatDialog';
 
+// --- ADDED THIS IMPORT ---
+import NotificationIcon from '@/components/nav/NotificationIcon'; 
+// -------------------------
+
+
 // --- FAB Components (Unchanged) ---
 
 const NewPostFAB = ({ onClick, visible }) => (
@@ -186,9 +191,11 @@ const Index = () => {
             <h1 className="text-xl font-extrabold text-primary tracking-wide">AfuChat</h1>
           </div>
           
+          {/* --- UPDATED THIS SECTION --- */}
           <div className="flex items-center gap-1">
             {user ? (
               <>
+                <NotificationIcon />
                 <Button size="icon" variant="ghost" onClick={handleViewProfile} className="text-foreground hover:bg-muted rounded-full">
                   <User className="h-5 w-5" />
                   <span className="sr-only">Profile</span>
@@ -205,6 +212,7 @@ const Index = () => {
               </Button>
             )}
           </div>
+          {/* --------------------------- */}
           
         </div>
       </header>
@@ -239,11 +247,6 @@ const Index = () => {
           </TabsList>
           
           <div className="flex-1 relative">
-            {/* --- THE FIX ---
-              Removed the conditional 'className' prop.
-              The TabsContent component handles this internally.
-              This stops the components from re-mounting.
-            */}
             <TabsContent value="feed" className="h-full mt-0">
               <Feed />
             </TabsContent>
