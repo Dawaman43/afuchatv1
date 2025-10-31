@@ -51,18 +51,17 @@ const Index = () => {
   const [isChatModalOpen, setIsChatModalOpen] = useState(false); 
   const [headerVisible, setHeaderVisible] = useState(true);
   const [fabVisible, setFabVisible] = useState(true);
-  const [forceLoaded, setForceLoaded] = useState(false);
+  const [contentVisible, setContentVisible] = useState(false); // New: For smooth unhide
   const lastScrollYRef = useRef(0);
 
+  // Remove forced timeout; unhide immediately when auth ready
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setForceLoaded(true);
-    }, 3000); 
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const effectiveLoading = loading && !forceLoaded;
+    if (!loading) {
+      // Small delay for smooth fade-in (optional; remove if instant preferred)
+      const timer = setTimeout(() => setContentVisible(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
 
   useEffect(() => {
     let ticking = false;
@@ -125,8 +124,8 @@ const Index = () => {
     }
   };
 
-  if (effectiveLoading) {
-    // Skeleton loading state
+  if (loading) {
+    // Skeleton loading state (shows only during real auth loading, no forced delay)
     return (
       <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto">
         <div className="h-14 flex items-center justify-between shadow-md rounded-b-lg">
@@ -209,9 +208,11 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content - Unhide with fade-in */}
       <main 
-        className="flex-1 container mx-auto px-2 sm:px-4 py-4 max-w-4xl overflow-y-auto"
+        className={`flex-1 container mx-auto px-2 sm:px-4 py-4 max-w-4xl overflow-y-auto transition-all duration-300 ease-in-out ${
+          contentVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`}
       >
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
           <TabsList className="grid w-full grid-cols-3 mb-6 p-1 bg-muted/50 rounded-full shadow-inner">
@@ -239,18 +240,14 @@ const Index = () => {
           </TabsList>
           
           <div className="flex-1 relative">
-            {/* --- THE FIX ---
-              Removed the conditional 'className' prop.
-              The TabsContent component handles this internally.
-              This stops the components from re-mounting.
-            */}
-            <TabsContent value="feed" className="h-full mt-0">
+            {/* All TabsContent always mounted for no-reload switching */}
+            <TabsContent value="feed" className="h-full mt-0 absolute inset-0">
               <Feed />
             </TabsContent>
-            <TabsContent value="search" className="h-full mt-0">
+            <TabsContent value="search" className="h-full mt-0 absolute inset-0">
               <Search />
             </TabsContent>
-            <TabsContent value="chats" className="h-full mt-0">
+            <TabsContent value="chats" className="h-full mt-0 absolute inset-0">
               <Chats />
             </TabsContent>
           </div>
