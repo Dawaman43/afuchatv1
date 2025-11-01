@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, User as UserIcon, MessageSquare, Heart, Share, Bookmark, Repeat, MoreVertical } from 'lucide-react';
+import { ArrowLeft, User as UserIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
 // Note: Verified Badge components must be imported or defined here
 
 // --- START: Verified Badge Components (Unchanged) ---
@@ -71,7 +70,6 @@ interface Reply {
   content: string;
   created_at: string;
   author: {
-    id: string;
     display_name: string;
     handle: string;
     is_verified: boolean;
@@ -97,86 +95,66 @@ interface Post {
 }
 
 const PostDetail = () => {
-  const { postId } = useParams<{ postId: string }>();
+  const { postId } = useParams();
   const [post, setPost] = useState<Post | null>(null);
   const [replies, setReplies] = useState<Reply[]>([]); // NEW state for replies
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!postId) {
-      setError('Invalid post ID');
-      setLoading(false);
-      return;
-    }
+    if (!postId) return;
 
     const fetchPostAndReplies = async () => {
       setLoading(true);
-      setError(null);
       
-      try {
-        console.log('Fetching post with ID:', postId); // Debug log
+      // 1. Fetch Post Details and Counts
+      const postPromise = supabase
+        .from('posts')
+        .select(`
+          id, content, created_at,
+          likes_count:post_acknowledgments(count),
+          replies_count:post_replies(count),
+          author:profiles!author_id (
+            id, display_name, handle, is_verified, is_organization_verified
+          )
+        `) 
+        .eq('id', postId)
+        .single();
         
-        // 1. Fetch Post Details and Counts
-        const postPromise = supabase
-          .from('posts')
-          .select(`
-            id, content, created_at,
-            likes_count:post_acknowledgments(count),
-            replies_count:post_replies(count),
-            author:profiles!author_id (
-              id, display_name, handle, is_verified, is_organization_verified
-            )
-          `) 
-          .eq('id', postId)
-          .single();
-          
-        // 2. Fetch Replies (Comments)
-        const repliesPromise = supabase
-          .from('post_replies')
-          .select(`
-            id, content, created_at,
-            author:profiles!author_id (
-              id, display_name, handle, is_verified, is_organization_verified
-            )
-          `)
-          .eq('post_id', postId)
-          .order('created_at', { ascending: true });
+      // 2. Fetch Replies (Comments)
+      const repliesPromise = supabase
+        .from('post_replies')
+        .select(`
+          id, content, created_at,
+          author:profiles!author_id (
+            display_name, handle, is_verified, is_organization_verified
+          )
+        `)
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
 
-        const [postResult, repliesResult] = await Promise.all([postPromise, repliesPromise]);
-        
-        console.log('Post result:', postResult); // Debug log
-        console.log('Replies result:', repliesResult); // Debug log
-        
-        // Handle Post Data
-        if (postResult.error) {
-          console.error('Error fetching post data:', postResult.error);
-          setError(`Failed to fetch post: ${postResult.error.message}`);
-        } else if (postResult.data) {
-          const processedData = {
-            ...postResult.data,
-            likes_count: (postResult.data.likes_count as any[])[0]?.count || 0,
-            replies_count: (postResult.data.replies_count as any[])[0]?.count || 0,
-          };
-          setPost(processedData as Post);
-        } else {
-          setError('Post not found');
-        }
-
-        // Handle Replies Data
-        if (repliesResult.error) {
-          console.error('Error fetching replies:', repliesResult.error);
-          toast.error(`Failed to fetch replies: ${repliesResult.error.message}`);
-        } else if (repliesResult.data) {
-          setReplies(repliesResult.data as any);
-        }
-      } catch (err) {
-        console.error('Unexpected error:', err);
-        setError('An unexpected error occurred');
-      } finally {
-        setLoading(false);
+      const [postResult, repliesResult] = await Promise.all([postPromise, repliesPromise]);
+      
+      // Handle Post Data
+      if (postResult.error) {
+        console.error('Error fetching post data:', postResult.error);
+      } else if (postResult.data) {
+        const processedData = {
+          ...postResult.data,
+          likes_count: (postResult.data.likes_count as any[])[0]?.count || 0,
+          replies_count: (postResult.data.replies_count as any[])[0]?.count || 0,
+        };
+        setPost(processedData as Post);
       }
+
+      // Handle Replies Data
+      if (repliesResult.error) {
+        console.error('Error fetching replies:', repliesResult.error);
+      } else if (repliesResult.data) {
+        setReplies(repliesResult.data as any);
+      }
+      
+      setLoading(false);
     };
 
     fetchPostAndReplies();
@@ -201,31 +179,21 @@ const PostDetail = () => {
     );
   }
 
-  if (error || !post) {
+  if (!post) {
     return (
-      <div className="p-4 text-center min-h-screen flex flex-col items-center justify-center">
-        <h1 className="text-xl font-bold mb-2">Post not found</h1>
-        <p className="text-sm text-muted-foreground mb-4">{error || 'The requested post could not be loaded.'}</p>
-        <div className="flex gap-2">
-          <Button onClick={() => navigate(-1)} variant="outline">Go Back</Button>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
-        </div>
-        <p className="text-xs text-muted-foreground mt-4">Check console for more details.</p>
+      <div className="p-4 text-center min-h-screen">
+        <h1 className="text-2xl font-bold">Post not found</h1>
+        <Button onClick={() => navigate(-1)} variant="link">Go Back</Button>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background border-x border-border max-w-2xl mx-auto flex flex-col">
-      {/* --- HEADER --- */}
+      {/* --- HEADER (Unchanged) --- */}
       <div className="flex items-center py-2 px-4 border-b border-border sticky top-0 z-10 bg-background/90 backdrop-blur-sm">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="p-2 h-8 w-8 rounded-full">
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-sm font-bold ml-2">Post</h1>
-        <Button variant="ghost" size="icon" className="ml-auto h-8 w-8 rounded-full">
-          <MoreVertical className="h-4 w-4" />
-        </Button>
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="p-2"><ArrowLeft className="h-4 w-4" /></Button>
+        <h1 className="text-base font-bold ml-2">Post</h1>
       </div>
 
       <div className="flex-1">
@@ -276,34 +244,19 @@ const PostDetail = () => {
               </p>
             </Link>
 
-            {/* ACTION BUTTONS */}
+            {/* STATS SECTION */}
             <div className="flex justify-between items-center text-xs text-muted-foreground mt-1 -ml-2 max-w-[420px]">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
-                <MessageSquare className="h-4 w-4 group-hover:text-primary transition-colors" />
-                <span className="group-hover:text-primary transition-colors">{post.replies_count > 0 ? post.replies_count : ''}</span>
-              </Button>
-              <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
-                <Repeat className="h-4 w-4 group-hover:text-primary transition-colors" />
-                <span className="group-hover:text-primary transition-colors">106</span>
-              </Button>
-              <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
-                <Heart className="h-4 w-4 group-hover:text-red-500 transition-colors" />
-                <span className="group-hover:text-red-500 transition-colors">{post.likes_count > 0 ? post.likes_count : ''}</span>
-              </Button>
-              <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
-                <Bookmark className="h-4 w-4 group-hover:text-primary transition-colors" />
-                <span className="group-hover:text-primary transition-colors">24</span>
-              </Button>
-              <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
-                <Share className="h-4 w-4 group-hover:text-primary transition-colors" />
-              </Button>
+              <span>{post.replies_count > 0 ? post.replies_count : ''}</span>
+              <span className={`${post.likes_count > 0 ? 'text-red-500' : ''}`}>{post.likes_count > 0 ? post.likes_count : ''}</span>
+              <span>0</span>
             </div>
           </div>
         </div>
 
-        {/* --- MOST RELEVANT REPLIES HEADER --- */}
-        <div className="py-2 px-4 border-b border-border bg-muted/5">
-          <span className="text-xs text-muted-foreground">Most relevant replies ▼</span>
+        {/* --- REPLY INPUT SECTION (Placeholder) --- */}
+        <div className="py-2 px-4 border-b border-border">
+            {/* You would insert your Reply Input component here */}
+            <p className="text-xs text-muted-foreground">Reply input placeholder...</p>
         </div>
 
         {/* --- REPLIES LIST (NEW SECTION) --- */}
@@ -351,48 +304,12 @@ const PostDetail = () => {
                     <p className="text-foreground text-xs leading-snug whitespace-pre-wrap break-words mt-0.5">
                       {renderContentWithMentions(reply.content)}
                     </p>
-
-                    {/* REPLY ACTION BUTTONS */}
-                    <div className="flex justify-between items-center text-xs text-muted-foreground mt-1 -ml-2 max-w-[420px]">
-                      <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
-                        <MessageSquare className="h-4 w-4 group-hover:text-primary transition-colors" />
-                        <span className="group-hover:text-primary transition-colors">185</span>
-                      </Button>
-                      <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
-                        <Repeat className="h-4 w-4 group-hover:text-primary transition-colors" />
-                        <span className="group-hover:text-primary transition-colors">70</span>
-                      </Button>
-                      <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
-                        <Heart className="h-4 w-4 group-hover:text-red-500 transition-colors" />
-                        <span className="group-hover:text-red-500 transition-colors">702</span>
-                      </Button>
-                      <span className="group-hover:text-primary transition-colors">29.7K</span>
-                      <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
-                        <Share className="h-4 w-4 group-hover:text-primary transition-colors" />
-                      </Button>
-                    </div>
                   </div>
                 </div>
             ))}
             {replies.length === 0 && (
                 <p className="text-center text-xs text-muted-foreground py-8">No replies yet. Be the first!</p>
             )}
-        </div>
-
-        {/* --- REPLY INPUT SECTION --- */}
-        <div className="py-2 px-4 border-t border-border">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-              <UserIcon className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <Input
-              placeholder="Post your reply"
-              className="flex-1 bg-transparent border-0 text-xs text-foreground focus:outline-none focus:ring-0 focus:border-primary p-0 h-8"
-            />
-            <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full p-0">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </div>
         </div>
       </div>
     </div>
