@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -9,8 +9,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { motion, AnimatePresence } from 'framer-motion'; // For unique animations
-import { cn } from '@/lib/utils'; // Assuming you have a cn utility for class merging
+// Optional: Framer Motion for animations (install with: npm i framer-motion)
+let motion, AnimatePresence;
+try {
+  const fm = require('framer-motion');
+  motion = fm.motion;
+  AnimatePresence = fm.AnimatePresence;
+} catch (e) {
+  console.warn('Framer Motion not installed - animations disabled. Run: npm i framer-motion');
+  motion = null;
+  AnimatePresence = null;
+}
+// Fallback cn utility (if '@/lib/utils' missing, define here)
+const cn = (...classes: (string | undefined)[]) => classes.filter(Boolean).join(' ');
 
 // NOTE: This interface syntax is valid in a .tsx file.
 interface NewPostModalProps {
@@ -32,12 +43,12 @@ const useCharacterCount = (text: string) => {
 
 // Unique preview component for post
 const PostPreview: React.FC<{ content: string }> = ({ content }) => (
-    <Card className="mt-4 p-4 bg-gradient-to-r from-muted/20 to-accent/20 border-border/50">
+    <Card className="mt-4 p-3 sm:p-4 bg-gradient-to-r from-muted/20 to-accent/20 border-border/50 rounded-xl">
         <CardContent className="p-0">
             <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
                 {content || "Your post will appear here..."}
             </p>
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
+            <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border/20">
                 <Badge variant="outline" className="text-xs">Public</Badge>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <TrendingUp className="h-3 w-3" />
@@ -99,6 +110,10 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
         return () => clearTimeout(timer);
     }, [newPost]);
 
+    // Fallback for animations
+    const MotionDiv = motion ? motion.div : 'div';
+    const MotionSend = motion ? motion.div : 'div';
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             {/* DialogContent: Full-screen on mobile, rich design with rounded corners and high shadow */}
@@ -106,33 +121,52 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                 "sm:max-w-[425px] w-[95vw] max-w-md rounded-xl shadow-2xl p-0 overflow-hidden",
                 "sm:mx-auto sm:my-8"
             )}>
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key="header"
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="p-4 border-b border-muted-foreground/10 flex flex-row items-center justify-between bg-gradient-to-r from-primary/5 to-secondary/5"
-                    >
-                        <DialogTitle className="text-xl font-extrabold text-foreground flex items-center gap-2">
-                            <Sparkles className="h-5 w-5 text-primary animate-pulse" />
-                            Create Post
-                        </DialogTitle>
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={onClose} 
-                            className="rounded-full hover:bg-muted/50 transition-colors"
-                            disabled={isPosting}
+                <AnimatePresence mode="wait" suppressHydrationWarning={true}>
+                    {AnimatePresence && (
+                        <MotionDiv
+                            key="header"
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="p-4 border-b border-muted-foreground/10 flex flex-row items-center justify-between bg-gradient-to-r from-primary/5 to-secondary/5"
                         >
-                            <X className="h-5 w-5" />
-                        </Button>
-                    </motion.div>
+                            <DialogTitle className="text-xl font-extrabold text-foreground flex items-center gap-2">
+                                <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+                                Create Post
+                            </DialogTitle>
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={onClose} 
+                                className="rounded-full hover:bg-muted/50 transition-colors"
+                                disabled={isPosting}
+                            >
+                                <X className="h-5 w-5" />
+                            </Button>
+                        </MotionDiv>
+                    )}
+                    {!AnimatePresence && (
+                        <div className="p-4 border-b border-muted-foreground/10 flex flex-row items-center justify-between bg-gradient-to-r from-primary/5 to-secondary/5">
+                            <DialogTitle className="text-xl font-extrabold text-foreground flex items-center gap-2">
+                                <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+                                Create Post
+                            </DialogTitle>
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={onClose} 
+                                className="rounded-full hover:bg-muted/50 transition-colors"
+                                disabled={isPosting}
+                            >
+                                <X className="h-5 w-5" />
+                            </Button>
+                        </div>
+                    )}
                 </AnimatePresence>
                 
                 {/* Post Input Area: Elevated Card Style with interactive toolbar */}
                 <div className="p-4 space-y-4">
-                    {/* Toolbar: Quick actions for unique feel */}
+                    {/* Toolbar: Quick actions for unique feel - Mobile wrap */}
                     <div className="flex items-center gap-2 flex-wrap">
                         <Button variant="ghost" size="sm" className="h-8 px-2 text-xs rounded-full" disabled>
                             <ImageIcon className="h-4 w-4 mr-1" />
@@ -182,16 +216,19 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                     </div>
 
                     {/* Unique Post Preview */}
-                    <AnimatePresence>
-                        {showPreview && (
-                            <motion.div
+                    <AnimatePresence suppressHydrationWarning={true}>
+                        {showPreview && AnimatePresence && (
+                            <MotionDiv
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: "auto" }}
                                 exit={{ opacity: 0, height: 0 }}
                                 transition={{ duration: 0.3 }}
                             >
                                 <PostPreview content={newPost} />
-                            </motion.div>
+                            </MotionDiv>
+                        )}
+                        {showPreview && !AnimatePresence && (
+                            <PostPreview content={newPost} />
                         )}
                     </AnimatePresence>
 
@@ -209,21 +246,22 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                 : "bg-muted cursor-not-allowed"
                         )}
                     >
-                        <AnimatePresence mode="wait">
-                            {isPosting ? (
-                                <motion.div
+                        <AnimatePresence mode="wait" suppressHydrationWarning={true}>
+                            {isPosting && AnimatePresence ? (
+                                <MotionSend
                                     key="loading"
                                     initial={{ rotate: 0 }}
                                     animate={{ rotate: 360 }}
                                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                                 >
-                                    <Send className="h-4 w-4 animate-spin" />
-                                </motion.div>
-                            ) : (
-                                <motion.div key="send" initial={{ scale: 0.8 }} animate={{ scale: 1 }}>
                                     <Send className="h-4 w-4" />
-                                </motion.div>
+                                </MotionSend>
+                            ) : (
+                                <MotionSend key="send" initial={{ scale: 0.8 }} animate={{ scale: 1 }} suppressHydrationWarning={true}>
+                                    <Send className="h-4 w-4" />
+                                </MotionSend>
                             )}
+                            {!AnimatePresence && <Send className="h-4 w-4" />}
                         </AnimatePresence>
                         <span>{isPosting ? 'Posting...' : 'Share Post'}</span>
                     </Button>
