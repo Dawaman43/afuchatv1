@@ -4,8 +4,8 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#ffffff",
-  "description": "Connect and share on AfuChat",
+  "theme_color": "#33CCFF",
+  "description": "Fast, text-only messaging platform optimized for low-bandwidth connections",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
