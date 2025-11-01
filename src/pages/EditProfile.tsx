@@ -29,7 +29,7 @@ interface EditProfileForm {
 const EditProfile: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  const { userId } = useParams<{ userId: string }>(); // Fixed: Use 'userId' to match route /:userId/edit
 
   const [profile, setProfile] = useState<EditProfileForm>({
     display_name: '',
@@ -41,6 +41,7 @@ const EditProfile: React.FC = () => {
   });
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -48,8 +49,17 @@ const EditProfile: React.FC = () => {
       return;
     }
 
+    // Verify we're editing our own profile (userId from route should match user.id or handle)
+    if (userId && userId !== user.id) {
+      // Optional: Fetch profile by handle to verify, but for simplicity, redirect if mismatch
+      toast.error('Access denied: Can only edit your own profile');
+      navigate(`/profile/${user.id}`);
+      return;
+    }
+
     const fetchProfile = async () => {
       try {
+        setFetchError(null);
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
@@ -67,9 +77,20 @@ const EditProfile: React.FC = () => {
             show_online_status: data.show_online_status || true,
             show_read_receipts: data.show_read_receipts || true,
           });
+        } else {
+          // If no profile exists, initialize with defaults (upsert on save)
+          setProfile({
+            display_name: user.user_metadata?.full_name || '',
+            handle: user.user_metadata?.user_name || '',
+            bio: '',
+            is_private: false,
+            show_online_status: true,
+            show_read_receipts: true,
+          });
         }
       } catch (error: any) {
         console.error('Error fetching profile:', error);
+        setFetchError('Failed to load profile data. You can still edit and save.');
         toast.error('Failed to load profile');
       } finally {
         setLoading(false);
@@ -77,7 +98,7 @@ const EditProfile: React.FC = () => {
     };
 
     fetchProfile();
-  }, [user, navigate]);
+  }, [user, navigate, userId]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -107,7 +128,7 @@ const EditProfile: React.FC = () => {
 
       const { error } = await supabase
         .from('profiles')
-        .update(updateData)
+        .upsert(updateData) // Use upsert to create if not exists
         .eq('id', user.id);
 
       if (error) throw error;
@@ -143,7 +164,9 @@ const EditProfile: React.FC = () => {
               <Shield className="h-6 w-6 text-primary" />
               Edit Profile
             </CardTitle>
-            <CardDescription className="text-muted-foreground">Update your personal information and privacy settings</CardDescription>
+            <CardDescription className="text-muted-foreground">
+              {fetchError ? 'Some data could not be loaded, but you can still update your profile.' : 'Update your personal information and privacy settings'}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Display Name */}
@@ -209,7 +232,7 @@ const EditProfile: React.FC = () => {
                 Privacy & Settings
               </div>
               {/* Private Account Toggle */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-3 bg-card/50 rounded-lg">
                 <div className="space-y-1">
                   <Label className="text-sm font-medium text-foreground flex items-center gap-2">
                     <Lock className="h-4 w-4" />
@@ -225,7 +248,7 @@ const EditProfile: React.FC = () => {
               </div>
 
               {/* Show Online Status Toggle */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-3 bg-card/50 rounded-lg">
                 <div className="space-y-1">
                   <Label className="text-sm font-medium text-foreground flex items-center gap-2">
                     <Eye className="h-4 w-4" />
@@ -241,7 +264,7 @@ const EditProfile: React.FC = () => {
               </div>
 
               {/* Show Read Receipts Toggle */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-3 bg-card/50 rounded-lg">
                 <div className="space-y-1">
                   <Label className="text-sm font-medium text-foreground flex items-center gap-2">
                     <MessageCircle className="h-4 w-4" />
