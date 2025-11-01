@@ -54,8 +54,7 @@ const PostPreview: React.FC<{ content: string }> = ({ content }) => (
                     <TrendingUp className="h-3 w-3" />
                     <span>Visible to followers</span>
                 </div>
-            </div>
-        </CardContent>
+            </CardContent>
     </Card>
 );
 
@@ -145,11 +144,13 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
 
     return (
         <ErrorBoundary>
+            {/* The Dialog component handles the backdrop click close (the implicit "cancel") */}
             <Dialog open={isOpen} onOpenChange={onClose}>
-                {/* DialogContent: Full-screen on mobile, rich design with rounded corners and high shadow */}
+                {/* DialogContent Styling for Strict Mobile/Desktop Boundaries */}
                 <DialogContent className={cn(
-                    "sm:max-w-[425px] w-[95vw] max-w-md rounded-xl shadow-2xl p-0 overflow-hidden",
-                    "sm:mx-auto sm:my-8"
+                    "w-full max-w-md rounded-xl shadow-2xl p-0 overflow-hidden border-2 border-primary/50",
+                    "data-[state=open]:fixed data-[state=open]:top-[50%] data-[state=open]:left-[50%] data-[state=open]:translate-x-[-50%] data-[state=open]:translate-y-[-50%] data-[state=open]:duration-300",
+                    "sm:mx-auto sm:my-8 sm:max-w-[425px]"
                 )}>
                     <MotionDiv
                         key="header"
@@ -162,15 +163,20 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                             <Sparkles className="h-5 w-5 text-primary animate-pulse" />
                             Create Post
                         </DialogTitle>
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={onClose} 
-                            className="rounded-full hover:bg-muted/50 transition-colors"
-                            disabled={isPosting}
-                        >
-                            <X className="h-5 w-5" />
-                        </Button>
+                        {/* // --- REMOVED: Cancel icon (X) to ensure only one cancel mechanism exists ---
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={onClose} 
+                                className="rounded-full hover:bg-muted/50 transition-colors"
+                                disabled={isPosting}
+                            >
+                                <X className="h-5 w-5" />
+                            </Button>
+                        */}
+                        {/* NOTE: Dialog will close when the backdrop is clicked, 
+                            which serves as the single "cancel" action. 
+                        */}
                     </MotionDiv>
                     
                     {/* Post Input Area: Elevated Card Style with interactive toolbar */}
