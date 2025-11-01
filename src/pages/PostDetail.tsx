@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, User as UserIcon } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, MessageSquare, Heart, Share, Bookmark, Repeat, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 // Note: Verified Badge components must be imported or defined here
@@ -70,6 +70,7 @@ interface Reply {
   content: string;
   created_at: string;
   author: {
+    id: string;
     display_name: string;
     handle: string;
     is_verified: boolean;
@@ -84,6 +85,7 @@ interface Post {
   created_at: string;
   likes_count: number;
   replies_count: number;
+  views_count: number;
   
   author: {
     id: string; 
@@ -114,6 +116,7 @@ const PostDetail = () => {
           id, content, created_at,
           likes_count:post_acknowledgments(count),
           replies_count:post_replies(count),
+          views_count,
           author:profiles!author_id (
             id, display_name, handle, is_verified, is_organization_verified
           )
@@ -127,7 +130,7 @@ const PostDetail = () => {
         .select(`
           id, content, created_at,
           author:profiles!author_id (
-            display_name, handle, is_verified, is_organization_verified
+            id, display_name, handle, is_verified, is_organization_verified
           )
         `)
         .eq('post_id', postId)
@@ -190,10 +193,15 @@ const PostDetail = () => {
 
   return (
     <div className="min-h-screen bg-background border-x border-border max-w-2xl mx-auto flex flex-col">
-      {/* --- HEADER (Unchanged) --- */}
+      {/* --- HEADER --- */}
       <div className="flex items-center py-2 px-4 border-b border-border sticky top-0 z-10 bg-background/90 backdrop-blur-sm">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="p-2"><ArrowLeft className="h-4 w-4" /></Button>
-        <h1 className="text-base font-bold ml-2">Post</h1>
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="p-2 h-8 w-8 rounded-full">
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h1 className="text-sm font-bold ml-2">Post</h1>
+        <Button variant="ghost" size="icon" className="ml-auto h-8 w-8 rounded-full">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
       </div>
 
       <div className="flex-1">
@@ -244,19 +252,39 @@ const PostDetail = () => {
               </p>
             </Link>
 
-            {/* STATS SECTION */}
+            {/* VIEWS */}
+            <p className="text-xs text-muted-foreground mb-2">
+              {post.views_count} Views
+            </p>
+
+            {/* ACTION BUTTONS */}
             <div className="flex justify-between items-center text-xs text-muted-foreground mt-1 -ml-2 max-w-[420px]">
-              <span>{post.replies_count > 0 ? post.replies_count : ''}</span>
-              <span className={`${post.likes_count > 0 ? 'text-red-500' : ''}`}>{post.likes_count > 0 ? post.likes_count : ''}</span>
-              <span>0</span>
+              <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
+                <MessageSquare className="h-4 w-4 group-hover:text-primary transition-colors" />
+                <span className="group-hover:text-primary transition-colors">{post.replies_count > 0 ? post.replies_count : ''}</span>
+              </Button>
+              <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
+                <Repeat className="h-4 w-4 group-hover:text-primary transition-colors" />
+                <span className="group-hover:text-primary transition-colors">106</span>
+              </Button>
+              <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
+                <Heart className="h-4 w-4 group-hover:text-red-500 transition-colors" />
+                <span className="group-hover:text-red-500 transition-colors">914</span>
+              </Button>
+              <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
+                <Bookmark className="h-4 w-4 group-hover:text-primary transition-colors" />
+                <span className="group-hover:text-primary transition-colors">24</span>
+              </Button>
+              <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
+                <Share className="h-4 w-4 group-hover:text-primary transition-colors" />
+              </Button>
             </div>
           </div>
         </div>
 
-        {/* --- REPLY INPUT SECTION (Placeholder) --- */}
-        <div className="py-2 px-4 border-b border-border">
-            {/* You would insert your Reply Input component here */}
-            <p className="text-xs text-muted-foreground">Reply input placeholder...</p>
+        {/* --- MOST RELEVANT REPLIES HEADER --- */}
+        <div className="py-2 px-4 border-b border-border bg-muted/5">
+          <span className="text-xs text-muted-foreground">Most relevant replies ▼</span>
         </div>
 
         {/* --- REPLIES LIST (NEW SECTION) --- */}
@@ -304,12 +332,48 @@ const PostDetail = () => {
                     <p className="text-foreground text-xs leading-snug whitespace-pre-wrap break-words mt-0.5">
                       {renderContentWithMentions(reply.content)}
                     </p>
+
+                    {/* REPLY ACTION BUTTONS */}
+                    <div className="flex justify-between items-center text-xs text-muted-foreground mt-1 -ml-2 max-w-[420px]">
+                      <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
+                        <MessageSquare className="h-4 w-4 group-hover:text-primary transition-colors" />
+                        <span className="group-hover:text-primary transition-colors">185</span>
+                      </Button>
+                      <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
+                        <Repeat className="h-4 w-4 group-hover:text-primary transition-colors" />
+                        <span className="group-hover:text-primary transition-colors">70</span>
+                      </Button>
+                      <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
+                        <Heart className="h-4 w-4 group-hover:text-red-500 transition-colors" />
+                        <span className="group-hover:text-red-500 transition-colors">702</span>
+                      </Button>
+                      <span className="group-hover:text-primary transition-colors">29.7K</span>
+                      <Button variant="ghost" size="sm" className="flex items-center gap-1 group h-8">
+                        <Share className="h-4 w-4 group-hover:text-primary transition-colors" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
             ))}
             {replies.length === 0 && (
                 <p className="text-center text-xs text-muted-foreground py-8">No replies yet. Be the first!</p>
             )}
+        </div>
+
+        {/* --- REPLY INPUT SECTION --- */}
+        <div className="py-2 px-4 border-t border-border">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+              <UserIcon className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <Input
+              placeholder="Post your reply"
+              className="flex-1 bg-transparent border-0 text-xs text-foreground focus:outline-none focus:ring-0 focus:border-primary p-0 h-8"
+            />
+            <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full p-0">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
