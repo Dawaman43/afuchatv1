@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, User as UserIcon, MessageSquare, Heart, Share, Bookmark, Repeat, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 // Note: Verified Badge components must be imported or defined here
 
 // --- START: Verified Badge Components (Unchanged) ---
@@ -97,67 +98,87 @@ interface Post {
 }
 
 const PostDetail = () => {
-  const { postId } = useParams();
+  const { postId } = useParams<{ postId: string }>();
   const [post, setPost] = useState<Post | null>(null);
   const [replies, setReplies] = useState<Reply[]>([]); // NEW state for replies
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!postId) return;
+    if (!postId) {
+      setError('Invalid post ID');
+      setLoading(false);
+      return;
+    }
 
     const fetchPostAndReplies = async () => {
       setLoading(true);
+      setError(null);
       
-      // 1. Fetch Post Details and Counts
-      const postPromise = supabase
-        .from('posts')
-        .select(`
-          id, content, created_at,
-          likes_count:post_acknowledgments(count),
-          replies_count:post_replies(count),
-          views_count,
-          author:profiles!author_id (
-            id, display_name, handle, is_verified, is_organization_verified
-          )
-        `) 
-        .eq('id', postId)
-        .single();
+      try {
+        console.log('Fetching post with ID:', postId); // Debug log
         
-      // 2. Fetch Replies (Comments)
-      const repliesPromise = supabase
-        .from('post_replies')
-        .select(`
-          id, content, created_at,
-          author:profiles!author_id (
-            id, display_name, handle, is_verified, is_organization_verified
-          )
-        `)
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
+        // 1. Fetch Post Details and Counts
+        const postPromise = supabase
+          .from('posts')
+          .select(`
+            id, content, created_at,
+            likes_count:post_acknowledgments(count),
+            replies_count:post_replies(count),
+            views_count,
+            author:profiles!author_id (
+              id, display_name, handle, is_verified, is_organization_verified
+            )
+          `) 
+          .eq('id', postId)
+          .single();
+          
+        // 2. Fetch Replies (Comments)
+        const repliesPromise = supabase
+          .from('post_replies')
+          .select(`
+            id, content, created_at,
+            author:profiles!author_id (
+              id, display_name, handle, is_verified, is_organization_verified
+            )
+          `)
+          .eq('post_id', postId)
+          .order('created_at', { ascending: true });
 
-      const [postResult, repliesResult] = await Promise.all([postPromise, repliesPromise]);
-      
-      // Handle Post Data
-      if (postResult.error) {
-        console.error('Error fetching post data:', postResult.error);
-      } else if (postResult.data) {
-        const processedData = {
-          ...postResult.data,
-          likes_count: (postResult.data.likes_count as any[])[0]?.count || 0,
-          replies_count: (postResult.data.replies_count as any[])[0]?.count || 0,
-        };
-        setPost(processedData as Post);
-      }
+        const [postResult, repliesResult] = await Promise.all([postPromise, repliesPromise]);
+        
+        console.log('Post result:', postResult); // Debug log
+        console.log('Replies result:', repliesResult); // Debug log
+        
+        // Handle Post Data
+        if (postResult.error) {
+          console.error('Error fetching post data:', postResult.error);
+          setError(`Failed to fetch post: ${postResult.error.message}`);
+        } else if (postResult.data) {
+          const processedData = {
+            ...postResult.data,
+            likes_count: (postResult.data.likes_count as any[])[0]?.count || 0,
+            replies_count: (postResult.data.replies_count as any[])[0]?.count || 0,
+          };
+          setPost(processedData as Post);
+        } else {
+          setError('Post not found');
+        }
 
-      // Handle Replies Data
-      if (repliesResult.error) {
-        console.error('Error fetching replies:', repliesResult.error);
-      } else if (repliesResult.data) {
-        setReplies(repliesResult.data as any);
+        // Handle Replies Data
+        if (repliesResult.error) {
+          console.error('Error fetching replies:', repliesResult.error);
+          toast.error(`Failed to fetch replies: ${repliesResult.error.message}`);
+        } else if (repliesResult.data) {
+          setReplies(repliesResult.data as any);
+        }
+      } catch (err) {
+        console.error('Unexpected error:', err);
+        setError('An unexpected error occurred');
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     fetchPostAndReplies();
@@ -182,11 +203,16 @@ const PostDetail = () => {
     );
   }
 
-  if (!post) {
+  if (error || !post) {
     return (
-      <div className="p-4 text-center min-h-screen">
-        <h1 className="text-2xl font-bold">Post not found</h1>
-        <Button onClick={() => navigate(-1)} variant="link">Go Back</Button>
+      <div className="p-4 text-center min-h-screen flex flex-col items-center justify-center">
+        <h1 className="text-xl font-bold mb-2">Post not found</h1>
+        <p className="text-sm text-muted-foreground mb-4">{error || 'The requested post could not be loaded.'}</p>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate(-1)} variant="outline">Go Back</Button>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-4">Check console for more details.</p>
       </div>
     );
   }
