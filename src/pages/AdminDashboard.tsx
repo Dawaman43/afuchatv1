@@ -193,7 +193,7 @@ const AdminDashboard = () => {
         totalChats: chatCount || 0,
         activeToday: activeTodayCount,
         messagesLast7Days: groupByDay(messages7Days || []),
-        messagesLast30Days: processedMessages30,
+        messagesLast30Days: sma7,  // Use SMA-enriched data
         newUsersLast30Days: groupByDay(newUsers30Days || []),
       });
     } catch (error) {
@@ -319,14 +319,14 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background p-4 max-w-6xl mx-auto">
-        <Skeleton className="h-12 w-48 mb-6" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="min-h-screen bg-background p-2 sm:p-4 max-w-6xl mx-auto">
+        <Skeleton className="h-10 w-32 mb-4" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4">
           {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-32" />
+            <Skeleton key={i} className="h-24 sm:h-32" />
           ))}
         </div>
-        <Skeleton className="h-96" />
+        <Skeleton className="h-64 sm:h-96" />
       </div>
     );
   }
@@ -335,91 +335,91 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6 max-w-6xl">
-        <div className="flex items-center gap-4 mb-6">
+      <div className="container mx-auto px-2 py-4 sm:px-4 sm:py-6 max-w-6xl">
+        <div className="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/')}
-            className="rounded-full"
+            className="rounded-full h-8 w-8 sm:h-10 sm:w-10"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Monitor platform performance and manage users/posts</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Admin Dashboard</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Monitor platform performance and manage users/posts</p>
           </div>
         </div>
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="stats">Stats</TabsTrigger>
-            <TabsTrigger value="users">Users ({users.length})</TabsTrigger>
-            <TabsTrigger value="posts">Posts ({posts.length})</TabsTrigger>
+          <TabsList className="grid grid-cols-3 gap-0 mb-4 sm:mb-6 h-10 sm:h-auto">
+            <TabsTrigger value="stats" className="text-xs sm:text-sm py-2">Stats</TabsTrigger>
+            <TabsTrigger value="users" className="text-xs sm:text-sm py-2">Users ({users.length})</TabsTrigger>
+            <TabsTrigger value="posts" className="text-xs sm:text-sm py-2">Posts ({posts.length})</TabsTrigger>
           </TabsList>
 
           {/* Stats Tab */}
           <TabsContent value="stats">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
+            {/* Stats Cards - Mobile Grid */}
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6">
+              <Card className="p-2 sm:p-4">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+                  <CardTitle className="text-xs sm:text-sm font-medium">Total Users</CardTitle>
+                  <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{stats?.totalUsers}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-foreground">{stats?.totalUsers}</div>
                   <p className="text-xs text-muted-foreground">Registered accounts</p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Messages</CardTitle>
-                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <Card className="p-2 sm:p-4">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+                  <CardTitle className="text-xs sm:text-sm font-medium">Total Messages</CardTitle>
+                  <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{stats?.totalMessages}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-foreground">{stats?.totalMessages}</div>
                   <p className="text-xs text-muted-foreground">All-time messages</p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Chats</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <Card className="p-2 sm:p-4">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+                  <CardTitle className="text-xs sm:text-sm font-medium">Total Chats</CardTitle>
+                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{stats?.totalChats}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-foreground">{stats?.totalChats}</div>
                   <p className="text-xs text-muted-foreground">Active conversations</p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Today</CardTitle>
-                  <Activity className="h-4 w-4 text-muted-foreground" />
+              <Card className="p-2 sm:p-4">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+                  <CardTitle className="text-xs sm:text-sm font-medium">Active Today</CardTitle>
+                  <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{stats?.activeToday}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-foreground">{stats?.activeToday}</div>
                   <p className="text-xs text-muted-foreground">Users online today</p>
                 </CardContent>
               </Card>
             </div>
 
             {/* User Growth Chart - Professional Area Chart */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UsersIcon className="h-4 w-4" />
+            <Card className="mb-4 sm:mb-6 overflow-hidden">
+              <CardHeader className="p-3 sm:p-4">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                  <UsersIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                   User Growth - Last 30 Days
                 </CardTitle>
-                <CardDescription>Daily new user registrations with trend analysis</CardDescription>
+                <CardDescription className="text-xs sm:text-sm">Daily new user registrations with trend analysis</CardDescription>
               </CardHeader>
-              <CardContent className="bg-gradient-to-br from-gray-900 to-gray-800 p-4 rounded-lg">
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={stats?.newUsersLast30Days || []} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CardContent className="bg-gradient-to-br from-gray-900 to-gray-800 p-2 sm:p-4">
+                <ResponsiveContainer width="100%" height={250} className="sm:h-300">
+                  <AreaChart data={stats?.newUsersLast30Days || []} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                     <defs>
                       <linearGradient id="userGrowth" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
@@ -427,10 +427,10 @@ const AdminDashboard = () => {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="date" stroke="#9CA3AF" fontSize={12} tickLine={false} />
-                    <YAxis stroke="#9CA3AF" fontSize={12} tickLine={false} />
-                    <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }} />
-                    <Legend verticalAlign="top" />
+                    <XAxis dataKey="date" stroke="#9CA3AF" fontSize={10} tickLine={false} interval={Math.max(0, stats?.newUsersLast30Days.length - 5)} />
+                    <YAxis stroke="#9CA3AF" fontSize={10} tickLine={false} />
+                    <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', fontSize: '12px' }} />
+                    <Legend verticalAlign="top" wrapperStyle={{ fontSize: '12px' }} />
                     <Area type="monotone" dataKey="count" stroke="#8884d8" fillOpacity={1} fill="url(#userGrowth)" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -439,34 +439,34 @@ const AdminDashboard = () => {
 
             {/* Activity Timeline - Trading-Style Composed Chart */}
             <Tabs value={activityTab} onValueChange={setActivityTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="7days">Last 7 Days</TabsTrigger>
-                <TabsTrigger value="30days">Last 30 Days</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-2 sm:mb-4 h-10">
+                <TabsTrigger value="7days" className="text-xs sm:text-sm py-2">Last 7 Days</TabsTrigger>
+                <TabsTrigger value="30days" className="text-xs sm:text-sm py-2">Last 30 Days</TabsTrigger>
               </TabsList>
               
               <TabsContent value="7days">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-4 w-4" />
+                <Card className="overflow-hidden">
+                  <CardHeader className="p-3 sm:p-4">
+                    <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                      <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
                       Message Activity - Last 7 Days
                     </CardTitle>
-                    <CardDescription>Volume and trend with moving average (trading view style)</CardDescription>
+                    <CardDescription className="text-xs sm:text-sm">Volume and trend with moving average (trading view style)</CardDescription>
                   </CardHeader>
-                  <CardContent className="bg-gradient-to-br from-gray-900 to-gray-800 p-4 rounded-lg">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <ComposedChart data={stats?.messagesLast7Days || []} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <CardContent className="bg-gradient-to-br from-gray-900 to-gray-800 p-2 sm:p-4">
+                    <ResponsiveContainer width="100%" height={300} className="sm:h-400">
+                      <ComposedChart data={stats?.messagesLast7Days || []} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                        <XAxis dataKey="date" stroke="#9CA3AF" fontSize={12} tickLine={false} />
-                        <YAxis yAxisId="left" stroke="#9CA3AF" fontSize={12} tickLine={false} />
-                        <YAxis yAxisId="right" orientation="right" stroke="#9CA3AF" fontSize={12} tickLine={false} />
+                        <XAxis dataKey="date" stroke="#9CA3AF" fontSize={10} tickLine={false} />
+                        <YAxis yAxisId="left" stroke="#9CA3AF" fontSize={10} tickLine={false} />
+                        <YAxis yAxisId="right" orientation="right" stroke="#9CA3AF" fontSize={10} tickLine={false} />
                         <Tooltip 
-                          contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }}
-                          labelStyle={{ color: '#f3f4f6' }}
+                          contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', fontSize: '12px' }}
+                          labelStyle={{ color: '#f3f4f6', fontSize: '12px' }}
                         />
-                        <Legend verticalAlign="top" wrapperStyle={{ color: '#f3f4f6' }} />
-                        <Bar yAxisId="left" dataKey="count" fill="#ef4444" name="Volume" barSize={20} />
-                        <Line yAxisId="right" type="monotone" dataKey="count" stroke="#10b981" strokeWidth={2} name="Price" dot={false} />
+                        <Legend verticalAlign="top" wrapperStyle={{ fontSize: '12px' }} />
+                        <Bar yAxisId="left" dataKey="count" fill="#ef4444" name="Volume" barSize={15} className="sm:barSize-20" />
+                        <Line yAxisId="right" type="monotone" dataKey="count" stroke="#10b981" strokeWidth={2} name="Daily" dot={false} />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -474,27 +474,27 @@ const AdminDashboard = () => {
               </TabsContent>
 
               <TabsContent value="30days">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-4 w-4" />
+                <Card className="overflow-hidden">
+                  <CardHeader className="p-3 sm:p-4">
+                    <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                      <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
                       Message Activity - Last 30 Days
                     </CardTitle>
-                    <CardDescription>Advanced volume bars with SMA(7) overlay for trend analysis</CardDescription>
+                    <CardDescription className="text-xs sm:text-sm">Advanced volume bars with SMA(7) overlay for trend analysis</CardDescription>
                   </CardHeader>
-                  <CardContent className="bg-gradient-to-br from-gray-900 to-gray-800 p-4 rounded-lg">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <ComposedChart data={stats?.messagesLast30Days || []} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <CardContent className="bg-gradient-to-br from-gray-900 to-gray-800 p-2 sm:p-4">
+                    <ResponsiveContainer width="100%" height={300} className="sm:h-400">
+                      <ComposedChart data={stats?.messagesLast30Days || []} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                        <XAxis dataKey="date" stroke="#9CA3AF" fontSize={12} tickLine={false} />
-                        <YAxis yAxisId="left" stroke="#9CA3AF" fontSize={12} tickLine={false} />
-                        <YAxis yAxisId="right" orientation="right" stroke="#9CA3AF" fontSize={12} tickLine={false} />
+                        <XAxis dataKey="date" stroke="#9CA3AF" fontSize={10} tickLine={false} interval={Math.max(0, stats?.messagesLast30Days.length - 8)} />
+                        <YAxis yAxisId="left" stroke="#9CA3AF" fontSize={10} tickLine={false} />
+                        <YAxis yAxisId="right" orientation="right" stroke="#9CA3AF" fontSize={10} tickLine={false} />
                         <Tooltip 
-                          contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }}
-                          labelStyle={{ color: '#f3f4f6' }}
+                          contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', fontSize: '12px' }}
+                          labelStyle={{ color: '#f3f4f6', fontSize: '12px' }}
                         />
-                        <Legend verticalAlign="top" wrapperStyle={{ color: '#f3f4f6' }} />
-                        <Bar yAxisId="left" dataKey="count" fill="#ef4444" name="Volume" barSize={20} />
+                        <Legend verticalAlign="top" wrapperStyle={{ fontSize: '12px' }} />
+                        <Bar yAxisId="left" dataKey="count" fill="#ef4444" name="Volume" barSize={15} className="sm:barSize-20" />
                         <Line yAxisId="right" type="monotone" dataKey="count" stroke="#10b981" strokeWidth={2} name="Daily" dot={false} />
                         <Line yAxisId="right" type="monotone" dataKey="sma" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" name="SMA(7)" dot={false} />
                       </ComposedChart>
@@ -505,40 +505,41 @@ const AdminDashboard = () => {
             </Tabs>
           </TabsContent>
 
-          {/* Users Tab */}
+          {/* Users Tab - Mobile Optimized Table */}
           <TabsContent value="users">
             <Card>
-              <CardHeader>
-                <CardTitle>Manage Users</CardTitle>
-                <CardDescription>View and moderate user accounts</CardDescription>
+              <CardHeader className="p-3 sm:p-4">
+                <CardTitle className="text-sm sm:text-base">Manage Users</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">View and moderate user accounts</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Table>
+              <CardContent className="p-0 sm:p-0 overflow-x-auto">
+                <Table className="min-w-full">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Handle</TableHead>
-                      <TableHead>Joined</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Name</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Handle</TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Joined</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {users.map((u) => (
-                      <TableRow key={u.id}>
-                        <TableCell>{u.display_name}</TableCell>
-                        <TableCell>@{u.handle}</TableCell>
-                        <TableCell>{formatDate(u.created_at)}</TableCell>
-                        <TableCell>
-                          {u.is_admin && <Badge variant="secondary" className="mr-1">Admin</Badge>}
-                          {u.is_verified && <Badge variant="default" className="mr-1">Verified</Badge>}
-                          {u.is_organization_verified && <Badge variant="outline">Org</Badge>}
+                      <TableRow key={u.id} className="border-b border-border/50">
+                        <TableCell className="text-sm font-medium">{u.display_name}</TableCell>
+                        <TableCell className="text-xs">@{u.handle}</TableCell>
+                        <TableCell className="text-xs hidden sm:table-cell">{formatDate(u.created_at)}</TableCell>
+                        <TableCell className="text-xs">
+                          {u.is_admin && <Badge variant="secondary" className="mr-1 text-xs">Admin</Badge>}
+                          {u.is_verified && <Badge variant="default" className="mr-1 text-xs">Verified</Badge>}
+                          {u.is_organization_verified && <Badge variant="outline" className="text-xs">Org</Badge>}
                         </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
+                        <TableCell className="text-xs">
+                          <div className="flex flex-col sm:flex-row gap-1">
                             <Button
                               size="sm"
                               variant="outline"
+                              className="text-xs px-2 py-1"
                               onClick={() => toggleVerification(u.id, 'is_verified', !u.is_verified)}
                             >
                               {u.is_verified ? <Edit className="h-3 w-3 mr-1" /> : <UserCheck className="h-3 w-3 mr-1" />}
@@ -547,6 +548,7 @@ const AdminDashboard = () => {
                             <Button
                               size="sm"
                               variant="outline"
+                              className="text-xs px-2 py-1"
                               onClick={() => toggleVerification(u.id, 'is_organization_verified', !u.is_organization_verified)}
                             >
                               {u.is_organization_verified ? <Edit className="h-3 w-3 mr-1" /> : <Shield className="h-3 w-3 mr-1" />}
@@ -555,10 +557,11 @@ const AdminDashboard = () => {
                             <Button
                               size="sm"
                               variant={u.is_admin ? "destructive" : "secondary"}
+                              className="text-xs px-2 py-1"
                               onClick={() => toggleAdminRole(u.id, !u.is_admin)}
                             >
                               {u.is_admin ? <Edit className="h-3 w-3 mr-1" /> : <Shield className="h-3 w-3 mr-1" />}
-                              {u.is_admin ? 'Demote Admin' : 'Promote Admin'}
+                              {u.is_admin ? 'Demote' : 'Promote'}
                             </Button>
                           </div>
                         </TableCell>
@@ -566,7 +569,7 @@ const AdminDashboard = () => {
                     ))}
                     {users.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8 text-xs sm:text-sm">
                           No users found.
                         </TableCell>
                       </TableRow>
@@ -577,33 +580,34 @@ const AdminDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* Posts Tab */}
+          {/* Posts Tab - Mobile Optimized Table */}
           <TabsContent value="posts">
             <Card>
-              <CardHeader>
-                <CardTitle>Recent Posts</CardTitle>
-                <CardDescription>Moderate recent user posts</CardDescription>
+              <CardHeader className="p-3 sm:p-4">
+                <CardTitle className="text-sm sm:text-base">Recent Posts</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Moderate recent user posts</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Table>
+              <CardContent className="p-0 sm:p-0 overflow-x-auto">
+                <Table className="min-w-full">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Content</TableHead>
-                      <TableHead>Author ID</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Content</TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Author ID</TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden md:table-cell">Date</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {posts.map((p) => (
-                      <TableRow key={p.id}>
-                        <TableCell className="max-w-xs truncate">{p.content}</TableCell>
-                        <TableCell className="font-mono text-xs">{p.author_id.slice(0, 8)}...</TableCell>
-                        <TableCell>{formatDate(p.created_at)}</TableCell>
+                      <TableRow key={p.id} className="border-b border-border/50">
+                        <TableCell className="text-xs max-w-[150px] truncate sm:max-w-xs">{p.content}</TableCell>
+                        <TableCell className="text-xs font-mono hidden sm:table-cell">{p.author_id.slice(0, 8)}...</TableCell>
+                        <TableCell className="text-xs hidden md:table-cell">{formatDate(p.created_at)}</TableCell>
                         <TableCell>
                           <Button 
                             size="sm" 
                             variant="destructive" 
+                            className="text-xs px-2 py-1"
                             onClick={() => deletePost(p.id)}
                           >
                             <Trash2 className="h-3 w-3 mr-1" />
@@ -614,7 +618,7 @@ const AdminDashboard = () => {
                     ))}
                     {posts.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8 text-xs sm:text-sm">
                           No posts found.
                         </TableCell>
                       </TableRow>
