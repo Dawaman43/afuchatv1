@@ -9,6 +9,7 @@ import Chats from './Chats';
 import Feed from './Feed';
 import Search from './Search';
 import NewPostModal from '@/components/ui/NewPostModal';
+import Logo from '@/components/Logo';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import NewChatDialog from '@/components/ui/NewChatDialog';
@@ -144,49 +145,10 @@ const Index = () => {
 
 
   if (effectiveLoading) {
-    // Custom splash screen: White background with centered blue gradient "bubble" and app name
+    // Simplified splash screen: white background with centered larger logo only
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
-        <div className="relative">
-          {/* Custom chat bubble shape using SVG (blue gradient, no logo) */}
-          <svg
-            width="120"
-            height="120"
-            viewBox="0 0 120 120"
-            className="animate-pulse"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <defs>
-              <radialGradient id="bubbleGrad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" style={{ stopColor: '#3B82F6', stopOpacity: 1 }} />
-                <stop offset="100%" style={{ stopColor: '#1D4ED8', stopOpacity: 1 }} />
-              </radialGradient>
-            </defs>
-            <path
-              d="M60 10C30 10 10 30 10 60c0 20 15 35 35 35h20l15 15v-15h10c30 0 50 -20 50 -50S90 10 60 10Z"
-              fill="url(#bubbleGrad)"
-              stroke="#1D4ED8"
-              strokeWidth="2"
-            />
-          </svg>
-          {/* Subtle eyes and smile using simple paths (emoji-inspired but custom) */}
-          <svg
-            width="120"
-            height="120"
-            viewBox="0 0 120 120"
-            className="absolute top-0 left-0 pointer-events-none"
-          >
-            {/* Eyes */}
-            <circle cx="40" cy="45" r="6" fill="white" />
-            <circle cx="80" cy="45" r="6" fill="white" />
-            <circle cx="40" cy="45" r="3" fill="#1D4ED8" />
-            <circle cx="80" cy="45" r="3" fill="#1D4ED8" />
-            {/* Smile */}
-            <path d="M35 70 Q60 85 85 70" stroke="#1D4ED8" strokeWidth="3" fill="none" strokeLinecap="round" />
-          </svg>
-        </div>
-        <h1 className="mt-6 text-3xl font-bold text-gray-800">AfuChat</h1>
-        <p className="mt-2 text-sm text-gray-500">Loading your chats...</p>
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <Logo size="xl" />
       </div>
     );
   }
@@ -201,7 +163,6 @@ const Index = () => {
       >
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {/* Keep original Logo for header if desired, or replace with custom here too */}
             <Logo size="md" />
             <h1 className="text-lg font-bold text-primary">AfuChat</h1>
           </div>
