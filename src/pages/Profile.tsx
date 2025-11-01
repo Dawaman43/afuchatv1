@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-// 🛑 CRITICAL FIX: Changed from '@/contexts/Auth/AuthContext' to match the likely correct direct path.
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,10 +10,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-// --- NEW IMPORT: Admin Dashboard from pages (assuming path structure) ---
 import AdminDashboard from '@/pages/AdminDashboard';
 
-// --- Extended Profile and Post Interfaces (Unchanged) ---
 interface Profile {
 	id: string;
 	display_name: string;
@@ -34,91 +31,54 @@ interface Post {
 	reply_count: number;
 }
 
-// --- Helper: Check if a string is a valid UUID ---
 const isUUID = (str: string): boolean => {
 	const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 	return uuidRegex.test(str);
 };
 
-// --- Badges (Unchanged) ---
 const GoldVerifiedBadge = ({ size = 'w-5 h-5' }: { size?: string }) => (
-	<svg
-		viewBox="0 0 22 22"
-		xmlns="http://www.w3.org/2000/svg"
-		className={`${size} ml-1 text-[#FFD43B] fill-[#FFD43B]`}
-	>
-		<path
-			d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"
-		/>
+	<svg viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg" className={`${size} ml-1 text-[#FFD43B] fill-[#FFD43B]`}>
+		<path d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z" />
 	</svg>
 );
 
 const TwitterVerifiedBadge = ({ size = 'w-5 h-5' }: { size?: string }) => (
-	<svg
-		viewBox="0 0 22 22"
-		xmlns="http://www.w3.org/2000/svg"
-		className={`${size} ml-1 text-[#1d9bf0] fill-[#1d9bf0]`}
-	>
-		<path
-			d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"
-		/>
+	<svg viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg" className={`${size} ml-1 text-[#1d9bf0] fill-[#1d9bf0]`}>
+		<path d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z" />
 	</svg>
 );
 
 const VerifiedBadgeIcon = ({ isVerified, isOrgVerified }: { isVerified?: boolean; isOrgVerified?: boolean }) => {
-	if (isOrgVerified) {
-		return <GoldVerifiedBadge />;
-	}
-	if (isVerified) {
-		return <TwitterVerifiedBadge />;
-	}
+	if (isOrgVerified) return <GoldVerifiedBadge />;
+	if (isVerified) return <TwitterVerifiedBadge />;
 	return null;
 };
 
-// --- Content Parser Component for @Mentions (Used for both Post and Bio) ---
 const MENTION_REGEX = /@(\w+)/g;
 
 const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content, isBio = false }) => {
 	const parts: React.ReactNode[] = [];
 	let lastIndex = 0;
 	let match;
-
 	while ((match = MENTION_REGEX.exec(content)) !== null) {
 		const mentionText = match[0];
 		const handle = match[1];
-
-		if (match.index > lastIndex) {
-			parts.push(content.substring(lastIndex, match.index));
-		}
-
+		if (match.index > lastIndex) parts.push(content.substring(lastIndex, match.index));
 		parts.push(
 			<Link
 				key={`mention-${match.index}-${handle}`}
 				to={`/profile/${handle}`}
 				className="text-blue-500 hover:text-blue-400 font-medium transition-colors"
 				onClick={(e) => e.stopPropagation()}
-			>
-				{mentionText}
-			</Link>
+			>{mentionText}</Link>
 		);
-
 		lastIndex = match.index + mentionText.length;
 	}
-
-	if (lastIndex < content.length) {
-		parts.push(content.substring(lastIndex));
-	}
-
-	// Use a different className for the bio to control font size/margin if needed
-	const className = isBio
-		? "mt-3 text-sm whitespace-pre-wrap leading-relaxed"
-		: "text-foreground whitespace-pre-wrap leading-relaxed";
-
+	if (lastIndex < content.length) parts.push(content.substring(lastIndex));
+	const className = isBio ? "mt-3 text-sm whitespace-pre-wrap leading-relaxed" : "text-foreground whitespace-pre-wrap leading-relaxed";
 	return <p className={className}>{parts}</p>;
 };
 
-
-// --- Component Definition ---
 const Profile = () => {
 	const { userId: urlParam } = useParams<{ userId: string }>();
 	const navigate = useNavigate();
@@ -128,230 +88,86 @@ const Profile = () => {
 	const [isFollowing, setIsFollowing] = useState(false);
 	const [followCount, setFollowCount] = useState({ followers: 0, following: 0 });
 	const [loading, setLoading] = useState(true);
-
 	const [profileId, setProfileId] = useState<string | null>(null);
-	// --- NEW STATE: Track if current user is admin ---
 	const [isAdmin, setIsAdmin] = useState(false);
 
-	// Function to aggregate follow/follower counts
 	const fetchFollowCounts = useCallback(async (id: string) => {
 		if (!id) return;
-
-		const { count: followerCount } = await supabase
-			.from('follows')
-			.select('id', { count: 'exact', head: true })
-			.eq('following_id', id);
-
-		const { count: followingCount } = await supabase
-			.from('follows')
-			.select('id', { count: 'exact', head: true })
-			.eq('follower_id', id);
-
-		setFollowCount({
-			followers: followerCount || 0,
-			following: followingCount || 0
-		});
+		const { count: followers } = await supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', id);
+		const { count: following } = await supabase.from('follows').select('id', { count: 'exact', head: true }).eq('follower_id', id);
+		setFollowCount({ followers: followers || 0, following: following || 0 });
 	}, []);
 
-	// --- NEW FUNCTION: Fetch admin role for current user ---
 	const fetchAdminStatus = useCallback(async (userId: string) => {
-		if (!userId) {
-			setIsAdmin(false);
-			return;
-		}
-
-		const { data } = await supabase
-			.from('user_roles')
-			.select('role')
-			.eq('user_id', userId)
-			.limit(1)
-			.single();
-
+		if (!userId) return setIsAdmin(false);
+		const { data } = await supabase.from('user_roles').select('role').eq('user_id', userId).limit(1).single();
 		setIsAdmin(data?.role === 'admin');
 	}, []);
 
-	// --- THE CRUCIAL FIX IS HERE ---
 	const fetchProfile = useCallback(async () => {
 		setLoading(true);
 		setProfile(null);
 		setProfileId(null);
-
-		if (!urlParam) {
-			navigate('/');
-			setLoading(false);
-			return;
-		}
-
+		if (!urlParam) { navigate('/'); setLoading(false); return; }
 		const isParamUUID = isUUID(urlParam);
-
-		let query = supabase
-			.from('profiles')
-			.select('*, created_at')
-			.limit(1);
-
-		if (isParamUUID) {
-			query = query.eq('id', urlParam);
-		} else {
-            // 🛑 FIX 1: Change .eq() to .ilike() for case-insensitive handle lookup.
-			// This relies on your database RLS policy being correctly set!
-			query = query.ilike('handle', urlParam);
-		}
-
-        // 🛑 FIX 2: Change .single() to .maybeSingle() to prevent Supabase
-        // from throwing a 406 error when no profile is found.
+		let query = supabase.from('profiles').select('*, created_at').limit(1);
+		query = isParamUUID ? query.eq('id', urlParam) : query.ilike('handle', urlParam);
 		const { data, error } = await query.maybeSingle();
-
-		if (error && error.code !== 'PGRST116') { // PGRST116 is 'single row not found' error, which maybeSingle aims to avoid
-			toast.error('Failed to load profile due to a database error.');
-			console.error('Profile fetch error:', error);
-			setLoading(false);
-			return;
-		}
-
-		if (!data) {
-            // Handle the 'no profile found' scenario cleanly
-			toast.error('Profile not found');
-			setLoading(false);
-			return;
-		}
-
+		if (error && error.code !== 'PGRST116') { toast.error('Failed to load profile'); setLoading(false); return; }
+		if (!data) { toast.error('Profile not found'); setLoading(false); return; }
 		setProfile(data as Profile);
 		setProfileId(data.id);
-		setLoading(false); // Set loading to false on success here
-
+		setLoading(false);
 	}, [urlParam, navigate]);
 
 	const checkFollowStatus = useCallback(async (id: string) => {
 		if (!user || !id) return;
-
-		const { data } = await supabase
-			.from('follows')
-			.select('id')
-			.eq('follower_id', user.id)
-			.eq('following_id', id)
-			.limit(1)
-			.single();
-
+		const { data } = await supabase.from('follows').select('id').eq('follower_id', user.id).eq('following_id', id).limit(1).single();
 		setIsFollowing(!!data);
 	}, [user]);
 
 	const fetchUserPosts = useCallback(async (id: string) => {
 		if (!id) return;
-
-		// If the profile is private, and the current user is NOT the owner, don't fetch posts
-		if (profile?.is_private && user?.id !== id) {
-			setPosts([]);
-			return;
-		}
-		
-		const { data, error } = await supabase
-			.from('posts')
-			.select('id, content, created_at')
-			.eq('author_id', id)
-			.order('created_at', { ascending: false })
-			.limit(20);
-
-		if (!error && data) {
-			setPosts(data.map(p => ({
-				...p,
-				// NOTE: Acknowledgment and reply counts should ideally come from a PostgreSQL view or RPC
-				acknowledgment_count: Math.floor(Math.random() * 100),
-				reply_count: Math.floor(Math.random() * 10),
-			} as Post)));
-		} else {
-			setPosts([]);
-		}
+		if (profile?.is_private && user?.id !== id) { setPosts([]); return; }
+		const { data, error } = await supabase.from('posts').select('id, content, created_at').eq('author_id', id).order('created_at', { ascending: false }).limit(20);
+		if (!error && data) setPosts(data.map(p => ({ ...p, acknowledgment_count: Math.floor(Math.random()*100), reply_count: Math.floor(Math.random()*10) } as Post)));
+		else setPosts([]);
 	}, [profile, user]);
 
-
-	useEffect(() => {
-		fetchProfile();
-	}, [fetchProfile]);
-
+	useEffect(() => { fetchProfile(); }, [fetchProfile]);
 	useEffect(() => {
 		if (profileId) {
 			fetchFollowCounts(profileId);
-			fetchUserPosts(profileId); // Now safely fetches posts based on new logic
-			if (user && user.id !== profileId) {
-				checkFollowStatus(profileId);
-			}
-			// Removed redundant setLoading(false) which is now in fetchProfile
+			fetchUserPosts(profileId);
+			if (user && user.id !== profileId) checkFollowStatus(profileId);
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [profileId, user, fetchUserPosts]); // Added fetchUserPosts to dependency array for clarity
+	}, [profileId, user, fetchFollowCounts, fetchUserPosts, checkFollowStatus]);
 
-	// --- NEW EFFECT: Fetch admin status when user changes ---
-	useEffect(() => {
-		if (user) {
-			fetchAdminStatus(user.id);
-		}
-	}, [user, fetchAdminStatus]);
+	useEffect(() => { if (user) fetchAdminStatus(user.id); }, [user, fetchAdminStatus]);
 
-	// --- Follow/Unfollow Logic (Updated to use profileId) ---
 	const handleFollow = async () => {
-		if (!user || !profileId) {
-			navigate('/auth');
-			return;
-		}
-		const currentIsFollowing = isFollowing;
-
-		setIsFollowing(!currentIsFollowing);
-		setFollowCount(prev => ({
-			...prev,
-			followers: prev.followers + (currentIsFollowing ? -1 : 1)
-		}));
-
-		if (currentIsFollowing) {
-			const { error } = await supabase
-				.from('follows')
-				.delete()
-				.eq('follower_id', user.id)
-				.eq('following_id', profileId);
-
-			if (error) {
-				setIsFollowing(true);
-				setFollowCount(prev => ({ ...prev, followers: prev.followers + 1 }));
-				toast.error('Failed to unfollow');
-			} else {
-				toast.success('Unfollowed');
-			}
+		if (!user || !profileId) { navigate('/auth'); return; }
+		const current = isFollowing;
+		setIsFollowing(!current);
+		setFollowCount(prev => ({ ...prev, followers: prev.followers + (current ? -1 : 1) }));
+		if (current) {
+			const { error } = await supabase.from('follows').delete().eq('follower_id', user.id).eq('following_id', profileId);
+			if (error) { setIsFollowing(true); setFollowCount(prev => ({ ...prev, followers: prev.followers + 1 })); toast.error('Failed to unfollow'); }
+			else toast.success('Unfollowed');
 		} else {
-			const { error } = await supabase
-				.from('follows')
-				.insert({ follower_id: user.id, following_id: profileId });
-
-			if (error) {
-				setIsFollowing(false);
-				setFollowCount(prev => ({ ...prev, followers: prev.followers - 1 }));
-				toast.error('Failed to follow');
-			} else {
-				toast.success('Following');
-			}
+			const { error } = await supabase.from('follows').insert({ follower_id: user.id, following_id: profileId });
+			if (error) { setIsFollowing(false); setFollowCount(prev => ({ ...prev, followers: prev.followers - 1 })); toast.error('Failed to follow'); }
+			else toast.success('Following');
 		}
 	};
 
-	// --- Start Chat Logic (Updated to use profileId) ---
 	const handleStartChat = async () => {
-		if (!user || !profileId) {
-			navigate('/auth');
-			return;
-		}
-
-		const { data: existingChats } = await supabase
-			.from('chat_members')
-			.select('chat_id, chats!inner(is_group)')
-			.eq('user_id', user.id);
-
+		if (!user || !profileId) { navigate('/auth'); return; }
+		const { data: existingChats } = await supabase.from('chat_members').select('chat_id, chats!inner(is_group)').eq('user_id', user.id);
 		if (existingChats) {
 			for (const chat of existingChats) {
-				// Only check private chats (is_group: false)
 				if (chat.chats?.is_group === false) {
-					const { data: members } = await supabase
-						.from('chat_members')
-						.select('user_id')
-						.eq('chat_id', chat.chat_id);
-
-					// Check if the chat has exactly two members, one of whom is the profile user
+					const { data: members } = await supabase.from('chat_members').select('user_id').eq('chat_id', chat.chat_id);
 					if (members && members.length === 2 && members.some(m => m.user_id === profileId)) {
 						navigate(`/chat/${chat.chat_id}`);
 						return;
@@ -359,315 +175,119 @@ const Profile = () => {
 				}
 			}
 		}
-
-		const { data: newChat, error: chatError } = await supabase
-			.from('chats')
-			.insert({ is_group: false, created_by: user.id })
-			.select()
-			.single();
-
-		if (chatError) {
-			toast.error('Failed to create chat');
-			return;
-		}
-
-		const { error: membersError } = await supabase
-			.from('chat_members')
-			.insert([
-				{ chat_id: newChat.id, user_id: user.id },
-				{ chat_id: newChat.id, user_id: profileId },
-			]);
-
-		if (membersError) {
-			toast.error('Failed to add members');
-			return;
-		}
-
+		const { data: newChat, error: chatError } = await supabase.from('chats').insert({ is_group: false, created_by: user.id }).select().single();
+		if (chatError) { toast.error('Failed to create chat'); return; }
+		const { error: membersError } = await supabase.from('chat_members').insert([{ chat_id: newChat.id, user_id: user.id }, { chat_id: newChat.id, user_id: profileId }]);
+		if (membersError) { toast.error('Failed to add members'); return; }
 		navigate(`/chat/${newChat.id}`);
 	};
 
-	// --- NEW FUNCTION: Handle Logout ---
 	const handleLogout = async () => {
 		const { error } = await supabase.auth.signOut();
-		if (error) {
-			toast.error('Failed to log out');
-			console.error('Logout error:', error);
-		} else {
-			toast.success('Logged out successfully');
-			navigate('/');
-		}
+		if (error) toast.error('Failed to log out');
+		else { toast.success('Logged out successfully'); navigate('/'); }
 	};
 
-	// --- NEW FUNCTION: Navigate to Admin Dashboard ---
-	const handleAdminDashboard = () => {
-		navigate('/admin');
-	};
+	const handleAdminDashboard = () => navigate('/admin');
+	const formatCount = (count: number) => (count >= 1000 ? (count/1000).toFixed(1)+'K' : count);
 
-	// --- Loading State Render (Unchanged) ---
-	if (loading) {
-		return (
-			<div className="h-full flex flex-col">
-				<div className="p-4 border-b border-border">
-					<Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Back</Button>
-					<Skeleton className="h-4 w-1/4 mb-4" />
+	if (loading) return (
+		<div className="h-full flex flex-col">
+			<div className="p-4 border-b border-border">
+				<Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Back</Button>
+				<Skeleton className="h-4 w-1/4 mb-4" />
+			</div>
+			<div className="p-4">
+				<div className="flex items-center justify-between">
+					<Skeleton className="h-24 w-24 sm:h-32 sm:w-32 rounded-full -mt-10 border-4 border-background" />
+					<Skeleton className="h-10 w-32 rounded-full" />
 				</div>
-				<div className="p-4">
-					<div className="flex items-center justify-between">
-						<Skeleton className="h-24 w-24 sm:h-32 sm:w-32 rounded-full -mt-10 border-4 border-background" />
-						<Skeleton className="h-10 w-32 rounded-full" />
-					</div>
-					<Skeleton className="h-6 w-1/2 mt-4" />
-					<Skeleton className="h-4 w-1/4 mt-1" />
-					<Skeleton className="h-4 w-3/4 mt-3" />
-					<div className="flex gap-4 mt-3">
-						<Skeleton className="h-4 w-24" />
-						<Skeleton className="h-4 w-24" />
-					</div>
-				</div>
-				<div className="mt-4 border-b border-border">
-					<Skeleton className="h-10 w-full" />
-				</div>
-				<div className="p-4 space-y-4">
-					<Skeleton className="h-20 w-full" />
-					<Skeleton className="h-20 w-full" />
+				<Skeleton className="h-6 w-1/2 mt-4" />
+				<Skeleton className="h-4 w-1/4 mt-1" />
+				<Skeleton className="h-4 w-3/4 mt-3" />
+				<div className="flex gap-4 mt-3">
+					<Skeleton className="h-4 w-24" />
+					<Skeleton className="h-4 w-24" />
 				</div>
 			</div>
-		);
-	}
-
-	// --- Profile Not Found Render (Unchanged) ---
-	if (!profile) {
-		return (
-			<div className="flex items-center justify-center h-full">
-				<div className="text-muted-foreground">Profile not found</div>
+			<div className="mt-4 border-b border-border">
+				<Skeleton className="h-10 w-full" />
 			</div>
-		);
-	}
+			<div className="p-4 space-y-4">
+				<Skeleton className="h-20 w-full" />
+				<Skeleton className="h-20 w-full" />
+			</div>
+		</div>
+	);
 
-	// --- Utility (Unchanged) ---
-	const formatCount = (count: number) => {
-		if (count >= 1000) {
-			return (count / 1000).toFixed(1) + 'K';
-		}
-		return count;
-	};
+	if (!profile) return <div className="flex items-center justify-center h-full"><div className="text-muted-foreground">Profile not found</div></div>;
 
-	// --- Main Render ---
 	return (
 		<div className="h-full flex flex-col">
-			{/* HEADER BAR - UPDATED WITH LOGOUT BUTTON */}
 			<div className="p-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b border-border">
 				<div className="flex items-center justify-between">
 					<div className="flex items-center">
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={() => navigate(-1)}
-							className="rounded-full mr-4"
-						>
-							<ArrowLeft className="h-5 w-5" />
-						</Button>
+						<Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full mr-4"><ArrowLeft className="h-5 w-5" /></Button>
 						<div>
 							<h1 className="text-xl font-bold">{profile.display_name}</h1>
 							<p className="text-xs text-muted-foreground">{posts.length} Posts</p>
 						</div>
 					</div>
-					{/* NEW: Logout Button (shown if user is logged in) */}
-					{user && (
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={handleLogout}
-							className="rounded-full"
-							title="Log out"
-						>
-							<LogOut className="h-5 w-5" />
-						</Button>
+					{user?.id === profile.id ? (
+						<Popover>
+							<PopoverTrigger asChild>
+								<Button variant="outline" size="sm"><Settings className="h-4 w-4 mr-1" />Settings</Button>
+							</PopoverTrigger>
+							<PopoverContent align="end" className="w-40">
+								<Button variant="ghost" className="w-full justify-start" onClick={handleLogout}><LogOut className="mr-2 h-4 w-4" />Logout</Button>
+								<Button variant="ghost" className="w-full justify-start" onClick={() => navigate('/edit-profile')}><Pencil className="mr-2 h-4 w-4" />Edit Profile</Button>
+							</PopoverContent>
+						</Popover>
+					) : (
+						<div className="flex gap-2">
+							<Button size="sm" variant={isFollowing ? 'outline' : 'default'} onClick={handleFollow}>
+								{isFollowing ? 'Following' : 'Follow'} {isFollowing ? <UserPlus className="ml-1 h-4 w-4" /> : null}
+							</Button>
+							<Button size="sm" variant="secondary" onClick={handleStartChat}><MessageSquare className="h-4 w-4 mr-1" />Message</Button>
+						</div>
 					)}
+				</div>
+				<div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-4">
+					<div className="flex items-center gap-2">
+						<h2 className="text-lg font-semibold">{profile.display_name}</h2>
+						<VerifiedBadgeIcon isVerified={profile.is_verified} isOrgVerified={profile.is_organization_verified} />
+					</div>
+					<p className="text-muted-foreground">@{profile.handle}</p>
+				</div>
+				{profile.bio && <ContentParser content={profile.bio} isBio />}
+				<div className="flex gap-4 mt-2 text-sm">
+					<span><strong>{formatCount(followCount.followers)}</strong> Followers</span>
+					<span><strong>{formatCount(followCount.following)}</strong> Following</span>
 				</div>
 			</div>
 
-			{/* PROFILE CONTENT AREA */}
-			<div className="flex-1 overflow-y-auto">
-				{/* Banner/Header Image Placeholder */}
-				<div className="h-36 bg-gray-300 dark:bg-gray-700 w-full">
-					{/* Placeholder for banner image */}
-				</div>
+			{isAdmin && <AdminDashboard />}
 
-				{/* Profile Info and Buttons - UPDATED WITH ADMIN DASHBOARD BUTTON */}
-				<div className="p-4">
-					<div className="flex justify-between items-end -mt-20 sm:-mt-16">
-						<div className="h-24 w-24 sm:h-32 sm:w-32 rounded-full bg-primary flex items-center justify-center text-primary-foreground border-4 border-background shadow-lg">
-							<User className="h-12 w-12 sm:h-16 sm:w-16" />
-						</div>
-
-						{/* Buttons - UPDATED: Add Admin Dashboard if owner and admin */}
-						{user && user.id === profileId ? (
-							<div className="flex flex-col gap-2">
-								<Button variant="outline" className="rounded-full px-4 font-bold">
-									<Pencil className="h-4 w-4 mr-2" />
-									Edit Profile
-								</Button>
-								{isAdmin && (
-									<Button
-										onClick={handleAdminDashboard}
-										variant="secondary"
-										className="rounded-full px-4 font-bold"
-									>
-										<Settings className="h-4 w-4 mr-2" />
-										Admin Dashboard
-									</Button>
-								)}
+			<Tabs defaultValue="posts" className="flex-1">
+				<TabsList className="border-b border-border">
+					<TabsTrigger value="posts">Posts</TabsTrigger>
+					<TabsTrigger value="replies">Replies</TabsTrigger>
+				</TabsList>
+				<TabsContent value="posts" className="p-4 space-y-4">
+					{posts.length === 0 ? <p className="text-muted-foreground">No posts yet.</p> : posts.map(post => (
+						<Card key={post.id} className="p-4">
+							<ContentParser content={post.content} />
+							<div className="flex gap-4 mt-2 text-sm text-muted-foreground">
+								<span>{post.acknowledgment_count} Likes</span>
+								<span>{post.reply_count} Replies</span>
 							</div>
-						) : (
-							<div className="flex gap-2">
-								{isFollowing && (
-									<Button onClick={handleStartChat} variant="outline" size="icon" className="rounded-full">
-										<MessageSquare className="h-5 w-5" />
-									</Button>
-								)}
-								<Button
-									onClick={handleFollow}
-									variant={isFollowing ? "outline" : "default"}
-									className="rounded-full px-4 font-bold transition-colors"
-									onMouseEnter={e => isFollowing && (e.currentTarget.textContent = 'Unfollow')}
-									onMouseLeave={e => isFollowing && (e.currentTarget.textContent = 'Following')}
-								>
-									{isFollowing ? 'Following' :
-										<>
-											<UserPlus className="h-4 w-4 mr-2" />
-											Follow
-										</>
-									}
-								</Button>
-							</div>
-						)}
-					</div>
-
-					{/* Name and Handle Section */}
-					<div className="mt-3">
-
-						{/* Verification Badge/Popover Logic (Unchanged) */}
-						{(profile.is_verified || profile.is_organization_verified) ? (
-							<Popover>
-								<PopoverTrigger asChild>
-									<div className="flex items-center gap-1 cursor-pointer w-fit">
-										<h1 className="text-xl font-extrabold leading-tight">{profile.display_name}</h1>
-										<VerifiedBadgeIcon
-											isVerified={profile.is_verified}
-											isOrgVerified={profile.is_organization_verified}
-										/>
-									</div>
-								</PopoverTrigger>
-								<PopoverContent className="w-auto p-0 border-none shadow-xl rounded-2xl" onClick={(e) => e.stopPropagation()}>
-
-									{profile.is_organization_verified ? (
-										<div className="p-4 max-w-sm">
-											<GoldVerifiedBadge size="w-6 h-6" />
-											<h3 className="font-bold text-lg mt-2 text-foreground">Verified Organization</h3>
-											<p className="text-sm text-muted-foreground mt-1">
-												This account is verified because it's a notable organization on AfuChat.
-												<span className="block mt-2 font-bold text-foreground">@{profile.handle}</span>
-											</p>
-										</div>
-									) : (
-										<div className="p-4 max-w-sm">
-											<TwitterVerifiedBadge size="w-6 h-6" />
-											<h3 className="font-bold text-lg mt-2 text-foreground">Verified Account</h3>
-											<p className="text-sm text-muted-foreground mt-1">
-												This account is verified because it’s notable in government, news, entertainment, or another designated category.
-												<span className="block mt-2 font-bold text-foreground">@{profile.handle}</span>
-											</p>
-										</div>
-									)}
-
-								</PopoverContent>
-							</Popover>
-						) : (
-							<div className="flex items-center gap-1">
-								<h1 className="text-xl font-extrabold leading-tight">{profile.display_name}</h1>
-							</div>
-						)}
-
-						<p className="text-muted-foreground text-sm">@{profile.handle}</p>
-					</div>
-					{/* --- END Name/Handle Section --- */}
-
-					{/* Bio - NOW USING THE PARSER COMPONENT with isBio=true */}
-					{profile.bio && (
-						<ContentParser content={profile.bio} isBio={true} />
-					)}
-
-					{/* Metadata */}
-					<div className="flex items-center space-x-4 mt-3 text-muted-foreground text-sm">
-						<div className="flex items-center gap-1">
-							<Calendar className="h-4 w-4" />
-							<span className="text-xs">Joined {profile.created_at ? new Date(profile.created_at).toLocaleString('en-UG', { month: 'long', year: 'numeric' }) : 'Unknown'}</span>
-						</div>
-					</div>
-
-					{/* Follow Counts */}
-					<div className="flex gap-4 mt-3">
-						<div className="flex items-center">
-							<span className="font-bold text-sm">{formatCount(followCount.following)}</span>
-							<span className="text-muted-foreground text-sm ml-1 hover:underline cursor-pointer">Following</span>
-						</div>
-						<div className="flex items-center">
-							<span className="font-bold text-sm">{formatCount(followCount.followers)}</span>
-							<span className="text-muted-foreground text-sm ml-1 hover:underline cursor-pointer">Followers</span>
-						</div>
-					</div>
-				</div>
-
-				{/* POSTS SECTION (Tabs) */}
-				<Separator className="mt-4" />
-				<Tabs defaultValue="posts" className="w-full">
-					<TabsList className="grid grid-cols-3 w-full h-12 rounded-none bg-background">
-						<TabsTrigger value="posts" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground">
-							Posts
-						</TabsTrigger>
-						<TabsTrigger value="replies" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground">
-							Replies
-						</TabsTrigger>
-						<TabsTrigger value="media" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground">
-							Media
-						</TabsTrigger>
-					</TabsList>
-
-					<TabsContent value="posts">
-						{profile.is_private && user?.id !== profileId ? (
-							<div className="text-center text-muted-foreground py-12">
-								<Lock className="h-8 w-8 mx-auto mb-2" />
-								<p className="font-semibold">This profile is private</p>
-								<p className="text-sm">Follow to see their posts and activity.</p>
-							</div>
-						) : posts.length === 0 ? (
-							<div className="text-center text-muted-foreground py-12">
-								No posts yet.
-							</div>
-						) : (
-							<div className="space-y-0 divide-y divide-border">
-								{posts.map((post) => (
-									<Card key={post.id} className="p-4 rounded-none border-x-0 border-t-0 hover:bg-muted/10 cursor-pointer transition-colors">
-										{/* 👇 Using the parser for post content 👇 */}
-										<ContentParser content={post.content} />
-										<div className="flex justify-between items-center text-xs text-muted-foreground mt-2">
-											<span>{new Date(post.created_at).toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}</span>
-										</div>
-									</Card>
-								))}
-							</div>
-						)}
-					</TabsContent>
-
-					<TabsContent value="replies">
-						<div className="text-center text-muted-foreground py-12">Replies feature coming soon...</div>
-					</TabsContent>
-					<TabsContent value="media">
-						<div className="text-center text-muted-foreground py-12">Media content is not yet supported.</div>
-					</TabsContent>
-				</Tabs>
-			</div>
+						</Card>
+					))}
+				</TabsContent>
+				<TabsContent value="replies" className="p-4 space-y-4">
+					<p className="text-muted-foreground">Replies section coming soon.</p>
+				</TabsContent>
+			</Tabs>
 		</div>
 	);
 };
