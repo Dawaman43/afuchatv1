@@ -148,7 +148,7 @@ const Index = () => {
     // Skeleton loading state
     return (
       <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto">
-        <div className="h-14 flex items-center justify-between shadow-md rounded-b-lg">
+        <div className="h-14 flex items-center justify-between rounded-b-lg">
           <Skeleton className="h-6 w-24" />
           <div className="flex gap-2">
             <Skeleton className="h-8 w-8 rounded-full" />
@@ -197,7 +197,7 @@ const Index = () => {
       {/* Header (Hides on Scroll Down) */}
       <header 
         ref={headerRef}
-        className={`bg-card shadow-md sticky top-0 z-20 transition-transform duration-300 ease-in-out ${headerTranslateClass}`}
+        className={`bg-background sticky top-0 z-20 transition-transform duration-300 ease-in-out ${headerTranslateClass}`}
       >
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -255,7 +255,7 @@ const Index = () => {
 
       {/* Bottom Navigation (Hides on Scroll Down) */}
       <nav 
-        className={`fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30 transition-transform duration-300 ease-in-out ${navTranslateClass}`}
+        className={`fixed bottom-0 left-0 right-0 bg-background z-30 transition-transform duration-300 ease-in-out ${navTranslateClass}`}
       >
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="grid grid-cols-3 h-16">
