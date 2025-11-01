@@ -4,9 +4,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Send, X } from 'lucide-react';
+import { Send, X, Sparkles, Image as ImageIcon, AtSign, Hash, Smile, TrendingUp } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Card } from '@/components/ui/card'; // Used for rich styling inside modal
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { motion, AnimatePresence } from 'framer-motion'; // For unique animations
+import { cn } from '@/lib/utils'; // Assuming you have a cn utility for class merging
 
 // NOTE: This interface syntax is valid in a .tsx file.
 interface NewPostModalProps {
@@ -14,11 +18,44 @@ interface NewPostModalProps {
     onClose: () => void;
 }
 
+// Custom hook for character counting with color thresholds
+const useCharacterCount = (text: string) => {
+    const length = text.length;
+    const remaining = 280 - length;
+    const getVariant = () => {
+        if (length > 250) return 'destructive';
+        if (length > 200) return 'secondary';
+        return 'default';
+    };
+    return { remaining, variant: getVariant(), length };
+};
+
+// Unique preview component for post
+const PostPreview: React.FC<{ content: string }> = ({ content }) => (
+    <Card className="mt-4 p-4 bg-gradient-to-r from-muted/20 to-accent/20 border-border/50">
+        <CardContent className="p-0">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
+                {content || "Your post will appear here..."}
+            </p>
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
+                <Badge variant="outline" className="text-xs">Public</Badge>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <TrendingUp className="h-3 w-3" />
+                    <span>Visible to followers</span>
+                </div>
+            </div>
+        </CardContent>
+    </Card>
+);
+
 // NOTE: Component declaration should use React.FC<NewPostModalProps>
 const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
     const { user } = useAuth();
     const [newPost, setNewPost] = useState('');
     const [isPosting, setIsPosting] = useState(false);
+    const [showPreview, setShowPreview] = useState(false);
+
+    const { remaining, variant, length } = useCharacterCount(newPost);
 
     const handlePost = async () => {
         // Validation based on AfuChat project brief
@@ -43,48 +80,154 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
             toast.error('Failed to post. Please try again.');
         } else {
             setNewPost(''); 
+            setShowPreview(false);
             onClose(); // Close modal on success
             // Success toast handled by the real-time subscription in Feed.tsx 
+            toast.success('Post created! ✨', {
+                description: 'Your thoughts are now live.',
+                duration: 3000,
+            });
         }
     };
 
+    // Unique feature: Auto-show preview after typing a few characters
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (newPost.length > 10) setShowPreview(true);
+            else setShowPreview(false);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [newPost]);
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            {/* DialogContent: Rich design with rounded corners and high shadow */}
-            <DialogContent className="sm:max-w-[425px] rounded-xl shadow-2xl p-0">
-                <DialogHeader className="p-4 border-b border-muted-foreground/10 flex flex-row items-center justify-between">
-                    <DialogTitle className="text-xl font-extrabold text-foreground">Create New Post</DialogTitle>
-                    <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
-                        <X className="h-5 w-5" />
-                    </Button>
-                </DialogHeader>
+            {/* DialogContent: Full-screen on mobile, rich design with rounded corners and high shadow */}
+            <DialogContent className={cn(
+                "sm:max-w-[425px] w-[95vw] max-w-md rounded-xl shadow-2xl p-0 overflow-hidden",
+                "sm:mx-auto sm:my-8"
+            )}>
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key="header"
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="p-4 border-b border-muted-foreground/10 flex flex-row items-center justify-between bg-gradient-to-r from-primary/5 to-secondary/5"
+                    >
+                        <DialogTitle className="text-xl font-extrabold text-foreground flex items-center gap-2">
+                            <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+                            Create Post
+                        </DialogTitle>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={onClose} 
+                            className="rounded-full hover:bg-muted/50 transition-colors"
+                            disabled={isPosting}
+                        >
+                            <X className="h-5 w-5" />
+                        </Button>
+                    </motion.div>
+                </AnimatePresence>
                 
-                {/* Post Input Area: Elevated Card Style */}
-                <Card className="p-5 m-4 rounded-xl shadow-lg border-none"> 
+                {/* Post Input Area: Elevated Card Style with interactive toolbar */}
+                <div className="p-4 space-y-4">
+                    {/* Toolbar: Quick actions for unique feel */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs rounded-full" disabled>
+                            <ImageIcon className="h-4 w-4 mr-1" />
+                            Media (Coming Soon)
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs rounded-full" disabled>
+                            <AtSign className="h-4 w-4 mr-1" />
+                            Mention
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs rounded-full" disabled>
+                            <Hash className="h-4 w-4 mr-1" />
+                            Hashtag
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs rounded-full" disabled>
+                            <Smile className="h-4 w-4 mr-1" />
+                            Emoji
+                        </Button>
+                    </div>
+
                     <Textarea
-                        placeholder="What's happening? (Text-only, max 280 characters)"
+                        placeholder="Share your thoughts... What's on your mind today? (Text-only, max 280 characters)"
                         value={newPost}
                         onChange={(e) => setNewPost(e.target.value)}
                         maxLength={280}
-                        rows={5}
-                        className="mb-3 resize-none focus-visible:ring-primary"
+                        rows={4}
+                        className={cn(
+                            "mb-3 resize-none focus-visible:ring-primary min-h-[100px]",
+                            "placeholder:text-muted-foreground/70"
+                        )}
                         disabled={isPosting}
                     />
-                    <div className="flex justify-between items-center">
-                        {/* Character counter logic */}
-                        <span className={`text-sm ${newPost.length > 250 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                            {280 - newPost.length} characters left
-                        </span>
-                        <Button 
-                            onClick={handlePost} 
-                            disabled={!newPost.trim() || newPost.length > 280 || isPosting} 
-                            className="flex items-center space-x-2 shadow-md rounded-full px-5"
-                        >
-                            <Send className="h-4 w-4" />
-                            <span>{isPosting ? 'Posting...' : 'Post'}</span>
-                        </Button>
+
+                    {/* Character counter with progress bar */}
+                    <div className="flex items-center justify-between">
+                        <Badge variant={variant} className="text-xs">
+                            {remaining} left • {length}/280
+                        </Badge>
+                        <div className="w-20 bg-muted rounded-full h-1.5">
+                            <div 
+                                className={cn(
+                                    "h-1.5 rounded-full transition-all duration-300",
+                                    length > 250 ? "bg-destructive" : length > 200 ? "bg-secondary" : "bg-primary"
+                                )} 
+                                style={{ width: `${(length / 280) * 100}%` }}
+                            />
+                        </div>
                     </div>
-                </Card>
+
+                    {/* Unique Post Preview */}
+                    <AnimatePresence>
+                        {showPreview && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <PostPreview content={newPost} />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <Separator />
+
+                    {/* Post Button with loading state */}
+                    <Button 
+                        onClick={handlePost} 
+                        disabled={!newPost.trim() || newPost.length > 280 || isPosting} 
+                        className={cn(
+                            "w-full flex items-center justify-center space-x-2 shadow-lg rounded-full px-6 py-3 h-12 font-bold transition-all duration-200",
+                            "hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]",
+                            (newPost.trim() && newPost.length <= 280 && !isPosting) 
+                                ? "bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90" 
+                                : "bg-muted cursor-not-allowed"
+                        )}
+                    >
+                        <AnimatePresence mode="wait">
+                            {isPosting ? (
+                                <motion.div
+                                    key="loading"
+                                    initial={{ rotate: 0 }}
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                >
+                                    <Send className="h-4 w-4 animate-spin" />
+                                </motion.div>
+                            ) : (
+                                <motion.div key="send" initial={{ scale: 0.8 }} animate={{ scale: 1 }}>
+                                    <Send className="h-4 w-4" />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                        <span>{isPosting ? 'Posting...' : 'Share Post'}</span>
+                    </Button>
+                </div>
             </DialogContent>
         </Dialog>
     );
