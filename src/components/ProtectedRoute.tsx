@@ -1,32 +1,60 @@
 // ./components/ProtectedRoute.tsx
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext'; // Assuming this path
-import { Skeleton } from '@/components/ui/skeleton'; // Reusing your Skeleton component
+import React, { useEffect, useState } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
+import { supabase } from '@/integrations/supabase/client'; // Assuming you can import supabase here
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  // Optional: check for a specific role (e.g., 'admin')
   requiredRole?: 'admin'; 
 }
 
 /**
- * A wrapper component for routes that require authentication.
- * * It checks for:
- * 1. Auth Loading state (show spinner/skeleton).
- * 2. Authentication status (redirect to /auth if not logged in).
- * 3. Required Role (redirect to / if role is insufficient).
+ * A wrapper component for routes that require authentication and optional role-based access.
  */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
-  // Assuming useAuth returns { user: User | null, isLoading: boolean, isAdmin: boolean }
-  // We'll add 'isLoading' and 'isAdmin' to your AuthContext structure.
-  // For now, we'll assume we can check if the user is null and if loading is finished.
   const { user, loading: isAuthLoading } = useAuth();
+  const location = useLocation();
 
-  // --- 1. Authentication Check ---
-  
-  // If the AuthContext is still loading the session, show a full-page loading screen
-  if (isAuthLoading) {
+  // --- NEW ROLE STATE MANAGEMENT ---
+  const [userRole, setUserRole] = useState<'user' | 'admin' | null>(null);
+  const [isRoleChecking, setIsRoleChecking] = useState(false);
+
+  // 1. Fetch Role when a role is required and we have a user
+  useEffect(() => {
+    const fetchRole = async () => {
+      if (!user || !requiredRole) return;
+
+      setIsRoleChecking(true);
+      
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', requiredRole) // Only query for the required role
+        .limit(1)
+        .maybeSingle();
+
+      setUserRole(data ? (data.role as 'admin') : null);
+      setIsRoleChecking(false);
+    };
+
+    if (user && requiredRole) {
+      fetchRole();
+    } else if (!requiredRole) {
+      // No role check needed for standard protected pages
+      setUserRole('user'); // Treat them as a standard user
+    } else {
+      setUserRole(null);
+    }
+  }, [user, requiredRole]);
+
+
+  // --- 1. Authentication and Role Loading State ---
+
+  // Show skeleton if auth is loading OR if we're waiting for a role check
+  if (isAuthLoading || (requiredRole && isRoleChecking)) {
     return (
       <div className="h-screen w-full flex flex-col p-8 space-y-4">
         <Skeleton className="h-10 w-full" />
@@ -36,30 +64,25 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
     );
   }
 
-  // If loading is finished and no user is found, redirect to the login page
+  // --- 2. Authentication Failure ---
+  
   if (!user) {
-    // Navigate to /auth and pass the current location to redirect back later
+    // Redirect to /auth and save the target path in state
     return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
   }
   
-  // --- 2. Role-Based Access Control (RBAC) Check ---
+  // --- 3. Role-Based Access Control (RBAC) Failure ---
 
-  if (requiredRole === 'admin') {
-    // NOTE: This assumes you can fetch and store the 'isAdmin' state in your AuthContext.
-    // If isAdmin is not available in useAuth, you will need to add it there.
-    // For this demonstration, we'll assume you have access to the logic from the Profile component.
-    
-    // Since we don't have the full AuthContext code, we'll use a placeholder logic.
-    // In a real app, you would fetch the user's role on login and store it.
-    const hasRequiredRole = (user as any).role === 'admin'; // Placeholder!
-
-    if (!(user as any).isAdmin) { // Placeholder: Assume useAuth provides an isAdmin boolean
-        // User is logged in but does not have the required role. Redirect to home.
-        return <Navigate to="/" replace />;
-    }
+  // Check if a role is required AND the user's role does not match the requirement
+  // This covers the scenario where userRole is null (not found in DB) or the wrong role.
+  if (requiredRole && userRole !== requiredRole) {
+    // User is logged in but does not have access.
+    return <Navigate to="/" replace />; 
   }
 
-  // If authenticated (and has the required role), render the children (the protected page)
+  // --- 4. Success ---
+  
+  // If authenticated and authorized, render the children
   return <>{children}</>;
 };
 
