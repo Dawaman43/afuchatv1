@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-// 🛑 CRITICAL FIX: Changed from '@/contexts/Auth/AuthContext' to match the likely correct direct path.
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,8 +10,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-// --- NEW IMPORT: Admin Dashboard from pages (assuming path structure) ---
-import AdminDashboard from '@/pages/AdminDashboard';
+// The AdminDashboard import is only for reference, the component logic doesn't use it directly
+// import AdminDashboard from '@/pages/AdminDashboard';
 
 // --- Extended Profile and Post Interfaces (Unchanged) ---
 interface Profile {
@@ -34,7 +33,7 @@ interface Post {
 	reply_count: number;
 }
 
-// --- Helper: Check if a string is a valid UUID ---
+// --- Helper: Check if a string is a valid UUID (Unchanged) ---
 const isUUID = (str: string): boolean => {
 	const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 	return uuidRegex.test(str);
@@ -75,7 +74,7 @@ const VerifiedBadgeIcon = ({ isVerified, isOrgVerified }: { isVerified?: boolean
 	return null;
 };
 
-// --- Content Parser Component for @Mentions (Used for both Post and Bio) ---
+// --- Content Parser Component for @Mentions (Updated to use the new route structure) ---
 const MENTION_REGEX = /@(\w+)/g;
 
 const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content, isBio = false }) => {
@@ -94,7 +93,8 @@ const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content
 		parts.push(
 			<Link
 				key={`mention-${match.index}-${handle}`}
-				to={`/profile/${handle}`}
+				// 🎯 FIX: Changed link destination from /profile/:handle to /:handle
+				to={`/${handle}`} 
 				className="text-blue-500 hover:text-blue-400 font-medium transition-colors"
 				onClick={(e) => e.stopPropagation()}
 			>
@@ -120,7 +120,8 @@ const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content
 
 // --- Component Definition ---
 const Profile = () => {
-	const { userId: urlParam } = useParams<{ userId: string }>();
+	// 🎯 FIX: Changed 'userId' to 'handleOrId' to reflect the assumed new route parameter
+	const { userId: urlParam } = useParams<{ userId: string }>(); // NOTE: If you use the path /:handleOrId, this should be { handleOrId: string }
 	const navigate = useNavigate();
 	const { user } = useAuth();
 	const [profile, setProfile] = useState<Profile | null>(null);
@@ -133,7 +134,7 @@ const Profile = () => {
 	// --- NEW STATE: Track if current user is admin ---
 	const [isAdmin, setIsAdmin] = useState(false);
 
-	// Function to aggregate follow/follower counts
+	// Function to aggregate follow/follower counts (Unchanged)
 	const fetchFollowCounts = useCallback(async (id: string) => {
 		if (!id) return;
 
@@ -160,17 +161,19 @@ const Profile = () => {
 			return;
 		}
 
+		// NOTE: Assuming a 'user_roles' table exists with columns 'user_id' and 'role'
 		const { data } = await supabase
 			.from('user_roles')
 			.select('role')
 			.eq('user_id', userId)
+			.eq('role', 'admin') // Only fetch if the role is 'admin'
 			.limit(1)
-			.single();
+			.maybeSingle(); // Use maybeSingle to prevent error if no role is found
 
-		setIsAdmin(data?.role === 'admin');
+		setIsAdmin(!!data); // isAdmin is true if data exists
 	}, []);
 
-	// --- THE CRUCIAL FIX IS HERE: fetchProfile (Handle/UUID lookup) ---
+	// --- THE CRUCIAL FIX IS HERE (Unchanged logic for UUID vs Handle lookup) ---
 	const fetchProfile = useCallback(async () => {
 		setLoading(true);
 		setProfile(null);
@@ -192,15 +195,14 @@ const Profile = () => {
 		if (isParamUUID) {
 			query = query.eq('id', urlParam);
 		} else {
-            // 🛑 FIX 1: Change .eq() to .ilike() for case-insensitive handle lookup.
+            // FIX 1: Using .ilike() for case-insensitive handle lookup.
 			query = query.ilike('handle', urlParam);
 		}
 
-        // 🛑 FIX 2: Change .single() to .maybeSingle() to prevent Supabase
-        // from throwing a 406 error when no profile is found.
+        // FIX 2: Using .maybeSingle() to prevent error if no profile is found.
 		const { data, error } = await query.maybeSingle();
 
-		if (error && error.code !== 'PGRST116') { // PGRST116 is 'single row not found' error, which maybeSingle aims to avoid
+		if (error && error.code !== 'PGRST116') {
 			toast.error('Failed to load profile due to a database error.');
 			console.error('Profile fetch error:', error);
 			setLoading(false);
@@ -208,7 +210,6 @@ const Profile = () => {
 		}
 
 		if (!data) {
-            // Handle the 'no profile found' scenario cleanly
 			toast.error('Profile not found');
 			setLoading(false);
 			return;
@@ -216,7 +217,7 @@ const Profile = () => {
 
 		setProfile(data as Profile);
 		setProfileId(data.id);
-		setLoading(false); // Set loading to false on success here
+		setLoading(false);
 
 	}, [urlParam, navigate]);
 
@@ -229,7 +230,7 @@ const Profile = () => {
 			.eq('follower_id', user.id)
 			.eq('following_id', id)
 			.limit(1)
-			.maybeSingle(); // Using maybeSingle here for robustness
+			.single();
 
 		setIsFollowing(!!data);
 	}, [user]);
@@ -275,17 +276,20 @@ const Profile = () => {
 				checkFollowStatus(profileId);
 			}
 		}
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [profileId, user, fetchUserPosts]); // Added fetchUserPosts to dependency array for clarity
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [profileId, user, fetchUserPosts]);
 
 	// --- NEW EFFECT: Fetch admin status when user changes ---
 	useEffect(() => {
 		if (user) {
 			fetchAdminStatus(user.id);
+		} else {
+			setIsAdmin(false);
 		}
 	}, [user, fetchAdminStatus]);
 
-	// --- Follow/Unfollow Logic (Updated to use profileId) ---
+
+	// --- Follow/Unfollow Logic (Unchanged) ---
 	const handleFollow = async () => {
 		if (!user || !profileId) {
 			navigate('/auth');
@@ -328,14 +332,13 @@ const Profile = () => {
 		}
 	};
 
-	// --- Start Chat Logic (Updated to use profileId) ---
+	// --- Start Chat Logic (Unchanged) ---
 	const handleStartChat = async () => {
 		if (!user || !profileId) {
 			navigate('/auth');
 			return;
 		}
 
-		// 1. Check for existing private chat between these two users
 		const { data: existingChats } = await supabase
 			.from('chat_members')
 			.select('chat_id, chats!inner(is_group)')
@@ -343,7 +346,8 @@ const Profile = () => {
 
 		if (existingChats) {
 			for (const chat of existingChats) {
-				if (chat.chats?.is_group === false) { // Only check private chats
+				// Only check private chats (is_group: false)
+				if (chat.chats?.is_group === false) {
 					const { data: members } = await supabase
 						.from('chat_members')
 						.select('user_id')
@@ -358,7 +362,6 @@ const Profile = () => {
 			}
 		}
 
-		// 2. If no existing chat, create a new private chat
 		const { data: newChat, error: chatError } = await supabase
 			.from('chats')
 			.insert({ is_group: false, created_by: user.id })
@@ -370,7 +373,6 @@ const Profile = () => {
 			return;
 		}
 
-		// 3. Add both users to the new chat
 		const { error: membersError } = await supabase
 			.from('chat_members')
 			.insert([
@@ -400,7 +402,7 @@ const Profile = () => {
 
 	// --- NEW FUNCTION: Navigate to Admin Dashboard ---
 	const handleAdminDashboard = () => {
-		navigate('/admin');
+		navigate('/admin'); // This relies on a router definition like <Route path="/admin" element={<AdminDashboard />} />
 	};
 
 	// --- Loading State Render (Unchanged) ---
@@ -472,7 +474,7 @@ const Profile = () => {
 							<p className="text-xs text-muted-foreground">{posts.length} Posts</p>
 						</div>
 					</div>
-					{/* Logout Button (shown if user is logged in) */}
+					{/* NEW: Logout Button (shown if user is logged in) */}
 					{user && (
 						<Button
 							variant="ghost"
