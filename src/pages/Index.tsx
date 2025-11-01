@@ -16,14 +16,14 @@ import NewChatDialog from '@/components/ui/NewChatDialog';
 import NotificationIcon from '@/components/nav/NotificationIcon';
 
 
-// --- FAB Components (Unchanged) ---
+// --- FAB Components (Updated: bottom-6 -> bottom-20) ---
 
 const NewPostFAB = ({ onClick, visible }) => (
   <Button 
     size="lg" 
     onClick={onClick}
     aria-label="Create new post"
-    className={`fixed bottom-6 right-6 rounded-full shadow-2xl h-14 w-14 transition-all duration-300 ease-in-out z-50 ${
+    className={`fixed bottom-20 right-6 rounded-full shadow-2xl h-14 w-14 transition-all duration-300 ease-in-out z-50 ${
       visible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
     }`}
   >
@@ -36,7 +36,7 @@ const NewChatFAB = ({ onClick, visible }) => (
     size="lg" 
     onClick={onClick}
     aria-label="Start new chat"
-    className={`fixed bottom-6 right-6 rounded-full shadow-2xl h-14 w-14 transition-all duration-300 ease-in-out z-50 ${
+    className={`fixed bottom-20 right-6 rounded-full shadow-2xl h-14 w-14 transition-all duration-300 ease-in-out z-50 ${
       visible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
     }`}
   >
@@ -94,7 +94,8 @@ const Index = () => {
     if (user) {
       setIsPostModalOpen(true);
     } else {
-      navigate('/auth');
+      // Should not happen if FAB is conditional, but safe check
+      navigate('/auth'); 
     }
   };
 
@@ -102,6 +103,7 @@ const Index = () => {
     if (user) {
       setIsChatModalOpen(true);
     } else {
+      // Should not happen if FAB is conditional, but safe check
       navigate('/auth');
     }
   };
@@ -148,7 +150,7 @@ const Index = () => {
              </div>
           </div>
         </div>
-        <Skeleton className="fixed bottom-6 right-6 h-14 w-14 rounded-full" />
+        <Skeleton className="fixed bottom-20 right-6 h-14 w-14 rounded-full" />
       </div>
     );
   }
@@ -164,7 +166,9 @@ const Index = () => {
           </div>
           
           <div className="flex items-center gap-1">
-            {user && (
+            {/* Conditional Login Button or User Icons */}
+            {user ? (
+              // Logged In: Show icons
               <>
                 <NotificationIcon />
                 {isAdmin && (
@@ -180,6 +184,13 @@ const Index = () => {
                   </Button>
                 </Link>
               </>
+            ) : (
+              // Logged Out: Show Log In Button
+              <Link to="/auth">
+                <Button size="sm" variant="default" className="text-sm font-semibold">
+                  Log In
+                </Button>
+              </Link>
             )}
           </div>
         </div>
@@ -237,9 +248,10 @@ const Index = () => {
         </div>
       </nav>
       
-      {/* FAB for new content */}
-      {activeTab === 'feed' && <NewPostFAB onClick={handleNewPost} visible={true} />}
-      {activeTab === 'chats' && <NewChatFAB onClick={handleNewChat} visible={true} />}
+      {/* FAB for new content (Now bottom-20) */}
+      {/* Only show FABs if the user is authenticated */}
+      {user && activeTab === 'feed' && <NewPostFAB onClick={handleNewPost} visible={true} />}
+      {user && activeTab === 'chats' && <NewChatFAB onClick={handleNewChat} visible={true} />}
       
       {/* Modals */}
       <NewPostModal 
