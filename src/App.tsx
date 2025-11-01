@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
-import ProtectedRoute from "./components/ProtectedRoute"; 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ChatRoom from "./pages/ChatRoom";
@@ -16,10 +15,10 @@ import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
+// 🔁 Redirect component for old /profile/:userId URLs
 const ProfileRedirect = () => {
-  const { userId } = useParams<{ userId: string }>(); 
-  
-  return userId ? <Navigate to={`/${userId}`} replace /> : <Navigate to="/" replace />;
+  const { userId } = useParams();
+  return <Navigate to={`/${userId}`} replace />;
 };
 
 const App = () => (
@@ -30,41 +29,21 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            
+            {/* 🏠 Main routes */}
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/post/:postId" element={<PostDetail />} /> 
+            <Route path="/chat/:chatId" element={<ChatRoom />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/post/:postId" element={<PostDetail />} />
+            <Route path="/admin" element={<AdminDashboard />} />
 
-            <Route
-              path="/chat/:chatId"
-              element={
-                <ProtectedRoute>
-                  <ChatRoom />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/notifications"
-              element={
-                <ProtectedRoute>
-                  <Notifications />
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-
+            {/* 🔁 Redirect old /profile/:userId -> /:userId */}
             <Route path="/profile/:userId" element={<ProfileRedirect />} />
 
+            {/* 👤 Clean username-based route (placed last) */}
             <Route path="/:userId" element={<Profile />} />
 
+            {/* 🚫 404 Fallback */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
