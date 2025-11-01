@@ -166,24 +166,43 @@ const AdminDashboard = () => {
 
   const fetchUsers = async () => {
     try {
-      const { data: userData, error } = await supabase
+      // Step 1: Fetch profiles (basic fields only - no join to avoid errors)
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select(`
-          id, display_name, handle, is_verified, is_organization_verified, created_at,
-          user_roles(role)
-        `);
+        .select('id, display_name, handle, is_verified, is_organization_verified, created_at')
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (profileError) throw profileError;
 
-      setUsers(
-        (userData || []).map((u: any) => ({
-          ...u,
-          is_admin: u.user_roles?.role === 'admin',
-        }))
-      );
+      if (!profileData || profileData.length === 0) {
+        setUsers([]);
+        return;
+      }
+
+      // Step 2: Fetch all user roles (since admin can read all)
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (roleError) throw roleError;
+
+      // Step 3: Map roles to profiles
+      const roleMap = new Map();
+      roleData?.forEach(r => {
+        roleMap.set(r.user_id, r.role);
+      });
+
+      // Combine
+      const combinedUsers = profileData.map((p: any) => ({
+        ...p,
+        is_admin: roleMap.get(p.id) === 'admin',
+      }));
+
+      setUsers(combinedUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Failed to load users');
+      setUsers([]);  // Fallback to empty array
     }
   };
 
@@ -200,6 +219,7 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast.error('Failed to load posts');
+      setPosts([]);
     }
   };
 
