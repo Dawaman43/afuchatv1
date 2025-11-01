@@ -17,27 +17,27 @@ import NotificationIcon from '@/components/nav/NotificationIcon';
 
 
 // --- FAB Components (Positioned at bottom-20, above the collapsible nav) ---
-
-const NewPostFAB = ({ onClick, visible }) => (
+// Note: FAB visibility is now controlled by the parent component's translate class
+const NewPostFAB = ({ onClick, visible, isNavVisible }) => (
   <Button 
     size="lg" 
     onClick={onClick}
     aria-label="Create new post"
     className={`fixed bottom-20 right-6 rounded-full shadow-2xl h-14 w-14 transition-all duration-300 ease-in-out z-50 ${
-      visible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+      (visible && isNavVisible) ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
     }`}
   >
     <Send className="h-6 w-6" />
   </Button>
 );
 
-const NewChatFAB = ({ onClick, visible }) => (
+const NewChatFAB = ({ onClick, visible, isNavVisible }) => (
   <Button 
     size="lg" 
     onClick={onClick}
     aria-label="Start new chat"
     className={`fixed bottom-20 right-6 rounded-full shadow-2xl h-14 w-14 transition-all duration-300 ease-in-out z-50 ${
-      visible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+      (visible && isNavVisible) ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
     }`}
   >
     <MessageSquarePlus className="h-6 w-6" />
@@ -57,6 +57,7 @@ const Index = () => {
   // --- Scroll-Hiding Nav State ---
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
+  const headerRef = useRef(null);
   // -------------------------------
 
   useEffect(() => {
@@ -73,17 +74,24 @@ const Index = () => {
     }
   }, [user]);
 
-  // --- Scroll Logic for Hiding Nav ---
+  // --- Scroll Logic for Hiding All Elements ---
   useEffect(() => {
+    const headerHeight = headerRef.current ? headerRef.current.offsetHeight : 56; // Fallback to 56px (h-14)
+
     const handleScroll = () => {
-      // Only hide nav if scrolling down and past the header (e.g., 100px)
-      if (window.scrollY > lastScrollY.current && window.scrollY > 100) {
+      const currentScrollY = window.scrollY;
+      
+      // Hiding condition: Scrolling down AND scrolled past the initial header height
+      if (currentScrollY > lastScrollY.current && currentScrollY > headerHeight) {
         setIsNavVisible(false);
-      } else if (window.scrollY < lastScrollY.current) {
-        // Always show nav if scrolling up
+      } else if (currentScrollY < lastScrollY.current) {
+        // Showing condition: Scrolling up
+        setIsNavVisible(true);
+      } else if (currentScrollY <= headerHeight) {
+        // Always show at the top of the page
         setIsNavVisible(true);
       }
-      lastScrollY.current = window.scrollY;
+      lastScrollY.current = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -132,8 +140,12 @@ const Index = () => {
     }
   };
 
+  const headerTranslateClass = isNavVisible ? 'translate-y-0' : '-translate-y-full';
+  const navTranslateClass = isNavVisible ? 'translate-y-0' : 'translate-y-full';
+
+
   if (effectiveLoading) {
-    // Skeleton loading state (updated bottom-6 to bottom-20 for consistency)
+    // Skeleton loading state
     return (
       <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto">
         <div className="h-14 flex items-center justify-between shadow-md rounded-b-lg">
@@ -180,9 +192,13 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-16">
-      {/* Header */}
-      <header className="bg-card shadow-md sticky top-0 z-20">
+    // Removed pb-16 since the fixed nav no longer occupies space when hidden
+    <div className="min-h-screen bg-background flex flex-col"> 
+      {/* Header (Hides on Scroll Down) */}
+      <header 
+        ref={headerRef}
+        className={`bg-card shadow-md sticky top-0 z-20 transition-transform duration-300 ease-in-out ${headerTranslateClass}`}
+      >
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Logo size="sm" />
@@ -239,9 +255,7 @@ const Index = () => {
 
       {/* Bottom Navigation (Hides on Scroll Down) */}
       <nav 
-        className={`fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30 transition-transform duration-300 ease-in-out ${
-          isNavVisible ? 'translate-y-0' : 'translate-y-full'
-        }`}
+        className={`fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30 transition-transform duration-300 ease-in-out ${navTranslateClass}`}
       >
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="grid grid-cols-3 h-16">
@@ -276,10 +290,10 @@ const Index = () => {
         </div>
       </nav>
       
-      {/* FAB for new content (Now bottom-20) */}
+      {/* FAB for new content (Visibility now depends on isNavVisible) */}
       {/* Only show FABs if the user is authenticated */}
-      {user && activeTab === 'feed' && <NewPostFAB onClick={handleNewPost} visible={true} />}
-      {user && activeTab === 'chats' && <NewChatFAB onClick={handleNewChat} visible={true} />}
+      {user && activeTab === 'feed' && <NewPostFAB onClick={handleNewPost} visible={true} isNavVisible={isNavVisible} />}
+      {user && activeTab === 'chats' && <NewChatFAB onClick={handleNewChat} visible={true} isNavVisible={isNavVisible} />}
       
       {/* Modals */}
       <NewPostModal 
