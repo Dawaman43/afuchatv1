@@ -1,4 +1,5 @@
-// ./components/ProtectedRoute.tsx
+// ./components/ProtectedRoute.tsx (Updated for profiles.is_admin check)
+
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,78 +11,71 @@ interface ProtectedRouteProps {
   requiredRole?: 'admin'; 
 }
 
-/**
- * A wrapper component for routes that require authentication and optional role-based access.
- */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
   const { user, loading: isAuthLoading } = useAuth();
   const location = useLocation();
 
-  // --- NEW ROLE STATE MANAGEMENT: Now stores an array of roles ---
-  const [userRoles, setUserRoles] = useState<string[]>([]);
+  // --- NEW ROLE STATE MANAGEMENT (Simplified) ---
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isRoleChecking, setIsRoleChecking] = useState(false);
 
-  // 1. Fetch ALL roles for the user
   useEffect(() => {
-    const fetchRole = async () => {
-      if (!user) return; // Should be handled by isAuthLoading check, but safety first
+    const fetchAdminStatus = async () => {
+      if (!user || requiredRole !== 'admin') return; // Only run if admin role is required
 
       setIsRoleChecking(true);
       
-      // 🎯 FIX: Fetch ALL roles for the user
-      const { data } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id); // No longer filtering by requiredRole here
+      // 🎯 FIX: Query the profiles table for the boolean 'is_admin' column
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id) // Check for the logged-in user's profile
+        .limit(1)
+        .maybeSingle();
 
-      // Extract roles into an array of strings, defaulting to empty array
-      const roles = data ? data.map(row => row.role) : [];
-      setUserRoles(roles);
+      if (data && !error) {
+        setIsAdmin(data.is_admin || false);
+      } else {
+        setIsAdmin(false); // Default to false on error or no data
+        console.error("Failed to fetch admin status:", error);
+      }
+
       setIsRoleChecking(false);
     };
 
-    if (user && requiredRole) {
-      fetchRole();
-    } else if (!requiredRole) {
-      // If no role check is required, we are instantly done
-      setIsRoleChecking(false);
+    if (requiredRole === 'admin') {
+      fetchAdminStatus();
+    } else {
+      // For non-admin protected routes, we are authorized by default if logged in.
+      setIsAdmin(true); 
     }
     
   }, [user, requiredRole]);
 
 
-  // --- 1. Authentication and Role Loading State ---
-
-  if (isAuthLoading || (requiredRole && isRoleChecking)) {
+  // 1. Loading State
+  if (isAuthLoading || (requiredRole === 'admin' && isRoleChecking)) {
+    // Show skeleton if auth is loading OR if we're waiting for admin check result
     return (
       <div className="h-screen w-full flex flex-col p-8 space-y-4">
         <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-64 w-full" />
         <Skeleton className="h-64 w-full" />
       </div>
     );
   }
 
-  // --- 2. Authentication Failure ---
-  
+  // 2. Authentication Failure
   if (!user) {
     return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
   }
   
-  // --- 3. Role-Based Access Control (RBAC) Failure ---
-
-  if (requiredRole) {
-      // 🎯 FIX: Check if the userRoles array includes the required role string
-      const hasRequiredRole = userRoles.includes(requiredRole);
-      
-      if (!hasRequiredRole) {
-        // User is logged in but does not have access. Redirect to home.
-        return <Navigate to="/" replace />; 
-      }
+  // 3. Role/Authorization Failure
+  if (requiredRole === 'admin' && !isAdmin) {
+    // User is logged in but profiles.is_admin is false. Redirect to home.
+    return <Navigate to="/" replace />; 
   }
 
-  // --- 4. Success ---
-  
+  // 4. Success
   return <>{children}</>;
 };
 
