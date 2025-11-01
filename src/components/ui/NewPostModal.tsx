@@ -147,15 +147,11 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
         <ErrorBoundary>
             {/* The Dialog component handles the backdrop click close (the implicit "cancel") */}
             <Dialog open={isOpen} onOpenChange={onClose}>
-                {/* DialogContent Styling for Strict Mobile/Desktop Boundaries 
-                    KEY CHANGES: 
-                    1. Removed 'w-full' to prevent fullscreen takeover.
-                    2. Enforced max-w-sm on mobile for a smaller footprint.
-                */}
+                {/* DialogContent Styling: Enforced max-w-sm and fixed center position */}
                 <DialogContent className={cn(
-                    "max-w-sm rounded-xl shadow-2xl p-0 overflow-hidden border-2 border-primary/50", // Max-w-sm enforces small size
+                    "max-w-sm rounded-xl shadow-2xl p-0 overflow-hidden border-2 border-primary/50",
                     "data-[state=open]:fixed data-[state=open]:top-[50%] data-[state=open]:left-[50%] data-[state=open]:translate-x-[-50%] data-[state=open]:translate-y-[-50%] data-[state=open]:duration-300",
-                    "mx-auto my-8" // Center align on all screens
+                    "mx-auto my-8" 
                 )}>
                     <MotionDiv
                         key="header"
@@ -192,6 +188,10 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                             </Button>
                         </div>
 
+                        {/* KEY CHANGE: Added max-h-40 and overflow-y-auto to the Textarea 
+                           to force vertical scrolling within the input box itself,
+                           preventing modal expansion/horizontal sliding. 
+                        */}
                         <Textarea
                             placeholder="Share your thoughts... What's on your mind today? (Text-only, max 280 characters)"
                             value={newPost}
@@ -199,7 +199,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                             maxLength={280}
                             rows={4}
                             className={cn(
-                                "mb-3 resize-none focus-visible:ring-primary min-h-[100px]",
+                                "mb-3 resize-none focus-visible:ring-primary min-h-[100px] max-h-40 overflow-y-auto",
                                 "placeholder:text-muted-foreground/70"
                             )}
                             disabled={isPosting}
