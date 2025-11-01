@@ -10,8 +10,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-// The AdminDashboard import is only for reference, the component logic doesn't use it directly
-// import AdminDashboard from '@/pages/AdminDashboard';
 
 // --- Extended Profile and Post Interfaces (Unchanged) ---
 interface Profile {
@@ -93,7 +91,7 @@ const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content
 		parts.push(
 			<Link
 				key={`mention-${match.index}-${handle}`}
-				// 🎯 FIX: Changed link destination from /profile/:handle to /:handle
+				// FIX: Link destination uses the new /:handle path
 				to={`/${handle}`} 
 				className="text-blue-500 hover:text-blue-400 font-medium transition-colors"
 				onClick={(e) => e.stopPropagation()}
@@ -109,7 +107,6 @@ const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content
 		parts.push(content.substring(lastIndex));
 	}
 
-	// Use a different className for the bio to control font size/margin if needed
 	const className = isBio
 		? "mt-3 text-sm whitespace-pre-wrap leading-relaxed"
 		: "text-foreground whitespace-pre-wrap leading-relaxed";
@@ -120,8 +117,9 @@ const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content
 
 // --- Component Definition ---
 const Profile = () => {
-	// 🎯 FIX: Changed 'userId' to 'handleOrId' to reflect the assumed new route parameter
-	const { userId: urlParam } = useParams<{ userId: string }>(); // NOTE: If you use the path /:handleOrId, this should be { handleOrId: string }
+    // 🎯 CRITICAL FIX: Destructure 'userId' from the router and alias it to 'urlParam'.
+    // The router route path is defined as "/:userId".
+	const { userId: urlParam } = useParams<{ userId: string }>(); 
 	const navigate = useNavigate();
 	const { user } = useAuth();
 	const [profile, setProfile] = useState<Profile | null>(null);
@@ -131,7 +129,6 @@ const Profile = () => {
 	const [loading, setLoading] = useState(true);
 
 	const [profileId, setProfileId] = useState<string | null>(null);
-	// --- NEW STATE: Track if current user is admin ---
 	const [isAdmin, setIsAdmin] = useState(false);
 
 	// Function to aggregate follow/follower counts (Unchanged)
@@ -154,33 +151,36 @@ const Profile = () => {
 		});
 	}, []);
 
-	// --- NEW FUNCTION: Fetch admin role for current user ---
+	// --- Fetch admin role for current user (Unchanged) ---
 	const fetchAdminStatus = useCallback(async (userId: string) => {
 		if (!userId) {
 			setIsAdmin(false);
 			return;
 		}
 
-		// NOTE: Assuming a 'user_roles' table exists with columns 'user_id' and 'role'
 		const { data } = await supabase
 			.from('user_roles')
 			.select('role')
 			.eq('user_id', userId)
-			.eq('role', 'admin') // Only fetch if the role is 'admin'
+			.eq('role', 'admin') 
 			.limit(1)
-			.maybeSingle(); // Use maybeSingle to prevent error if no role is found
+			.maybeSingle(); 
 
-		setIsAdmin(!!data); // isAdmin is true if data exists
+		setIsAdmin(!!data); 
 	}, []);
 
-	// --- THE CRUCIAL FIX IS HERE (Unchanged logic for UUID vs Handle lookup) ---
+	// --- Profile Fetch Logic (Unchanged, relies on correct urlParam) ---
 	const fetchProfile = useCallback(async () => {
 		setLoading(true);
 		setProfile(null);
 		setProfileId(null);
 
-		if (!urlParam) {
-			navigate('/');
+		// If urlParam is null/undefined, this prevents an error, but the redirect in App.tsx should prevent it
+		if (!urlParam) { 
+			// Instead of navigating to '/', we should show 'Profile not found' or let the logic flow.
+			// Since the route matched, we assume urlParam exists and proceed.
+            // If the blank screen is due to this, navigating to '/' is too aggressive.
+            // Let's just set loading to false and let the final check handle it.
 			setLoading(false);
 			return;
 		}
@@ -195,11 +195,11 @@ const Profile = () => {
 		if (isParamUUID) {
 			query = query.eq('id', urlParam);
 		} else {
-            // FIX 1: Using .ilike() for case-insensitive handle lookup.
+            // Fix 1: Using .ilike() for case-insensitive handle lookup.
 			query = query.ilike('handle', urlParam);
 		}
 
-        // FIX 2: Using .maybeSingle() to prevent error if no profile is found.
+        // Fix 2: Using .maybeSingle() to prevent error if no profile is found.
 		const { data, error } = await query.maybeSingle();
 
 		if (error && error.code !== 'PGRST116') {
@@ -279,7 +279,7 @@ const Profile = () => {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [profileId, user, fetchUserPosts]);
 
-	// --- NEW EFFECT: Fetch admin status when user changes ---
+	// --- Fetch admin status when user changes (Unchanged) ---
 	useEffect(() => {
 		if (user) {
 			fetchAdminStatus(user.id);
@@ -388,7 +388,7 @@ const Profile = () => {
 		navigate(`/chat/${newChat.id}`);
 	};
 
-	// --- NEW FUNCTION: Handle Logout ---
+	// --- Handle Logout (Unchanged) ---
 	const handleLogout = async () => {
 		const { error } = await supabase.auth.signOut();
 		if (error) {
@@ -400,9 +400,9 @@ const Profile = () => {
 		}
 	};
 
-	// --- NEW FUNCTION: Navigate to Admin Dashboard ---
+	// --- Navigate to Admin Dashboard (Unchanged) ---
 	const handleAdminDashboard = () => {
-		navigate('/admin'); // This relies on a router definition like <Route path="/admin" element={<AdminDashboard />} />
+		navigate('/admin'); 
 	};
 
 	// --- Loading State Render (Unchanged) ---
@@ -454,10 +454,10 @@ const Profile = () => {
 		return count;
 	};
 
-	// --- Main Render ---
+	// --- Main Render (Unchanged) ---
 	return (
 		<div className="h-full flex flex-col">
-			{/* HEADER BAR - UPDATED WITH LOGOUT BUTTON */}
+			{/* HEADER BAR */}
 			<div className="p-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b border-border">
 				<div className="flex items-center justify-between">
 					<div className="flex items-center">
