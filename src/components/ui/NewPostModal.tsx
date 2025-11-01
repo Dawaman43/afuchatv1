@@ -54,8 +54,8 @@ const PostPreview: React.FC<{ content: string }> = ({ content }) => (
                     <TrendingUp className="h-3 w-3" />
                     <span>Visible to followers</span>
                 </div>
-            </div> {/* <--- FIX: Correctly close the wrapper div */}
-        </CardContent> {/* <--- FIX: Correctly close CardContent */}
+            </div>
+        </CardContent>
     </Card>
 );
 
@@ -147,11 +147,15 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
         <ErrorBoundary>
             {/* The Dialog component handles the backdrop click close (the implicit "cancel") */}
             <Dialog open={isOpen} onOpenChange={onClose}>
-                {/* DialogContent Styling for Strict Mobile/Desktop Boundaries */}
+                {/* DialogContent Styling for Strict Mobile/Desktop Boundaries 
+                    KEY CHANGES: 
+                    1. Removed 'w-full' to prevent fullscreen takeover.
+                    2. Enforced max-w-sm on mobile for a smaller footprint.
+                */}
                 <DialogContent className={cn(
-                    "w-full max-w-md rounded-xl shadow-2xl p-0 overflow-hidden border-2 border-primary/50",
+                    "max-w-sm rounded-xl shadow-2xl p-0 overflow-hidden border-2 border-primary/50", // Max-w-sm enforces small size
                     "data-[state=open]:fixed data-[state=open]:top-[50%] data-[state=open]:left-[50%] data-[state=open]:translate-x-[-50%] data-[state=open]:translate-y-[-50%] data-[state=open]:duration-300",
-                    "sm:mx-auto sm:my-8 sm:max-w-[425px]"
+                    "mx-auto my-8" // Center align on all screens
                 )}>
                     <MotionDiv
                         key="header"
