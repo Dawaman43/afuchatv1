@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+Import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 // Note: Verified Badge components must be imported or defined here
 
-// --- START: Verified Badge Components ---
+// --- START: Verified Badge Components (Unchanged) ---
 const TwitterVerifiedBadge = ({ size = 'w-5 h-5' }: { size?: string }) => (
   <svg viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg" className={`${size} ml-1 flex-shrink-0`}>
     <path d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z" fill="#1d9bf0" />
@@ -203,35 +203,37 @@ const PostDetail = () => {
                     isOrgVerified={post.author.is_organization_verified} 
                   />
                 </div>
-                <p className="text-base text-muted-foreground truncate">@{post.author.handle}</p> 
+                <p className="text-sm text-muted-foreground truncate">@{post.author.handle}</p>
               </Link>
             </div>
 
             {/* POST TEXT */}
-            <p className="text-xl leading-relaxed whitespace-pre-wrap mb-4">
+            {/* 🎨 UPDATED: Changed from text-2xl to text-lg for smaller text */}
+            <p className="text-lg leading-relaxed whitespace-pre-wrap mb-4">
               {renderContentWithMentions(post.content)}
             </p>
 
             {/* TIME & DATE */}
-            <p className="text-base text-muted-foreground border-b border-border pb-3 mb-3"> 
+            <p className="text-sm text-muted-foreground border-b border-border pb-3 mb-3">
               {formatDate(post.created_at)}
             </p>
 
             {/* STATS SECTION */}
             <div className="flex gap-4 text-foreground">
-                <span className="text-base font-semibold">
+                <span className="text-sm font-semibold">
                   {post.likes_count} <span className="text-muted-foreground font-normal">Likes</span>
                 </span>
-                <span className="text-base font-semibold">
+                <span className="text-sm font-semibold">
                   {post.replies_count} <span className="text-muted-foreground font-normal">Replies</span>
                 </span>
-                <span className="text-base font-semibold text-muted-foreground">0 Shares</span> 
+                <span className="text-sm font-semibold text-muted-foreground">0 Shares</span> 
             </div>
         </div>
 
-        {/* --- REPLY INPUT SECTION --- */}
+        {/* --- REPLY INPUT SECTION (Placeholder) --- */}
         <div className="p-4 border-b border-border">
-            {/* Removed the hardcoded 'Reply input placeholder...' text */}
+            {/* You would insert your Reply Input component here */}
+            <p className="text-muted-foreground">Reply input placeholder...</p>
         </div>
 
         {/* --- REPLIES LIST (NEW SECTION) --- */}
@@ -247,20 +249,20 @@ const PostDetail = () => {
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center">
-                                    <Link to={`/profile/${reply.author.handle}`} className="font-bold text-base hover:underline truncate">
+                                    <Link to={`/profile/${reply.author.handle}`} className="font-bold hover:underline truncate">
                                         {reply.author.display_name}
                                     </Link>
                                     <VerifiedBadge 
                                         isVerified={reply.author.is_verified} 
                                         isOrgVerified={reply.author.is_organization_verified} 
                                     />
-                                    <span className="text-base text-muted-foreground ml-2">@{reply.author.handle}</span> 
+                                    <span className="text-sm text-muted-foreground ml-2">@{reply.author.handle}</span>
                                 </div>
-                                <span className="text-sm text-muted-foreground ml-4 flex-shrink-0">
+                                <span className="text-xs text-muted-foreground ml-4 flex-shrink-0">
                                     {new Date(reply.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                 </span>
                             </div>
-                            <p className="text-base text-foreground mt-1 whitespace-pre-wrap">
+                            <p className="text-foreground mt-1 whitespace-pre-wrap">
                                 {renderContentWithMentions(reply.content)}
                             </p>
                         </div>
@@ -268,7 +270,8 @@ const PostDetail = () => {
                 </div>
             ))}
             {replies.length === 0 && (
-                <p className="text-center text-muted-foreground p-8 text-base">No replies yet. Be the first!</p>
+                {/* 🎨 UPDATED: Changed p-8 to p-4 for smaller padding */}
+                <p className="text-center text-muted-foreground p-4">No replies yet. Be the first!</p>
             )}
         </div>
       </div>
