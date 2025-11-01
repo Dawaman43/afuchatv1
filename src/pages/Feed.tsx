@@ -286,7 +286,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
 
         {/* 🎯 POST CONTENT WRAPPED IN LINK TO DETAIL PAGE */}
         <Link to={`/post/${post.id}`} className="block">
-          <p className="text-foreground text-xs mt-1 mb-2 leading-relaxed whitespace-pre-wrap">
+          <p className="text-foreground text-xs mt-0.5 mb-1.5 leading-relaxed whitespace-pre-wrap">
             {parsePostContent(post.content, navigate)}
           </p>
         </Link>
@@ -294,7 +294,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
 
 
         {/* Post Actions */}
-        <div className="flex justify-between items-center text-xs text-muted-foreground mt-2 -ml-2 max-w-[420px]">
+        <div className="flex justify-between items-center text-xs text-muted-foreground mt-1 -ml-2 max-w-[420px]">
           <Button variant="ghost" size="sm" className="flex items-center gap-1 group" onClick={() => setShowComments(!showComments)}>
             <MessageSquare className="h-4 w-4 group-hover:text-primary transition-colors" />
             <span className="group-hover:text-primary transition-colors text-xs">{post.reply_count > 0 ? post.reply_count : ''}</span>
@@ -309,7 +309,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
         </div>
 
         {/* --- ENHANCED COMMENT SECTION --- */}
-        <div className="mt-2 ml-[-12px] pr-[12px]"> {/* Adjusted margin for better visual alignment with post content */}
+        <div className="mt-1 ml-[-12px] pr-[12px]"> {/* Adjusted margin for better visual alignment with post content */}
           {post.reply_count > 0 && !showComments && (
             <span
               className="text-xs text-muted-foreground cursor-pointer hover:underline"
