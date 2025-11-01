@@ -20,7 +20,7 @@ try {
   motion = null;
   AnimatePresence = null;
 }
-// Fallback cn utility (if '@/lib/utils' missing, define here)
+// Fallback cn utility (if '@/lib/utils' missing)
 const cn = (...classes: (string | undefined)[]) => classes.filter(Boolean).join(' ');
 
 // NOTE: This interface syntax is valid in a .tsx file.
@@ -59,6 +59,30 @@ const PostPreview: React.FC<{ content: string }> = ({ content }) => (
     </Card>
 );
 
+// Error Boundary Component (wraps modal to catch crashes)
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+    constructor(props: any) {
+        super(props);
+        this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError() {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+        console.error('Modal Error:', error, errorInfo);
+        toast.error('Something went wrong—try again.');
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return <div className="p-4 text-center text-destructive">Error loading modal. <Button onClick={() => this.setState({ hasError: false })}>Retry</Button></div>;
+        }
+        return this.props.children;
+    }
+}
+
 // NOTE: Component declaration should use React.FC<NewPostModalProps>
 const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
     const { user } = useAuth();
@@ -78,26 +102,31 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
         setIsPosting(true);
         const postContent = newPost.trim();
 
-        // Database insert
-        const { error } = await supabase.from('posts').insert({
-            content: postContent,
-            author_id: user.id,
-        });
-
-        setIsPosting(false);
-
-        if (error) {
-            console.error("Supabase Post Error:", error);
-            toast.error('Failed to post. Please try again.');
-        } else {
-            setNewPost(''); 
-            setShowPreview(false);
-            onClose(); // Close modal on success
-            // Success toast handled by the real-time subscription in Feed.tsx 
-            toast.success('Post created! ✨', {
-                description: 'Your thoughts are now live.',
-                duration: 3000,
+        try {
+            // Database insert
+            const { error } = await supabase.from('posts').insert({
+                content: postContent,
+                author_id: user.id,
             });
+
+            if (error) {
+                console.error("Supabase Post Error:", error);
+                toast.error('Failed to post. Please try again.');
+            } else {
+                setNewPost(''); 
+                setShowPreview(false);
+                onClose(); // Close modal on success
+                // Success toast handled by the real-time subscription in Feed.tsx 
+                toast.success('Post created! ✨', {
+                    description: 'Your thoughts are now live.',
+                    duration: 3000,
+                });
+            }
+        } catch (err) {
+            console.error('Post Error:', err);
+            toast.error('Network error—check connection.');
+        } finally {
+            setIsPosting(false);
         }
     };
 
@@ -111,163 +140,123 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
     }, [newPost]);
 
     // Fallback for animations
-    const MotionDiv = motion ? motion.div : 'div';
-    const MotionSend = motion ? motion.div : 'div';
+    const MotionDiv = motion ? motion.div : (({ children, ...props }: any) => <div {...props}>{children}</div>);
+    const MotionSend = motion ? motion.div : (({ children, ...props }: any) => <div {...props}>{children}</div>);
 
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            {/* DialogContent: Full-screen on mobile, rich design with rounded corners and high shadow */}
-            <DialogContent className={cn(
-                "sm:max-w-[425px] w-[95vw] max-w-md rounded-xl shadow-2xl p-0 overflow-hidden",
-                "sm:mx-auto sm:my-8"
-            )}>
-                <AnimatePresence mode="wait" suppressHydrationWarning={true}>
-                    {AnimatePresence && (
-                        <MotionDiv
-                            key="header"
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="p-4 border-b border-muted-foreground/10 flex flex-row items-center justify-between bg-gradient-to-r from-primary/5 to-secondary/5"
-                        >
-                            <DialogTitle className="text-xl font-extrabold text-foreground flex items-center gap-2">
-                                <Sparkles className="h-5 w-5 text-primary animate-pulse" />
-                                Create Post
-                            </DialogTitle>
-                            <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={onClose} 
-                                className="rounded-full hover:bg-muted/50 transition-colors"
-                                disabled={isPosting}
-                            >
-                                <X className="h-5 w-5" />
-                            </Button>
-                        </MotionDiv>
-                    )}
-                    {!AnimatePresence && (
-                        <div className="p-4 border-b border-muted-foreground/10 flex flex-row items-center justify-between bg-gradient-to-r from-primary/5 to-secondary/5">
-                            <DialogTitle className="text-xl font-extrabold text-foreground flex items-center gap-2">
-                                <Sparkles className="h-5 w-5 text-primary animate-pulse" />
-                                Create Post
-                            </DialogTitle>
-                            <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={onClose} 
-                                className="rounded-full hover:bg-muted/50 transition-colors"
-                                disabled={isPosting}
-                            >
-                                <X className="h-5 w-5" />
-                            </Button>
-                        </div>
-                    )}
-                </AnimatePresence>
-                
-                {/* Post Input Area: Elevated Card Style with interactive toolbar */}
-                <div className="p-4 space-y-4">
-                    {/* Toolbar: Quick actions for unique feel - Mobile wrap */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs rounded-full" disabled>
-                            <ImageIcon className="h-4 w-4 mr-1" />
-                            Media (Coming Soon)
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs rounded-full" disabled>
-                            <AtSign className="h-4 w-4 mr-1" />
-                            Mention
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs rounded-full" disabled>
-                            <Hash className="h-4 w-4 mr-1" />
-                            Hashtag
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs rounded-full" disabled>
-                            <Smile className="h-4 w-4 mr-1" />
-                            Emoji
-                        </Button>
-                    </div>
-
-                    <Textarea
-                        placeholder="Share your thoughts... What's on your mind today? (Text-only, max 280 characters)"
-                        value={newPost}
-                        onChange={(e) => setNewPost(e.target.value)}
-                        maxLength={280}
-                        rows={4}
-                        className={cn(
-                            "mb-3 resize-none focus-visible:ring-primary min-h-[100px]",
-                            "placeholder:text-muted-foreground/70"
-                        )}
-                        disabled={isPosting}
-                    />
-
-                    {/* Character counter with progress bar */}
-                    <div className="flex items-center justify-between">
-                        <Badge variant={variant} className="text-xs">
-                            {remaining} left • {length}/280
-                        </Badge>
-                        <div className="w-20 bg-muted rounded-full h-1.5">
-                            <div 
-                                className={cn(
-                                    "h-1.5 rounded-full transition-all duration-300",
-                                    length > 250 ? "bg-destructive" : length > 200 ? "bg-secondary" : "bg-primary"
-                                )} 
-                                style={{ width: `${(length / 280) * 100}%` }}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Unique Post Preview */}
-                    <AnimatePresence suppressHydrationWarning={true}>
-                        {showPreview && AnimatePresence && (
-                            <MotionDiv
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                <PostPreview content={newPost} />
-                            </MotionDiv>
-                        )}
-                        {showPreview && !AnimatePresence && (
-                            <PostPreview content={newPost} />
-                        )}
-                    </AnimatePresence>
-
-                    <Separator />
-
-                    {/* Post Button with loading state */}
-                    <Button 
-                        onClick={handlePost} 
-                        disabled={!newPost.trim() || newPost.length > 280 || isPosting} 
-                        className={cn(
-                            "w-full flex items-center justify-center space-x-2 shadow-lg rounded-full px-6 py-3 h-12 font-bold transition-all duration-200",
-                            "hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]",
-                            (newPost.trim() && newPost.length <= 280 && !isPosting) 
-                                ? "bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90" 
-                                : "bg-muted cursor-not-allowed"
-                        )}
+        <ErrorBoundary>
+            <Dialog open={isOpen} onOpenChange={onClose}>
+                {/* DialogContent: Full-screen on mobile, rich design with rounded corners and high shadow */}
+                <DialogContent className={cn(
+                    "sm:max-w-[425px] w-[95vw] max-w-md rounded-xl shadow-2xl p-0 overflow-hidden",
+                    "sm:mx-auto sm:my-8"
+                )}>
+                    <MotionDiv
+                        key="header"
+                        initial={motion ? { opacity: 0, y: -20 } : {}}
+                        animate={motion ? { opacity: 1, y: 0 } : {}}
+                        exit={motion ? { opacity: 0, y: -20 } : {}}
+                        className="p-4 border-b border-muted-foreground/10 flex flex-row items-center justify-between bg-gradient-to-r from-primary/5 to-secondary/5"
                     >
-                        <AnimatePresence mode="wait" suppressHydrationWarning={true}>
-                            {isPosting && AnimatePresence ? (
-                                <MotionSend
-                                    key="loading"
-                                    initial={{ rotate: 0 }}
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                >
-                                    <Send className="h-4 w-4" />
-                                </MotionSend>
-                            ) : (
-                                <MotionSend key="send" initial={{ scale: 0.8 }} animate={{ scale: 1 }} suppressHydrationWarning={true}>
-                                    <Send className="h-4 w-4" />
-                                </MotionSend>
+                        <DialogTitle className="text-xl font-extrabold text-foreground flex items-center gap-2">
+                            <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+                            Create Post
+                        </DialogTitle>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={onClose} 
+                            className="rounded-full hover:bg-muted/50 transition-colors"
+                            disabled={isPosting}
+                        >
+                            <X className="h-5 w-5" />
+                        </Button>
+                    </MotionDiv>
+                    
+                    {/* Post Input Area: Elevated Card Style with interactive toolbar */}
+                    <div className="p-4 space-y-4">
+                        {/* Toolbar: Quick actions for unique feel - Mobile wrap */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <Button variant="ghost" size="sm" className="h-8 px-2 text-xs rounded-full" disabled>
+                                <ImageIcon className="h-4 w-4 mr-1" />
+                                Media (Coming Soon)
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-8 px-2 text-xs rounded-full" disabled>
+                                <AtSign className="h-4 w-4 mr-1" />
+                                Mention
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-8 px-2 text-xs rounded-full" disabled>
+                                <Hash className="h-4 w-4 mr-1" />
+                                Hashtag
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-8 px-2 text-xs rounded-full" disabled>
+                                <Smile className="h-4 w-4 mr-1" />
+                                Emoji
+                            </Button>
+                        </div>
+
+                        <Textarea
+                            placeholder="Share your thoughts... What's on your mind today? (Text-only, max 280 characters)"
+                            value={newPost}
+                            onChange={(e) => setNewPost(e.target.value)}
+                            maxLength={280}
+                            rows={4}
+                            className={cn(
+                                "mb-3 resize-none focus-visible:ring-primary min-h-[100px]",
+                                "placeholder:text-muted-foreground/70"
                             )}
-                            {!AnimatePresence && <Send className="h-4 w-4" />}
-                        </AnimatePresence>
-                        <span>{isPosting ? 'Posting...' : 'Share Post'}</span>
-                    </Button>
-                </div>
-            </DialogContent>
-        </Dialog>
+                            disabled={isPosting}
+                        />
+
+                        {/* Character counter with progress bar */}
+                        <div className="flex items-center justify-between">
+                            <Badge variant={variant} className="text-xs">
+                                {remaining} left • {length}/280
+                            </Badge>
+                            <div className="w-20 bg-muted rounded-full h-1.5">
+                                <div 
+                                    className={cn(
+                                        "h-1.5 rounded-full transition-all duration-300",
+                                        length > 250 ? "bg-destructive" : length > 200 ? "bg-secondary" : "bg-primary"
+                                    )} 
+                                    style={{ width: `${(length / 280) * 100}%` }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Unique Post Preview */}
+                        {showPreview && <PostPreview content={newPost} />}
+
+                        <Separator />
+
+                        {/* Post Button with loading state */}
+                        <Button 
+                            onClick={handlePost} 
+                            disabled={!newPost.trim() || newPost.length > 280 || isPosting} 
+                            className={cn(
+                                "w-full flex items-center justify-center space-x-2 shadow-lg rounded-full px-6 py-3 h-12 font-bold transition-all duration-200",
+                                "hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]",
+                                (newPost.trim() && newPost.length <= 280 && !isPosting) 
+                                    ? "bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90" 
+                                    : "bg-muted cursor-not-allowed"
+                            )}
+                        >
+                            {isPosting ? (
+                                <div className="flex items-center space-x-2">
+                                    <Send className="h-4 w-4 animate-spin" />
+                                    <span>Posting...</span>
+                                </div>
+                            ) : (
+                                <div className="flex items-center space-x-2">
+                                    <Send className="h-4 w-4" />
+                                    <span>Share Post</span>
+                                </div>
+                            )}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </ErrorBoundary>
     );
 };
 
