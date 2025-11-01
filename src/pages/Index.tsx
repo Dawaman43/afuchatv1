@@ -201,8 +201,8 @@ const Index = () => {
       >
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Logo size="sm" />
-            <h1 className="text-base font-bold text-primary">AfuChat</h1>
+            <Logo size="md" />
+            <h1 className="text-lg font-bold text-primary">AfuChat</h1>
           </div>
           
           <div className="flex items-center gap-1">
@@ -258,14 +258,14 @@ const Index = () => {
         className={`fixed bottom-0 left-0 right-0 bg-background z-30 transition-transform duration-300 ease-in-out ${navTranslateClass}`}
       >
         <div className="container mx-auto px-4 max-w-4xl">
-          <div className="grid grid-cols-3 h-16">
+          <div className="grid grid-cols-3 h-14">
             <button
               onClick={() => setActiveTab('feed')}
               className={`flex flex-col items-center justify-center gap-1 transition-colors ${
                 activeTab === 'feed' ? 'text-primary' : 'text-muted-foreground'
               }`}
             >
-              <Radio className="h-5 w-5" />
+              <Radio className="h-4 w-4" />
               <span className="text-xs font-medium">Feed</span>
             </button>
             <button
@@ -274,7 +274,7 @@ const Index = () => {
                 activeTab === 'search' ? 'text-primary' : 'text-muted-foreground'
               }`}
             >
-              <SearchIcon className="h-5 w-5" />
+              <SearchIcon className="h-4 w-4" />
               <span className="text-xs font-medium">Search</span>
             </button>
             <button
@@ -283,7 +283,7 @@ const Index = () => {
                 activeTab === 'chats' ? 'text-primary' : 'text-muted-foreground'
               }`}
             >
-              <MessageSquare className="h-5 w-5" />
+              <MessageSquare className="h-4 w-4" />
               <span className="text-xs font-medium">Chats</span>
             </button>
           </div>
