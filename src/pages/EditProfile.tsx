@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Shield, Globe, MapPin, Lock, Eye, MessageCircle } from 'lucide-react';
 
 // Import Supabase types (assuming types/supabase.ts exists)
 import type { Database } from '@/types/supabase';
@@ -20,6 +21,9 @@ interface EditProfileForm {
   display_name: string;
   handle: string;
   bio: string;
+  is_private: boolean;
+  show_online_status: boolean;
+  show_read_receipts: boolean;
 }
 
 const EditProfile: React.FC = () => {
@@ -31,6 +35,9 @@ const EditProfile: React.FC = () => {
     display_name: '',
     handle: '',
     bio: '',
+    is_private: false,
+    show_online_status: true,
+    show_read_receipts: true,
   });
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -56,6 +63,9 @@ const EditProfile: React.FC = () => {
             display_name: data.display_name,
             handle: data.handle,
             bio: data.bio || '',
+            is_private: data.is_private || false,
+            show_online_status: data.show_online_status || true,
+            show_read_receipts: data.show_read_receipts || true,
           });
         }
       } catch (error: any) {
@@ -76,6 +86,10 @@ const EditProfile: React.FC = () => {
     setProfile((prev) => ({ ...prev, [name as keyof EditProfileForm]: value }));
   };
 
+  const handleToggleChange = (key: keyof Pick<EditProfileForm, 'is_private' | 'show_online_status' | 'show_read_receipts'>) => {
+    setProfile((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
   const handleSave = async () => {
     if (!user) return;
 
@@ -85,6 +99,9 @@ const EditProfile: React.FC = () => {
         display_name: profile.display_name,
         handle: profile.handle,
         bio: profile.bio || null,
+        is_private: profile.is_private,
+        show_online_status: profile.show_online_status,
+        show_read_receipts: profile.show_read_receipts,
         updated_at: new Date().toISOString(),
       };
 
@@ -120,35 +137,44 @@ const EditProfile: React.FC = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Card className="border-none shadow-none">
+        <Card className="border-none">
           <CardHeader className="pb-6">
-            <CardTitle className="text-2xl font-bold text-foreground">Edit Profile</CardTitle>
-            <CardDescription className="text-muted-foreground">Update your personal information</CardDescription>
+            <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <Shield className="h-6 w-6 text-primary" />
+              Edit Profile
+            </CardTitle>
+            <CardDescription className="text-muted-foreground">Update your personal information and privacy settings</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Display Name */}
             <div className="space-y-2">
-              <Label htmlFor="display_name" className="text-sm font-medium text-foreground">Display Name</Label>
+              <Label htmlFor="display_name" className="text-sm font-medium text-foreground flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                Display Name
+              </Label>
               <Input
                 id="display_name"
                 name="display_name"
                 value={profile.display_name}
                 onChange={handleInputChange}
-                placeholder="Your display name"
+                placeholder="Enter your display name"
                 disabled={saving}
                 className="text-base h-12 bg-card focus-visible:ring-1 focus-visible:ring-primary/20"
               />
             </div>
 
-            {/* Handle (Username) */}
+            {/* Handle */}
             <div className="space-y-2">
-              <Label htmlFor="handle" className="text-sm font-medium text-foreground">Handle</Label>
+              <Label htmlFor="handle" className="text-sm font-medium text-foreground flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                Handle
+              </Label>
               <Input
                 id="handle"
                 name="handle"
                 value={profile.handle}
                 onChange={handleInputChange}
-                placeholder="@handle"
+                placeholder="@yourhandle"
                 disabled={saving}
                 className="text-base h-12 bg-card focus-visible:ring-1 focus-visible:ring-primary/20"
               />
@@ -156,26 +182,87 @@ const EditProfile: React.FC = () => {
 
             {/* Bio */}
             <div className="space-y-2">
-              <Label htmlFor="bio" className="text-sm font-medium text-foreground">Bio</Label>
+              <Label htmlFor="bio" className="text-sm font-medium text-foreground flex items-center gap-2">
+                <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                Bio
+              </Label>
               <Textarea
                 id="bio"
                 name="bio"
                 value={profile.bio}
                 onChange={handleInputChange}
-                placeholder="Tell us about yourself (max 150 chars)"
+                placeholder="Tell us about yourself (max 150 characters)"
                 rows={4}
                 maxLength={150}
                 disabled={saving}
                 className="text-base resize-none bg-card focus-visible:ring-1 focus-visible:ring-primary/20"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground text-right">
                 {profile.bio.length}/150
               </p>
             </div>
 
+            {/* Privacy & Settings Section */}
+            <div className="space-y-4 pt-4 border-t border-border/50">
+              <div className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                Privacy & Settings
+              </div>
+              {/* Private Account Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Lock className="h-4 w-4" />
+                    Private Account
+                  </Label>
+                  <p className="text-xs text-muted-foreground">Only approved followers can see your posts and profile</p>
+                </div>
+                <Switch
+                  checked={profile.is_private}
+                  onCheckedChange={() => handleToggleChange('is_private')}
+                  disabled={saving}
+                />
+              </div>
+
+              {/* Show Online Status Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Eye className="h-4 w-4" />
+                    Show Online Status
+                  </Label>
+                  <p className="text-xs text-muted-foreground">Display when you're active on AfuChat</p>
+                </div>
+                <Switch
+                  checked={profile.show_online_status}
+                  onCheckedChange={() => handleToggleChange('show_online_status')}
+                  disabled={saving}
+                />
+              </div>
+
+              {/* Show Read Receipts Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4" />
+                    Show Read Receipts
+                  </Label>
+                  <p className="text-xs text-muted-foreground">Let others see when you've read their messages</p>
+                </div>
+                <Switch
+                  checked={profile.show_read_receipts}
+                  onCheckedChange={() => handleToggleChange('show_read_receipts')}
+                  disabled={saving}
+                />
+              </div>
+            </div>
+
             {/* Location - Coming Soon */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground">Location</Label>
+            <div className="space-y-2 pt-4 border-t border-border/50">
+              <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Location
+              </Label>
               <div className="h-12 bg-muted/50 flex items-center justify-center rounded-md text-sm text-muted-foreground">
                 Coming soon
               </div>
@@ -183,20 +270,23 @@ const EditProfile: React.FC = () => {
 
             {/* Website - Coming Soon */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground">Website</Label>
+              <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                Website
+              </Label>
               <div className="h-12 bg-muted/50 flex items-center justify-center rounded-md text-sm text-muted-foreground">
                 Coming soon
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end space-x-3 pt-4">
+            <div className="flex justify-end space-x-3 pt-6">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleCancel}
                 disabled={saving}
-                className="px-6 h-12 text-base bg-card hover:bg-card/80 focus-visible:ring-1 focus-visible:ring-primary/20"
+                className="px-6 h-12 text-base bg-card hover:bg-card/80 focus-visible:ring-1 focus-visible:ring-primary/20 border-border"
               >
                 Cancel
               </Button>
