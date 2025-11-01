@@ -76,9 +76,13 @@ const ChatRoom = () => {
                 setMessages((prev) => [
                   ...prev,
                   {
-                    ...payload.new,
+                    id: payload.new.id,
+                    encrypted_content: payload.new.encrypted_content,
+                    audio_url: payload.new.audio_url,
+                    sender_id: payload.new.sender_id,
+                    sent_at: payload.new.sent_at,
                     profiles: profile,
-                  },
+                  } as Message,
                 ]);
               }
             });
@@ -183,12 +187,14 @@ const ChatRoom = () => {
           encrypted_content: '[Voice Message]', // Placeholder text
           audio_url: supabase.storage.from('voice-messages').getPublicUrl(data.path).data.publicUrl,
         })
-        .select()
+        .select('*, profiles(display_name, handle)')
         .single();
 
       if (insertError) throw insertError;
 
-      setMessages((prev) => [...prev, { ...inserted, profiles: { display_name: user.display_name || 'You', handle: user.handle || '@you' } }]);
+      if (inserted) {
+        setMessages((prev) => [...prev, inserted as Message]);
+      }
       setAudioBlob(null);
     } catch (err) {
       toast.error('Failed to send voice message');
@@ -215,28 +221,21 @@ const ChatRoom = () => {
   const handleSend = async () => {
     if (!newMessage.trim() || !user || !chatId) return;
 
-    setSending(true);
     const { error } = await supabase
       .from('messages')
       .insert({
         chat_id: chatId,
         sender_id: user.id,
         encrypted_content: newMessage,
-      });
+      })
+      .select('*, profiles(display_name, handle)')
+      .single();
 
     if (error) {
       console.error('Send error details:', error);
       toast.error(`Failed to send: ${error.message}`);
     } else {
       setNewMessage('');
-      const optimisticMsg: Message = {
-        id: Date.now().toString(),
-        encrypted_content: newMessage,
-        sender_id: user.id,
-        sent_at: new Date().toISOString(),
-        profiles: { display_name: user.display_name || 'You', handle: user.handle || '@you' },
-      };
-      setMessages((prev) => [...prev, optimisticMsg]);
     }
     setSending(false);
   };

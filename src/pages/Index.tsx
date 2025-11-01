@@ -1,9 +1,9 @@
-import { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Radio, LogOut, Send, MessageSquarePlus, Search as SearchIcon, LogIn, User } from 'lucide-react';
+import { MessageSquare, Radio, Send, MessageSquarePlus, Search as SearchIcon, User, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import Chats from './Chats';
 import Feed from './Feed';
@@ -13,10 +13,7 @@ import Logo from '@/components/Logo';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import NewChatDialog from '@/components/ui/NewChatDialog';
-
-// --- ADDED THIS IMPORT ---
-import NotificationIcon from '@/components/nav/NotificationIcon'; 
-// -------------------------
+import NotificationIcon from '@/components/nav/NotificationIcon';
 
 
 // --- FAB Components (Unchanged) ---
@@ -53,11 +50,9 @@ const Index = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('feed'); 
   const [isPostModalOpen, setIsPostModalOpen] = useState(false); 
-  const [isChatModalOpen, setIsChatModalOpen] = useState(false); 
-  const [headerVisible, setHeaderVisible] = useState(true);
-  const [fabVisible, setFabVisible] = useState(true);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [forceLoaded, setForceLoaded] = useState(false);
-  const lastScrollYRef = useRef(0);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -67,47 +62,28 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const effectiveLoading = loading && !forceLoaded;
-
   useEffect(() => {
-    let ticking = false;
+    if (user) {
+      checkAdminStatus();
+    }
+  }, [user]);
 
-    const handleScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          if (currentScrollY > lastScrollYRef.current && currentScrollY > 100) {
-            setHeaderVisible(false);
-            setFabVisible(false);
-          } else {
-            setHeaderVisible(true);
-            setFabVisible(true);
-          }
-          lastScrollYRef.current = currentScrollY;
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error('Failed to sign out');
-    } else {
-      toast.success('Signed out successfully');
-      navigate('/auth');
+  const checkAdminStatus = async () => {
+    if (!user) return;
+    
+    try {
+      const { data } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'admin'
+      });
+      setIsAdmin(!!data);
+    } catch (error) {
+      console.error('Error checking admin status:', error);
     }
   };
 
-  const handleSignIn = () => {
-    navigate('/auth');
-  };
-  
+  const effectiveLoading = loading && !forceLoaded;
+
   const handleViewProfile = () => {
     if (user) {
       navigate(`/profile/${user.id}`);
@@ -178,74 +154,40 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col pb-16">
       {/* Header */}
-      <header 
-        className={`bg-card shadow-md sticky top-0 z-20 transition-all duration-300 ease-in-out ${
-          headerVisible ? 'translate-y-0' : '-translate-y-full'
-        }`}
-      >
-        <div className="container mx-auto px-2 sm:px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <header className="bg-card shadow-md sticky top-0 z-20">
+        <div className="container mx-auto px-4 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <Logo size="sm" />
-            <h1 className="text-xl font-extrabold text-primary tracking-wide">AfuChat</h1>
+            <h1 className="text-base font-bold text-primary">AfuChat</h1>
           </div>
           
-          {/* --- UPDATED THIS SECTION --- */}
           <div className="flex items-center gap-1">
-            {user ? (
+            {user && (
               <>
                 <NotificationIcon />
-                <Button size="icon" variant="ghost" onClick={handleViewProfile} className="text-foreground hover:bg-muted rounded-full">
-                  <User className="h-5 w-5" />
-                  <span className="sr-only">Profile</span>
-                </Button>
-                <Button size="icon" variant="ghost" onClick={handleSignOut} className="text-foreground hover:bg-muted rounded-full">
-                  <LogOut className="h-5 w-5" />
-                  <span className="sr-only">Sign out</span>
-                </Button>
+                {isAdmin && (
+                  <Link to="/admin">
+                    <Button size="icon" variant="ghost" className="rounded-full">
+                      <Shield className="h-5 w-5 text-primary" />
+                    </Button>
+                  </Link>
+                )}
+                <Link to={`/profile/${user.id}`}>
+                  <Button size="icon" variant="ghost" className="rounded-full">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </Link>
               </>
-            ) : (
-              <Button size="icon" variant="ghost" onClick={handleSignIn} className="text-foreground hover:bg-muted rounded-full">
-                <LogIn className="h-5 w-5" />
-                <span className="sr-only">Sign in</span>
-              </Button>
             )}
           </div>
-          {/* --------------------------- */}
-          
         </div>
       </header>
 
       {/* Main Content */}
-      <main 
-        className="flex-1 container mx-auto px-2 sm:px-4 py-4 max-w-4xl overflow-y-auto"
-      >
+      <main className="flex-1 container mx-auto px-4 py-4 max-w-4xl">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          <TabsList className="grid w-full grid-cols-3 mb-6 p-1 bg-muted/50 rounded-full shadow-inner">
-            <TabsTrigger 
-              value="feed" 
-              className="flex items-center gap-2 py-2 rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 data-[state=active]:font-bold transition-all duration-300"
-            >
-              <Radio className="h-4 w-4" />
-              Feed
-            </TabsTrigger>
-            <TabsTrigger 
-              value="search" 
-              className="flex items-center gap-2 py-2 rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 data-[state=active]:font-bold transition-all duration-300"
-            >
-              <SearchIcon className="h-4 w-4" />
-              Search
-            </TabsTrigger>
-            <TabsTrigger 
-              value="chats" 
-              className="flex items-center gap-2 py-2 rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 data-[state=active]:font-bold transition-all duration-300"
-            >
-              <MessageSquare className="h-4 w-4" />
-              Chats
-            </TabsTrigger>
-          </TabsList>
-          
           <div className="flex-1 relative">
             <TabsContent value="feed" className="h-full mt-0">
               <Feed />
@@ -259,10 +201,45 @@ const Index = () => {
           </div>
         </Tabs>
       </main>
+
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="grid grid-cols-3 h-16">
+            <button
+              onClick={() => setActiveTab('feed')}
+              className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+                activeTab === 'feed' ? 'text-primary' : 'text-muted-foreground'
+              }`}
+            >
+              <Radio className="h-5 w-5" />
+              <span className="text-xs font-medium">Feed</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('search')}
+              className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+                activeTab === 'search' ? 'text-primary' : 'text-muted-foreground'
+              }`}
+            >
+              <SearchIcon className="h-5 w-5" />
+              <span className="text-xs font-medium">Search</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('chats')}
+              className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+                activeTab === 'chats' ? 'text-primary' : 'text-muted-foreground'
+              }`}
+            >
+              <MessageSquare className="h-5 w-5" />
+              <span className="text-xs font-medium">Chats</span>
+            </button>
+          </div>
+        </div>
+      </nav>
       
-      {/* FAB Renderer */}
-      {activeTab === 'feed' && <NewPostFAB onClick={handleNewPost} visible={fabVisible} />}
-      {activeTab === 'chats' && <NewChatFAB onClick={handleNewChat} visible={fabVisible} />}
+      {/* FAB for new content */}
+      {activeTab === 'feed' && <NewPostFAB onClick={handleNewPost} visible={true} />}
+      {activeTab === 'chats' && <NewChatFAB onClick={handleNewChat} visible={true} />}
       
       {/* Modals */}
       <NewPostModal 

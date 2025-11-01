@@ -4,11 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search as SearchIcon, User, MessageSquare, Loader2, TrendingUp, Hash } from 'lucide-react';
+import { Search as SearchIcon, User, MessageSquare, Loader2, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
-// --- Type Definitions ---
 interface SearchResult {
   type: 'user' | 'post';
   id: string;
@@ -30,13 +30,10 @@ interface SearchResult {
 }
 
 interface Trend {
-  topic: string; // From the DB function
-  post_count: number; // From the DB function
+  topic: string;
+  post_count: number;
 }
 
-// --- Placeholder Components (Unchanged) ---
-// (TwitterVerifiedBadge, GoldVerifiedBadge, VerifiedBadge, SearchSkeleton remain the same)
-// ... [Verified Badge components from your original code] ...
 const TwitterVerifiedBadge = ({ size = 'w-4 h-4' }: { size?: string }) => (
   <svg viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg" className={`${size} ml-1 fill-[#1d9bf0] flex-shrink-0`}>
     <path d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z" />
@@ -50,12 +47,8 @@ const GoldVerifiedBadge = ({ size = 'w-4 h-4' }: { size?: string }) => (
 );
 
 const VerifiedBadge = ({ isVerified, isOrgVerified }: { isVerified?: boolean; isOrgVerified?: boolean }) => {
-  if (isOrgVerified) {
-    return <GoldVerifiedBadge />;
-  }
-  if (isVerified) {
-    return <TwitterVerifiedBadge />;
-  }
+  if (isOrgVerified) return <GoldVerifiedBadge />;
+  if (isVerified) return <TwitterVerifiedBadge />;
   return null;
 };
 
@@ -75,7 +68,6 @@ const SearchSkeleton = () => (
   </div>
 );
 
-// --- New Trending Section Component (Now fetching data) ---
 const TrendingSection = ({ onTrendClick }: { onTrendClick: (topic: string) => void }) => {
   const [trends, setTrends] = useState<Trend[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,18 +76,15 @@ const TrendingSection = ({ onTrendClick }: { onTrendClick: (topic: string) => vo
     const fetchTrends = async () => {
       setLoading(true);
       try {
-        // Call the Supabase RPC function (Remote Procedure Call)
-        const { data, error } = await supabase.rpc('get_trending_topics', {
-          hours_ago: 24, // Look at the last 24 hours
-          num_topics: 5, // Get the top 5
+        const { data, error } = await supabase.rpc('get_trending_topics' as any, {
+          hours_ago: 24,
+          num_topics: 5,
         });
 
         if (error) {
           console.error('Error fetching trends:', error);
-          // Fallback to empty array on error
           setTrends([]);
-        } else {
-          // The topic field from Postgres's ts_stat is a lexeme, which often needs to be capitalized for display
+        } else if (Array.isArray(data)) {
           const formattedData = data.map((d: Trend) => ({
             ...d,
             topic: d.topic.charAt(0).toUpperCase() + d.topic.slice(1),
@@ -115,8 +104,8 @@ const TrendingSection = ({ onTrendClick }: { onTrendClick: (topic: string) => vo
   if (loading) {
     return (
       <div className="space-y-3 p-4">
-        <h2 className="text-xl font-bold text-foreground flex items-center mb-4">
-          <TrendingUp className="h-6 w-6 mr-2 text-primary" /> Trending Now
+        <h2 className="text-base font-bold text-foreground flex items-center mb-4">
+          <TrendingUp className="h-5 w-5 mr-2 text-primary" /> Trending Now
         </h2>
         <Skeleton className="h-40 w-full rounded-xl" />
       </div>
@@ -125,7 +114,7 @@ const TrendingSection = ({ onTrendClick }: { onTrendClick: (topic: string) => vo
 
   if (trends.length === 0) {
     return (
-      <div className="text-center text-muted-foreground py-8">
+      <div className="text-center text-muted-foreground py-8 text-sm">
         No new trends detected in the last 24 hours.
       </div>
     );
@@ -133,19 +122,19 @@ const TrendingSection = ({ onTrendClick }: { onTrendClick: (topic: string) => vo
 
   return (
     <div className="p-0 space-y-3">
-      <h2 className="text-xl font-bold text-foreground flex items-center mb-4">
-        <TrendingUp className="h-6 w-6 mr-2 text-primary" /> Trending Now
+      <h2 className="text-base font-bold text-foreground flex items-center mb-4">
+        <TrendingUp className="h-5 w-5 mr-2 text-primary" /> Trending Now
       </h2>
       <Card className="p-0 divide-y">
         {trends.map((trend, index) => (
           <div
-            key={index} // Use index if topic isn't guaranteed unique
+            key={index}
             className="flex flex-col p-4 cursor-pointer hover:bg-muted/50 transition-colors"
             onClick={() => onTrendClick(trend.topic)}
           >
             <div className="flex items-center text-sm font-medium text-muted-foreground">
-              <span className="text-lg font-extrabold mr-2 text-primary/50">{index + 1}</span>
-              <span className="text-primary hover:underline font-semibold">{trend.topic}</span>
+              <span className="text-base font-bold mr-2 text-primary/50">{index + 1}</span>
+              <span className="text-primary hover:underline font-semibold text-sm">{trend.topic}</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1 ml-6">
               {trend.post_count.toLocaleString()} posts
@@ -153,14 +142,13 @@ const TrendingSection = ({ onTrendClick }: { onTrendClick: (topic: string) => vo
           </div>
         ))}
       </Card>
-      <div className="text-center text-sm text-muted-foreground pt-4">
+      <div className="text-center text-xs text-muted-foreground pt-4">
         Tap a topic to search
       </div>
     </div>
   );
 };
 
-// --- Main Search Component ---
 const Search = () => {
   const { user } = useAuth();
   const [query, setQuery] = useState('');
@@ -169,7 +157,6 @@ const Search = () => {
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const navigate = useNavigate();
 
-  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(query), 300);
     return () => clearTimeout(timer);
@@ -182,18 +169,15 @@ const Search = () => {
     setLoading(true);
 
     const searchConfig = 'english'; 
-    // Uses a basic OR logic, which is generally effective for initial FTS
     const searchTsQuery = trimmedQuery.replace(/ /g, ' | '); 
 
     try {
-      // 1. Search Users
       const { data: userData } = await supabase
         .from('profiles')
         .select('id, display_name, handle, bio, is_verified, is_organization_verified, is_private')
         .or(`display_name.ilike.%${trimmedQuery}%,handle.ilike.%${trimmedQuery}%`)
         .limit(5);
 
-      // 2. Search Posts
       const { data: postData } = await supabase
         .from('posts')
         .select(`
@@ -226,7 +210,6 @@ const Search = () => {
     }
   }, [debouncedQuery]);
   
-  // Re-run search when debounced query changes
   useEffect(() => {
     if (debouncedQuery.trim()) {
       handleSearch();
@@ -244,7 +227,6 @@ const Search = () => {
   };
   
   const handleTrendClick = (topic: string) => {
-    // Set query, which triggers the useEffect and debounce logic
     setQuery(topic); 
   };
 
@@ -255,42 +237,37 @@ const Search = () => {
     }
 
     try {
-      // Logic to find or create 1-1 chat... (Placeholder for your existing logic)
-      const chatId = await findOrCreateOneToOneChat(user.id, targetUserId);
+      const { data: chatId, error } = await supabase
+        .rpc('get_or_create_chat' as any, {
+          other_user_id: targetUserId
+        })
+        .single();
+
+      if (error) throw error;
 
       if (chatId) {
         navigate(`/chat/${chatId}`);
       }
     } catch (error) {
       console.error('Chat creation error:', error);
+      toast.error('Failed to create chat');
     }
   };
-  
-  const findOrCreateOneToOneChat = async (currentUserId: string, targetUserId: string) => {
-    // [Your existing findOrCreateOneToOneChat logic here]
-    // ...
-    // For brevity in the response, assume this is externalized or exists.
-    // ...
-  };
 
-
-  // --- Render Logic ---
   const isSearchActive = !!query.trim();
-
   const userResults = results.filter(r => r.type === 'user');
   const postResults = results.filter(r => r.type === 'post');
 
   return (
     <div className="h-full flex flex-col">
-      {/* Search Header and Input */}
       <div className="p-4 bg-card shadow-sm sticky top-0 z-10 border-b border-border">
-        <h1 className="text-2xl font-extrabold text-foreground mb-4">Explore</h1>
+        <h1 className="text-base font-bold text-foreground mb-4">Explore</h1>
         <div className="flex gap-2">
           <Input
-            placeholder="Search all users, posts, and topics..."
+            placeholder="Search users, posts, topics..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 rounded-full bg-muted/70 focus:bg-background h-10 px-4"
+            className="flex-1 rounded-full bg-muted/70 focus:bg-background h-10 px-4 text-sm"
           />
           <Button 
             onClick={handleSearch} 
@@ -306,20 +283,16 @@ const Search = () => {
         {loading && isSearchActive ? (
           <SearchSkeleton />
         ) : !isSearchActive ? (
-          // Display Trends when search bar is empty
           <TrendingSection onTrendClick={handleTrendClick} />
         ) : results.length === 0 ? (
-          // Display No Results when search is active but results are empty
-          <div className="text-center text-muted-foreground py-8">
-            No results found for **"{query}"**.
+          <div className="text-center text-muted-foreground py-8 text-sm">
+            No results found for "{query}".
           </div>
         ) : (
-          // Display Search Results
           <div className="space-y-6">
-            {/* People Results Section */}
             {userResults.length > 0 && (
               <section>
-                <h2 className="text-lg font-bold text-foreground mb-3 border-b pb-1">People ({userResults.length})</h2>
+                <h2 className="text-sm font-bold text-foreground mb-3 border-b pb-1">People ({userResults.length})</h2>
                 <div className="space-y-3">
                   {userResults.map((result) => (
                     <Card key={result.id} className="p-4 hover:shadow-xl transition-shadow">
@@ -333,14 +306,14 @@ const Search = () => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1">
-                              <h3 className="font-semibold text-foreground truncate">
+                              <h3 className="font-semibold text-foreground truncate text-sm">
                                 {result.display_name}
                               </h3>
                               <VerifiedBadge isVerified={result.is_verified} isOrgVerified={result.is_organization_verified} />
                             </div>
-                            <p className="text-sm text-muted-foreground truncate">@{result.handle}</p>
+                            <p className="text-xs text-muted-foreground truncate">@{result.handle}</p>
                             {result.bio && (
-                              <p className="text-sm text-muted-foreground truncate mt-1">{result.bio}</p>
+                              <p className="text-xs text-muted-foreground truncate mt-1">{result.bio}</p>
                             )}
                           </div>
                         </div>
@@ -349,7 +322,7 @@ const Search = () => {
                           size="sm"
                           onClick={() => handleStartChat(result.id)}
                           disabled={result.is_private}
-                          className="ml-4 flex-shrink-0"
+                          className="ml-4 flex-shrink-0 text-xs"
                         >
                           <MessageSquare className="h-4 w-4 mr-1" />
                           Message
@@ -361,10 +334,9 @@ const Search = () => {
               </section>
             )}
 
-            {/* Post Results Section */}
             {postResults.length > 0 && (
               <section>
-                <h2 className="text-lg font-bold text-foreground mb-3 border-b pb-1">Posts ({postResults.length})</h2>
+                <h2 className="text-sm font-bold text-foreground mb-3 border-b pb-1">Posts ({postResults.length})</h2>
                 <div className="space-y-3">
                   {postResults.map((result) => (
                     <Card
@@ -378,7 +350,7 @@ const Search = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1">
-                            <h4 className="font-semibold text-foreground truncate">
+                            <h4 className="font-semibold text-foreground truncate text-sm">
                               {result.author_profiles?.display_name}
                             </h4>
                             <VerifiedBadge
@@ -390,7 +362,7 @@ const Search = () => {
                             </p>
                             <span className="text-xs text-muted-foreground mx-1">·</span>
                             <p className="text-xs text-muted-foreground flex-shrink-0">
-                              {result.created_at ? new Date(result.created_at).toLocaleDateString('en-UG') : 'Unknown Date'}
+                              {result.created_at ? new Date(result.created_at).toLocaleDateString() : 'Unknown'}
                             </p>
                           </div>
                           <p className="text-foreground text-sm mt-1 leading-relaxed line-clamp-3 whitespace-pre-wrap">

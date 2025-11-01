@@ -1,4 +1,5 @@
 import { cva } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
 
 // Helper to get initials
 const getInitials = (name: string) => {

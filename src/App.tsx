@@ -10,9 +10,8 @@ import ChatRoom from "./pages/ChatRoom";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Notifications from "./pages/Notifications";
-
-// --- 1. IMPORT THE NEW POSTDETAIL PAGE ---
 import PostDetail from "./pages/PostDetail";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -29,11 +28,8 @@ const App = () => (
             <Route path="/chat/:chatId" element={<ChatRoom />} />
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/notifications" element={<Notifications />} />
-            
-            {/* --- 2. ADD THE NEW ROUTE FOR POSTS --- */}
             <Route path="/post/:postId" element={<PostDetail />} />
-
-            {/* CATCH-ALL "*" ROUTE MUST BE LAST */}
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

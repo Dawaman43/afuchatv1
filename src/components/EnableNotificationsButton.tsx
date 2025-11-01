@@ -51,7 +51,7 @@ const EnableNotificationsButton = () => {
 
       // 4. Save the subscription to our 'push_subscriptions' table
       const { error } = await supabase
-        .from('push_subscriptions')
+        .from('push_subscriptions' as any)
         .insert({
           user_id: user.id,
           subscription: subscription.toJSON(),

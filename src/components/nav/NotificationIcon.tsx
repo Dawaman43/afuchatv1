@@ -15,7 +15,7 @@ const NotificationIcon = () => {
     // 1. Get the initial count of unread notifications on load
     const fetchInitialCount = async () => {
       const { count, error } = await supabase
-        .from('notifications')
+        .from('notifications' as any)
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('is_read', false);
@@ -40,20 +40,16 @@ const NotificationIcon = () => {
           table: 'notifications',
           filter: `user_id=eq.${user.id}`,
         },
-        async (payload) => {
+        async () => {
           // Re-fetch the count to be 100% accurate
-          const { count, error } = await supabase
-            .from('notifications')
+          const { count } = await supabase
+            .from('notifications' as any)
             .select('*', { count: 'exact', head: true })
             .eq('user_id', user.id)
             .eq('is_read', false);
           
           if (count !== null) {
             setUnreadCount(count);
-          }
-
-          // If a new one just came in, show an in-app toast
-          if (payload.eventType === 'INSERT') {
             toast.info("You have a new notification!");
           }
         }

@@ -59,11 +59,11 @@ self.addEventListener('push', (event) => {
 });
 
 // 2. Listen for a click on the notification
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener('notificationclick', (event: any) => {
   event.notification.close(); // Close the notification
 
   // Open the app or a specific URL
   event.waitUntil(
-    clients.openWindow(event.notification.data.url || '/')
+    self.clients.openWindow(event.notification.data.url || '/')
   );
 });

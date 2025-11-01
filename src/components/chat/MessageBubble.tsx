@@ -4,7 +4,30 @@ import { Avatar } from './Avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Message, Reaction } from './ChatRoom'; // Assuming types are exported from ChatRoom
+
+export interface Reaction {
+  reaction_emoji: string;
+}
+
+export interface Message {
+  id: string;
+  encrypted_content: string;
+  audio_url?: string;
+  sender_id: string;
+  sent_at: string;
+  message_reactions?: Reaction[];
+  reply_to_message?: {
+    audio_url?: string;
+    encrypted_content: string;
+    profiles: {
+      display_name: string;
+    };
+  };
+  profiles: {
+    display_name: string;
+    handle: string;
+  };
+}
 
 // --- Helper to aggregate reactions ---
 const aggregateReactions = (reactions: Reaction[]) => {
@@ -113,13 +136,13 @@ export const MessageBubble = ({
   );
 
   const ReactionDisplay = () => {
-    const aggregated = aggregateReactions(message.message_reactions);
+    const aggregated = aggregateReactions(message.message_reactions || []);
     if (aggregated.length === 0) return null;
     return (
       <div className={`flex gap-1 ${isOwn ? 'justify-end' : ''} -mt-1`}>
         {aggregated.map(({ emoji, count }) => (
           <Badge key={emoji} variant="secondary" className="shadow-sm">
-            {emoji} {count > 1 && <span className="text-xs ml-1">{count}</span>}
+            {emoji} {typeof count === 'number' && count > 1 && <span className="text-xs ml-1">{count}</span>}
           </Badge>
         ))}
       </div>

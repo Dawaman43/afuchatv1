@@ -95,15 +95,14 @@ const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
     }
   };
 
-  // --- UPDATED FUNCTION WITH .single() AND BETTER ERROR LOGGING ---
   const handleStartChat = async (targetUserId: string) => {
     setCreating(true);
     try {
       const { data: chatId, error } = await supabase
-        .rpc('get_or_create_chat', {
+        .rpc('get_or_create_chat' as any, {
           other_user_id: targetUserId
         })
-        .single();  // Ensures single scalar return (UUID)
+        .single();
 
       if (error) throw error;
 
