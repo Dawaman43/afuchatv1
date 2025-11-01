@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,7 +16,7 @@ import NewChatDialog from '@/components/ui/NewChatDialog';
 import NotificationIcon from '@/components/nav/NotificationIcon';
 
 
-// --- FAB Components (Updated: bottom-6 -> bottom-20) ---
+// --- FAB Components (Positioned at bottom-20, above the collapsible nav) ---
 
 const NewPostFAB = ({ onClick, visible }) => (
   <Button 
@@ -54,6 +54,11 @@ const Index = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [forceLoaded, setForceLoaded] = useState(false);
 
+  // --- Scroll-Hiding Nav State ---
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  // -------------------------------
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setForceLoaded(true);
@@ -67,6 +72,27 @@ const Index = () => {
       checkAdminStatus();
     }
   }, [user]);
+
+  // --- Scroll Logic for Hiding Nav ---
+  useEffect(() => {
+    const handleScroll = () => {
+      // Only hide nav if scrolling down and past the header (e.g., 100px)
+      if (window.scrollY > lastScrollY.current && window.scrollY > 100) {
+        setIsNavVisible(false);
+      } else if (window.scrollY < lastScrollY.current) {
+        // Always show nav if scrolling up
+        setIsNavVisible(true);
+      }
+      lastScrollY.current = window.scrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+  // ------------------------------------
 
   const checkAdminStatus = async () => {
     if (!user) return;
@@ -94,7 +120,6 @@ const Index = () => {
     if (user) {
       setIsPostModalOpen(true);
     } else {
-      // Should not happen if FAB is conditional, but safe check
       navigate('/auth'); 
     }
   };
@@ -103,13 +128,12 @@ const Index = () => {
     if (user) {
       setIsChatModalOpen(true);
     } else {
-      // Should not happen if FAB is conditional, but safe check
       navigate('/auth');
     }
   };
 
   if (effectiveLoading) {
-    // Skeleton loading state
+    // Skeleton loading state (updated bottom-6 to bottom-20 for consistency)
     return (
       <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto">
         <div className="h-14 flex items-center justify-between shadow-md rounded-b-lg">
@@ -213,8 +237,12 @@ const Index = () => {
         </Tabs>
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30">
+      {/* Bottom Navigation (Hides on Scroll Down) */}
+      <nav 
+        className={`fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30 transition-transform duration-300 ease-in-out ${
+          isNavVisible ? 'translate-y-0' : 'translate-y-full'
+        }`}
+      >
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="grid grid-cols-3 h-16">
             <button
