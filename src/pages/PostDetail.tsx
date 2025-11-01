@@ -1,4 +1,4 @@
-Import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -208,8 +208,7 @@ const PostDetail = () => {
             </div>
 
             {/* POST TEXT */}
-            {/* 🎨 UPDATED: Changed from text-2xl to text-lg for smaller text */}
-            <p className="text-lg leading-relaxed whitespace-pre-wrap mb-4">
+            <p className="text-2xl leading-relaxed whitespace-pre-wrap mb-4">
               {renderContentWithMentions(post.content)}
             </p>
 
@@ -270,8 +269,7 @@ const PostDetail = () => {
                 </div>
             ))}
             {replies.length === 0 && (
-                {/* 🎨 UPDATED: Changed p-8 to p-4 for smaller padding */}
-                <p className="text-center text-muted-foreground p-4">No replies yet. Be the first!</p>
+                <p className="text-center text-muted-foreground p-8">No replies yet. Be the first!</p>
             )}
         </div>
       </div>
