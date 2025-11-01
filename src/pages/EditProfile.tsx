@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-// NOTE: Assuming your AuthContext provides 'user' and 'isLoading'
 import { useAuth } from '@/contexts/AuthContext'; 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -26,7 +25,7 @@ interface EditProfileForm {
 }
 
 const EditProfile: React.FC = () => {
-  // 💡 ASSUMPTION: useAuth now provides an isLoading flag for initial authentication check
+  // Assuming useAuth provides 'user' and 'isLoading'
   const { user, isLoading: authLoading } = useAuth(); 
   const navigate = useNavigate();
 
@@ -35,18 +34,18 @@ const EditProfile: React.FC = () => {
     handle: '',
     bio: '',
   });
-  const [profileLoading, setProfileLoading] = useState<boolean>(true); // Renamed internal loading state
+  const [profileLoading, setProfileLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
 
   useEffect(() => {
-    // 1. Do nothing if auth is still loading (authLoading = true)
+    // Wait for the authentication state to finish loading
     if (authLoading) return;
 
-    // 2. Redirect if no user is found after auth loads (Unauthenticated)
+    // Redirect unauthenticated users
     if (!user) {
         toast.error("You must be logged in to edit your profile.");
-        // Redirect to a safe place (e.g., login page)
-        navigate('/login'); 
+        // Redirect to a specific login path
+        navigate('/login', { replace: true }); 
         return;
     }
 
@@ -78,7 +77,7 @@ const EditProfile: React.FC = () => {
     };
 
     fetchProfile();
-  }, [user, navigate, authLoading]); // Dependency array includes user and authLoading
+  }, [user, navigate, authLoading]); 
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | React.TextareaHTMLAttributes<HTMLTextAreaElement>>
@@ -93,7 +92,11 @@ const EditProfile: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!user) return; // Should be handled by the useEffect redirect, but good defensive programming
+    if (!user) {
+        toast.error("Session expired. Please log in again.");
+        navigate('/login', { replace: true });
+        return;
+    }
 
     if (!profile.display_name.trim() || !profile.handle.trim()) {
         toast.error("Display Name and Handle are required.");
@@ -117,7 +120,6 @@ const EditProfile: React.FC = () => {
       if (error) throw error;
 
       toast.success('Profile updated successfully!');
-      // Assuming you want to navigate to the user's profile view
       navigate(`/${user.id}`); 
     } catch (error: any) {
       console.error('Update error:', error);
@@ -144,8 +146,7 @@ const EditProfile: React.FC = () => {
     );
   }
 
-  // NOTE: If we reached here without a 'user' object, the useEffect redirect should have fired.
-  // This return statement ensures the component still doesn't crash if the redirect is slow.
+  // Do not render the form if the user is null (the useEffect redirect should handle this)
   if (!user) return null; 
 
 
