@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-// Note: Added CheckCircle to your imports
+// Note: CheckCircle added to the import list
 import { Bot, Send, Loader2, ArrowLeft, CheckCircle } from 'lucide-react'; 
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +29,7 @@ const AIChat = () => {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Hardcode the AI as verified for the purposes of this display
+  // Hardcode the AI as verified for display purposes
   const isAIVerified = true; 
 
   useEffect(() => {
@@ -96,7 +96,6 @@ const AIChat = () => {
   
   // Function to handle the navigation to the AI's profile
   const handleAIAvatarClick = () => {
-    // Assuming your user profile route is '/profile/:username'
     navigate('/profile/afuai'); 
   };
 
@@ -120,14 +119,15 @@ const AIChat = () => {
           <div>
             <div className="flex items-center gap-1">
               <h1 className="font-bold text-foreground">AfuAI</h1>
-              {/* === GOLDEN VERIFICATION BADGE === */}
+              {/* === GOLDEN CHECKMARK === */}
               {isAIVerified && (
                 <CheckCircle 
-                  className="h-5 w-5 text-yellow-500 fill-yellow-500" // Styled for GOLD
+                  // Applying the same gold color used in the GoldVerifiedBadge: #FFD43B
+                  className="h-5 w-5 text-[#FFD43B] fill-[#FFD43B]" 
                   title="Verified AI Assistant"
                 />
               )}
-              {/* ================================= */}
+              {/* ======================== */}
             </div>
             <p className="text-xs text-muted-foreground">Your AI Assistant</p>
           </div>
