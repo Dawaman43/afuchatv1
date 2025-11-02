@@ -8,7 +8,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-// --- Type Definitions (Unchanged) ---
 interface Post {
   id: string;
   content: string;
@@ -41,7 +40,6 @@ interface Reply {
   };
 }
 
-// --- Verified Badge Logic (Unchanged) ---
 const TwitterVerifiedBadge = () => (
   <svg
     viewBox="0 0 22 22"
@@ -72,7 +70,6 @@ const VerifiedBadge = ({ isVerified, isOrgVerified }: { isVerified: boolean; isO
   return null;
 };
 
-// Helper to format time (Unchanged)
 const formatTime = (isoString: string) => {
   const date = new Date(isoString);
   const now = new Date();
@@ -90,7 +87,6 @@ const formatTime = (isoString: string) => {
 };
 
 
-// Utility to parse content and create clickable links for mentions with ID lookup (Unchanged)
 const parsePostContent = (content: string, navigate: (path: string) => void) => {
   if (!content) return null;
   
@@ -142,16 +138,12 @@ const parsePostContent = (content: string, navigate: (path: string) => void) => 
   
   return <>{parts}</>;
 };
-// --- END UTILITY ---
 
-// --- NEW ReplyItem Component (Unchanged) ---
 const ReplyItem = ({ reply, navigate, handleViewProfile }: { reply: Reply; navigate: any; handleViewProfile: (id: string) => void }) => {
     return (
         <div className="flex pt-2 pb-1 relative">
-            {/* Visual Indentation Line */}
             <div className="absolute left-5 top-0 bottom-0 w-px bg-border/80 ml-px mt-2.5 mb-1.5" />
             
-            {/* Author Icon (smaller) */}
             <div
                 className="mr-2 flex-shrink-0 h-7 w-7 rounded-full bg-secondary flex items-center justify-center cursor-pointer z-10"
                 onClick={() => handleViewProfile(reply.author_id)}
@@ -160,7 +152,6 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: { reply: Reply; navig
             </div>
 
             <div className="flex-1 min-w-0">
-                {/* Reply Header (smaller text) */}
                 <div className="flex items-center gap-x-1 min-w-0">
                     <span
                         className="font-bold text-foreground text-xs cursor-pointer hover:underline whitespace-nowrap"
@@ -182,7 +173,6 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: { reply: Reply; navig
                     </span>
                 </div>
 
-                {/* Reply Content */}
                 <p className="text-foreground text-xs leading-snug whitespace-pre-wrap break-words mt-0.5">
                     {parsePostContent(reply.content, navigate)}
                 </p>
@@ -190,10 +180,8 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: { reply: Reply; navig
         </div>
     );
 };
-// --- END ReplyItem Component ---
 
 
-// --- PostCard Component ---
 const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
   { post: Post; addReply: (postId: string, reply: Reply) => void; user: any; navigate: any; onAcknowledge: (postId: string, hasLiked: boolean) => void }) => {
 
@@ -204,17 +192,13 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
     navigate(`/profile/${userId}`);
   };
 
-  // 🚨 IMPLEMENTATION: Handles navigating to AI Chat and passing post data
   const handleAiTransfer = () => {
-    // Construct the relevant post information to pass to the AI chat
     const postDetails = {
       postId: post.id,
       postContent: post.content,
       postAuthorHandle: post.profiles.handle,
-      // Include more context if needed
     };
 
-    // Use the navigate function to go to '/ai-chat' and pass data via state
     navigate('/ai-chat', { 
         state: { 
             context: 'post_analysis',
@@ -232,7 +216,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
     const trimmedReplyText = replyText.trim();
     setReplyText(''); 
 
-    // Optimistic Update
     const optimisticReply: Reply = {
       id: new Date().getTime().toString(),
       post_id: post.id,
@@ -249,7 +232,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
     addReply(post.id, optimisticReply);
     setShowComments(true);
 
-    // Database Write
     const { error } = await supabase.from('post_replies').insert({
       post_id: post.id,
       author_id: user.id,
@@ -264,7 +246,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
 
   return (
     <div className="flex border-b border-border py-2 pl-0 pr-4 transition-colors hover:bg-muted/5">
-      {/* Author Icon */}
       <div
         className="mr-3 flex-shrink-0 h-10 w-10 rounded-full bg-secondary flex items-center justify-center cursor-pointer ml-1"
         onClick={() => handleViewProfile(post.author_id)}
@@ -273,7 +254,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
       </div>
 
       <div className="flex-1 min-w-0">
-        {/* Post Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-x-1 min-w-0">
             <span
@@ -284,7 +264,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
             </span>
             <VerifiedBadge isVerified={post.profiles.is_verified} isOrgVerified={post.profiles.is_organization_verified} />
 
-            {/* Post Author Handle and Time */}
             <span
               className="text-muted-foreground text-xs hover:underline cursor-pointer truncate flex-shrink min-w-0"
               onClick={() => handleViewProfile(post.author_id)}
@@ -299,13 +278,12 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
           </div>
 
           <div className="flex items-center gap-1">
-            {/* 🚨 AI ICON BUTTON with onClick handler to transfer to AI chat */}
             <Button 
                 variant="ghost" 
                 size="icon" 
                 className="h-8 w-8 rounded-full flex-shrink-0" 
                 title="Analyze post with AfuAI"
-                onClick={handleAiTransfer} // Attached the handler
+                onClick={handleAiTransfer}
             >
                 <Sparkles className="h-4 w-4 text-primary/70" />
             </Button>
@@ -316,16 +294,13 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
           </div>
         </div>
 
-        {/* 🎯 POST CONTENT WRAPPED IN LINK TO DETAIL PAGE */}
         <Link to={`/post/${post.id}`} className="block">
           <p className="text-foreground text-xs mt-0.5 mb-1.5 leading-relaxed whitespace-pre-wrap">
             {parsePostContent(post.content, navigate)}
           </p>
         </Link>
-        {/* END POST CONTENT LINK */}
 
 
-        {/* Post Actions */}
         <div className="flex justify-between items-center text-xs text-muted-foreground mt-1 -ml-2 max-w-[420px]">
           <Button variant="ghost" size="sm" className="flex items-center gap-1 group" onClick={() => setShowComments(!showComments)}>
             <MessageSquare className="h-4 w-4 group-hover:text-primary transition-colors" />
@@ -340,8 +315,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
           </Button>
         </div>
 
-        {/* --- ENHANCED COMMENT SECTION --- */}
-        <div className="mt-1 ml-[-12px] pr-[12px]"> {/* Adjusted margin for better visual alignment with post content */}
+        <div className="mt-1 ml-[-12px] pr-[12px]">
           {post.reply_count > 0 && !showComments && (
             <span
               className="text-xs text-muted-foreground cursor-pointer hover:underline"
@@ -352,7 +326,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
           )}
 
           {showComments && post.replies && post.replies.length > 0 && (
-            // Reply container with clear left padding
             <div className="space-y-1 pt-2 border-l border-border/80 pl-4 ml-3"> 
               {post.replies.map((reply) => (
                 <ReplyItem 
@@ -365,7 +338,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
             </div>
           )}
 
-          {/* Comment input */}
           {showComments && user && (
             <div className="mt-2 flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
@@ -402,14 +374,12 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
   );
 };
 
-// --- Feed Component ---
 const Feed = () => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [forceLoaded, setForceLoaded] = useState(false);
   const navigate = useNavigate();
-  // 🚨 CHANGE 1: Create a ref for the scrollable container
   const feedRef = useRef<HTMLDivElement>(null); 
 
   const addReply = useCallback((postId: string, newReply: Reply) => {
@@ -595,7 +565,6 @@ const Feed = () => {
             const newReply = { ...payload.new, profiles: profile } as Reply;
             addReply(payload.new.post_id, newReply);
 
-            // Check if @afuai is mentioned
             const mentionsAfuAi = /@afuai/i.test(payload.new.content);
             if (mentionsAfuAi) {
               const { data: postData } = await supabase
@@ -647,18 +616,14 @@ const Feed = () => {
     };
   }, [user, addReply, fetchPosts]);
   
-  // 🚨 CHANGE 2: useEffect to scroll to top whenever the component mounts/re-renders
-  // Note: This relies on React Router's behavior. For true back-button logic, you might need useLocation.
   useEffect(() => {
       if (feedRef.current) {
-          // Check if the scroll position is not already at the top before scrolling
           if (feedRef.current.scrollTop > 0) {
               feedRef.current.scrollTo({ top: 0, behavior: 'smooth' });
           }
       }
-  }, [posts]); // Run whenever posts are updated/fetched (i.e., when returning to the feed)
+  }, [posts]);
 
-  // --- Post Skeleton Component (Unchanged) ---
   const PostSkeleton = () => (
     <div className="flex p-4 border-b border-border">
       <Skeleton className="h-10 w-10 rounded-full mr-3" />
@@ -679,7 +644,6 @@ const Feed = () => {
   );
 
 
-  // --- Render Logic (Unchanged) ---
   const effectiveLoading = loading && !forceLoaded;
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -700,7 +664,6 @@ const Feed = () => {
 
   return (
     <div className="h-full flex flex-col">
-      {/* 🚨 CHANGE 3: Attach the ref to the scrollable container */}
       <div ref={feedRef} className="flex-1 overflow-y-auto">
         {posts.length === 0 && !effectiveLoading ? (
           <div className="text-center text-muted-foreground py-8 text-xs">
