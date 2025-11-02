@@ -121,7 +121,7 @@ const AIChat = () => {
               {/* === X ORGANIZATION GOLD VERIFIED BADGE === */}
               {isAIVerified && (
                 <img 
-                  src="https://upload.wikimedia.org/wikipedia/commons/8/81/Twitter_Verified_Badge_Gold.svg" 
+                  src="https://upload.wikimedia.org/wikipedia/commons/archive/8/81/20230122072306!Twitter_Verified_Badge_Gold.svg" 
                   alt="Verified Organization" 
                   className="h-5 w-5" 
                   title="Verified AI Assistant"
