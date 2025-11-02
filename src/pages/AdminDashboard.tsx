@@ -264,7 +264,10 @@ const AdminDashboard = () => {
     // ... (Skeleton loading UI remains the same)
     return (
       <div className="min-h-screen bg-background p-2 sm:p-4 max-w-6xl mx-auto">
-        <Skeleton className="h-10 w-32 mb-4" />
+        {/* 🚨 MODIFICATION 1: Changed navigate('/') to navigate(-1) for skeleton */}
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full h-8 w-8 sm:h-10 sm:w-10 mb-4">
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+        </Button>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-24 sm:h-32" />
@@ -281,7 +284,7 @@ const AdminDashboard = () => {
       <div className="min-h-screen bg-background p-4 md:p-8 flex flex-col items-center pt-20">
         <div className="w-full max-w-4xl">
           <div className="flex items-center gap-2 sm:gap-4 mb-6 border-b pb-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
@@ -363,14 +366,14 @@ const AdminDashboard = () => {
 
   // --- FULL ADMIN VIEW (Only renders if hasAdminPrivileges is true) ---
   return (
-    // ... (Your full Admin Dashboard JSX code from the previous step)
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-2 py-4 sm:px-4 sm:py-6 max-w-6xl">
         <div className="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/')}
+            // 🚨 MODIFICATION 2: Changed navigate('/') to navigate(-1) for main header
+            onClick={() => navigate(-1)}
             className="rounded-full h-8 w-8 sm:h-10 sm:w-10"
           >
             <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
