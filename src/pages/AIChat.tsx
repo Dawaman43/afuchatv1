@@ -17,7 +17,13 @@ interface Message {
 const AIChat = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: 'assistant',
+      content: "Hi! I'm AfuAI, your personal assistant. I can help you create posts, answer questions about AfuChat, or just chat! How can I help you today?",
+      timestamp: new Date(),
+    }
+  ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -25,116 +31,12 @@ const AIChat = () => {
   // Hardcode the AI as verified for display purposes
   const isAIVerified = true; 
 
-  const [chatId, setChatId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const loadOrCreateAIChat = async () => {
-      try {
-        // Fetch user's profile to get ai_chat_id
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('ai_chat_id')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) throw profileError;
-
-        let currentChatId = profile?.ai_chat_id;
-
-        if (!currentChatId) {
-          // Create new AI chat
-          const { data: newChat, error: chatError } = await supabase
-            .from('chats')
-            .insert({
-              name: 'AfuAI Chat',
-              is_group: false,
-              created_by: user.id,
-              user_id: user.id, // For personal chat
-            })
-            .select('id')
-            .single();
-
-          if (chatError) throw chatError;
-          currentChatId = newChat.id;
-
-          // Update profile with ai_chat_id
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ ai_chat_id: currentChatId })
-            .eq('id', user.id);
-
-          if (updateError) throw updateError;
-        }
-
-        setChatId(currentChatId);
-
-        // Fetch messages for this chat
-        const { data: dbMessages, error: msgError } = await supabase
-          .from('messages')
-          .select('id, role, content, created_at')
-          .eq('chat_id', currentChatId)
-          .order('created_at', { ascending: true });
-
-        if (msgError) throw msgError;
-
-        const mappedMessages: Message[] = (dbMessages || []).map(msg => ({
-          role: msg.role as 'user' | 'assistant',
-          content: msg.content,
-          timestamp: new Date(msg.created_at),
-        }));
-
-        if (mappedMessages.length === 0) {
-          const welcomeMessage: Message = {
-            role: 'assistant',
-            content: "Hi! I'm AfuAI, your personal assistant. I can help you create posts, answer questions about AfuChat, or just chat! How can I help you today?",
-            timestamp: new Date(),
-          };
-          setMessages([welcomeMessage]);
-          // Save welcome to DB
-          await supabase.from('messages').insert({
-            chat_id: currentChatId,
-            role: 'assistant',
-            content: welcomeMessage.content,
-            created_at: welcomeMessage.timestamp.toISOString(),
-            user_id: user.id,
-            sender_id: user.id, // Assuming sender_id for assistant is user or null; adjust if needed
-          });
-        } else {
-          setMessages(mappedMessages);
-        }
-      } catch (error) {
-        console.error('Load AI chat error:', error);
-        toast.error('Failed to load AI chat history');
-      }
-    };
-
-    loadOrCreateAIChat();
-  }, [user]);
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const saveMessageToDb = async (msg: Message) => {
-    if (!chatId) return;
-    const { error } = await supabase.from('messages').insert({
-      chat_id: chatId,
-      role: msg.role,
-      content: msg.content,
-      created_at: msg.timestamp.toISOString(),
-      user_id: user?.id,
-      sender_id: msg.role === 'user' ? user?.id : null, // Adjust for assistant
-    });
-    if (error) {
-      console.error('Save message error:', error);
-      toast.error('Failed to save message');
-    }
-  };
-
   const handleSend = async () => {
-    if (!input.trim() || loading || !chatId || !user) return;
+    if (!input.trim() || loading) return;
 
     const userMessage: Message = {
       role: 'user',
@@ -145,14 +47,6 @@ const AIChat = () => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
-
-    await saveMessageToDb(userMessage);
-
-    // History for AI: last 5 local messages + new user message
-    const historyForAI = messages
-      .slice(-4) // Last 4 before new
-      .map(m => ({ role: m.role, content: m.content }))
-      .concat({ role: 'user' as const, content: userMessage.content });
 
     try {
       const response = await fetch(
@@ -165,7 +59,7 @@ const AIChat = () => {
           },
           body: JSON.stringify({
             message: userMessage.content,
-            history: historyForAI,
+            history: messages.slice(-5), // Last 5 messages for context
           }),
         }
       );
@@ -191,7 +85,6 @@ const AIChat = () => {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-      await saveMessageToDb(assistantMessage);
     } catch (error) {
       console.error('AI Chat error:', error);
       toast.error('Failed to get response from AfuAI');
@@ -204,23 +97,6 @@ const AIChat = () => {
   const handleAIAvatarClick = () => {
     navigate('/profile/afuai'); 
   };
-
-  if (!user) {
-    return (
-      <div className="flex flex-col h-screen bg-background justify-center items-center">
-        <p className="text-muted-foreground">Please log in to chat with AfuAI.</p>
-      </div>
-    );
-  }
-
-  if (!chatId) {
-    return (
-      <div className="flex flex-col h-screen bg-background justify-center items-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <p className="text-muted-foreground mt-2">Loading chat...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-screen bg-background">
