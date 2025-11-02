@@ -211,7 +211,7 @@ const PostActionsSheet: React.FC<PostActionsSheetProps> = ({ post, user, navigat
                             className="justify-start w-full text-left py-3 h-auto text-foreground hover:bg-muted border-b border-border/20 text-sm"
                             onClick={() => navigate('/auth')}
                         >
-                            <LogIn className="h-4 w-4 mr-4 flex-shrink-0" />
+                            <LogIn className="h-3 w-3 mr-2 flex-shrink-0" />
                             <span className="font-normal">Log In to Engage</span>
                         </Button>
                     </SheetClose>
