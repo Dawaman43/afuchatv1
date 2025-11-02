@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // 🎯 ADDED LINK
+import { useEffect, useState, useCallback, useRef } from 'react'; // 🚨 ADDED useRef
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -144,7 +144,7 @@ const parsePostContent = (content: string, navigate: (path: string) => void) => 
 };
 // --- END UTILITY ---
 
-// --- NEW ReplyItem Component ---
+// --- NEW ReplyItem Component (Unchanged) ---
 const ReplyItem = ({ reply, navigate, handleViewProfile }: { reply: Reply; navigate: any; handleViewProfile: (id: string) => void }) => {
     return (
         <div className="flex pt-2 pb-1 relative">
@@ -193,7 +193,7 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: { reply: Reply; navig
 // --- END ReplyItem Component ---
 
 
-// --- PostCard Component ---
+// --- PostCard Component (Unchanged) ---
 const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
   { post: Post; addReply: (postId: string, reply: Reply) => void; user: any; navigate: any; onAcknowledge: (postId: string, hasLiked: boolean) => void }) => {
 
@@ -370,13 +370,15 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge }:
   );
 };
 
-// --- Feed Component (Unchanged) ---
+// --- Feed Component ---
 const Feed = () => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [forceLoaded, setForceLoaded] = useState(false);
   const navigate = useNavigate();
+  // 🚨 CHANGE 1: Create a ref for the scrollable container
+  const feedRef = useRef<HTMLDivElement>(null); 
 
   const addReply = useCallback((postId: string, newReply: Reply) => {
     setPosts((cur) =>
@@ -433,11 +435,11 @@ const Feed = () => {
       if (error) {
         toast.error('Failed to acknowledge post');
         setPosts((currentPosts) =>
-          currentPosts.map((p) =>
-            p.id === postId
-              ? { ...p, has_liked: currentHasLiked, like_count: p.like_count - 1 }
-              : p
-          )
+            currentPosts.map((p) =>
+              p.id === postId
+                ? { ...p, has_liked: currentHasLiked, like_count: p.like_count - 1 }
+                : p
+            )
         );
       }
     }
@@ -582,6 +584,17 @@ const Feed = () => {
       supabase.removeChannel(acksChannel);
     };
   }, [user, addReply, fetchPosts]);
+  
+  // 🚨 CHANGE 2: useEffect to scroll to top whenever the component mounts/re-renders
+  // Note: This relies on React Router's behavior. For true back-button logic, you might need useLocation.
+  useEffect(() => {
+      if (feedRef.current) {
+          // Check if the scroll position is not already at the top before scrolling
+          if (feedRef.current.scrollTop > 0) {
+              feedRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+      }
+  }, [posts]); // Run whenever posts are updated/fetched (i.e., when returning to the feed)
 
   // --- Post Skeleton Component (Unchanged) ---
   const PostSkeleton = () => (
@@ -625,7 +638,8 @@ const Feed = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-y-auto">
+      {/* 🚨 CHANGE 3: Attach the ref to the scrollable container */}
+      <div ref={feedRef} className="flex-1 overflow-y-auto">
         {posts.length === 0 && !effectiveLoading ? (
           <div className="text-center text-muted-foreground py-8 text-xs">
             No posts yet. Follow users or share your first post!
