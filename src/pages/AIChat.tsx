@@ -4,8 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-// Note: CheckCircle added to the import list
-import { Bot, Send, Loader2, ArrowLeft, CheckCircle } from 'lucide-react'; 
+import { Bot, Send, Loader2, ArrowLeft } from 'lucide-react'; 
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -119,15 +118,16 @@ const AIChat = () => {
           <div>
             <div className="flex items-center gap-1">
               <h1 className="font-bold text-foreground">AfuAI</h1>
-              {/* === GOLDEN CHECKMARK === */}
+              {/* === X ORGANIZATION GOLD VERIFIED BADGE === */}
               {isAIVerified && (
-                <CheckCircle 
-                  // Applying the same gold color used in the GoldVerifiedBadge: #FFD43B
-                  className="h-5 w-5 text-[#FFD43B] fill-[#FFD43B]" 
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/8/81/Twitter_Verified_Badge_Gold.svg" 
+                  alt="Verified Organization" 
+                  className="h-5 w-5" 
                   title="Verified AI Assistant"
                 />
               )}
-              {/* ======================== */}
+              {/* ======================================== */}
             </div>
             <p className="text-xs text-muted-foreground">Your AI Assistant</p>
           </div>
