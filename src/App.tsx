@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import Notifications from "./pages/Notifications";
 import PostDetail from "./pages/PostDetail";
 import AdminDashboard from "./pages/AdminDashboard";
+import AIChat from "./pages/AIChat";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/post/:postId" element={<PostDetail />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/ai-chat" element={<AIChat />} />
 
             <Route path="/profile/:userId" element={<ProfileRedirect />} />
 

@@ -4,11 +4,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Send, X, Sparkles, Image as ImageIcon, AtSign, Hash, Smile, TrendingUp } from 'lucide-react';
+import { Send, X, Sparkles, Image as ImageIcon, AtSign, Hash, Smile, TrendingUp, Wand2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 // Optional: Framer Motion for animations (install with: npm i framer-motion)
 let motion, AnimatePresence;
 try {
@@ -91,6 +94,11 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
     const [newPost, setNewPost] = useState('');
     const [isPosting, setIsPosting] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
+    const [showAIAssist, setShowAIAssist] = useState(false);
+    const [aiTopic, setAiTopic] = useState('');
+    const [aiTone, setAiTone] = useState('casual');
+    const [aiLength, setAiLength] = useState('medium');
+    const [generatingAI, setGeneratingAI] = useState(false);
 
     const { remaining, variant, length } = useCharacterCount(newPost);
 
@@ -117,6 +125,8 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
             } else {
                 setNewPost(''); 
                 setShowPreview(false);
+                setShowAIAssist(false);
+                setAiTopic('');
                 onClose(); // Close modal on success
                 // Success toast handled by the real-time subscription in Feed.tsx 
                 toast.success('Post created! ✨', {
@@ -129,6 +139,48 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
             toast.error('Network error—check connection.');
         } finally {
             setIsPosting(false);
+        }
+    };
+
+    const handleGenerateAI = async () => {
+        if (!aiTopic.trim()) {
+            toast.error('Please enter a topic');
+            return;
+        }
+
+        setGeneratingAI(true);
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-post`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        topic: aiTopic,
+                        tone: aiTone,
+                        length: aiLength,
+                    }),
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                toast.error(errorData.error || 'Failed to generate post');
+                return;
+            }
+
+            const data = await response.json();
+            setNewPost(data.post);
+            setShowAIAssist(false);
+            toast.success('AI post generated! ✨');
+        } catch (error) {
+            console.error('AI generation error:', error);
+            toast.error('Failed to generate post');
+        } finally {
+            setGeneratingAI(false);
         }
     };
 
@@ -171,65 +223,159 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                     {/* Post Input Area */}
                     <div className="p-4 space-y-4 overflow-hidden"> 
 
-                        {/* Textarea: Max height and forced vertical scroll, blocked horizontal expansion */}
-                        <Textarea
-                            placeholder="Share your thoughts... What's on your mind today? (Text-only, max 280 characters)"
-                            value={newPost}
-                            onChange={(e) => setNewPost(e.target.value)}
-                            maxLength={280}
-                            rows={4}
-                            className={cn(
-                                "mb-3 resize-none focus-visible:ring-primary min-h-[100px] max-h-40 overflow-y-auto overflow-x-hidden",
-                                "placeholder:text-muted-foreground/70"
-                            )}
-                            disabled={isPosting}
-                        />
-
-                        {/* Character counter with progress bar */}
-                        <div className="flex items-center justify-between">
-                            <Badge variant={variant} className="text-xs">
-                                {remaining} left • {length}/280
-                            </Badge>
-                            <div className="w-20 bg-muted rounded-full h-1.5">
-                                <div 
+                        {!showAIAssist ? (
+                            <>
+                                {/* Textarea: Max height and forced vertical scroll, blocked horizontal expansion */}
+                                <Textarea
+                                    placeholder="Share your thoughts... What's on your mind today? (Text-only, max 280 characters)"
+                                    value={newPost}
+                                    onChange={(e) => setNewPost(e.target.value)}
+                                    maxLength={280}
+                                    rows={4}
                                     className={cn(
-                                        "h-1.5 rounded-full transition-all duration-300",
-                                        length > 250 ? "bg-destructive" : length > 200 ? "bg-secondary" : "bg-primary"
-                                    )} 
-                                    style={{ width: `${(length / 280) * 100}%` }}
+                                        "mb-3 resize-none focus-visible:ring-primary min-h-[100px] max-h-40 overflow-y-auto overflow-x-hidden",
+                                        "placeholder:text-muted-foreground/70"
+                                    )}
+                                    disabled={isPosting}
                                 />
-                            </div>
-                        </div>
 
-                        {/* Unique Post Preview */}
-                        {showPreview && <PostPreview content={newPost} />}
+                                {/* AI Assist Button */}
+                                <Button
+                                    onClick={() => setShowAIAssist(true)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full flex items-center gap-2"
+                                >
+                                    <Wand2 className="h-4 w-4" />
+                                    Need help? Let AI generate a post
+                                </Button>
 
-                        <Separator />
-
-                        {/* Post Button with loading state */}
-                        <Button 
-                            onClick={handlePost} 
-                            disabled={!newPost.trim() || newPost.length > 280 || isPosting} 
-                            className={cn(
-                                "w-full flex items-center justify-center space-x-2 shadow-lg rounded-full px-6 py-3 h-12 font-bold transition-all duration-200",
-                                "hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]",
-                                (newPost.trim() && newPost.length <= 280 && !isPosting) 
-                                    ? "bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90" 
-                                    : "bg-muted cursor-not-allowed"
-                            )}
-                        >
-                            {isPosting ? (
-                                <div className="flex items-center space-x-2">
-                                    <Send className="h-4 w-4 animate-spin" />
-                                    <span>Posting...</span>
+                                {/* Character counter with progress bar */}
+                                <div className="flex items-center justify-between">
+                                    <Badge variant={variant as "default" | "destructive" | "outline" | "secondary"} className="text-xs">
+                                        {remaining} left • {length}/280
+                                    </Badge>
+                                    <div className="w-20 bg-muted rounded-full h-1.5">
+                                        <div 
+                                            className={cn(
+                                                "h-1.5 rounded-full transition-all duration-300",
+                                                length > 250 ? "bg-destructive" : length > 200 ? "bg-secondary" : "bg-primary"
+                                            )} 
+                                            style={{ width: `${(length / 280) * 100}%` }}
+                                        />
+                                    </div>
                                 </div>
-                            ) : (
-                                <div className="flex items-center space-x-2">
-                                    <Send className="h-4 w-4" />
-                                    <span>Share Post</span>
+
+                                {/* Unique Post Preview */}
+                                {showPreview && <PostPreview content={newPost} />}
+
+                                <Separator />
+
+                                {/* Post Button with loading state */}
+                                <Button 
+                                    onClick={handlePost} 
+                                    disabled={!newPost.trim() || newPost.length > 280 || isPosting} 
+                                    className={cn(
+                                        "w-full flex items-center justify-center space-x-2 shadow-lg rounded-full px-6 py-3 h-12 font-bold transition-all duration-200",
+                                        "hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]",
+                                        (newPost.trim() && newPost.length <= 280 && !isPosting) 
+                                            ? "bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90" 
+                                            : "bg-muted cursor-not-allowed"
+                                    )}
+                                >
+                                    {isPosting ? (
+                                        <div className="flex items-center space-x-2">
+                                            <Send className="h-4 w-4 animate-spin" />
+                                            <span>Posting...</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center space-x-2">
+                                            <Send className="h-4 w-4" />
+                                            <span>Share Post</span>
+                                        </div>
+                                    )}
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                {/* AI Generation Form */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-sm font-semibold flex items-center gap-2">
+                                            <Wand2 className="h-4 w-4 text-primary" />
+                                            AI Post Generator
+                                        </h3>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setShowAIAssist(false)}
+                                        >
+                                            Back
+                                        </Button>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div>
+                                            <Label htmlFor="topic" className="text-xs">What's your topic?</Label>
+                                            <Input
+                                                id="topic"
+                                                value={aiTopic}
+                                                onChange={(e) => setAiTopic(e.target.value)}
+                                                placeholder="e.g., morning motivation, tech trends, funny story..."
+                                                className="mt-1"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <Label htmlFor="tone" className="text-xs">Tone</Label>
+                                            <Select value={aiTone} onValueChange={setAiTone}>
+                                                <SelectTrigger className="mt-1">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="casual">Casual & Friendly</SelectItem>
+                                                    <SelectItem value="professional">Professional</SelectItem>
+                                                    <SelectItem value="funny">Funny & Entertaining</SelectItem>
+                                                    <SelectItem value="inspiring">Motivational</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div>
+                                            <Label htmlFor="length" className="text-xs">Length</Label>
+                                            <Select value={aiLength} onValueChange={setAiLength}>
+                                                <SelectTrigger className="mt-1">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="short">Short (50-100 chars)</SelectItem>
+                                                    <SelectItem value="medium">Medium (100-200 chars)</SelectItem>
+                                                    <SelectItem value="long">Long (200-280 chars)</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    <Button
+                                        onClick={handleGenerateAI}
+                                        disabled={generatingAI || !aiTopic.trim()}
+                                        className="w-full"
+                                    >
+                                        {generatingAI ? (
+                                            <>
+                                                <Sparkles className="h-4 w-4 mr-2 animate-spin" />
+                                                Generating...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Sparkles className="h-4 w-4 mr-2" />
+                                                Generate Post
+                                            </>
+                                        )}
+                                    </Button>
                                 </div>
-                            )}
-                        </Button>
+                            </>
+                        )}
                     </div>
                 </DialogContent>
             </Dialog>

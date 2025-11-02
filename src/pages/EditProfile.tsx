@@ -13,8 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Separator } from '@/components/ui/separator'; 
 import { Loader2, User, Lock, Eye, MessageCircle, MapPin, Globe } from 'lucide-react'; 
 
-// Import Supabase types (assuming types/supabase.ts exists)
-import type { Database } from '@/types/supabase';
+// Import Supabase types
+import type { Database } from '@/integrations/supabase/types';
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
@@ -152,7 +152,7 @@ const EditProfile: React.FC = () => {
 
       const { error } = await supabase
         .from('profiles')
-        .upsert(updateData)
+        .update(updateData)
         .eq('id', user.id);
 
       if (error) throw error;

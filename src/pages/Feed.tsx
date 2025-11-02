@@ -562,6 +562,36 @@ const Feed = () => {
           if (profile) {
             const newReply = { ...payload.new, profiles: profile } as Reply;
             addReply(payload.new.post_id, newReply);
+
+            // Check if @afuai is mentioned
+            const mentionsAfuAi = /@afuai/i.test(payload.new.content);
+            if (mentionsAfuAi) {
+              const { data: postData } = await supabase
+                .from('posts')
+                .select('content')
+                .eq('id', payload.new.post_id)
+                .single();
+
+              try {
+                await fetch(
+                  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/afu-ai-reply`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                    },
+                    body: JSON.stringify({
+                      postId: payload.new.post_id,
+                      replyContent: payload.new.content,
+                      originalPostContent: postData?.content || '',
+                    }),
+                  }
+                );
+              } catch (error) {
+                console.error('Failed to trigger AfuAI:', error);
+              }
+            }
           }
         }
       )

@@ -385,7 +385,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Main Tabs (Only visible to admin) */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'stats' | 'users' | 'posts')} className="w-full">
           <TabsList className="grid grid-cols-3 gap-0 mb-4 sm:mb-6 h-10 sm:h-auto">
             <TabsTrigger value="stats" className="text-xs sm:text-sm py-2">Stats</TabsTrigger>
             <TabsTrigger value="users" className="text-xs sm:text-sm py-2">Users ({users.length})</TabsTrigger>
@@ -497,7 +497,7 @@ const AdminDashboard = () => {
             </Card>
 
             {/* Activity Timeline - Trading-Style Composed Chart */}
-            <Tabs value={activityTab} onValueChange={setActivityTab} className="w-full">
+            <Tabs value={activityTab} onValueChange={(value) => setActivityTab(value as '7days' | '30days')} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-2 sm:mb-4 h-10">
                 <TabsTrigger value="7days" className="text-xs sm:text-sm py-2">Last 7 Days</TabsTrigger>
                 <TabsTrigger value="30days" className="text-xs sm:text-sm py-2">Last 30 Days</TabsTrigger>
