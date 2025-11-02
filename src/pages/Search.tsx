@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search as SearchIcon, User, MessageSquare, Loader2, TrendingUp } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom'; // 🚨 ADDED useLocation
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
@@ -151,22 +151,37 @@ const TrendingSection = ({ onTrendClick }: { onTrendClick: (topic: string) => vo
 
 const Search = () => {
   const { user } = useAuth();
+  const location = useLocation(); // 🚨 Hook to access current URL search params
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const navigate = useNavigate();
 
+  // 🚨 NEW useEffect: Read query from URL on component mount
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const urlQuery = params.get('q') || '';
+    if (urlQuery && urlQuery !== query) {
+      setQuery(urlQuery);
+    }
+  }, [location.search]);
+
+  // Debouncing logic remains the same
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(query), 300);
     return () => clearTimeout(timer);
   }, [query]);
 
+  // Main search logic remains the same
   const handleSearch = useCallback(async () => {
     const trimmedQuery = debouncedQuery.trim();
     if (!trimmedQuery) return;
     
     setLoading(true);
+
+    // 🚨 NEW: Update URL whenever a search is explicitly performed
+    navigate(`?q=${encodeURIComponent(trimmedQuery)}`, { replace: true });
 
     const searchConfig = 'english'; 
     const searchTsQuery = trimmedQuery.replace(/ /g, ' | '); 
@@ -208,15 +223,22 @@ const Search = () => {
     } finally {
       setLoading(false);
     }
-  }, [debouncedQuery]);
+  }, [debouncedQuery, navigate]);
   
+  // 🚨 MODIFIED useEffect: Trigger search when debouncedQuery changes
   useEffect(() => {
     if (debouncedQuery.trim()) {
       handleSearch();
+    } else if (location.search.includes('q=')) {
+        // Clear URL param if search bar is empty but URL still has query
+        navigate('', { replace: true }); 
+        setResults([]);
     } else {
       setResults([]);
     }
-  }, [debouncedQuery, handleSearch]);
+  }, [debouncedQuery, handleSearch, navigate, location.search]);
+
+  // Handler functions remain the same...
 
   const handleViewProfile = (userId: string) => {
     navigate(`/profile/${userId}`);
@@ -227,6 +249,7 @@ const Search = () => {
   };
   
   const handleTrendClick = (topic: string) => {
+    // 🚨 NEW: Use setQuery, which triggers debouncing, which triggers handleSearch and URL update
     setQuery(topic); 
   };
 
@@ -270,8 +293,9 @@ const Search = () => {
             className="flex-1 rounded-full bg-muted/70 focus:bg-background h-10 px-4 text-sm"
           />
           <Button 
-            onClick={handleSearch} 
-            disabled={loading || !isSearchActive} 
+            // 🚨 MODIFIED: Use the direct query state for the click handler
+            onClick={() => setDebouncedQuery(query)}
+            disabled={loading || !query.trim()} 
             className="rounded-full h-10 w-10 p-0"
           >
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <SearchIcon className="h-5 w-5" />}
@@ -298,7 +322,6 @@ const Search = () => {
                     <Card 
                         key={result.id} 
                         className="p-4 hover:shadow-xl transition-shadow cursor-pointer"
-                        // 🚨 FIX 1: Make Card clickable for navigation
                         onClick={() => handleViewProfile(result.id)}
                     >
                       <div className="flex items-center justify-between">
@@ -324,9 +347,8 @@ const Search = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          // 🚨 FIX 2: Stop propagation when clicking the Message button
                           onClick={(e) => {
-                            e.stopPropagation(); // Prevents the parent Card's onClick from firing
+                            e.stopPropagation(); 
                             handleStartChat(result.id);
                           }}
                           disabled={result.is_private}
@@ -350,7 +372,6 @@ const Search = () => {
                     <Card
                       key={result.id}
                       className="p-4 hover:shadow-xl transition-shadow cursor-pointer"
-                      // 🚨 FIX 3: Make the Card itself clickable for post navigation
                       onClick={() => handleViewPost(result.id)}
                     >
                       <div className="flex items-start space-x-3 mb-2">
