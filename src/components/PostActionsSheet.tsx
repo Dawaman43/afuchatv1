@@ -199,20 +199,20 @@ const PostActionsSheet: React.FC<PostActionsSheetProps> = ({ post, user, navigat
     // --- RENDER LOGIC ---
     const renderActions = () => {
         if (!user) {
-            // Simplified for unauthenticated users to match style
+            // Richer UI for unauthenticated users with blue login button
             return (
-                <div className="px-4 pb-4">
-                    <div className="text-center text-muted-foreground text-sm py-4">
+                <div className="px-4 pb-6 space-y-4">
+                    <div className="text-center text-muted-foreground text-sm py-6">
                         Log in to interact with this post.
                     </div>
                     <SheetClose asChild>
                         <Button 
-                            variant="ghost"
-                            className="justify-start w-full text-left py-3 h-auto text-foreground hover:bg-muted border-b border-border/20 text-sm"
-                            onClick={() => navigate('/auth')}
+                            variant="default"
+                            className="w-full justify-center py-4 h-auto bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base rounded-xl shadow-md transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] border-none"
+                            onClick={() => navigate('/auth')} // Assuming '/auth' is your login route
                         >
-                            <LogIn className="h-3 w-3 mr-2 flex-shrink-0" />
-                            <span className="font-normal">Log In to Engage</span>
+                            <LogIn className="h-5 w-5 mr-3 flex-shrink-0" />
+                            Log In to Engage
                         </Button>
                     </SheetClose>
                 </div>
