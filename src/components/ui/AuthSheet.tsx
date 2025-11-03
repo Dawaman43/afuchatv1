@@ -10,13 +10,20 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
 
-// Define props for the internal content component
+// --- Type Definitions ---
+
 interface AuthSheetContentProps {
   onClose: () => void;
 }
 
+interface AuthSheetProps {
+  isOpen: boolean;
+  // Standard type for shadcn/ui Dialog/Sheet components open change handler
+  onOpenChange: (open: boolean) => void;
+}
+
 // --- Auth Sheet Content Component ---
-// This component contains all the authentication form logic and UI.
+
 const AuthSheetContent: React.FC<AuthSheetContentProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const [isSignUp, setIsSignUp] = useState(false);
@@ -58,11 +65,10 @@ const AuthSheetContent: React.FC<AuthSheetContentProps> = ({ onClose }) => {
         if (error) throw error;
         
         toast.success('Signed in successfully!');
-        onClose(); // Close the sheet after successful sign in
+        // No explicit navigate is needed; parent component/AuthContext handles re-render
+        onClose(); 
       }
     } catch (error: any) {
-      // Use 'any' for the catch block error if you're not sure of the exact structure, 
-      // or narrow the type if your supabase client provides better error types.
       toast.error(error.message || 'An error occurred during authentication.');
     } finally {
       setLoading(false);
@@ -70,7 +76,7 @@ const AuthSheetContent: React.FC<AuthSheetContentProps> = ({ onClose }) => {
   };
 
   return (
-    // The Card provides the internal structure for the form
+    // Card is used for styling the content inside the dialog
     <Card className="w-full border-none shadow-none">
         <CardHeader className="space-y-1 pt-6 pb-2">
             <div className="flex justify-center">
@@ -156,14 +162,8 @@ const AuthSheetContent: React.FC<AuthSheetContentProps> = ({ onClose }) => {
   );
 };
 
-// Define props for the wrapper component
-interface AuthSheetProps {
-  isOpen: boolean;
-  // This is the standard type for shadcn/ui Dialog/Sheet components
-  onOpenChange: (open: boolean) => void;
-}
+// --- Exported AuthSheet Component (The Sheet Wrapper) ---
 
-// --- Exported AuthSheet Component ---
 const AuthSheet: React.FC<AuthSheetProps> = ({ isOpen, onOpenChange }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
