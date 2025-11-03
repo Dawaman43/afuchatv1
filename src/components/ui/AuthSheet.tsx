@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-// Updated icon import: Changed 'X' to 'Minimize2' to match the screenshot's unique 'crossed lines'
-import { Minimize2, Eye, EyeOff, User, AtSign, Mail, Lock, MessageCircle, ShoppingCart, Cpu } from 'lucide-react'; 
+// Reverted icon import back to X, but it is unused inside the CardHeader now
+import { X, Eye, EyeOff, User, AtSign, Mail, Lock, MessageCircle, ShoppingCart, Cpu } from 'lucide-react'; 
 import Logo from '@/components/Logo';
 
 interface AuthSheetContentProps {
@@ -45,12 +45,10 @@ const AuthSheetContent: React.FC<AuthSheetContentProps> = ({ onClose }) => {
           },
         });
         if (error) throw error;
-        // User must confirm email before signing in
         toast.success('Account created! Check your email for verification.');
         onClose();
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        // Handling the "Email not confirmed" case explicitly for better user feedback
         if (error) {
             if (error.message.includes('Email not confirmed')) {
                 toast.error('Email not confirmed. Please check your inbox for a verification link.');
@@ -68,21 +66,23 @@ const AuthSheetContent: React.FC<AuthSheetContentProps> = ({ onClose }) => {
     }
   };
   
-  // Placeholder function for handling Forgot Password
   const handleForgotPassword = () => {
     toast.info("Forgot Password functionality pending implementation.");
     // navigate('/reset-password'); // Uncomment and implement actual navigation/flow
   };
 
   return (
-    <Card className="w-full border border-border/30 shadow-2xl rounded-2xl flex flex-col h-full backdrop-blur-md bg-white/90 dark:bg-gray-900/80">
+    // REMOVED backdrop-blur-md bg-white/90 and dark:bg-gray-900/80 (made background solid)
+    <Card className="w-full border border-border/30 shadow-2xl rounded-2xl flex flex-col h-full bg-white dark:bg-gray-900">
       <CardHeader className="pt-4 pb-2 relative flex flex-col items-center">
-        {/* Updated Cancel Icon: Using Minimize2 to visually match the crossed-line icon */}
+        {/* Removed the 'Minimize2' Cancel Icon entirely */}
+        {/*
         <DialogClose asChild>
           <button className="absolute right-3 top-3 p-0 rounded-full bg-transparent hover:bg-transparent">
             <Minimize2 className="h-5 w-5 text-muted-foreground" />
           </button>
         </DialogClose>
+        */}
 
         <Logo size="sm" className="mb-2" />
         <CardTitle className="text-lg font-bold text-center bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
@@ -248,7 +248,8 @@ const AuthSheet: React.FC<AuthSheetProps> = ({ isOpen, onOpenChange }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-full max-w-[320px] sm:max-w-xs lg:max-w-sm mx-auto p-3 max-h-[95vh] overflow-hidden rounded-2xl shadow-2xl backdrop-blur-md bg-card/95 border-border/20 border"
+        // REMOVED backdrop-blur-md bg-card/95 and replaced with bg-card
+        className="w-full max-w-[320px] sm:max-w-xs lg:max-w-sm mx-auto p-3 max-h-[95vh] overflow-hidden rounded-2xl shadow-2xl bg-card border-border/20 border"
       >
         <div className="h-full flex flex-col
           data-[state=open]:animate-in
