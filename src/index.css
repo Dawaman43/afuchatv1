@@ -10,12 +10,12 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Brand Blue Primary - #33CCFF */
-    --primary: 195 100% 60%;
+    /* Brand Cyan Primary - #1B9AAA */
+    --primary: 191 75% 45%;
     --primary-foreground: 0 0% 100%;
     
-    /* Bright Accent Blue - #1E90FF */
-    --accent: 210 100% 56%;
+    /* Bright Cyan Accent - #17869B */
+    --accent: 191 75% 40%;
     --accent-foreground: 0 0% 100%;
     
     /* High contrast backgrounds */
@@ -61,12 +61,12 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Brand Blue Primary - slightly adjusted for dark mode */
-    --primary: 195 100% 60%;
+    /* Brand Cyan Primary - slightly adjusted for dark mode */
+    --primary: 191 75% 50%;
     --primary-foreground: 0 0% 0%;
     
-    /* Bright Accent Blue */
-    --accent: 210 100% 56%;
+    /* Bright Cyan Accent */
+    --accent: 191 75% 45%;
     --accent-foreground: 0 0% 100%;
     
     /* Dark mode backgrounds - pure black for OLED */

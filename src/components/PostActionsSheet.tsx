@@ -132,7 +132,7 @@ const PostActionsSheet: React.FC<PostActionsSheetProps> = ({ post, user, navigat
 
     const handleDragMouseLeave = (e: React.MouseEvent) => {
         if (isDragging) {
-            handleMouseLeave(e);
+            handleMouseLeave();
         }
     };
 
