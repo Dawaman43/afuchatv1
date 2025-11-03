@@ -14,11 +14,12 @@ import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import NewChatDialog from '@/components/ui/NewChatDialog';
 import NotificationIcon from '@/components/nav/NotificationIcon';
+import AuthSheet from '@/components/ui/AuthSheet'; // 👈 IMPORT NEW SHEET COMPONENT
 
 
 // --- FAB Components (Positioned at bottom-20, above the collapsible nav) ---
 // Note: FAB visibility is now controlled by the parent component's translate class
-const NewPostFAB = ({ onClick, visible, isNavVisible }) => (
+const NewPostFAB = ({ onClick, visible, isNavVisible }: { onClick: () => void, visible: boolean, isNavVisible: boolean }) => (
   <Button 
     size="lg" 
     onClick={onClick}
@@ -31,7 +32,7 @@ const NewPostFAB = ({ onClick, visible, isNavVisible }) => (
   </Button>
 );
 
-const NewChatFAB = ({ onClick, visible, isNavVisible }) => (
+const NewChatFAB = ({ onClick, visible, isNavVisible }: { onClick: () => void, visible: boolean, isNavVisible: boolean }) => (
   <Button 
     size="lg" 
     onClick={onClick}
@@ -53,11 +54,13 @@ const Index = () => {
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [forceLoaded, setForceLoaded] = useState(false);
+  // 👇 NEW STATE: Control visibility of the Auth Sheet
+  const [isAuthSheetOpen, setIsAuthSheetOpen] = useState(false); 
 
   // --- Scroll-Hiding Nav State ---
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
-  const headerRef = useRef(null);
+  const headerRef = useRef<HTMLElement | null>(null); // 👈 Added TS type
   // -------------------------------
 
   useEffect(() => {
@@ -106,6 +109,7 @@ const Index = () => {
     if (!user) return;
     
     try {
+      // Assuming 'supabase.rpc' is the correct method for role check
       const { data } = await supabase.rpc('has_role', {
         _user_id: user.id,
         _role: 'admin'
@@ -118,18 +122,17 @@ const Index = () => {
 
   const effectiveLoading = loading && !forceLoaded;
 
-  const handleViewProfile = () => {
-    if (user) {
-      navigate(`/profile/${user.id}`);
-    }
+  // --- MODIFIED AUTH HANDLERS ---
+  const handleLoginRequired = () => {
+    // 👇 Instead of navigating, open the sheet
+    setIsAuthSheetOpen(true);
   };
-
+  
   const handleNewPost = () => {
     if (user) {
       setIsPostModalOpen(true);
     } else {
-      // If user is not logged in, clicking the FAB takes them to auth
-      navigate('/auth'); 
+      handleLoginRequired();
     }
   };
 
@@ -137,10 +140,18 @@ const Index = () => {
     if (user) {
       setIsChatModalOpen(true);
     } else {
-      // If user is not logged in, clicking the FAB takes them to auth
-      navigate('/auth');
+      handleLoginRequired();
     }
   };
+  
+  const handleAIClick = () => {
+    if (user) {
+      navigate('/ai-chat');
+    } else {
+      handleLoginRequired();
+    }
+  };
+  // ------------------------------
 
   const headerTranslateClass = isNavVisible ? 'translate-y-0' : '-translate-y-full';
   const navTranslateClass = isNavVisible ? 'translate-y-0' : 'translate-y-full';
@@ -150,6 +161,7 @@ const Index = () => {
     // Skeleton loading state
     return (
       <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto">
+        {/* ... (Skeleton code remains the same) ... */}
         <div className="h-14 flex items-center justify-between rounded-b-lg">
           <Skeleton className="h-6 w-24" />
           <div className="flex gap-2">
@@ -194,8 +206,8 @@ const Index = () => {
   }
 
   return (
-    // Removed pb-16 since the fixed nav no longer occupies space when hidden
     <div className="min-h-screen bg-background flex flex-col"> 
+      
       {/* Header (Hides on Scroll Down) */}
       <header 
         ref={headerRef}
@@ -212,15 +224,13 @@ const Index = () => {
             {user ? (
               // Logged In: Show icons
               <>
-                {/* START: UPDATED SUBSCRIBE BUTTON (Pink, fully rounded) */}
                 <Button 
                   size="sm" 
-                  variant="default" // Use default variant or remove for full control
+                  variant="default" 
                   className="text-xs font-semibold h-8 px-3 rounded-full bg-pink-500 hover:bg-pink-600 text-white"
                 >
                   Subscribe
                 </Button>
-                {/* END: UPDATED SUBSCRIBE BUTTON */}
                 <NotificationIcon />
                 {isAdmin && (
                   <Link to="/admin">
@@ -237,11 +247,10 @@ const Index = () => {
               </>
             ) : (
               // Logged Out: Show Log In Button
-              <Link to="/auth">
-                <Button size="sm" variant="default" className="text-sm font-semibold">
-                  Log In
-                </Button>
-              </Link>
+              // 👇 MODIFIED: Open the sheet instead of navigating
+              <Button size="sm" variant="default" className="text-sm font-semibold" onClick={handleLoginRequired}>
+                Log In
+              </Button>
             )}
           </div>
         </div>
@@ -289,10 +298,9 @@ const Index = () => {
               <span className="text-xs font-medium">Search</span>
             </button>
             
-            {/* --- MODIFIED CHATS BUTTON (Ghosted when logged out) --- */}
+            {/* MODIFIED CHATS BUTTON */}
             <button
-              // Navigate to auth if not logged in, otherwise set tab
-              onClick={() => user ? setActiveTab('chats') : navigate('/auth')}
+              onClick={() => user ? setActiveTab('chats') : handleLoginRequired()} // 👈 MODIFIED
               className={`flex flex-col items-center justify-center gap-1 transition-colors ${
                 user 
                   ? (activeTab === 'chats' ? 'text-primary' : 'text-muted-foreground')
@@ -303,12 +311,9 @@ const Index = () => {
               <MessageSquare className="h-4 w-4" />
               <span className="text-xs font-medium">Chats</span>
             </button>
-            {/* --- END MODIFIED CHATS BUTTON --- */}
-
-            {/* --- MODIFIED AFUAI BUTTON (Ghosted when logged out) --- */}
+            {/* MODIFIED AFUAI BUTTON */}
             <button
-              // Navigate to auth if not logged in, otherwise navigate to AI Chat page
-              onClick={() => user ? navigate('/ai-chat') : navigate('/auth')}
+              onClick={handleAIClick} // 👈 Uses the new handler
               className={`flex flex-col items-center justify-center gap-1 transition-colors ${
                 user 
                   ? 'text-muted-foreground hover:text-primary' 
@@ -321,14 +326,12 @@ const Index = () => {
               </svg>
               <span className="text-xs font-medium">AfuAI</span>
             </button>
-            {/* --- END MODIFIED AFUAI BUTTON --- */}
           </div>
         </div>
       </nav>
       
-      {/* FAB for new content (Visibility now depends on isNavVisible) */}
-      {/* Only show FABs if the user is authenticated */}
-      {/* The FABs will now also navigate to /auth if clicked when the user is logged out (handled in handleNewPost/handleNewChat) */}
+      {/* FABs for new content */}
+      {/* FAB handlers already call handleLoginRequired() if logged out */}
       {activeTab === 'feed' && <NewPostFAB onClick={handleNewPost} visible={true} isNavVisible={isNavVisible} />}
       {activeTab === 'chats' && <NewChatFAB onClick={handleNewChat} visible={true} isNavVisible={isNavVisible} />}
       
@@ -341,6 +344,12 @@ const Index = () => {
       <NewChatDialog
         isOpen={isChatModalOpen}
         onClose={() => setIsChatModalOpen(false)}
+      />
+
+      {/* 🌟 AUTHENTICATION SHEET INTEGRATION 🌟 */}
+      <AuthSheet 
+        isOpen={isAuthSheetOpen} 
+        onOpenChange={setIsAuthSheetOpen} 
       />
     </div>
   );
