@@ -227,6 +227,10 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   };
 
   const handleAiTransfer = () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
     const postDetails = {
       postId: post.id,
       postContent: post.content,
@@ -241,9 +245,36 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     });
   };
 
+  const handleShare = () => {
+    const shareUrl = `${window.location.origin}/post/${post.id}`;
+    const shareData = {
+      title: `Check out this post by ${post.profiles.display_name}`,
+      text: post.content.substring(0, 100) + '...',
+      url: shareUrl,
+    };
+
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      navigator.share(shareData).catch((error) => {
+        console.error('Error sharing', error);
+        // Fallback to copy
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          toast.success('Link copied to clipboard!');
+        }).catch(() => {
+          toast.error('Failed to copy link');
+        });
+      });
+    } else {
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        toast.success('Link copied to clipboard!');
+      }).catch(() => {
+        toast.error('Failed to copy link');
+      });
+    }
+  };
+
   const handleReplySubmit = async () => {
     if (!replyText.trim() || !user) {
-      toast.error('You must be logged in to comment');
+      navigate('/auth');
       return;
     }
 
@@ -349,7 +380,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             <Heart className={`h-4 w-4 group-hover:text-red-500 transition-colors ${post.has_liked ? 'text-red-500 fill-red-500' : ''}`} />
             <span className={`group-hover:text-red-500 transition-colors text-xs ${post.has_liked ? 'text-red-500' : ''}`}>{post.like_count > 0 ? post.like_count : ''}</span>
           </Button>
-          <Button variant="ghost" size="sm" className="flex items-center gap-1 group">
+          <Button variant="ghost" size="sm" className="flex items-center gap-1 group" onClick={handleShare}>
             <Share className="h-4 w-4 group-hover:text-primary transition-colors" />
           </Button>
         </div>
@@ -447,7 +478,7 @@ const Feed = () => {
 
   const handleAcknowledge = useCallback(async (postId: string, currentHasLiked: boolean) => {
     if (!user) {
-      toast.error('You must be logged in to like a post');
+      navigate('/auth');
       return;
     }
     const currentUserId = user.id;
@@ -492,12 +523,16 @@ const Feed = () => {
         );
       }
     }
-  }, [user]);
+  }, [user, navigate]);
 
   // NEW: Delete Post Handler - Opens confirmation sheet
   const handleDeletePost = useCallback((postId: string) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
     setDeletePostId(postId);
-  }, []);
+  }, [user, navigate]);
 
   // Actual delete after confirmation
   const confirmDeletePost = useCallback(async () => {
@@ -534,8 +569,12 @@ const Feed = () => {
 
   // NEW: Report Post Handler - Opens report sheet
   const handleReportPost = useCallback((postId: string) => {
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
       setReportPostId(postId);
-  }, []);
+  }, [user, navigate]);
 
   // Actual report after reason selection
   const confirmReportPost = useCallback((reason: string) => {
@@ -703,7 +742,14 @@ const Feed = () => {
       .channel('acks-updates')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'post_acknowledgments' },
+        { event: 'INSERT', schema: 'public', table: 'post_acknowledgments' },
+        (payload) => {
+          fetchPosts();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'post_acknowledgments' },
         (payload) => {
           fetchPosts();
         }
