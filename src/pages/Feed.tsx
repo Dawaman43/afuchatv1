@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { MessageSquare, Heart, Share, User, Ellipsis, Sparkles } from 'lucide-react';
+import { MessageSquare, Heart, Share, User, Ellipsis, Sparkles, MessageQuote } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -272,6 +272,14 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     }
   };
 
+  const handleQuote = () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    navigate('/compose', { state: { quotedPost: post } });
+  };
+
   const handleReplySubmit = async () => {
     if (!replyText.trim() || !user) {
       navigate('/auth');
@@ -382,6 +390,9 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           </Button>
           <Button variant="ghost" size="sm" className="flex items-center gap-1 group" onClick={handleShare}>
             <Share className="h-4 w-4 group-hover:text-primary transition-colors" />
+          </Button>
+          <Button variant="ghost" size="sm" className="flex items-center gap-1 group" onClick={handleQuote}>
+            <MessageQuote className="h-4 w-4 group-hover:text-primary transition-colors" />
           </Button>
         </div>
 
@@ -742,14 +753,7 @@ const Feed = () => {
       .channel('acks-updates')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'post_acknowledgments' },
-        (payload) => {
-          fetchPosts();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'post_acknowledgments' },
+        { event: '*', schema: 'public', table: 'post_acknowledgments' },
         (payload) => {
           fetchPosts();
         }
