@@ -71,7 +71,7 @@ const AuthSheetContent: React.FC<AuthSheetContentProps> = ({ onClose }) => {
   };
 
   return (
-    <Card className="w-full border border-border/50 shadow-xl h-full max-h-[400px]">
+    <Card className="w-full border border-border/50 shadow-xl flex flex-col h-full">
       <CardHeader className="space-y-1 pt-2 pb-1 relative flex-shrink-0">
         <DialogClose asChild>
           <Button
@@ -96,8 +96,8 @@ const AuthSheetContent: React.FC<AuthSheetContentProps> = ({ onClose }) => {
           </CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="pb-3 pt-0 flex-1 overflow-y-auto">
-        <form onSubmit={handleAuth} className="space-y-2">
+      <CardContent className="pb-3 pt-0 flex-1 overflow-y-auto flex flex-col">
+        <form onSubmit={handleAuth} className="space-y-2 flex-1">
           {isSignUp && (
             <>
               <div className="space-y-0.5">
@@ -197,12 +197,12 @@ const AuthSheetContent: React.FC<AuthSheetContentProps> = ({ onClose }) => {
             )}
           </Button>
         </form>
-        <div className="mt-2 pt-2 border-t border-border/20 text-center">
+        <div className="mt-2 pt-2 border-t border-border/20 text-center flex-shrink-0">
           <p className="text-xs text-muted-foreground mb-0.5">Or continue with</p>
           <div className="flex justify-center space-x-1">
           </div>
         </div>
-        <div className="mt-2 text-center">
+        <div className="mt-2 text-center flex-shrink-0">
           <button
             type="button"
             onClick={() => setIsSignUp(!isSignUp)}
@@ -225,7 +225,7 @@ const AuthSheet: React.FC<AuthSheetProps> = ({ isOpen, onOpenChange }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="w-full max-w-[300px] sm:max-w-xs lg:max-w-sm mx-auto p-2 sm:p-2.5 md:p-3 max-h-[75vh] overflow-hidden rounded-xl shadow-2xl backdrop-blur-md bg-card/95 border-border/20 border"
+        className="w-full max-w-[300px] sm:max-w-xs lg:max-w-sm mx-auto p-2 sm:p-2.5 md:p-3 max-h-[95vh] overflow-hidden rounded-xl shadow-2xl backdrop-blur-md bg-card/95 border-border/20 border"
       >
         <div className="h-full flex flex-col data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
           <AuthSheetContent onClose={() => onOpenChange(false)} />
