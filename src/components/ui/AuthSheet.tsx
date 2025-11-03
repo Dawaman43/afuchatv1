@@ -83,7 +83,7 @@ const AuthSheetContent: React.FC<AuthSheetContentProps> = ({ onClose }) => {
           </Button>
         </DialogClose>
         <div className="flex justify-center">
-          <Logo size="xs" className="text-xl" />
+          <Logo size="xs" className={isSignUp ? "text-base" : "text-xl"} />
         </div>
         <div className="space-y-0">
           <CardTitle className="text-base font-bold text-center bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
