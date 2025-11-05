@@ -5,25 +5,53 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { ArrowLeft, User, Bell, Lock, Shield, FileText, LogOut } from 'lucide-react';
+import { ArrowLeft, User, Bell, Lock, Shield, FileText, LogOut, Languages } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import Logo from '@/components/Logo';
+import { useTranslation } from 'react-i18next';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, i18n } = useTranslation();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [privateAccount, setPrivateAccount] = useState(false);
+
+  const languages = [
+    { code: 'en', name: t('languages.en'), flag: '🇬🇧' },
+    { code: 'es', name: t('languages.es'), flag: '🇪🇸' },
+    { code: 'fr', name: t('languages.fr'), flag: '🇫🇷' },
+    { code: 'ar', name: t('languages.ar'), flag: '🇸🇦' },
+  ];
+
+  const handleLanguageChange = (languageCode: string) => {
+    i18n.changeLanguage(languageCode);
+    toast.success(t('common.success'));
+    
+    // Apply RTL for Arabic
+    if (languageCode === 'ar') {
+      document.documentElement.dir = 'rtl';
+    } else {
+      document.documentElement.dir = 'ltr';
+    }
+  };
 
   const handleLogout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      toast.success('Logged out successfully');
+      toast.success(t('auth.loggedOut'));
       navigate('/');
     } catch (error) {
-      toast.error('Failed to logout');
+      toast.error(t('auth.loginError'));
     }
   };
 
@@ -53,8 +81,8 @@ const Settings = () => {
       <main className="container max-w-2xl mx-auto px-4 sm:px-6 py-6 pb-24">
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Settings</h1>
-            <p className="text-muted-foreground mt-1">Manage your account and preferences</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">{t('settings.title')}</h1>
+            <p className="text-muted-foreground mt-1">{t('settings.subtitle')}</p>
           </div>
 
           {/* Account Settings */}
@@ -62,14 +90,14 @@ const Settings = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <User className="h-5 w-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold">Account</h2>
+                <h2 className="text-lg font-semibold">{t('settings.account')}</h2>
               </div>
               <Separator />
               <button
                 onClick={() => user && navigate(`/${user.id}/edit`)}
                 className="w-full flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted transition-colors text-left"
               >
-                <span>Edit Profile</span>
+                <span>{t('settings.editProfile')}</span>
                 <span className="text-muted-foreground">›</span>
               </button>
             </div>
@@ -80,13 +108,13 @@ const Settings = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <Lock className="h-5 w-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold">Privacy</h2>
+                <h2 className="text-lg font-semibold">{t('settings.privacy')}</h2>
               </div>
               <Separator />
               <div className="flex items-center justify-between py-3 px-2">
                 <div>
-                  <p className="font-medium">Private Account</p>
-                  <p className="text-sm text-muted-foreground">Only approved followers can see your posts</p>
+                  <p className="font-medium">{t('settings.privateAccount')}</p>
+                  <p className="text-sm text-muted-foreground">{t('settings.privateAccountDesc')}</p>
                 </div>
                 <Switch
                   checked={privateAccount}
@@ -101,13 +129,13 @@ const Settings = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <Bell className="h-5 w-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold">Notifications</h2>
+                <h2 className="text-lg font-semibold">{t('settings.notifications')}</h2>
               </div>
               <Separator />
               <div className="flex items-center justify-between py-3 px-2">
                 <div>
-                  <p className="font-medium">Push Notifications</p>
-                  <p className="text-sm text-muted-foreground">Receive notifications for new messages and updates</p>
+                  <p className="font-medium">{t('settings.pushNotifications')}</p>
+                  <p className="text-sm text-muted-foreground">{t('settings.pushNotificationsDesc')}</p>
                 </div>
                 <Switch
                   checked={notificationsEnabled}
@@ -117,26 +145,58 @@ const Settings = () => {
             </div>
           </Card>
 
+          {/* Language Settings */}
+          <Card className="p-4 sm:p-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Languages className="h-5 w-5 text-muted-foreground" />
+                <h2 className="text-lg font-semibold">{t('settings.language')}</h2>
+              </div>
+              <Separator />
+              <div className="py-3 px-2 space-y-3">
+                <div>
+                  <p className="font-medium mb-1">{t('settings.selectLanguage')}</p>
+                  <p className="text-sm text-muted-foreground mb-3">{t('settings.languageDesc')}</p>
+                </div>
+                <Select value={i18n.language} onValueChange={handleLanguageChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t('settings.selectLanguage')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {languages.map((lang) => (
+                      <SelectItem key={lang.code} value={lang.code}>
+                        <span className="flex items-center gap-2">
+                          <span>{lang.flag}</span>
+                          <span>{lang.name}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </Card>
+
           {/* Legal */}
           <Card className="p-4 sm:p-6">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <FileText className="h-5 w-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold">Legal</h2>
+                <h2 className="text-lg font-semibold">{t('settings.legal')}</h2>
               </div>
               <Separator />
               <button
                 onClick={() => navigate('/terms')}
                 className="w-full flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted transition-colors text-left"
               >
-                <span>Terms of Use</span>
+                <span>{t('settings.termsOfUse')}</span>
                 <span className="text-muted-foreground">›</span>
               </button>
               <button
                 onClick={() => navigate('/privacy')}
                 className="w-full flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted transition-colors text-left"
               >
-                <span>Privacy Policy</span>
+                <span>{t('settings.privacyPolicy')}</span>
                 <span className="text-muted-foreground">›</span>
               </button>
             </div>
@@ -147,12 +207,12 @@ const Settings = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <Shield className="h-5 w-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold">About</h2>
+                <h2 className="text-lg font-semibold">{t('settings.about')}</h2>
               </div>
               <Separator />
               <div className="py-3 px-2 space-y-2">
-                <p className="text-sm text-muted-foreground">AfuChat Version 1.0.0</p>
-                <p className="text-sm text-muted-foreground">© 2025 AfuChat. All rights reserved.</p>
+                <p className="text-sm text-muted-foreground">{t('settings.version')}</p>
+                <p className="text-sm text-muted-foreground">{t('settings.copyright')}</p>
               </div>
             </div>
           </Card>
@@ -164,7 +224,7 @@ const Settings = () => {
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4 mr-2" />
-            Log Out
+            {t('common.logout')}
           </Button>
         </div>
       </main>

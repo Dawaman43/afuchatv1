@@ -1,0 +1,95 @@
+{
+  "app": {
+    "name": "AfuChat",
+    "tagline": "Conecta, Comparte, Interactúa"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "back": "Atrás",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "search": "Buscar",
+    "home": "Inicio",
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "notifications": "Notificaciones",
+    "messages": "Mensajes",
+    "logout": "Cerrar Sesión",
+    "login": "Iniciar Sesión",
+    "signup": "Registrarse"
+  },
+  "auth": {
+    "welcome": "Bienvenido a AfuChat",
+    "signIn": "Inicia sesión en tu cuenta",
+    "signUp": "Crea una nueva cuenta",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "noAccount": "¿No tienes una cuenta?",
+    "hasAccount": "¿Ya tienes una cuenta?",
+    "loggedOut": "Sesión cerrada exitosamente",
+    "loginSuccess": "Inicio de sesión exitoso",
+    "loginError": "Error al iniciar sesión"
+  },
+  "settings": {
+    "title": "Configuración",
+    "subtitle": "Administra tu cuenta y preferencias",
+    "account": "Cuenta",
+    "editProfile": "Editar Perfil",
+    "privacy": "Privacidad",
+    "privateAccount": "Cuenta Privada",
+    "privateAccountDesc": "Solo los seguidores aprobados pueden ver tus publicaciones",
+    "notifications": "Notificaciones",
+    "pushNotifications": "Notificaciones Push",
+    "pushNotificationsDesc": "Recibe notificaciones de nuevos mensajes y actualizaciones",
+    "language": "Idioma",
+    "selectLanguage": "Seleccionar Idioma",
+    "languageDesc": "Elige tu idioma preferido",
+    "legal": "Legal",
+    "termsOfUse": "Términos de Uso",
+    "privacyPolicy": "Política de Privacidad",
+    "about": "Acerca de",
+    "version": "AfuChat Versión 1.0.0",
+    "copyright": "© 2025 AfuChat. Todos los derechos reservados."
+  },
+  "feed": {
+    "title": "Feed",
+    "newPost": "¿Qué estás pensando?",
+    "post": "Publicar",
+    "acknowledge": "Reconocer",
+    "reply": "Responder",
+    "share": "Compartir",
+    "noPostsYet": "Aún no hay publicaciones",
+    "startConversation": "¡Sé el primero en iniciar una conversación!"
+  },
+  "profile": {
+    "posts": "Publicaciones",
+    "followers": "Seguidores",
+    "following": "Siguiendo",
+    "follow": "Seguir",
+    "unfollow": "Dejar de seguir",
+    "message": "Mensaje",
+    "editProfile": "Editar Perfil",
+    "joinedDate": "Se unió {{date}}"
+  },
+  "terms": {
+    "title": "Términos de Uso",
+    "lastUpdated": "Última actualización: Enero 2025"
+  },
+  "privacy": {
+    "title": "Política de Privacidad",
+    "lastUpdated": "Última actualización: Enero 2025"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Español",
+    "fr": "Français",
+    "ar": "العربية"
+  }
+}

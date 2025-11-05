@@ -1,0 +1,95 @@
+{
+  "app": {
+    "name": "AfuChat",
+    "tagline": "Connect, Share, Engage"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "close": "Close",
+    "confirm": "Confirm",
+    "search": "Search",
+    "home": "Home",
+    "profile": "Profile",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "messages": "Messages",
+    "logout": "Log Out",
+    "login": "Log In",
+    "signup": "Sign Up"
+  },
+  "auth": {
+    "welcome": "Welcome to AfuChat",
+    "signIn": "Sign in to your account",
+    "signUp": "Create a new account",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loggedOut": "Logged out successfully",
+    "loginSuccess": "Logged in successfully",
+    "loginError": "Failed to login"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account and preferences",
+    "account": "Account",
+    "editProfile": "Edit Profile",
+    "privacy": "Privacy",
+    "privateAccount": "Private Account",
+    "privateAccountDesc": "Only approved followers can see your posts",
+    "notifications": "Notifications",
+    "pushNotifications": "Push Notifications",
+    "pushNotificationsDesc": "Receive notifications for new messages and updates",
+    "language": "Language",
+    "selectLanguage": "Select Language",
+    "languageDesc": "Choose your preferred language",
+    "legal": "Legal",
+    "termsOfUse": "Terms of Use",
+    "privacyPolicy": "Privacy Policy",
+    "about": "About",
+    "version": "AfuChat Version 1.0.0",
+    "copyright": "© 2025 AfuChat. All rights reserved."
+  },
+  "feed": {
+    "title": "Feed",
+    "newPost": "What's on your mind?",
+    "post": "Post",
+    "acknowledge": "Acknowledge",
+    "reply": "Reply",
+    "share": "Share",
+    "noPostsYet": "No posts yet",
+    "startConversation": "Be the first to start a conversation!"
+  },
+  "profile": {
+    "posts": "Posts",
+    "followers": "Followers",
+    "following": "Following",
+    "follow": "Follow",
+    "unfollow": "Unfollow",
+    "message": "Message",
+    "editProfile": "Edit Profile",
+    "joinedDate": "Joined {{date}}"
+  },
+  "terms": {
+    "title": "Terms of Use",
+    "lastUpdated": "Last updated: January 2025"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: January 2025"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Español",
+    "fr": "Français",
+    "ar": "العربية"
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "app": {
+    "name": "AfuChat",
+    "tagline": "تواصل، شارك، تفاعل"
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "back": "رجوع",
+    "close": "إغلاق",
+    "confirm": "تأكيد",
+    "search": "بحث",
+    "home": "الرئيسية",
+    "profile": "الملف الشخصي",
+    "settings": "الإعدادات",
+    "notifications": "الإشعارات",
+    "messages": "الرسائل",
+    "logout": "تسجيل الخروج",
+    "login": "تسجيل الدخول",
+    "signup": "إنشاء حساب"
+  },
+  "auth": {
+    "welcome": "مرحباً بك في AfuChat",
+    "signIn": "تسجيل الدخول إلى حسابك",
+    "signUp": "إنشاء حساب جديد",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "forgotPassword": "هل نسيت كلمة المرور؟",
+    "noAccount": "ليس لديك حساب؟",
+    "hasAccount": "هل لديك حساب بالفعل؟",
+    "loggedOut": "تم تسجيل الخروج بنجاح",
+    "loginSuccess": "تم تسجيل الدخول بنجاح",
+    "loginError": "فشل تسجيل الدخول"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "subtitle": "إدارة حسابك وتفضيلاتك",
+    "account": "الحساب",
+    "editProfile": "تعديل الملف الشخصي",
+    "privacy": "الخصوصية",
+    "privateAccount": "حساب خاص",
+    "privateAccountDesc": "فقط المتابعون المعتمدون يمكنهم رؤية منشوراتك",
+    "notifications": "الإشعارات",
+    "pushNotifications": "إشعارات الدفع",
+    "pushNotificationsDesc": "تلقي إشعارات للرسائل والتحديثات الجديدة",
+    "language": "اللغة",
+    "selectLanguage": "اختر اللغة",
+    "languageDesc": "اختر لغتك المفضلة",
+    "legal": "قانوني",
+    "termsOfUse": "شروط الاستخدام",
+    "privacyPolicy": "سياسة الخصوصية",
+    "about": "حول",
+    "version": "AfuChat الإصدار 1.0.0",
+    "copyright": "© 2025 AfuChat. جميع الحقوق محفوظة."
+  },
+  "feed": {
+    "title": "الأخبار",
+    "newPost": "بماذا تفكر؟",
+    "post": "نشر",
+    "acknowledge": "إقرار",
+    "reply": "رد",
+    "share": "مشاركة",
+    "noPostsYet": "لا توجد منشورات بعد",
+    "startConversation": "كن أول من يبدأ محادثة!"
+  },
+  "profile": {
+    "posts": "المنشورات",
+    "followers": "المتابعون",
+    "following": "المتابَعون",
+    "follow": "متابعة",
+    "unfollow": "إلغاء المتابعة",
+    "message": "رسالة",
+    "editProfile": "تعديل الملف الشخصي",
+    "joinedDate": "انضم {{date}}"
+  },
+  "terms": {
+    "title": "شروط الاستخدام",
+    "lastUpdated": "آخر تحديث: يناير 2025"
+  },
+  "privacy": {
+    "title": "سياسة الخصوصية",
+    "lastUpdated": "آخر تحديث: يناير 2025"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Español",
+    "fr": "Français",
+    "ar": "العربية"
+  }
+}

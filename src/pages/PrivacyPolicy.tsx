@@ -2,9 +2,11 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Logo from '@/components/Logo';
+import { useTranslation } from 'react-i18next';
 
 const PrivacyPolicy = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-background">
@@ -31,8 +33,8 @@ const PrivacyPolicy = () => {
       {/* Main Content */}
       <main className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 pb-24">
         <article className="prose prose-slate dark:prose-invert max-w-none">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">Privacy Policy</h1>
-          <p className="text-muted-foreground mb-8">Last updated: January 2025</p>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">{t('privacy.title')}</h1>
+          <p className="text-muted-foreground mb-8">{t('privacy.lastUpdated')}</p>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>

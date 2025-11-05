@@ -1,0 +1,95 @@
+{
+  "app": {
+    "name": "AfuChat",
+    "tagline": "Connectez, Partagez, Engagez"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "back": "Retour",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "search": "Rechercher",
+    "home": "Accueil",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "notifications": "Notifications",
+    "messages": "Messages",
+    "logout": "Se Déconnecter",
+    "login": "Se Connecter",
+    "signup": "S'inscrire"
+  },
+  "auth": {
+    "welcome": "Bienvenue sur AfuChat",
+    "signIn": "Connectez-vous à votre compte",
+    "signUp": "Créer un nouveau compte",
+    "email": "Email",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié?",
+    "noAccount": "Vous n'avez pas de compte?",
+    "hasAccount": "Vous avez déjà un compte?",
+    "loggedOut": "Déconnexion réussie",
+    "loginSuccess": "Connexion réussie",
+    "loginError": "Échec de la connexion"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "subtitle": "Gérez votre compte et vos préférences",
+    "account": "Compte",
+    "editProfile": "Modifier le Profil",
+    "privacy": "Confidentialité",
+    "privateAccount": "Compte Privé",
+    "privateAccountDesc": "Seuls les abonnés approuvés peuvent voir vos publications",
+    "notifications": "Notifications",
+    "pushNotifications": "Notifications Push",
+    "pushNotificationsDesc": "Recevez des notifications pour les nouveaux messages et mises à jour",
+    "language": "Langue",
+    "selectLanguage": "Sélectionner la Langue",
+    "languageDesc": "Choisissez votre langue préférée",
+    "legal": "Juridique",
+    "termsOfUse": "Conditions d'Utilisation",
+    "privacyPolicy": "Politique de Confidentialité",
+    "about": "À Propos",
+    "version": "AfuChat Version 1.0.0",
+    "copyright": "© 2025 AfuChat. Tous droits réservés."
+  },
+  "feed": {
+    "title": "Fil d'Actualité",
+    "newPost": "À quoi pensez-vous?",
+    "post": "Publier",
+    "acknowledge": "Reconnaître",
+    "reply": "Répondre",
+    "share": "Partager",
+    "noPostsYet": "Pas encore de publications",
+    "startConversation": "Soyez le premier à démarrer une conversation!"
+  },
+  "profile": {
+    "posts": "Publications",
+    "followers": "Abonnés",
+    "following": "Abonnements",
+    "follow": "Suivre",
+    "unfollow": "Ne plus suivre",
+    "message": "Message",
+    "editProfile": "Modifier le Profil",
+    "joinedDate": "Inscrit {{date}}"
+  },
+  "terms": {
+    "title": "Conditions d'Utilisation",
+    "lastUpdated": "Dernière mise à jour: Janvier 2025"
+  },
+  "privacy": {
+    "title": "Politique de Confidentialité",
+    "lastUpdated": "Dernière mise à jour: Janvier 2025"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Español",
+    "fr": "Français",
+    "ar": "العربية"
+  }
+}
