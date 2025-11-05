@@ -12,32 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authentication
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Authentication required' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    
-    // Verify JWT and get user
-    const supabaseClient = createClient(supabaseUrl!, supabaseAnonKey!, {
-      global: { headers: { Authorization: authHeader } }
-    });
-    
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid authentication' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { postId, replyContent, originalPostContent } = await req.json();
+    const { postId, replyContent, originalPostContent, triggerReplyId } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -121,14 +96,27 @@ serve(async (req) => {
     const aiData = await response.json();
     const aiReply = aiData.choices[0].message.content;
 
-    // Award XP for using AI
-    const supabaseServiceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    await supabaseServiceClient.rpc('award_xp', {
-      p_user_id: user.id,
-      p_action_type: 'use_ai',
-      p_xp_amount: 5,
-      p_metadata: { action: 'ai_reply' }
-    });
+    // Get the user who mentioned AfuAI (from the trigger reply) to award XP
+    let mentioningUserId = null;
+    if (triggerReplyId) {
+      const { data: replyData } = await supabase
+        .from('post_replies')
+        .select('author_id')
+        .eq('id', triggerReplyId)
+        .single();
+      mentioningUserId = replyData?.author_id;
+    }
+
+    // Award XP to the user who used AI (mentioned AfuAI)
+    if (mentioningUserId) {
+      const supabaseServiceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      await supabaseServiceClient.rpc('award_xp', {
+        p_user_id: mentioningUserId,
+        p_action_type: 'use_ai',
+        p_xp_amount: 5,
+        p_metadata: { action: 'ai_reply', post_id: postId }
+      });
+    }
 
     // Post AI reply
     const afuAiUserId = afuAiProfile?.id || (await supabase

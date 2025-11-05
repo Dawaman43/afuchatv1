@@ -1,1 +1,13 @@
 project_id = "rhnsjqqtdzlkvqazfcbg"
+
+[functions.afu-ai-reply]
+verify_jwt = false
+
+[functions.award-xp]
+verify_jwt = true
+
+[functions.chat-with-afuai]
+verify_jwt = true
+
+[functions.generate-post]
+verify_jwt = true
