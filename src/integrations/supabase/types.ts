@@ -434,6 +434,7 @@ export type Database = {
           last_login_date: string | null
           last_seen: string | null
           login_streak: number | null
+          profile_completion_rewarded: boolean | null
           show_online_status: boolean | null
           show_read_receipts: boolean | null
           updated_at: string | null
@@ -454,6 +455,7 @@ export type Database = {
           last_login_date?: string | null
           last_seen?: string | null
           login_streak?: number | null
+          profile_completion_rewarded?: boolean | null
           show_online_status?: boolean | null
           show_read_receipts?: boolean | null
           updated_at?: string | null
@@ -474,6 +476,7 @@ export type Database = {
           last_login_date?: string | null
           last_seen?: string | null
           login_streak?: number | null
+          profile_completion_rewarded?: boolean | null
           show_online_status?: boolean | null
           show_read_receipts?: boolean | null
           updated_at?: string | null
@@ -518,6 +521,33 @@ export type Database = {
           },
         ]
       }
+      referrals: {
+        Row: {
+          created_at: string | null
+          id: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          rewarded: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          rewarded?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+          rewarded?: boolean | null
+        }
+        Relationships: []
+      }
       typing_indicators: {
         Row: {
           chat_id: string | null
@@ -559,18 +589,21 @@ export type Database = {
           achievement_type: string
           earned_at: string | null
           id: string
+          metadata: Json | null
           user_id: string
         }
         Insert: {
           achievement_type: string
           earned_at?: string | null
           id?: string
+          metadata?: Json | null
           user_id: string
         }
         Update: {
           achievement_type?: string
           earned_at?: string | null
           id?: string
+          metadata?: Json | null
           user_id?: string
         }
         Relationships: []
@@ -637,6 +670,8 @@ export type Database = {
         }
         Returns: undefined
       }
+      check_daily_login_streak: { Args: { p_user_id: string }; Returns: Json }
+      check_profile_completion: { Args: { p_user_id: string }; Returns: Json }
       create_new_chat: { Args: { other_user_id: string }; Returns: string }
       get_or_create_chat: { Args: { other_user_id: string }; Returns: string }
       get_requesting_user: { Args: never; Returns: string }
@@ -675,6 +710,10 @@ export type Database = {
         Returns: boolean
       }
       mark_notifications_as_read: { Args: never; Returns: undefined }
+      process_referral_reward: {
+        Args: { p_referral_code: string; p_referred_id: string }
+        Returns: Json
+      }
       send_message: {
         Args: { p_chat_id: string; p_plain_content: string }
         Returns: undefined

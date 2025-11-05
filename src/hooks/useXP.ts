@@ -68,5 +68,55 @@ export const useXP = () => {
     }
   }, [user]);
 
-  return { awardXP };
+  const checkDailyLogin = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase.rpc('check_daily_login_streak', {
+        p_user_id: user.id,
+      });
+
+      if (error) throw error;
+
+      const result = data as { streak: number; xp_awarded: number; message: string } | null;
+
+      if (result && result.xp_awarded > 0) {
+        toast.success(`Daily login streak: ${result.streak} days!`, {
+          description: `+${result.xp_awarded} XP earned!`,
+          duration: 4000,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error checking daily login:', error);
+    }
+  }, [user]);
+
+  const checkProfileCompletion = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase.rpc('check_profile_completion', {
+        p_user_id: user.id,
+      });
+
+      if (error) throw error;
+
+      const result = data as { completed: boolean; xp_awarded: number; message: string } | null;
+
+      if (result && result.xp_awarded > 0) {
+        toast.success('Profile completed!', {
+          description: `+${result.xp_awarded} XP bonus unlocked! 🎉`,
+          duration: 5000,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error checking profile completion:', error);
+    }
+  }, [user]);
+
+  return { awardXP, checkDailyLogin, checkProfileCompletion };
 };

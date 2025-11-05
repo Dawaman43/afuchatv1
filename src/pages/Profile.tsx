@@ -13,6 +13,8 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { useTranslation } from 'react-i18next';
 import { GradeBadge, type Grade } from '@/components/gamification/GradeBadge';
 import { XPProgressBar } from '@/components/gamification/XPProgressBar';
+import { AchievementBadges } from '@/components/gamification/AchievementBadges';
+import { ReferralSystem } from '@/components/gamification/ReferralSystem';
 import ProfileActionsSheet from '@/components/ProfileActionsSheet';
 
 interface Profile {
@@ -606,7 +608,7 @@ const Profile = () => {
 
 				<Separator className="mt-4" />
 				<Tabs defaultValue="posts" className="w-full">
-					<TabsList className="grid grid-cols-3 w-full h-12 rounded-none bg-background">
+					<TabsList className="grid grid-cols-5 w-full h-12 rounded-none bg-background">
 						<TabsTrigger value="posts" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground">
 							{t('profile.posts')}
 						</TabsTrigger>
@@ -616,6 +618,14 @@ const Profile = () => {
 						<TabsTrigger value="media" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground">
 							Media
 						</TabsTrigger>
+						<TabsTrigger value="achievements" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground">
+							Achievements
+						</TabsTrigger>
+						{user?.id === profileId && (
+							<TabsTrigger value="referrals" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground">
+								Referrals
+							</TabsTrigger>
+						)}
 					</TabsList>
 
 					<TabsContent value="posts">
@@ -649,6 +659,18 @@ const Profile = () => {
 					<TabsContent value="media">
 						<div className="text-center text-muted-foreground py-12">Media content is not yet supported.</div>
 					</TabsContent>
+					<TabsContent value="achievements">
+						<div className="p-4">
+							<AchievementBadges userId={profileId!} />
+						</div>
+					</TabsContent>
+					{user?.id === profileId && (
+						<TabsContent value="referrals">
+							<div className="p-4">
+								<ReferralSystem />
+							</div>
+						</TabsContent>
+					)}
 				</Tabs>
 			</div>
 			

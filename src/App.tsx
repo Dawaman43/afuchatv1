@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { useDailyLogin } from "./hooks/useDailyLogin";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ChatRoom from "./pages/ChatRoom";
@@ -27,6 +28,35 @@ const ProfileRedirect = () => {
   return <Navigate to={`/${userId}`} replace />;
 };
 
+const AppRoutes = () => {
+  // Check daily login streak automatically
+  useDailyLogin();
+
+  return (
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/chat/:chatId" element={<ChatRoom />} />
+      <Route path="/notifications" element={<Notifications />} />
+      <Route path="/post/:postId" element={<PostDetail />} />
+      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/ai-chat" element={<AIChat />} />
+      <Route path="/install" element={<Install />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="/terms" element={<TermsOfUse />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/leaderboard" element={<Leaderboard />} />
+
+      <Route path="/profile/:userId" element={<ProfileRedirect />} />
+
+      <Route path="/:userId" element={<Profile />} />
+      <Route path="/:userId/edit" element={<EditProfile />} />
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -34,27 +64,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/chat/:chatId" element={<ChatRoom />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/post/:postId" element={<PostDetail />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/ai-chat" element={<AIChat />} />
-            <Route path="/install" element={<Install />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/terms" element={<TermsOfUse />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-
-            <Route path="/profile/:userId" element={<ProfileRedirect />} />
-
-            <Route path="/:userId" element={<Profile />} />
-            <Route path="/:userId/edit" element={<EditProfile />} />
-
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AppRoutes />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

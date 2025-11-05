@@ -121,6 +121,15 @@ serve(async (req) => {
     const aiData = await response.json();
     const aiReply = aiData.choices[0].message.content;
 
+    // Award XP for using AI
+    const supabaseServiceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    await supabaseServiceClient.rpc('award_xp', {
+      p_user_id: user.id,
+      p_action_type: 'use_ai',
+      p_xp_amount: 5,
+      p_metadata: { action: 'ai_reply' }
+    });
+
     // Post AI reply
     const afuAiUserId = afuAiProfile?.id || (await supabase
       .from('profiles')

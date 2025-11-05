@@ -99,6 +99,14 @@ serve(async (req) => {
     const data = await response.json();
     const reply = data.choices[0].message.content;
 
+    // Award XP for using AI
+    await supabaseClient.rpc('award_xp', {
+      p_user_id: user.id,
+      p_action_type: 'use_ai',
+      p_xp_amount: 5,
+      p_metadata: { action: 'chat_with_afuai' }
+    });
+
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

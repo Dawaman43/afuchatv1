@@ -107,6 +107,14 @@ serve(async (req) => {
     const data = await response.json();
     const generatedPost = data.choices[0].message.content.trim();
 
+    // Award XP for using AI
+    await supabaseClient.rpc('award_xp', {
+      p_user_id: user.id,
+      p_action_type: 'use_ai',
+      p_xp_amount: 5,
+      p_metadata: { action: 'generate_post', topic }
+    });
+
     // Ensure it's within 280 characters
     const finalPost = generatedPost.length > 280 
       ? generatedPost.substring(0, 277) + '...' 

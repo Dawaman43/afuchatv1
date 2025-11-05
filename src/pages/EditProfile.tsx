@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Separator } from '@/components/ui/separator'; 
 import { Loader2, User, Lock, Eye, MessageCircle, MapPin, Globe } from 'lucide-react';
 import { handleSchema, displayNameSchema, bioSchema } from '@/lib/validation';
+import { useXP } from '@/hooks/useXP';
 
 // Import Supabase types
 import type { Database } from '@/integrations/supabase/types';
@@ -34,6 +35,7 @@ const EditProfile: React.FC = () => {
   const { user, loading: isLoadingAuth } = useAuth();
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
+  const { checkProfileCompletion } = useXP();
 
   const [profile, setProfile] = useState<EditProfileForm>({
     display_name: '',
@@ -169,6 +171,10 @@ const EditProfile: React.FC = () => {
       if (error) throw error;
 
       toast.success('Profile updated successfully!');
+      
+      // Check for profile completion reward
+      await checkProfileCompletion();
+      
       navigate(`/${user.id}`);
     } catch (error: any) {
       console.error('Update error:', error);
