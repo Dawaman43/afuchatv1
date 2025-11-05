@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Radio, Send, MessageSquarePlus, Search as SearchIcon, User, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useTranslation } from 'react-i18next';
 import Chats from './Chats';
 import Feed from './Feed';
 import Search from './Search';
@@ -47,9 +48,10 @@ const NewChatFAB = ({ onClick, visible, isNavVisible }: { onClick: () => void, v
 // --- END FAB Components ---
 
 const Index = () => {
+  const { t } = useTranslation();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('feed'); 
+  const [activeTab, setActiveTab] = useState('feed');
   const [isPostModalOpen, setIsPostModalOpen] = useState(false); 
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -229,7 +231,7 @@ const Index = () => {
                   variant="default" 
                   className="hidden md:flex text-xs font-semibold h-8 px-3 rounded-full bg-pink-500 hover:bg-pink-600 text-white"
                 >
-                  Subscribe
+                  {t('navigation.subscribe')}
                 </Button>
                 <NotificationIcon />
                 {isAdmin && (
@@ -248,7 +250,7 @@ const Index = () => {
             ) : (
               // Logged Out: Show Log In Button
               <Button size="sm" variant="default" className="text-xs sm:text-sm font-semibold h-8 px-3 sm:px-4" onClick={handleLoginRequired}>
-                Log In
+                {t('common.login')}
               </Button>
             )}
           </div>
@@ -285,7 +287,7 @@ const Index = () => {
               }`}
             >
               <Radio className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-[10px] sm:text-xs font-medium">Feed</span>
+              <span className="text-[10px] sm:text-xs font-medium">{t('navigation.feed')}</span>
             </button>
             <button
               onClick={() => setActiveTab('search')}
@@ -294,7 +296,7 @@ const Index = () => {
               }`}
             >
               <SearchIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-[10px] sm:text-xs font-medium">Search</span>
+              <span className="text-[10px] sm:text-xs font-medium">{t('navigation.search')}</span>
             </button>
             
             {/* MODIFIED CHATS BUTTON */}
@@ -305,10 +307,10 @@ const Index = () => {
                   ? (activeTab === 'chats' ? 'text-primary' : 'text-muted-foreground')
                   : 'text-muted-foreground opacity-50'
               }`}
-              title={user ? "Open Chats" : "Log in to view chats"}
+              title={user ? t('navigation.openChats') : t('navigation.loginToViewChats')}
             >
               <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-[10px] sm:text-xs font-medium">Chats</span>
+              <span className="text-[10px] sm:text-xs font-medium">{t('navigation.chats')}</span>
             </button>
             {/* MODIFIED AFUAI BUTTON */}
             <button
@@ -318,12 +320,12 @@ const Index = () => {
                   ? 'text-muted-foreground hover:text-primary' 
                   : 'text-muted-foreground opacity-50'
               }`}
-              title={user ? "Talk to AfuAI" : "Log in to use AfuAI"}
+              title={user ? t('navigation.talkToAfuAI') : t('navigation.loginToUseAfuAI')}
             >
               <svg className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
               </svg>
-              <span className="text-[10px] sm:text-xs font-medium">AfuAI</span>
+              <span className="text-[10px] sm:text-xs font-medium">{t('navigation.afuai')}</span>
             </button>
           </div>
         </div>

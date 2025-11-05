@@ -66,7 +66,14 @@
     "reply": "Reply",
     "share": "Share",
     "noPostsYet": "No posts yet",
-    "startConversation": "Be the first to start a conversation!"
+    "startConversation": "Be the first to start a conversation!",
+    "addComment": "Add a comment...",
+    "signInToReply": "Sign in to reply",
+    "viewComments": "View all {{count}} comment",
+    "viewComments_other": "View all {{count}} comments",
+    "linkCopied": "Link copied to clipboard!",
+    "failedToCopy": "Failed to copy link",
+    "analyzePost": "Analyze post with AfuAI"
   },
   "profile": {
     "posts": "Posts",
@@ -76,7 +83,12 @@
     "unfollow": "Unfollow",
     "message": "Message",
     "editProfile": "Edit Profile",
-    "joinedDate": "Joined {{date}}"
+    "joinedDate": "Joined {{date}}",
+    "adminDashboard": "Admin Dashboard",
+    "notFound": "Profile not found",
+    "failedToFollow": "Failed to follow",
+    "failedToUnfollow": "Failed to unfollow",
+    "failedToChat": "Failed to create chat"
   },
   "terms": {
     "title": "Terms of Use",
@@ -85,6 +97,29 @@
   "privacy": {
     "title": "Privacy Policy",
     "lastUpdated": "Last updated: January 2025"
+  },
+  "search": {
+    "title": "Explore",
+    "placeholder": "Search users, posts, topics...",
+    "trendingNow": "Trending Now",
+    "noTrends": "No new trends detected in the last 24 hours.",
+    "tapTopic": "Tap a topic to search",
+    "posts": "Posts",
+    "people": "People",
+    "noResults": "No results found for \"{{query}}\".",
+    "postsCount": "{{count}} post",
+    "postsCount_other": "{{count}} posts"
+  },
+  "navigation": {
+    "feed": "Feed",
+    "search": "Search",
+    "chats": "Chats",
+    "afuai": "AfuAI",
+    "subscribe": "Subscribe",
+    "openChats": "Open Chats",
+    "loginToViewChats": "Log in to view chats",
+    "talkToAfuAI": "Talk to AfuAI",
+    "loginToUseAfuAI": "Log in to use AfuAI"
   },
   "languages": {
     "en": "English",

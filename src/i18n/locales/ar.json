@@ -66,7 +66,14 @@
     "reply": "رد",
     "share": "مشاركة",
     "noPostsYet": "لا توجد منشورات بعد",
-    "startConversation": "كن أول من يبدأ محادثة!"
+    "startConversation": "كن أول من يبدأ محادثة!",
+    "addComment": "أضف تعليقاً...",
+    "signInToReply": "سجّل الدخول للرد",
+    "viewComments": "عرض {{count}} تعليق",
+    "viewComments_other": "عرض جميع {{count}} التعليقات",
+    "linkCopied": "تم نسخ الرابط إلى الحافظة!",
+    "failedToCopy": "فشل نسخ الرابط",
+    "analyzePost": "تحليل المنشور مع AfuAI"
   },
   "profile": {
     "posts": "المنشورات",
@@ -76,7 +83,12 @@
     "unfollow": "إلغاء المتابعة",
     "message": "رسالة",
     "editProfile": "تعديل الملف الشخصي",
-    "joinedDate": "انضم {{date}}"
+    "joinedDate": "انضم {{date}}",
+    "adminDashboard": "لوحة الإدارة",
+    "notFound": "الملف الشخصي غير موجود",
+    "failedToFollow": "فشلت المتابعة",
+    "failedToUnfollow": "فشل إلغاء المتابعة",
+    "failedToChat": "فشل إنشاء الدردشة"
   },
   "terms": {
     "title": "شروط الاستخدام",
@@ -85,6 +97,29 @@
   "privacy": {
     "title": "سياسة الخصوصية",
     "lastUpdated": "آخر تحديث: يناير 2025"
+  },
+  "search": {
+    "title": "استكشف",
+    "placeholder": "ابحث عن مستخدمين، منشورات، مواضيع...",
+    "trendingNow": "الأكثر رواجاً الآن",
+    "noTrends": "لم يتم اكتشاف أي اتجاهات جديدة في آخر 24 ساعة.",
+    "tapTopic": "انقر على موضوع للبحث",
+    "posts": "المنشورات",
+    "people": "الأشخاص",
+    "noResults": "لم يتم العثور على نتائج لـ \"{{query}}\".",
+    "postsCount": "{{count}} منشور",
+    "postsCount_other": "{{count}} منشورات"
+  },
+  "navigation": {
+    "feed": "الأخبار",
+    "search": "بحث",
+    "chats": "الدردشات",
+    "afuai": "AfuAI",
+    "subscribe": "اشترك",
+    "openChats": "فتح الدردشات",
+    "loginToViewChats": "سجل الدخول لعرض الدردشات",
+    "talkToAfuAI": "تحدث إلى AfuAI",
+    "loginToUseAfuAI": "سجل الدخول لاستخدام AfuAI"
   },
   "languages": {
     "en": "English",

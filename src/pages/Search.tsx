@@ -5,9 +5,10 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search as SearchIcon, User, MessageSquare, Loader2, TrendingUp } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom'; // 🚨 ADDED useLocation
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface SearchResult {
   type: 'user' | 'post';
@@ -69,6 +70,7 @@ const SearchSkeleton = () => (
 );
 
 const TrendingSection = ({ onTrendClick }: { onTrendClick: (topic: string) => void }) => {
+  const { t } = useTranslation();
   const [trends, setTrends] = useState<Trend[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -105,7 +107,7 @@ const TrendingSection = ({ onTrendClick }: { onTrendClick: (topic: string) => vo
     return (
       <div className="space-y-3 p-4">
         <h2 className="text-base font-bold text-foreground flex items-center mb-4">
-          <TrendingUp className="h-5 w-5 mr-2 text-primary" /> Trending Now
+          <TrendingUp className="h-5 w-5 mr-2 text-primary" /> {t('search.trendingNow')}
         </h2>
         <Skeleton className="h-40 w-full rounded-xl" />
       </div>
@@ -115,7 +117,7 @@ const TrendingSection = ({ onTrendClick }: { onTrendClick: (topic: string) => vo
   if (trends.length === 0) {
     return (
       <div className="text-center text-muted-foreground py-8 text-sm">
-        No new trends detected in the last 24 hours.
+        {t('search.noTrends')}
       </div>
     );
   }
@@ -123,7 +125,7 @@ const TrendingSection = ({ onTrendClick }: { onTrendClick: (topic: string) => vo
   return (
     <div className="p-0 space-y-3">
       <h2 className="text-base font-bold text-foreground flex items-center mb-4">
-        <TrendingUp className="h-5 w-5 mr-2 text-primary" /> Trending Now
+        <TrendingUp className="h-5 w-5 mr-2 text-primary" /> {t('search.trendingNow')}
       </h2>
       <Card className="p-0 divide-y">
         {trends.map((trend, index) => (
@@ -137,19 +139,20 @@ const TrendingSection = ({ onTrendClick }: { onTrendClick: (topic: string) => vo
               <span className="text-primary hover:underline font-semibold text-sm">{trend.topic}</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1 ml-6">
-              {trend.post_count.toLocaleString()} posts
+              {t('search.postsCount', { count: trend.post_count })}
             </p>
           </div>
         ))}
       </Card>
       <div className="text-center text-xs text-muted-foreground pt-4">
-        Tap a topic to search
+        {t('search.tapTopic')}
       </div>
     </div>
   );
 };
 
 const Search = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const location = useLocation(); // 🚨 Hook to access current URL search params
   const [query, setQuery] = useState('');
@@ -284,10 +287,10 @@ const Search = () => {
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 bg-card shadow-sm sticky top-0 z-10 border-b border-border">
-        <h1 className="text-base font-bold text-foreground mb-4">Explore</h1>
+        <h1 className="text-base font-bold text-foreground mb-4">{t('search.title')}</h1>
         <div className="flex gap-2">
           <Input
-            placeholder="Search users, posts, topics..."
+            placeholder={t('search.placeholder')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="flex-1 rounded-full bg-muted/70 focus:bg-background h-10 px-4 text-sm"
@@ -310,13 +313,13 @@ const Search = () => {
           <TrendingSection onTrendClick={handleTrendClick} />
         ) : results.length === 0 ? (
           <div className="text-center text-muted-foreground py-8 text-sm">
-            No results found for "{query}".
+            {t('search.noResults', { query })}
           </div>
         ) : (
           <div className="space-y-6">
             {userResults.length > 0 && (
               <section>
-                <h2 className="text-sm font-bold text-foreground mb-3 border-b pb-1">People ({userResults.length})</h2>
+                <h2 className="text-sm font-bold text-foreground mb-3 border-b pb-1">{t('search.people')} ({userResults.length})</h2>
                 <div className="space-y-3">
                   {userResults.map((result) => (
                     <Card 
@@ -355,7 +358,7 @@ const Search = () => {
                           className="ml-4 flex-shrink-0 text-xs"
                         >
                           <MessageSquare className="h-4 w-4 mr-1" />
-                          Message
+                          {t('profile.message')}
                         </Button>
                       </div>
                     </Card>
@@ -366,7 +369,7 @@ const Search = () => {
 
             {postResults.length > 0 && (
               <section>
-                <h2 className="text-sm font-bold text-foreground mb-3 border-b pb-1">Posts ({postResults.length})</h2>
+                <h2 className="text-sm font-bold text-foreground mb-3 border-b pb-1">{t('search.posts')} ({postResults.length})</h2>
                 <div className="space-y-3">
                   {postResults.map((result) => (
                     <Card

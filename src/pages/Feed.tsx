@@ -7,6 +7,7 @@ import { MessageSquare, Heart, Share, User, Ellipsis, Sparkles } from 'lucide-re
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useTranslation } from 'react-i18next';
 // NEW: Import the dedicated PostActionsSheet component
 import PostActionsSheet from '@/components/PostActionsSheet';
 import DeletePostSheet from '@/components/DeletePostSheet';
@@ -219,6 +220,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       onReportPost: (postId: string) => void; // New Prop
   }) => {
 
+  const { t } = useTranslation();
   const [showComments, setShowComments] = useState(false);
   const [replyText, setReplyText] = useState('');
   
@@ -258,16 +260,16 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         console.error('Error sharing', error);
         // Fallback to copy
         navigator.clipboard.writeText(shareUrl).then(() => {
-          toast.success('Link copied to clipboard!');
+          toast.success(t('feed.linkCopied'));
         }).catch(() => {
-          toast.error('Failed to copy link');
+          toast.error(t('feed.failedToCopy'));
         });
       });
     } else {
       navigator.clipboard.writeText(shareUrl).then(() => {
-        toast.success('Link copied to clipboard!');
+        toast.success(t('feed.linkCopied'));
       }).catch(() => {
-        toast.error('Failed to copy link');
+        toast.error(t('feed.failedToCopy'));
       });
     }
   };
@@ -347,7 +349,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                 variant="ghost" 
                 size="icon" 
                 className="h-8 w-8 rounded-full flex-shrink-0" 
-                title="Analyze post with AfuAI"
+                title={t('feed.analyzePost')}
                 onClick={handleAiTransfer}
             >
                 <Sparkles className="h-4 w-4 text-primary/70" />
@@ -391,7 +393,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               className="text-[10px] sm:text-xs text-muted-foreground cursor-pointer hover:underline"
               onClick={() => setShowComments(true)}
             >
-              View all {post.reply_count} {post.reply_count === 1 ? 'comment' : 'comments'}
+              {t('feed.viewComments', { count: post.reply_count })}
             </span>
           )}
 
@@ -419,7 +421,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleReplySubmit();
                 }}
-                placeholder="Add a comment..."
+                placeholder={t('feed.addComment')}
                 className="flex-1 bg-transparent border-b border-input text-[10px] sm:text-xs text-foreground focus:outline-none focus:ring-0 focus:border-primary p-1"
               />
               <Button
@@ -429,13 +431,13 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                 onClick={handleReplySubmit}
                 className="text-primary font-bold disabled:text-muted-foreground disabled:opacity-70 p-0 text-[10px] sm:text-xs h-7 sm:h-8"
               >
-                Post
+                {t('feed.post')}
               </Button>
             </div>
           )}
           {showComments && !user && (
             <div className="mt-2 text-[10px] sm:text-xs text-muted-foreground">
-              Please <a href="/auth" className="text-primary underline">log in</a> to comment.
+              {t('feed.signInToReply')}
             </div>
           )}
         </div>
@@ -448,6 +450,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
 // --- FEED COMPONENT (Updated with new handlers) ---
 
 const Feed = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -812,7 +815,7 @@ const Feed = () => {
       <div ref={feedRef} className="flex-1 overflow-y-auto">
         {posts.length === 0 && !effectiveLoading ? (
           <div className="text-center text-muted-foreground py-6 sm:py-8 text-xs sm:text-sm px-4">
-            No posts yet. Follow users or share your first post!
+            {t('feed.noPostsYet')}
           </div>
         ) : (
           posts.map((post) => (

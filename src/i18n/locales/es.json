@@ -66,7 +66,14 @@
     "reply": "Responder",
     "share": "Compartir",
     "noPostsYet": "Aún no hay publicaciones",
-    "startConversation": "¡Sé el primero en iniciar una conversación!"
+    "startConversation": "¡Sé el primero en iniciar una conversación!",
+    "addComment": "Añade un comentario...",
+    "signInToReply": "Inicia sesión para responder",
+    "viewComments": "Ver {{count}} comentario",
+    "viewComments_other": "Ver los {{count}} comentarios",
+    "linkCopied": "¡Enlace copiado al portapapeles!",
+    "failedToCopy": "Error al copiar el enlace",
+    "analyzePost": "Analizar publicación con AfuAI"
   },
   "profile": {
     "posts": "Publicaciones",
@@ -76,7 +83,12 @@
     "unfollow": "Dejar de seguir",
     "message": "Mensaje",
     "editProfile": "Editar Perfil",
-    "joinedDate": "Se unió {{date}}"
+    "joinedDate": "Se unió {{date}}",
+    "adminDashboard": "Panel de Administración",
+    "notFound": "Perfil no encontrado",
+    "failedToFollow": "Error al seguir",
+    "failedToUnfollow": "Error al dejar de seguir",
+    "failedToChat": "Error al crear chat"
   },
   "terms": {
     "title": "Términos de Uso",
@@ -85,6 +97,29 @@
   "privacy": {
     "title": "Política de Privacidad",
     "lastUpdated": "Última actualización: Enero 2025"
+  },
+  "search": {
+    "title": "Explorar",
+    "placeholder": "Buscar usuarios, publicaciones, temas...",
+    "trendingNow": "Tendencias Ahora",
+    "noTrends": "No se detectaron nuevas tendencias en las últimas 24 horas.",
+    "tapTopic": "Toca un tema para buscar",
+    "posts": "Publicaciones",
+    "people": "Personas",
+    "noResults": "No se encontraron resultados para \"{{query}}\".",
+    "postsCount": "{{count}} publicación",
+    "postsCount_other": "{{count}} publicaciones"
+  },
+  "navigation": {
+    "feed": "Feed",
+    "search": "Buscar",
+    "chats": "Chats",
+    "afuai": "AfuAI",
+    "subscribe": "Suscribirse",
+    "openChats": "Abrir Chats",
+    "loginToViewChats": "Inicia sesión para ver chats",
+    "talkToAfuAI": "Habla con AfuAI",
+    "loginToUseAfuAI": "Inicia sesión para usar AfuAI"
   },
   "languages": {
     "en": "English",

@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { useTranslation } from 'react-i18next';
 import ProfileActionsSheet from '@/components/ProfileActionsSheet';
 
 interface Profile {
@@ -111,6 +112,7 @@ const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content
 };
 
 const Profile = () => {
+	const { t } = useTranslation();
     const { userId: urlParam } = useParams<{ userId: string }>(); 
 	const navigate = useNavigate();
 	const { user } = useAuth();
@@ -186,14 +188,14 @@ const Profile = () => {
 		const { data, error } = await query.maybeSingle();
 
 		if (error && error.code !== 'PGRST116') {
-			toast.error('Failed to load profile due to a database error.');
+			toast.error(t('common.error'));
 			console.error('Profile fetch error:', error);
 			setLoading(false);
 			return;
 		}
 
 		if (!data) {
-			toast.error('Profile not found');
+			toast.error(t('profile.notFound'));
 			setLoading(false);
 			return;
 		}
@@ -291,9 +293,9 @@ const Profile = () => {
 			if (error) {
 				setIsFollowing(true);
 				setFollowCount(prev => ({ ...prev, followers: prev.followers + 1 }));
-				toast.error('Failed to unfollow');
+				toast.error(t('profile.failedToUnfollow'));
 			} else {
-				toast.success('Unfollowed');
+				toast.success(t('profile.unfollow'));
 			}
 		} else {
 			const { error } = await supabase
@@ -303,9 +305,9 @@ const Profile = () => {
 			if (error) {
 				setIsFollowing(false);
 				setFollowCount(prev => ({ ...prev, followers: prev.followers - 1 }));
-				toast.error('Failed to follow');
+				toast.error(t('profile.failedToFollow'));
 			} else {
-				toast.success('Following');
+				toast.success(t('profile.follow'));
 			}
 		}
 	};
@@ -344,7 +346,7 @@ const Profile = () => {
 			.single();
 
 		if (chatError) {
-			toast.error('Failed to create chat');
+			toast.error(t('profile.failedToChat'));
 			return;
 		}
 
@@ -356,7 +358,7 @@ const Profile = () => {
 			]);
 
 		if (membersError) {
-			toast.error('Failed to add members');
+			toast.error(t('profile.failedToChat'));
 			return;
 		}
 
@@ -387,7 +389,7 @@ const Profile = () => {
 			<div className="h-full flex flex-col">
 				<div className="p-4 border-b border-border">
 					{/* 🚨 MODIFICATION 1: Changed navigate(-1) to navigate('/') */}
-					<Button variant="ghost" size="sm" onClick={() => navigate('/')} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />Back</Button>
+					<Button variant="ghost" size="sm" onClick={() => navigate('/')} className="mb-4"><ArrowLeft className="h-4 w-4 mr-2" />{t('common.back')}</Button>
 					<Skeleton className="h-4 w-1/4 mb-4" />
 				</div>
 				<div className="p-4">
@@ -417,7 +419,7 @@ const Profile = () => {
 	if (!profile) {
 		return (
 			<div className="flex items-center justify-center h-full">
-				<div className="text-muted-foreground">Profile not found</div>
+				<div className="text-muted-foreground">{t('profile.notFound')}</div>
 			</div>
 		);
 	}
@@ -445,7 +447,7 @@ const Profile = () => {
 						</Button>
 						<div>
 							<h1 className="text-xl font-bold">{profile.display_name}</h1>
-							<p className="text-xs text-muted-foreground">{posts.length} Posts</p>
+							<p className="text-xs text-muted-foreground">{posts.length} {t('profile.posts')}</p>
 						</div>
 					</div>
 					{user && user.id === profileId && (
@@ -482,7 +484,7 @@ const Profile = () => {
 									onClick={() => navigate(`/${urlParam}/edit`)}
 								>
 									<Pencil className="h-4 w-4 mr-2" />
-									Edit Profile
+									{t('profile.editProfile')}
 								</Button>
 								{isAdmin && (
 									<Button
@@ -491,7 +493,7 @@ const Profile = () => {
 										className="rounded-full px-4 font-bold"
 									>
 										<Settings className="h-4 w-4 mr-2" />
-										Admin Dashboard
+										{t('profile.adminDashboard')}
 									</Button>
 								)}
 							</div>
@@ -506,13 +508,13 @@ const Profile = () => {
 									onClick={handleFollow}
 									variant={isFollowing ? "outline" : "default"}
 									className="rounded-full px-4 font-bold transition-colors"
-									onMouseEnter={e => isFollowing && (e.currentTarget.textContent = 'Unfollow')}
-									onMouseLeave={e => isFollowing && (e.currentTarget.textContent = 'Following')}
+									onMouseEnter={e => isFollowing && (e.currentTarget.textContent = t('profile.unfollow'))}
+									onMouseLeave={e => isFollowing && (e.currentTarget.textContent = t('profile.following'))}
 								>
-									{isFollowing ? 'Following' :
+									{isFollowing ? t('profile.following') :
 										<>
 											<UserPlus className="h-4 w-4 mr-2" />
-											Follow
+											{t('profile.follow')}
 										</>
 									}
 								</Button>
@@ -580,11 +582,11 @@ const Profile = () => {
 					<div className="flex gap-4 mt-3">
 						<div className="flex items-center">
 							<span className="font-bold text-sm">{formatCount(followCount.following)}</span>
-							<span className="text-muted-foreground text-sm ml-1 hover:underline cursor-pointer">Following</span>
+							<span className="text-muted-foreground text-sm ml-1 hover:underline cursor-pointer">{t('profile.following')}</span>
 						</div>
 						<div className="flex items-center">
 							<span className="font-bold text-sm">{formatCount(followCount.followers)}</span>
-							<span className="text-muted-foreground text-sm ml-1 hover:underline cursor-pointer">Followers</span>
+							<span className="text-muted-foreground text-sm ml-1 hover:underline cursor-pointer">{t('profile.followers')}</span>
 						</div>
 					</div>
 				</div>
@@ -593,7 +595,7 @@ const Profile = () => {
 				<Tabs defaultValue="posts" className="w-full">
 					<TabsList className="grid grid-cols-3 w-full h-12 rounded-none bg-background">
 						<TabsTrigger value="posts" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground">
-							Posts
+							{t('profile.posts')}
 						</TabsTrigger>
 						<TabsTrigger value="replies" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground">
 							Replies
