@@ -1,0 +1,236 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Gift, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface GiftItem {
+  id: string;
+  name: string;
+  emoji: string;
+  base_xp_cost: number;
+  rarity: string;
+  description: string;
+}
+
+interface GiftStatistics {
+  price_multiplier: number;
+  total_sent: number;
+}
+
+interface SendGiftDialogProps {
+  receiverId: string;
+  receiverName: string;
+  trigger?: React.ReactNode;
+}
+
+const rarityColors: Record<string, string> = {
+  common: 'bg-gray-500',
+  rare: 'bg-blue-500',
+  legendary: 'bg-purple-500',
+};
+
+export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDialogProps) => {
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [gifts, setGifts] = useState<GiftItem[]>([]);
+  const [giftStats, setGiftStats] = useState<Record<string, GiftStatistics>>({});
+  const [selectedGift, setSelectedGift] = useState<string | null>(null);
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [userXP, setUserXP] = useState(0);
+
+  useEffect(() => {
+    if (open) {
+      fetchGifts();
+      fetchUserXP();
+    }
+  }, [open]);
+
+  const fetchGifts = async () => {
+    const { data: giftsData } = await supabase
+      .from('gifts')
+      .select('*')
+      .order('base_xp_cost', { ascending: true });
+
+    const { data: statsData } = await supabase
+      .from('gift_statistics')
+      .select('gift_id, price_multiplier, total_sent');
+
+    if (giftsData) {
+      setGifts(giftsData);
+    }
+
+    if (statsData) {
+      const statsMap: Record<string, GiftStatistics> = {};
+      statsData.forEach((stat: any) => {
+        statsMap[stat.gift_id] = {
+          price_multiplier: parseFloat(stat.price_multiplier),
+          total_sent: stat.total_sent,
+        };
+      });
+      setGiftStats(statsMap);
+    }
+  };
+
+  const fetchUserXP = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('profiles')
+      .select('xp')
+      .eq('id', user.id)
+      .single();
+
+    if (data) {
+      setUserXP(data.xp);
+    }
+  };
+
+  const calculatePrice = (giftId: string, baseCost: number) => {
+    const stats = giftStats[giftId];
+    if (!stats) return baseCost;
+    return Math.ceil(baseCost * stats.price_multiplier);
+  };
+
+  const handleSendGift = async () => {
+    if (!selectedGift || !user) return;
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('send_gift', {
+        p_gift_id: selectedGift,
+        p_receiver_id: receiverId,
+        p_message: message.trim() || null,
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; message: string; xp_cost?: number };
+
+      if (result.success) {
+        toast.success(`${result.message} (${result.xp_cost} XP)`);
+        setOpen(false);
+        setSelectedGift(null);
+        setMessage('');
+        fetchUserXP();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error('Error sending gift:', error);
+      toast.error('Failed to send gift');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button variant="outline" size="sm" className="gap-2">
+            <Gift className="h-4 w-4" />
+            Send Gift
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Send a Gift to {receiverName}</DialogTitle>
+          <DialogDescription>
+            Choose a gift to send. Your XP: {userXP}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-2 gap-3 my-4">
+          {gifts.map((gift) => {
+            const currentPrice = calculatePrice(gift.id, gift.base_xp_cost);
+            const stats = giftStats[gift.id];
+            const canAfford = userXP >= currentPrice;
+            const isSelected = selectedGift === gift.id;
+
+            return (
+              <div
+                key={gift.id}
+                onClick={() => canAfford && setSelectedGift(gift.id)}
+                className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  isSelected
+                    ? 'border-primary bg-primary/10'
+                    : canAfford
+                    ? 'border-border hover:border-primary/50'
+                    : 'border-border opacity-50 cursor-not-allowed'
+                }`}
+              >
+                <div className="text-center">
+                  <div className="text-4xl mb-2">{gift.emoji}</div>
+                  <h4 className="font-semibold text-sm">{gift.name}</h4>
+                  <p className="text-xs text-muted-foreground mt-1 min-h-[32px]">
+                    {gift.description}
+                  </p>
+                  <div className="mt-2 space-y-1">
+                    <Badge className={rarityColors[gift.rarity]} variant="secondary">
+                      {gift.rarity}
+                    </Badge>
+                    <div className="text-sm font-bold">
+                      {currentPrice} XP
+                      {stats && stats.price_multiplier > 1 && (
+                        <span className="text-xs text-muted-foreground ml-1">
+                          (×{stats.price_multiplier.toFixed(2)})
+                        </span>
+                      )}
+                    </div>
+                    {stats && (
+                      <p className="text-xs text-muted-foreground">
+                        Sent {stats.total_sent} times
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {selectedGift && (
+          <div className="space-y-3">
+            <Textarea
+              placeholder="Add a message (optional)"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="resize-none"
+              rows={3}
+            />
+            <Button
+              onClick={handleSendGift}
+              disabled={loading}
+              className="w-full"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Gift className="h-4 w-4 mr-2" />
+                  Send Gift
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};

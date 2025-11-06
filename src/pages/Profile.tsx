@@ -15,6 +15,7 @@ import { GradeBadge, type Grade } from '@/components/gamification/GradeBadge';
 import { XPProgressBar } from '@/components/gamification/XPProgressBar';
 import { AchievementBadges } from '@/components/gamification/AchievementBadges';
 import { ReferralSystem } from '@/components/gamification/ReferralSystem';
+import { ReceivedGifts } from '@/components/gifts/ReceivedGifts';
 import ProfileActionsSheet from '@/components/ProfileActionsSheet';
 import { OwlAvatar } from '@/components/avatar/OwlAvatar';
 import { useUserAvatar } from '@/hooks/useUserAvatar';
@@ -650,20 +651,17 @@ const Profile = () => {
 				<Separator className="mt-4" />
 				<Tabs defaultValue="posts" className="w-full">
 					<TabsList className="grid grid-cols-5 w-full h-12 rounded-none bg-background">
-						<TabsTrigger value="posts" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground">
+						<TabsTrigger value="posts" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground text-xs sm:text-sm">
 							{t('profile.posts')}
 						</TabsTrigger>
-						<TabsTrigger value="replies" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground">
-							Replies
+						<TabsTrigger value="achievements" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground text-xs sm:text-sm">
+							Badges
 						</TabsTrigger>
-						<TabsTrigger value="media" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground">
-							Media
-						</TabsTrigger>
-						<TabsTrigger value="achievements" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground">
-							Achievements
+						<TabsTrigger value="gifts" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground text-xs sm:text-sm">
+							Gifts
 						</TabsTrigger>
 						{user?.id === profileId && (
-							<TabsTrigger value="referrals" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground">
+							<TabsTrigger value="referrals" className="data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold text-muted-foreground text-xs sm:text-sm">
 								Referrals
 							</TabsTrigger>
 						)}
@@ -694,15 +692,14 @@ const Profile = () => {
 						)}
 					</TabsContent>
 
-					<TabsContent value="replies">
-						<div className="text-center text-muted-foreground py-12">Replies feature coming soon...</div>
-					</TabsContent>
-					<TabsContent value="media">
-						<div className="text-center text-muted-foreground py-12">Media content is not yet supported.</div>
-					</TabsContent>
 					<TabsContent value="achievements">
 						<div className="p-4">
 							<AchievementBadges userId={profileId!} />
+						</div>
+					</TabsContent>
+					<TabsContent value="gifts">
+						<div className="p-4">
+							<ReceivedGifts userId={profileId!} />
 						</div>
 					</TabsContent>
 					{user?.id === profileId && (

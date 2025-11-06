@@ -130,6 +130,106 @@ export type Database = {
           },
         ]
       }
+      gift_statistics: {
+        Row: {
+          gift_id: string
+          id: string
+          last_updated: string | null
+          price_multiplier: number
+          total_sent: number
+        }
+        Insert: {
+          gift_id: string
+          id?: string
+          last_updated?: string | null
+          price_multiplier?: number
+          total_sent?: number
+        }
+        Update: {
+          gift_id?: string
+          id?: string
+          last_updated?: string | null
+          price_multiplier?: number
+          total_sent?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_statistics_gift_id_fkey"
+            columns: ["gift_id"]
+            isOneToOne: true
+            referencedRelation: "gifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gift_transactions: {
+        Row: {
+          created_at: string | null
+          gift_id: string
+          id: string
+          message: string | null
+          receiver_id: string
+          sender_id: string
+          xp_cost: number
+        }
+        Insert: {
+          created_at?: string | null
+          gift_id: string
+          id?: string
+          message?: string | null
+          receiver_id: string
+          sender_id: string
+          xp_cost: number
+        }
+        Update: {
+          created_at?: string | null
+          gift_id?: string
+          id?: string
+          message?: string | null
+          receiver_id?: string
+          sender_id?: string
+          xp_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_transactions_gift_id_fkey"
+            columns: ["gift_id"]
+            isOneToOne: false
+            referencedRelation: "gifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gifts: {
+        Row: {
+          base_xp_cost: number
+          created_at: string | null
+          description: string | null
+          emoji: string
+          id: string
+          name: string
+          rarity: string
+        }
+        Insert: {
+          base_xp_cost: number
+          created_at?: string | null
+          description?: string | null
+          emoji: string
+          id?: string
+          name: string
+          rarity?: string
+        }
+        Update: {
+          base_xp_cost?: number
+          created_at?: string | null
+          description?: string | null
+          emoji?: string
+          id?: string
+          name?: string
+          rarity?: string
+        }
+        Relationships: []
+      }
       message_reactions: {
         Row: {
           created_at: string | null
@@ -771,6 +871,7 @@ export type Database = {
       check_daily_login_streak: { Args: { p_user_id: string }; Returns: Json }
       check_profile_completion: { Args: { p_user_id: string }; Returns: Json }
       create_new_chat: { Args: { other_user_id: string }; Returns: string }
+      get_gift_price: { Args: { p_gift_id: string }; Returns: number }
       get_or_create_chat: { Args: { other_user_id: string }; Returns: string }
       get_requesting_user: { Args: never; Returns: string }
       get_trending_topics: {
@@ -810,6 +911,10 @@ export type Database = {
       mark_notifications_as_read: { Args: never; Returns: undefined }
       process_referral_reward: {
         Args: { p_referral_code: string; p_referred_id: string }
+        Returns: Json
+      }
+      send_gift: {
+        Args: { p_gift_id: string; p_message?: string; p_receiver_id: string }
         Returns: Json
       }
       send_message: {

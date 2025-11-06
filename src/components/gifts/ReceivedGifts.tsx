@@ -1,0 +1,153 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Gift, Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+
+interface GiftTransaction {
+  id: string;
+  xp_cost: number;
+  message: string | null;
+  created_at: string;
+  sender: {
+    display_name: string;
+    handle: string;
+  };
+  gift: {
+    name: string;
+    emoji: string;
+    rarity: string;
+  };
+}
+
+interface ReceivedGiftsProps {
+  userId: string;
+}
+
+const rarityColors: Record<string, string> = {
+  common: 'bg-gray-500',
+  rare: 'bg-blue-500',
+  legendary: 'bg-purple-500',
+};
+
+export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
+  const [gifts, setGifts] = useState<GiftTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalValue, setTotalValue] = useState(0);
+
+  useEffect(() => {
+    fetchGifts();
+  }, [userId]);
+
+  const fetchGifts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gift_transactions')
+        .select(`
+          id,
+          xp_cost,
+          message,
+          created_at,
+          sender:sender_id(display_name, handle),
+          gift:gift_id(name, emoji, rarity)
+        `)
+        .eq('receiver_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+
+      const formattedGifts = (data || []).map((item: any) => ({
+        id: item.id,
+        xp_cost: item.xp_cost,
+        message: item.message,
+        created_at: item.created_at,
+        sender: Array.isArray(item.sender) ? item.sender[0] : item.sender,
+        gift: Array.isArray(item.gift) ? item.gift[0] : item.gift,
+      }));
+
+      setGifts(formattedGifts);
+
+      const total = formattedGifts.reduce((sum, g) => sum + g.xp_cost, 0);
+      setTotalValue(total);
+    } catch (error) {
+      console.error('Error fetching gifts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[...Array(3)].map((_, i) => (
+          <Skeleton key={i} className="h-24 rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
+  if (gifts.length === 0) {
+    return (
+      <Card className="p-6 text-center">
+        <Gift className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+        <p className="text-sm text-muted-foreground">
+          No gifts received yet
+        </p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-4 bg-gradient-to-br from-pink-500/10 to-purple-500/10">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-bold">{gifts.length} Gifts</h3>
+            <p className="text-sm text-muted-foreground">
+              Total value: {totalValue} XP
+            </p>
+          </div>
+          <Gift className="h-10 w-10 text-pink-500" />
+        </div>
+      </Card>
+
+      <div className="space-y-3">
+        {gifts.map((gift) => (
+          <Card key={gift.id} className="p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-start gap-3">
+              <div className="text-3xl">{gift.gift.emoji}</div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="font-semibold text-sm">{gift.gift.name}</h4>
+                  <Badge className={rarityColors[gift.gift.rarity]} variant="secondary">
+                    {gift.gift.rarity}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {gift.xp_cost} XP
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  From{' '}
+                  <span className="font-medium text-foreground">
+                    {gift.sender.display_name}
+                  </span>{' '}
+                  (@{gift.sender.handle})
+                </p>
+                {gift.message && (
+                  <p className="text-xs mt-2 p-2 bg-muted/50 rounded italic">
+                    "{gift.message}"
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  {new Date(gift.created_at).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};

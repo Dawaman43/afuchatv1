@@ -3,18 +3,21 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { MessageSquare, Heart, Share, Ellipsis, Sparkles } from 'lucide-react';
+import { MessageSquare, Heart, Share, Ellipsis, Sparkles, Gift } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useTranslation } from 'react-i18next';
 import { useXP } from '@/hooks/useXP';
-// NEW: Import the dedicated PostActionsSheet component
+import { useAITranslation } from '@/hooks/useAITranslation';
 import PostActionsSheet from '@/components/PostActionsSheet';
 import DeletePostSheet from '@/components/DeletePostSheet';
 import ReportPostSheet from '@/components/ReportPostSheet';
 import { OwlAvatar } from '@/components/avatar/OwlAvatar';
 import { useUserAvatar } from '@/hooks/useUserAvatar';
+import { SendGiftDialog } from '@/components/gifts/SendGiftDialog';
+import { ReadMoreText } from '@/components/ui/ReadMoreText';
 
 
 // --- INTERFACES ---
@@ -241,21 +244,43 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   { 
       post: Post; 
       addReply: (postId: string, reply: Reply) => void; 
-      user: AuthUser | null; // Changed user type to AuthUser | null
+      user: AuthUser | null;
       navigate: any; 
       onAcknowledge: (postId: string, hasLiked: boolean) => void;
-      onDeletePost: (postId: string) => void; // New Prop
-      onReportPost: (postId: string) => void; // New Prop
+      onDeletePost: (postId: string) => void;
+      onReportPost: (postId: string) => void;
   }) => {
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { awardXP } = useXP();
+  const { translateText } = useAITranslation();
   const [showComments, setShowComments] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const [translatedContent, setTranslatedContent] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
   
   const handleViewProfile = (userId: string) => {
     navigate(`/profile/${userId}`);
   };
+
+  const handleTranslate = async () => {
+    if (translatedContent) {
+      setTranslatedContent(null);
+      return;
+    }
+
+    setIsTranslating(true);
+    const translated = await translateText(post.content, i18n.language);
+    setTranslatedContent(translated);
+    setIsTranslating(false);
+  };
+
+  useEffect(() => {
+    // Auto-translate if user's language is different from English
+    if (i18n.language !== 'en' && !translatedContent && post.content) {
+      handleTranslate();
+    }
+  }, []);
 
   const handleAiTransfer = () => {
     if (!user) {
@@ -399,13 +424,37 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         </div>
 
         <Link to={`/post/${post.id}`} className="block">
-          <p className="text-foreground text-xs sm:text-sm mt-0.5 mb-1.5 leading-relaxed whitespace-pre-wrap break-words">
-            {parsePostContent(post.content, navigate)}
-          </p>
+          <ReadMoreText
+            maxLines={4}
+            className="text-foreground text-xs sm:text-sm mt-0.5 mb-1.5 leading-relaxed whitespace-pre-wrap break-words"
+            text={
+              translatedContent
+                ? parsePostContent(translatedContent, navigate)
+                : parsePostContent(post.content, navigate)
+            }
+          />
+          {i18n.language !== 'en' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.preventDefault();
+                handleTranslate();
+              }}
+              disabled={isTranslating}
+              className="text-xs text-muted-foreground hover:text-primary mt-1 p-0 h-auto"
+            >
+              {isTranslating
+                ? 'Translating...'
+                : translatedContent
+                ? 'Show original'
+                : 'Translate'}
+            </Button>
+          )}
         </Link>
 
 
-        <div className="flex justify-between items-center text-xs text-muted-foreground mt-1 -ml-1.5 sm:-ml-2 max-w-full sm:max-w-[420px]">
+        <div className="flex justify-between items-center text-xs text-muted-foreground mt-1 -ml-1.5 sm:-ml-2 max-w-full sm:max-w-[450px]">
           <Button variant="ghost" size="sm" className="flex items-center gap-0.5 sm:gap-1 group h-7 sm:h-8 px-2 sm:px-3" onClick={() => setShowComments(!showComments)}>
             <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-primary transition-colors" />
             <span className="group-hover:text-primary transition-colors text-[10px] sm:text-xs">{post.reply_count > 0 ? post.reply_count : ''}</span>
@@ -417,6 +466,17 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           <Button variant="ghost" size="sm" className="flex items-center gap-0.5 sm:gap-1 group h-7 sm:h-8 px-2 sm:px-3" onClick={handleShare}>
             <Share className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-primary transition-colors" />
           </Button>
+          {user && user.id !== post.author_id && (
+            <SendGiftDialog
+              receiverId={post.author_id}
+              receiverName={post.profiles.display_name}
+              trigger={
+                <Button variant="ghost" size="sm" className="flex items-center gap-0.5 sm:gap-1 group h-7 sm:h-8 px-2 sm:px-3">
+                  <Gift className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-pink-500 transition-colors" />
+                </Button>
+              }
+            />
+          )}
         </div>
 
         <div className="mt-1 ml-[-8px] sm:ml-[-12px] pr-[8px] sm:pr-[12px]">
@@ -486,12 +546,13 @@ const Feed = () => {
   const { awardXP } = useXP();
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [followingPosts, setFollowingPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [forceLoaded, setForceLoaded] = useState(false);
+  const [activeTab, setActiveTab] = useState<'foryou' | 'following'>('foryou');
   const navigate = useNavigate();
   const feedRef = useRef<HTMLDivElement>(null);
   
-  // NEW: State for delete and report sheets
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [reportPostId, setReportPostId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -648,6 +709,7 @@ const Feed = () => {
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     try {
+      // Fetch all posts for "For You" tab
       let { data: postData, error: postsError } = await supabase
         .from('posts')
         .select('*, profiles(display_name, handle, is_verified, is_organization_verified)')
@@ -656,6 +718,27 @@ const Feed = () => {
 
       if (postsError) throw postsError;
       if (!postData) postData = [];
+
+      // Fetch following posts if user is logged in
+      let followingPostData: any[] = [];
+      if (user) {
+        const { data: followingData } = await supabase
+          .from('follows')
+          .select('following_id')
+          .eq('follower_id', user.id);
+
+        if (followingData && followingData.length > 0) {
+          const followingIds = followingData.map((f) => f.following_id);
+          const { data: followingPostsData } = await supabase
+            .from('posts')
+            .select('*, profiles(display_name, handle, is_verified, is_organization_verified)')
+            .in('author_id', followingIds)
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+          followingPostData = followingPostsData || [];
+        }
+      }
 
       const postIds = postData.map((p) => p.id);
 
@@ -705,7 +788,23 @@ const Feed = () => {
         } as Post;
       });
 
+      // Process following posts
+      const finalFollowingPosts: Post[] = followingPostData.map((post) => {
+        const replies = repliesByPostId.get(post.id) || [];
+        const acks = acksByPostId.get(post.id) || [];
+
+        return {
+          ...post,
+          profiles: post.profiles || { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false },
+          replies: replies,
+          reply_count: replies.length,
+          like_count: acks.length,
+          has_liked: currentUserId ? acks.includes(currentUserId) : false,
+        } as Post;
+      });
+
       setPosts(finalPosts);
+      setFollowingPosts(finalFollowingPosts);
     } catch (err) {
       console.error('Error fetching posts:', err);
       if (err instanceof Error) {
@@ -864,28 +963,49 @@ const Feed = () => {
     );
   }
 
+  const currentPosts = activeTab === 'foryou' ? posts : followingPosts;
+
   return (
     <div className="h-full flex flex-col max-w-4xl mx-auto">
-      <div ref={feedRef} className="flex-1 overflow-y-auto">
-        {posts.length === 0 && !effectiveLoading ? (
-          <div className="text-center text-muted-foreground py-6 sm:py-8 text-xs sm:text-sm px-4">
-            {t('feed.noPostsYet')}
-          </div>
-        ) : (
-          posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              addReply={addReply}
-              user={user as AuthUser | null}
-              navigate={navigate}
-              onAcknowledge={handleAcknowledge}
-              onDeletePost={handleDeletePost}
-              onReportPost={handleReportPost}
-            />
-          ))
-        )}
-      </div>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'foryou' | 'following')} className="w-full">
+        <TabsList className="grid grid-cols-2 w-full h-12 rounded-none bg-background border-b">
+          <TabsTrigger
+            value="foryou"
+            className="data-[state=active]:bg-transparent data-[state=active]:text-foreground border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold"
+          >
+            For You
+          </TabsTrigger>
+          <TabsTrigger
+            value="following"
+            className="data-[state=active]:bg-transparent data-[state=active]:text-foreground border-b-2 data-[state=active]:border-primary data-[state=inactive]:border-transparent rounded-none font-bold"
+          >
+            Following
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeTab} className="flex-1 overflow-y-auto m-0" ref={feedRef}>
+          {currentPosts.length === 0 && !effectiveLoading ? (
+            <div className="text-center text-muted-foreground py-6 sm:py-8 text-xs sm:text-sm px-4">
+              {activeTab === 'following' && user
+                ? 'Follow users to see their posts here'
+                : t('feed.noPostsYet')}
+            </div>
+          ) : (
+            currentPosts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                addReply={addReply}
+                user={user as AuthUser | null}
+                navigate={navigate}
+                onAcknowledge={handleAcknowledge}
+                onDeletePost={handleDeletePost}
+                onReportPost={handleReportPost}
+              />
+            ))
+          )}
+        </TabsContent>
+      </Tabs>
       
       {/* Delete Confirmation Sheet */}
       <DeletePostSheet
