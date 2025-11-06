@@ -62,6 +62,28 @@ export const useXP = () => {
         });
       }
 
+      // Check for newly unlocked accessories
+      if (data.success) {
+        try {
+          const { data: unlockData } = await supabase.rpc('check_and_unlock_accessories', {
+            p_user_id: user.id,
+          });
+          
+          const result = unlockData as { newly_unlocked: string[]; user_xp: number } | null;
+          
+          if (result?.newly_unlocked && result.newly_unlocked.length > 0) {
+            result.newly_unlocked.forEach((accessory: string) => {
+              toast.success(`🎉 New accessory unlocked: ${accessory}!`, {
+                description: `You can now use the ${accessory} in your avatar.`,
+                duration: 5000,
+              });
+            });
+          }
+        } catch (error) {
+          console.error('Error checking accessories unlock:', error);
+        }
+      }
+
       return data;
     } catch (error) {
       console.error('Error awarding XP:', error);

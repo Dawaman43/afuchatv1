@@ -625,6 +625,27 @@ export type Database = {
           },
         ]
       }
+      unlocked_accessories: {
+        Row: {
+          accessory_type: string
+          id: string
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          accessory_type: string
+          id?: string
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          accessory_type?: string
+          id?: string
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_type: string
@@ -742,6 +763,10 @@ export type Database = {
           p_xp_amount: number
         }
         Returns: undefined
+      }
+      check_and_unlock_accessories: {
+        Args: { p_user_id: string }
+        Returns: Json
       }
       check_daily_login_streak: { Args: { p_user_id: string }; Returns: Json }
       check_profile_completion: { Args: { p_user_id: string }; Returns: Json }

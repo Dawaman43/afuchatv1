@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
 import { useTranslation } from 'react-i18next';
@@ -16,15 +16,20 @@ import { AccessorySelector } from '@/components/avatar/AccessorySelector';
 import { EmotionSelector } from '@/components/avatar/EmotionSelector';
 import { EyeSelector } from '@/components/avatar/EyeSelector';
 import { BackgroundSelector } from '@/components/avatar/BackgroundSelector';
+import { useUnlockedAccessories } from '@/hooks/useUnlockedAccessories';
+import { XPProgressBar } from '@/components/gamification/XPProgressBar';
+import { supabase } from '@/integrations/supabase/client';
 
 const AvatarEditor = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
   const { avatarConfig: savedConfig, loading: loadingAvatar, updateAvatar } = useUserAvatar(user?.id);
+  const { checkAndUnlockAccessories, userXP, isAccessoryUnlocked } = useUnlockedAccessories();
   
   const [config, setConfig] = useState<OwlAvatarConfig>(savedConfig);
   const [saving, setSaving] = useState(false);
+  const [currentGrade, setCurrentGrade] = useState<'Newcomer' | 'Active Chatter' | 'Community Builder' | 'Elite Creator' | 'Legend'>('Newcomer');
 
   useEffect(() => {
     if (!user) {
@@ -39,6 +44,30 @@ const AvatarEditor = () => {
     }
   }, [savedConfig]);
 
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('current_grade')
+        .eq('id', user.id)
+        .single();
+      
+      if (data && data.current_grade) {
+        const grade = data.current_grade as string;
+        if (['Newcomer', 'Active Chatter', 'Community Builder', 'Elite Creator', 'Legend'].includes(grade)) {
+          setCurrentGrade(grade as 'Newcomer' | 'Active Chatter' | 'Community Builder' | 'Elite Creator' | 'Legend');
+        }
+      }
+      
+      // Check for newly unlocked accessories
+      await checkAndUnlockAccessories();
+    };
+    
+    fetchUserData();
+  }, [user, checkAndUnlockAccessories]);
+
   const handleColorChange = (color: string) => {
     setConfig(prev => ({ ...prev, color }));
   };
@@ -48,6 +77,13 @@ const AvatarEditor = () => {
   };
 
   const handleAccessoryToggle = (accessory: AccessoryType) => {
+    if (!isAccessoryUnlocked(accessory)) {
+      toast.error('Accessory locked', {
+        description: 'Earn more XP to unlock this accessory!',
+      });
+      return;
+    }
+    
     setConfig(prev => {
       const accessories = prev.accessories.includes(accessory)
         ? prev.accessories.filter(a => a !== accessory)
@@ -132,6 +168,20 @@ const AvatarEditor = () => {
             <h1 className="text-2xl sm:text-3xl font-bold">Customize Your Owl</h1>
             <p className="text-muted-foreground mt-1">Create your unique owl identity</p>
           </div>
+
+          {/* XP Progress */}
+          <Card className="p-4 sm:p-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold">Your Progress</h2>
+              </div>
+              <XPProgressBar currentXP={userXP} currentGrade={currentGrade} showDetails={true} />
+              <p className="text-sm text-muted-foreground">
+                Earn XP to unlock special accessories for your owl!
+              </p>
+            </div>
+          </Card>
 
           {/* Preview Card */}
           <Card className="p-6 sm:p-8">
