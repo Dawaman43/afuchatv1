@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { User, ArrowLeft, MessageSquare, UserPlus, Pencil, Calendar, Lock, LogOut, Settings } from 'lucide-react';
+import { ArrowLeft, MessageSquare, UserPlus, Pencil, Calendar, Lock, LogOut, Settings } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,6 +16,8 @@ import { XPProgressBar } from '@/components/gamification/XPProgressBar';
 import { AchievementBadges } from '@/components/gamification/AchievementBadges';
 import { ReferralSystem } from '@/components/gamification/ReferralSystem';
 import ProfileActionsSheet from '@/components/ProfileActionsSheet';
+import { OwlAvatar } from '@/components/avatar/OwlAvatar';
+import { useUserAvatar } from '@/hooks/useUserAvatar';
 
 interface Profile {
 	id: string;
@@ -115,6 +117,19 @@ const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content
 		: "text-foreground whitespace-pre-wrap leading-relaxed";
 
 	return <p className={className}>{parts}</p>;
+};
+
+// Profile Avatar Display Component
+const ProfileAvatarDisplay = ({ profileId }: { profileId: string | null }) => {
+	const { avatarConfig, loading } = useUserAvatar(profileId || undefined);
+
+	if (loading) {
+		return (
+			<div className="w-full h-full bg-muted animate-pulse rounded-full" />
+		);
+	}
+
+	return <OwlAvatar config={avatarConfig} size={128} />;
 };
 
 const Profile = () => {
@@ -478,8 +493,8 @@ const Profile = () => {
 
 				<div className="p-4">
 					<div className="flex justify-between items-end -mt-20 sm:-mt-16">
-						<div className="h-24 w-24 sm:h-32 sm:w-32 rounded-full bg-primary flex items-center justify-center text-primary-foreground border-4 border-background shadow-lg">
-							<User className="h-12 w-12 sm:h-16 sm:w-16" />
+						<div className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-background shadow-lg rounded-full overflow-hidden bg-background">
+							<ProfileAvatarDisplay profileId={profileId} />
 						</div>
 
 						{user && user.id === profileId ? (

@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { MessageSquare, Heart, Share, User, Ellipsis, Sparkles } from 'lucide-react';
+import { MessageSquare, Heart, Share, Ellipsis, Sparkles } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,8 @@ import { useXP } from '@/hooks/useXP';
 import PostActionsSheet from '@/components/PostActionsSheet';
 import DeletePostSheet from '@/components/DeletePostSheet';
 import ReportPostSheet from '@/components/ReportPostSheet';
+import { OwlAvatar } from '@/components/avatar/OwlAvatar';
+import { useUserAvatar } from '@/hooks/useUserAvatar';
 
 
 // --- INTERFACES ---
@@ -163,6 +165,31 @@ const parsePostContent = (content: string, navigate: (path: string) => void) => 
   return <>{parts}</>;
 };
 
+// Avatar Display Components
+const UserAvatarSmall = ({ userId }: { userId: string }) => {
+	const { avatarConfig, loading } = useUserAvatar(userId);
+
+	if (loading) {
+		return (
+			<div className="h-6 w-6 sm:h-7 sm:w-7 rounded-full bg-muted animate-pulse flex-shrink-0" />
+		);
+	}
+
+	return <OwlAvatar config={avatarConfig} size={28} className="flex-shrink-0" />;
+};
+
+const UserAvatarMedium = ({ userId }: { userId: string }) => {
+	const { avatarConfig, loading } = useUserAvatar(userId);
+
+	if (loading) {
+		return (
+			<div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-muted animate-pulse flex-shrink-0" />
+		);
+	}
+
+	return <OwlAvatar config={avatarConfig} size={40} className="flex-shrink-0" />;
+};
+
 // --- REPLY ITEM (Unchanged) ---
 
 const ReplyItem = ({ reply, navigate, handleViewProfile }: { reply: Reply; navigate: any; handleViewProfile: (id: string) => void }) => {
@@ -171,10 +198,10 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: { reply: Reply; navig
             <div className="absolute left-5 top-0 bottom-0 w-px bg-border/80 ml-px mt-2.5 mb-1.5" />
             
             <div
-                className="mr-1.5 sm:mr-2 flex-shrink-0 h-6 w-6 sm:h-7 sm:w-7 rounded-full bg-secondary flex items-center justify-center cursor-pointer z-10"
+                className="mr-1.5 sm:mr-2 flex-shrink-0 cursor-pointer z-10"
                 onClick={() => handleViewProfile(reply.author_id)}
             >
-                <User className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                <UserAvatarSmall userId={reply.author_id} />
             </div>
 
             <div className="flex-1 min-w-0">
@@ -319,10 +346,10 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
   return (
     <div className="flex border-b border-border py-2 pl-0 pr-4 transition-colors hover:bg-muted/5">
       <div
-        className="mr-2 sm:mr-3 flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-secondary flex items-center justify-center cursor-pointer ml-0.5 sm:ml-1"
+        className="mr-2 sm:mr-3 flex-shrink-0 cursor-pointer ml-0.5 sm:ml-1"
         onClick={() => handleViewProfile(post.author_id)}
       >
-        <User className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+        <UserAvatarMedium userId={post.author_id} />
       </div>
 
       <div className="flex-1 min-w-0">
@@ -417,8 +444,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
 
           {showComments && user && (
             <div className="mt-2 flex items-center gap-1.5 sm:gap-2">
-              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-                <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+              <div className="flex-shrink-0">
+                <UserAvatarSmall userId={user.id} />
               </div>
               <Input
                 value={replyText}
