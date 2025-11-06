@@ -108,6 +108,13 @@ const Settings = () => {
               </div>
               <Separator />
               <button
+                onClick={() => navigate('/avatar/edit')}
+                className="w-full flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted transition-colors text-left"
+              >
+                <span>Customize Owl Avatar</span>
+                <span className="text-muted-foreground">›</span>
+              </button>
+              <button
                 onClick={() => user && navigate(`/${user.id}/edit`)}
                 className="w-full flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted transition-colors text-left"
               >

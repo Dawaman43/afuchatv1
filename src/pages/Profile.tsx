@@ -122,6 +122,10 @@ const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content
 // Profile Avatar Display Component
 const ProfileAvatarDisplay = ({ profileId }: { profileId: string | null }) => {
 	const { avatarConfig, loading } = useUserAvatar(profileId || undefined);
+	const { user } = useAuth();
+	const navigate = useNavigate();
+
+	const isOwnProfile = user?.id === profileId;
 
 	if (loading) {
 		return (
@@ -129,7 +133,21 @@ const ProfileAvatarDisplay = ({ profileId }: { profileId: string | null }) => {
 		);
 	}
 
-	return <OwlAvatar config={avatarConfig} size={128} />;
+	const handleClick = () => {
+		if (isOwnProfile) {
+			navigate('/avatar/edit');
+		}
+	};
+
+	return (
+		<div 
+			className={isOwnProfile ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}
+			onClick={handleClick}
+			title={isOwnProfile ? 'Click to customize your owl' : undefined}
+		>
+			<OwlAvatar config={avatarConfig} size={128} />
+		</div>
+	);
 };
 
 const Profile = () => {
@@ -497,16 +515,24 @@ const Profile = () => {
 							<ProfileAvatarDisplay profileId={profileId} />
 						</div>
 
-						{user && user.id === profileId ? (
-							<div className="flex flex-col gap-2">
-								<Button 
-									variant="outline" 
-									className="rounded-full px-4 font-bold"
-									onClick={() => navigate(`/${urlParam}/edit`)}
-								>
-									<Pencil className="h-4 w-4 mr-2" />
-									{t('profile.editProfile')}
-								</Button>
+					{user && user.id === profileId ? (
+						<div className="flex flex-col gap-2">
+							<Button 
+								variant="outline" 
+								className="rounded-full px-4 font-bold"
+								onClick={() => navigate('/avatar/edit')}
+							>
+								<Pencil className="h-4 w-4 mr-2" />
+								Customize Owl
+							</Button>
+							<Button 
+								variant="outline" 
+								className="rounded-full px-4 font-bold"
+								onClick={() => navigate(`/${urlParam}/edit`)}
+							>
+								<Pencil className="h-4 w-4 mr-2" />
+								{t('profile.editProfile')}
+							</Button>
 								{isAdmin && (
 									<Button
 										onClick={handleAdminDashboard}
