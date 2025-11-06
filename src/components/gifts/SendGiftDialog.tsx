@@ -12,11 +12,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Gift, Loader2 } from 'lucide-react';
+import { Gift, Loader2, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { SimpleGiftIcon } from './SimpleGiftIcon';
 import { GiftConfetti } from './GiftConfetti';
+import { ComboConfetti } from './ComboConfetti';
 
 interface GiftItem {
   id: string;
@@ -65,12 +66,13 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
   const [open, setOpen] = useState(false);
   const [gifts, setGifts] = useState<GiftItem[]>([]);
   const [giftStats, setGiftStats] = useState<Record<string, GiftStatistics>>({});
-  const [selectedGift, setSelectedGift] = useState<string | null>(null);
+  const [selectedGifts, setSelectedGifts] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [userXP, setUserXP] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [sentGiftEmoji, setSentGiftEmoji] = useState('');
+  const [showComboConfetti, setShowComboConfetti] = useState(false);
+  const [sentGiftEmojis, setSentGiftEmojis] = useState<string[]>([]);
 
   useEffect(() => {
     if (open) {
@@ -127,51 +129,130 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
     return Math.ceil(baseCost * stats.price_multiplier);
   };
 
+  const toggleGiftSelection = (giftId: string, canAfford: boolean) => {
+    if (!canAfford) return;
+    
+    setSelectedGifts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(giftId)) {
+        newSet.delete(giftId);
+      } else {
+        newSet.add(giftId);
+      }
+      return newSet;
+    });
+  };
+
+  const calculateComboDiscount = (giftCount: number) => {
+    if (giftCount >= 6) return 0.15;
+    if (giftCount >= 4) return 0.10;
+    if (giftCount >= 2) return 0.05;
+    return 0;
+  };
+
+  const calculateTotalCost = () => {
+    let total = 0;
+    selectedGifts.forEach(giftId => {
+      const gift = gifts.find(g => g.id === giftId);
+      if (gift) {
+        total += calculatePrice(gift.id, gift.base_xp_cost);
+      }
+    });
+    return total;
+  };
+
+  const getDiscountedCost = () => {
+    const total = calculateTotalCost();
+    const discount = calculateComboDiscount(selectedGifts.size);
+    return Math.ceil(total * (1 - discount));
+  };
+
   const handleSendGift = async () => {
-    if (!selectedGift || !user) return;
+    if (selectedGifts.size === 0 || !user) return;
 
     setLoading(true);
     try {
-      // Get the gift emoji before sending
-      const giftItem = gifts.find(g => g.id === selectedGift);
-      const giftEmoji = giftItem?.emoji || '🎁';
+      const giftIds = Array.from(selectedGifts);
+      const giftEmojis = giftIds.map(id => gifts.find(g => g.id === id)?.emoji || '🎁');
 
-      const { data, error } = await supabase.rpc('send_gift', {
-        p_gift_id: selectedGift,
-        p_receiver_id: receiverId,
-        p_message: message.trim() || null,
-      });
+      // Use combo function if multiple gifts, otherwise single gift
+      if (giftIds.length > 1) {
+        const { data, error } = await supabase.rpc('send_gift_combo', {
+          p_gift_ids: giftIds,
+          p_receiver_id: receiverId,
+          p_message: message.trim() || null,
+        });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      const result = data as { 
-        success: boolean; 
-        message: string; 
-        xp_cost?: number;
-        new_xp?: number;
-        new_grade?: string;
-      };
+        const result = data as {
+          success: boolean;
+          message: string;
+          gift_count?: number;
+          original_cost?: number;
+          discounted_cost?: number;
+          discount_percent?: number;
+          new_xp?: number;
+          new_grade?: string;
+        };
 
-      if (result.success) {
-        // Trigger confetti animation
-        setSentGiftEmoji(giftEmoji);
-        setShowConfetti(true);
-        
-        toast.success(
-          t('gifts.giftSent'),
-          { description: result.new_grade ? `${t('gamification.grade')}: ${result.new_grade}` : undefined }
-        );
-        setOpen(false);
-        setSelectedGift(null);
-        setMessage('');
-        fetchUserXP();
-        
-        // Trigger a profile refresh for the sender to show updated XP and grade
-        window.dispatchEvent(new CustomEvent('xp-updated', { 
-          detail: { xp: result.new_xp, grade: result.new_grade } 
-        }));
+        if (result.success) {
+          setSentGiftEmojis(giftEmojis);
+          setShowComboConfetti(true);
+          
+          const savedXP = (result.original_cost || 0) - (result.discounted_cost || 0);
+          toast.success(
+            t('gifts.comboSent', { saved: savedXP }),
+            { description: result.new_grade ? `${t('gamification.grade')}: ${result.new_grade}` : undefined }
+          );
+          setOpen(false);
+          setSelectedGifts(new Set());
+          setMessage('');
+          fetchUserXP();
+          
+          window.dispatchEvent(new CustomEvent('xp-updated', { 
+            detail: { xp: result.new_xp, grade: result.new_grade } 
+          }));
+        } else {
+          toast.error(result.message);
+        }
       } else {
-        toast.error(result.message);
+        // Single gift
+        const { data, error } = await supabase.rpc('send_gift', {
+          p_gift_id: giftIds[0],
+          p_receiver_id: receiverId,
+          p_message: message.trim() || null,
+        });
+
+        if (error) throw error;
+
+        const result = data as { 
+          success: boolean; 
+          message: string; 
+          xp_cost?: number;
+          new_xp?: number;
+          new_grade?: string;
+        };
+
+        if (result.success) {
+          setSentGiftEmojis([giftEmojis[0]]);
+          setShowConfetti(true);
+          
+          toast.success(
+            t('gifts.giftSent'),
+            { description: result.new_grade ? `${t('gamification.grade')}: ${result.new_grade}` : undefined }
+          );
+          setOpen(false);
+          setSelectedGifts(new Set());
+          setMessage('');
+          fetchUserXP();
+          
+          window.dispatchEvent(new CustomEvent('xp-updated', { 
+            detail: { xp: result.new_xp, grade: result.new_grade } 
+          }));
+        } else {
+          toast.error(result.message);
+        }
       }
     } catch (error) {
       console.error('Error sending gift:', error);
@@ -181,12 +262,25 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
     }
   };
 
+  const totalCost = calculateTotalCost();
+  const discountedCost = getDiscountedCost();
+  const discount = calculateComboDiscount(selectedGifts.size);
+  const savedXP = totalCost - discountedCost;
+
   return (
     <>
       {showConfetti && (
         <GiftConfetti 
-          emoji={sentGiftEmoji} 
+          emoji={sentGiftEmojis[0]} 
           onComplete={() => setShowConfetti(false)} 
+        />
+      )}
+      
+      {showComboConfetti && (
+        <ComboConfetti 
+          emojis={sentGiftEmojis}
+          giftCount={selectedGifts.size}
+          onComplete={() => setShowComboConfetti(false)} 
         />
       )}
       
@@ -202,30 +296,44 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
       <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('gifts.sendGiftTo', { name: receiverName })}</DialogTitle>
-          <DialogDescription>
-            {t('gifts.yourXP', { xp: userXP })}
+          <DialogDescription className="space-y-1">
+            <div>{t('gifts.yourXP', { xp: userXP })}</div>
+            {selectedGifts.size > 1 && (
+              <div className="text-primary font-semibold">
+                {t('gifts.comboDiscount', { percent: (discount * 100).toFixed(0) })}
+              </div>
+            )}
           </DialogDescription>
         </DialogHeader>
+
+        <div className="text-sm text-muted-foreground mb-2">
+          {t('gifts.selectMultiple')}
+        </div>
 
         <div className="grid grid-cols-2 gap-4 my-6">
           {gifts.map((gift) => {
             const currentPrice = calculatePrice(gift.id, gift.base_xp_cost);
             const stats = giftStats[gift.id];
-            const canAfford = userXP >= currentPrice;
-            const isSelected = selectedGift === gift.id;
+            const canAfford = selectedGifts.size === 0 ? userXP >= currentPrice : userXP >= discountedCost;
+            const isSelected = selectedGifts.has(gift.id);
 
             return (
               <div
                 key={gift.id}
-                onClick={() => canAfford && setSelectedGift(gift.id)}
+                onClick={() => toggleGiftSelection(gift.id, canAfford)}
                 className={`relative p-5 rounded-2xl cursor-pointer transition-all duration-300 ${
                   isSelected
-                    ? 'ring-2 ring-primary shadow-2xl shadow-primary/20 scale-105'
+                    ? 'ring-2 ring-primary shadow-2xl shadow-primary/20 scale-105 bg-primary/5'
                     : canAfford
                     ? 'hover:shadow-xl hover:scale-105 hover:ring-1 hover:ring-primary/30'
                     : 'opacity-40 cursor-not-allowed'
                 }`}
               >
+                {isSelected && (
+                  <div className="absolute top-2 left-2 z-10 bg-primary rounded-full p-1">
+                    <Check className="h-4 w-4 text-primary-foreground" />
+                  </div>
+                )}
                 {gift.season && (
                   <div className="absolute top-2 right-2 z-10">
                     <Badge className={`${seasonColors[gift.season]} text-white text-[10px] px-2 py-1 shadow-lg`}>
@@ -268,8 +376,22 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
           })}
         </div>
 
-        {selectedGift && (
-          <div className="space-y-3">
+        {selectedGifts.size > 0 && (
+          <div className="space-y-3 border-t pt-4">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">{t('gifts.originalCost', { cost: totalCost })}</span>
+              {discount > 0 && (
+                <div className="space-y-1 text-right">
+                  <span className="line-through text-muted-foreground">{totalCost} XP</span>
+                  <div className="text-primary font-bold text-lg">{discountedCost} XP</div>
+                  <span className="text-xs text-green-500">{t('gifts.savedXP', { amount: savedXP })}</span>
+                </div>
+              )}
+              {discount === 0 && (
+                <span className="font-bold">{t('gifts.totalCost', { cost: totalCost })}</span>
+              )}
+            </div>
+            
             <Textarea
               placeholder={t('gifts.addMessage')}
               value={message}
@@ -279,7 +401,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
             />
             <Button
               onClick={handleSendGift}
-              disabled={loading}
+              disabled={loading || discountedCost > userXP}
               className="w-full"
             >
               {loading ? (
@@ -290,7 +412,10 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
               ) : (
                 <>
                   <Gift className="h-4 w-4 mr-2" />
-                  {t('gifts.sendGift')}
+                  {selectedGifts.size > 1 
+                    ? t('gifts.sendCombo', { count: selectedGifts.size })
+                    : t('gifts.sendGift')
+                  }
                 </>
               )}
             </Button>

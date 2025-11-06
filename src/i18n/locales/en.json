@@ -116,7 +116,14 @@
     "sentTimes": "Sent {{count}} times",
     "common": "Common",
     "rare": "Rare",
-    "legendary": "Legendary"
+    "legendary": "Legendary",
+    "selectMultiple": "Select multiple gifts for combo discount! 2+ gifts: 5% off • 4+ gifts: 10% off • 6+ gifts: 15% off",
+    "comboDiscount": "🎉 {{percent}}% Combo Discount",
+    "totalCost": "Total: {{cost}} XP",
+    "originalCost": "Original: {{cost}} XP",
+    "savedXP": "💰 Save {{amount}} XP",
+    "sendCombo": "Send {{count}} Gift Combo",
+    "comboSent": "🎊 Combo sent! You saved {{saved}} XP"
   },
   "admin": {
     "dashboard": "Admin Dashboard",

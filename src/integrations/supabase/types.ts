@@ -927,6 +927,14 @@ export type Database = {
         Args: { p_gift_id: string; p_message?: string; p_receiver_id: string }
         Returns: Json
       }
+      send_gift_combo: {
+        Args: {
+          p_gift_ids: string[]
+          p_message?: string
+          p_receiver_id: string
+        }
+        Returns: Json
+      }
       send_message: {
         Args: { p_chat_id: string; p_plain_content: string }
         Returns: undefined
