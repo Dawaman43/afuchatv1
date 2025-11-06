@@ -19,6 +19,7 @@ import { ReceivedGifts } from '@/components/gifts/ReceivedGifts';
 import ProfileActionsSheet from '@/components/ProfileActionsSheet';
 import { OwlAvatar } from '@/components/avatar/OwlAvatar';
 import { useUserAvatar } from '@/hooks/useUserAvatar';
+import { useAITranslation } from '@/hooks/useAITranslation';
 
 interface Profile {
 	id: string;
@@ -83,16 +84,34 @@ const VerifiedBadgeIcon = ({ isVerified, isOrgVerified }: { isVerified?: boolean
 const MENTION_REGEX = /@(\w+)/g;
 
 const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content, isBio = false }) => {
+	const { i18n } = useTranslation();
+	const { translateText } = useAITranslation();
+	const [translatedContent, setTranslatedContent] = useState<string | null>(null);
+
+	useEffect(() => {
+		const autoTranslate = async () => {
+			if (i18n.language !== 'en' && content) {
+				const translated = await translateText(content, i18n.language);
+				setTranslatedContent(translated);
+			} else {
+				setTranslatedContent(null);
+			}
+		};
+		autoTranslate();
+	}, [content, i18n.language]);
+
+	const displayContent = translatedContent || content;
 	const parts: React.ReactNode[] = [];
 	let lastIndex = 0;
 	let match;
 
-	while ((match = MENTION_REGEX.exec(content)) !== null) {
+	const MENTION_REGEX_LOCAL = /@(\w+)/g;
+	while ((match = MENTION_REGEX_LOCAL.exec(displayContent)) !== null) {
 		const mentionText = match[0];
 		const handle = match[1];
 
 		if (match.index > lastIndex) {
-			parts.push(content.substring(lastIndex, match.index));
+			parts.push(displayContent.substring(lastIndex, match.index));
 		}
 
 		parts.push(
@@ -109,8 +128,8 @@ const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content
 		lastIndex = match.index + mentionText.length;
 	}
 
-	if (lastIndex < content.length) {
-		parts.push(content.substring(lastIndex));
+	if (lastIndex < displayContent.length) {
+		parts.push(displayContent.substring(lastIndex));
 	}
 
 	const className = isBio

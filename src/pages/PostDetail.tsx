@@ -5,6 +5,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, User as UserIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
+import { useAITranslation } from '@/hooks/useAITranslation';
 // Note: Verified Badge components must be imported or defined here
 
 // --- START: Verified Badge Components (Unchanged) ---
@@ -83,6 +85,10 @@ const PostDetail = () => {
   const [replies, setReplies] = useState<Reply[]>([]); // NEW state for replies
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
+  const { translateText } = useAITranslation();
+  const [translatedPostContent, setTranslatedPostContent] = useState<string | null>(null);
+  const [translatedReplies, setTranslatedReplies] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     if (!postId) return;
@@ -142,6 +148,26 @@ const PostDetail = () => {
 
     fetchPostAndReplies();
   }, [postId]);
+
+  // Auto-translate post and replies when language changes or data loads
+  useEffect(() => {
+    const autoTranslate = async () => {
+      if (i18n.language !== 'en' && post) {
+        // Translate post
+        const translatedPost = await translateText(post.content, i18n.language);
+        setTranslatedPostContent(translatedPost);
+
+        // Translate all replies
+        const translatedRepliesMap: { [key: string]: string } = {};
+        for (const reply of replies) {
+          const translatedReply = await translateText(reply.content, i18n.language);
+          translatedRepliesMap[reply.id] = translatedReply;
+        }
+        setTranslatedReplies(translatedRepliesMap);
+      }
+    };
+    autoTranslate();
+  }, [post, replies, i18n.language]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -209,7 +235,7 @@ const PostDetail = () => {
 
             {/* POST TEXT */}
             <p className="text-2xl leading-relaxed whitespace-pre-wrap mb-4">
-              {renderContentWithMentions(post.content)}
+              {renderContentWithMentions(translatedPostContent || post.content)}
             </p>
 
             {/* TIME & DATE */}
@@ -262,7 +288,7 @@ const PostDetail = () => {
                                 </span>
                             </div>
                             <p className="text-foreground mt-1 whitespace-pre-wrap">
-                                {renderContentWithMentions(reply.content)}
+                                {renderContentWithMentions(translatedReplies[reply.id] || reply.content)}
                             </p>
                         </div>
                     </div>

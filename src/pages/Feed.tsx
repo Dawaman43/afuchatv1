@@ -195,7 +195,25 @@ const UserAvatarMedium = ({ userId }: { userId: string }) => {
 
 // --- REPLY ITEM (Unchanged) ---
 
+// --- REPLY ITEM (Updated with auto-translation) ---
+
 const ReplyItem = ({ reply, navigate, handleViewProfile }: { reply: Reply; navigate: any; handleViewProfile: (id: string) => void }) => {
+    const { i18n } = useTranslation();
+    const { translateText } = useAITranslation();
+    const [translatedContent, setTranslatedContent] = useState<string | null>(null);
+
+    useEffect(() => {
+        const autoTranslate = async () => {
+            if (i18n.language !== 'en' && reply.content) {
+                const translated = await translateText(reply.content, i18n.language);
+                setTranslatedContent(translated);
+            }
+        };
+        autoTranslate();
+    }, [reply.content, i18n.language]);
+
+    const displayContent = translatedContent || reply.content;
+
     return (
         <div className="flex pt-2 pb-1 relative">
             <div className="absolute left-5 top-0 bottom-0 w-px bg-border/80 ml-px mt-2.5 mb-1.5" />
@@ -230,7 +248,7 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: { reply: Reply; navig
                 </div>
 
                 <p className="text-foreground text-xs leading-snug whitespace-pre-wrap break-words mt-0.5">
-                    {parsePostContent(reply.content, navigate)}
+                    {parsePostContent(displayContent, navigate)}
                 </p>
             </div>
         </div>
