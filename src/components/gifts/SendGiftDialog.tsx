@@ -16,6 +16,7 @@ import { Gift, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { SimpleGiftIcon } from './SimpleGiftIcon';
+import { GiftConfetti } from './GiftConfetti';
 
 interface GiftItem {
   id: string;
@@ -68,6 +69,8 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [userXP, setUserXP] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [sentGiftEmoji, setSentGiftEmoji] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -129,6 +132,10 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
 
     setLoading(true);
     try {
+      // Get the gift emoji before sending
+      const giftItem = gifts.find(g => g.id === selectedGift);
+      const giftEmoji = giftItem?.emoji || '🎁';
+
       const { data, error } = await supabase.rpc('send_gift', {
         p_gift_id: selectedGift,
         p_receiver_id: receiverId,
@@ -146,6 +153,10 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
       };
 
       if (result.success) {
+        // Trigger confetti animation
+        setSentGiftEmoji(giftEmoji);
+        setShowConfetti(true);
+        
         toast.success(
           t('gifts.giftSent'),
           { description: result.new_grade ? `${t('gamification.grade')}: ${result.new_grade}` : undefined }
@@ -171,15 +182,23 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="outline" size="sm" className="gap-2">
-            <Gift className="h-4 w-4" />
-            {t('gifts.sendGift')}
-          </Button>
-        )}
-      </DialogTrigger>
+    <>
+      {showConfetti && (
+        <GiftConfetti 
+          emoji={sentGiftEmoji} 
+          onComplete={() => setShowConfetti(false)} 
+        />
+      )}
+      
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          {trigger || (
+            <Button variant="outline" size="sm" className="gap-2">
+              <Gift className="h-4 w-4" />
+              {t('gifts.sendGift')}
+            </Button>
+          )}
+        </DialogTrigger>
       <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('gifts.sendGiftTo', { name: receiverName })}</DialogTitle>
@@ -278,6 +297,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
           </div>
         )}
       </DialogContent>
-    </Dialog>
+      </Dialog>
+    </>
   );
 };
