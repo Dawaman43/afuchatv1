@@ -151,31 +151,39 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
   }
 
   return (
-    <div className="space-y-4">
-      <Card className="p-4 bg-gradient-to-br from-pink-500/10 to-purple-500/10 border-pink-200/50">
+    <div className="space-y-6">
+      <Card className="p-6 bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 border-border/50 shadow-lg backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-bold">{t('gifts.giftsReceived', { count: gifts.length })}</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              {t('gifts.giftsReceived', { count: gifts.length })}
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
               {t('gifts.totalValue', { value: totalValue })}
             </p>
           </div>
-          <Gift className="h-10 w-10 text-pink-500" />
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
+            <Gift className="h-12 w-12 text-primary relative" />
+          </div>
         </div>
       </Card>
 
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-6">
         {gifts.map((gift) => (
-          <div key={gift.id} className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+          <div 
+            key={gift.id} 
+            className="group flex flex-col items-center gap-3 p-4 rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+          >
             <SimpleGiftIcon 
               emoji={gift.gift.emoji}
-              size={48}
+              size={56}
             />
-            <div className="text-center w-full">
-              <div className="text-xs font-medium text-foreground truncate w-full">
+            <div className="text-center w-full space-y-1">
+              <div className="text-xs font-semibold text-foreground truncate w-full group-hover:text-primary transition-colors">
                 {gift.gift.name}
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
                 {gift.xp_cost} XP
               </div>
             </div>

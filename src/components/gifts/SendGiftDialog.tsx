@@ -188,7 +188,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-3 my-4">
+        <div className="grid grid-cols-2 gap-4 my-6">
           {gifts.map((gift) => {
             const currentPrice = calculatePrice(gift.id, gift.base_xp_cost);
             const stats = giftStats[gift.id];
@@ -199,37 +199,37 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
               <div
                 key={gift.id}
                 onClick={() => canAfford && setSelectedGift(gift.id)}
-                className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-lg ${
+                className={`relative p-5 rounded-2xl cursor-pointer transition-all duration-300 ${
                   isSelected
-                    ? 'border-primary bg-primary/10 shadow-xl'
+                    ? 'ring-2 ring-primary shadow-2xl shadow-primary/20 scale-105'
                     : canAfford
-                    ? 'border-border hover:border-primary/50'
-                    : 'border-border opacity-50 cursor-not-allowed'
+                    ? 'hover:shadow-xl hover:scale-105 hover:ring-1 hover:ring-primary/30'
+                    : 'opacity-40 cursor-not-allowed'
                 }`}
               >
                 {gift.season && (
-                  <div className="absolute top-1 right-1 z-10">
-                    <Badge className={`${seasonColors[gift.season]} text-white text-[10px] px-1 py-0`}>
+                  <div className="absolute top-2 right-2 z-10">
+                    <Badge className={`${seasonColors[gift.season]} text-white text-[10px] px-2 py-1 shadow-lg`}>
                       {seasonEmojis[gift.season]} {gift.season}
                     </Badge>
                   </div>
                 )}
-                <div className="text-center">
-                  <div className="flex justify-center mb-2">
+                <div className="text-center space-y-3">
+                  <div className="flex justify-center">
                     <SimpleGiftIcon 
                       emoji={gift.emoji}
-                      size={64}
+                      size={72}
                     />
                   </div>
-                  <h4 className="font-semibold text-sm">{gift.name}</h4>
-                  <p className="text-xs text-muted-foreground mt-1 min-h-[32px]">
+                  <h4 className="font-bold text-sm">{gift.name}</h4>
+                  <p className="text-xs text-muted-foreground min-h-[32px]">
                     {gift.description}
                   </p>
-                  <div className="mt-2 space-y-1">
+                  <div className="space-y-2">
                     <Badge className={rarityColors[gift.rarity]} variant="secondary">
                       {t(`gifts.${gift.rarity}`)}
                     </Badge>
-                    <div className="text-sm font-bold">
+                    <div className="text-base font-bold text-primary">
                       {currentPrice} {t('gamification.xp')}
                       {stats && stats.price_multiplier > 1 && (
                         <span className="text-xs text-muted-foreground ml-1">
