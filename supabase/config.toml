@@ -11,3 +11,9 @@ verify_jwt = true
 
 [functions.generate-post]
 verify_jwt = true
+
+[functions.seed-seasonal-gifts]
+verify_jwt = false
+
+[functions.translate-post]
+verify_jwt = true
