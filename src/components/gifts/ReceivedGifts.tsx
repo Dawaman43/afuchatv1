@@ -65,29 +65,54 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
 
   const fetchGifts = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch gift transactions
+      const { data: transactions, error: transError } = await supabase
         .from('gift_transactions')
-        .select(`
-          id,
-          xp_cost,
-          message,
-          created_at,
-          sender:sender_id(display_name, handle),
-          gift:gift_id(name, emoji, rarity)
-        `)
+        .select('id, xp_cost, message, created_at, sender_id, receiver_id, gift_id')
         .eq('receiver_id', userId)
         .order('created_at', { ascending: false })
         .limit(20);
 
-      if (error) throw error;
+      if (transError) throw transError;
+      if (!transactions || transactions.length === 0) {
+        setGifts([]);
+        setTotalValue(0);
+        setLoading(false);
+        return;
+      }
 
-      const formattedGifts = (data || []).map((item: any) => ({
+      // Get unique sender and gift IDs
+      const senderIds = [...new Set(transactions.map(t => t.sender_id))];
+      const giftIds = [...new Set(transactions.map(t => t.gift_id))];
+
+      // Fetch sender profiles
+      const { data: senders, error: senderError } = await supabase
+        .from('profiles')
+        .select('id, display_name, handle')
+        .in('id', senderIds);
+
+      if (senderError) throw senderError;
+
+      // Fetch gift details
+      const { data: giftDetails, error: giftError } = await supabase
+        .from('gifts')
+        .select('id, name, emoji, rarity')
+        .in('id', giftIds);
+
+      if (giftError) throw giftError;
+
+      // Create lookup maps
+      const senderMap = new Map(senders?.map(s => [s.id, s]) || []);
+      const giftMap = new Map(giftDetails?.map(g => [g.id, g]) || []);
+
+      // Format gifts with joined data
+      const formattedGifts = transactions.map((item) => ({
         id: item.id,
         xp_cost: item.xp_cost,
         message: item.message,
         created_at: item.created_at,
-        sender: Array.isArray(item.sender) ? item.sender[0] : item.sender,
-        gift: Array.isArray(item.gift) ? item.gift[0] : item.gift,
+        sender: senderMap.get(item.sender_id) || { display_name: 'Unknown', handle: 'unknown' },
+        gift: giftMap.get(item.gift_id) || { name: 'Unknown Gift', emoji: '🎁', rarity: 'common' },
       }));
 
       setGifts(formattedGifts);

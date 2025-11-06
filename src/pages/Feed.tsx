@@ -295,10 +295,18 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
 
   useEffect(() => {
     // Auto-translate if user's language is different from English
-    if (i18n.language !== 'en' && !translatedContent && post.content) {
-      handleTranslate();
-    }
-  }, []);
+    const autoTranslate = async () => {
+      if (i18n.language !== 'en' && post.content) {
+        setIsTranslating(true);
+        const translated = await translateText(post.content, i18n.language);
+        setTranslatedContent(translated);
+        setIsTranslating(false);
+      } else {
+        setTranslatedContent(null);
+      }
+    };
+    autoTranslate();
+  }, [post.content, i18n.language, translateText]);
 
   const handleAiTransfer = () => {
     if (!user) {
