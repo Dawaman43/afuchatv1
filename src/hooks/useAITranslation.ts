@@ -48,7 +48,9 @@ export const useAITranslation = () => {
       );
 
       if (!response.ok) {
-        throw new Error('Translation failed');
+        // If translation fails, return original text
+        console.warn('Translation failed:', response.status);
+        return text;
       }
 
       const data = await response.json();
@@ -63,6 +65,7 @@ export const useAITranslation = () => {
       return translatedText;
     } catch (error) {
       console.error('Translation error:', error);
+      // Return original text on error
       return text;
     } finally {
       setLoading(false);
