@@ -420,7 +420,6 @@ export default function Shop() {
     return bids[itemId]?.length || 0;
   };
 
-  // --- START: Small, Rich Card Implementation ---
   const renderCompactCard = (item: ShopItem) => {
     const owned = isOwned(item.id);
     const discountedPrice = getDiscountedPrice(item);
@@ -432,95 +431,93 @@ export default function Shop() {
     return (
       <Card 
         key={item.id}
-        // Very small card width on small screens
-        className={`relative overflow-hidden w-full sm:w-36 flex-shrink-0 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 rounded-xl ${
+        className={`relative overflow-hidden w-56 flex-shrink-0 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${
           owned ? 'border-primary/50 bg-primary/5' : ''
         } ${isFeatured ? 'border-yellow-500/50 shadow-lg' : ''} ${
           isAuction ? 'border-purple-500/50 bg-gradient-to-br from-purple-500/5 to-pink-500/5' : ''
         }`}
       >
-        {/* Top badges (Smaller size and tighter spacing) */}
-        <div className="absolute top-1 right-1 z-10 flex flex-col gap-0.5">
+        {/* Top badges */}
+        <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
           {owned && (
-            <Badge variant="secondary" className="gap-0.5 text-[10px] px-1 py-0.5">
-              <Check className="w-2.5 h-2.5" />
+            <Badge variant="secondary" className="gap-1 text-xs">
+              <Check className="w-3 h-3" />
               Owned
             </Badge>
           )}
           {isFeatured && (
-            <Badge className="gap-0.5 bg-yellow-500 hover:bg-yellow-600 text-black text-[10px] px-1 py-0.5">
-              <Zap className="w-2.5 h-2.5" />
+            <Badge className="gap-1 bg-yellow-500 hover:bg-yellow-600 text-black text-xs">
+              <Zap className="w-3 h-3" />
               {item.discount_percentage}% OFF
             </Badge>
           )}
           {isAuction && (
-            <Badge className="gap-0.5 bg-purple-500 hover:bg-purple-600 text-white text-[10px] px-1 py-0.5">
-              <Hammer className="w-2.5 h-2.5" />
+            <Badge className="gap-1 bg-purple-500 hover:bg-purple-600 text-white text-xs">
+              <Hammer className="w-3 h-3" />
               Auction
             </Badge>
           )}
         </div>
 
-        {/* Emoji/Image (Reduced height and emoji size) */}
-        <div className="h-20 flex items-center justify-center bg-gradient-to-br from-muted/30 to-muted/10 relative">
-          <div className="text-3xl">{item.emoji}</div>
+        {/* Emoji/Image */}
+        <div className="h-32 flex items-center justify-center bg-gradient-to-br from-muted/30 to-muted/10 relative">
+          <div className="text-6xl">{item.emoji}</div>
           {isAuction && item.auction_end_time && (
-            <div className="absolute bottom-1 left-1 right-1 bg-black/70 backdrop-blur-sm rounded-md px-1 py-0.5">
-              <div className="flex items-center justify-center gap-0.5 text-[10px] text-white">
-                <Clock className="w-2.5 h-2.5" />
+            <div className="absolute bottom-2 left-2 right-2 bg-black/70 backdrop-blur-sm rounded-md px-2 py-1">
+              <div className="flex items-center justify-center gap-1 text-xs text-white">
+                <Clock className="w-3 h-3" />
                 {getTimeRemaining(item.auction_end_time)}
               </div>
             </div>
           )}
         </div>
 
-        {/* Content (Reduced padding and text size) */}
-        <div className="p-1.5 space-y-1">
+        {/* Content */}
+        <div className="p-3 space-y-2">
           <div>
-            <h3 className="font-bold text-xs line-clamp-1">{item.name}</h3>
-            <p className="text-[10px] text-muted-foreground line-clamp-1">{item.description}</p>
+            <h3 className="font-bold text-sm line-clamp-1">{item.name}</h3>
+            <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
           </div>
 
           {/* Auction Info */}
           {isAuction ? (
-            <div className="space-y-1">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-muted-foreground">Current Bid</span>
-                <span className="font-bold text-purple-500 text-xs">
+                <span className="text-xs text-muted-foreground">Current Bid</span>
+                <span className="font-bold text-purple-500">
                   {item.current_bid || item.starting_bid} XP
                 </span>
               </div>
               {bidCount > 0 && (
-                <div className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-                  <Users className="w-2.5 h-2.5" />
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Users className="w-3 h-3" />
                   {bidCount} {bidCount === 1 ? 'bid' : 'bids'}
                 </div>
               )}
-              {/* Smaller button height */}
               <Button
                 onClick={() => openBidDialog(item)}
                 disabled={owned}
-                className="w-full h-6 text-[10px]"
+                className="w-full h-8 text-xs"
                 variant={owned ? 'outline' : 'default'}
               >
                 {owned ? 'Owned' : 'Place Bid'}
               </Button>
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-2">
               {/* Price */}
               <div className="flex items-center justify-between">
                 {isFeatured ? (
                   <div className="flex flex-col">
-                    <span className="font-bold text-primary text-xs">
+                    <span className="font-bold text-primary text-sm">
                       {discountedPrice} XP
                     </span>
-                    <span className="text-[10px] text-muted-foreground line-through">
+                    <span className="text-xs text-muted-foreground line-through">
                       {item.xp_cost} XP
                     </span>
                   </div>
                 ) : (
-                  <span className="font-bold text-primary text-xs">
+                  <span className="font-bold text-primary text-sm">
                     {item.xp_cost} XP
                   </span>
                 )}
@@ -528,26 +525,25 @@ export default function Shop() {
 
               {/* Featured countdown */}
               {isFeatured && item.featured_end_date && (
-                <div className="flex items-center gap-0.5 text-[10px] text-yellow-600 dark:text-yellow-400">
-                  <Clock className="w-2.5 h-2.5" />
+                <div className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400">
+                  <Clock className="w-3 h-3" />
                   {getTimeRemaining(item.featured_end_date)}
                 </div>
               )}
 
               {/* Purchase button */}
-              {/* Smaller button height and abbreviated text */}
               <Button
                 onClick={() => handlePurchase(item.id, item.name)}
                 disabled={owned || !canAfford || purchasing === item.id}
                 variant={owned ? 'outline' : 'default'}
-                className="w-full h-6 text-[10px]"
+                className="w-full h-8 text-xs"
               >
                 {purchasing === item.id ? (
-                  <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                  <Loader2 className="w-3 h-3 animate-spin" />
                 ) : owned ? (
                   'Owned'
                 ) : !canAfford ? (
-                  'Need XP'
+                  'Need More XP'
                 ) : (
                   'Purchase'
                 )}
@@ -562,9 +558,6 @@ export default function Shop() {
   const renderSection = (title: string, icon: React.ReactNode, items: ShopItem[], gradient?: string) => {
     if (items.length === 0) return null;
 
-    // Use responsive grid for categories to fit small cards better on mobile
-    const isGridSection = title !== 'Live Auctions' && title !== 'Limited Edition';
-
     return (
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-4">
@@ -572,20 +565,12 @@ export default function Shop() {
           <h2 className="text-2xl font-bold">{title}</h2>
           <Badge variant="outline" className="ml-auto">{items.length} items</Badge>
         </div>
-        <div className={`${gradient ? `bg-gradient-to-r ${gradient} p-3 rounded-xl` : ''}`}>
-          {isGridSection ? (
-            // Tighter Responsive Grid (3 columns on mobile)
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+        <div className={`${gradient ? `bg-gradient-to-r ${gradient} p-4 rounded-lg` : ''}`}>
+          <div className="overflow-x-auto pb-4 -mx-4 px-4">
+            <div className="flex gap-4">
               {items.map(item => renderCompactCard(item))}
             </div>
-          ) : (
-            // Horizontal Scroll for Featured/Auction (using tighter gap and padding)
-            <div className="overflow-x-auto pb-3 -mx-4 px-4">
-              <div className="flex gap-3">
-                {items.map(item => renderCompactCard(item))}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     );
@@ -602,58 +587,54 @@ export default function Shop() {
     return (
       <Card 
         key={listing.id}
-        // Very small card width on small screens
-        className="relative overflow-hidden w-full sm:w-36 flex-shrink-0 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 rounded-xl border-blue-500/50 bg-gradient-to-br from-blue-500/5 to-cyan-500/5"
+        className="relative overflow-hidden w-56 flex-shrink-0 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-blue-500/50 bg-gradient-to-br from-blue-500/5 to-cyan-500/5"
       >
-        <Badge className="absolute top-1 left-1 z-10 gap-0.5 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-1 py-0.5">
-          <Users className="w-2.5 h-2.5" />
+        <Badge className="absolute top-2 left-2 z-10 gap-1 bg-blue-500 hover:bg-blue-600 text-white text-xs">
+          <Users className="w-3 h-3" />
           Resale
         </Badge>
 
         {owned && (
-          <Badge variant="secondary" className="absolute top-1 right-1 z-10 gap-0.5 text-[10px] px-1 py-0.5">
-            <Check className="w-2.5 h-2.5" />
+          <Badge variant="secondary" className="absolute top-2 right-2 z-10 gap-1 text-xs">
+            <Check className="w-3 h-3" />
             Owned
           </Badge>
         )}
 
-        {/* Reduced height and emoji size */}
-        <div className="h-20 flex items-center justify-center bg-gradient-to-br from-muted/30 to-muted/10">
-          <div className="text-3xl">{itemData.emoji}</div>
+        <div className="h-32 flex items-center justify-center bg-gradient-to-br from-muted/30 to-muted/10">
+          <div className="text-6xl">{itemData.emoji}</div>
         </div>
 
-        {/* Reduced padding and text size */}
-        <div className="p-1.5 space-y-1">
+        <div className="p-3 space-y-2">
           <div>
-            <h3 className="font-bold text-xs line-clamp-1">{itemData.name}</h3>
-            <p className="text-[10px] text-muted-foreground line-clamp-1">{itemData.description}</p>
+            <h3 className="font-bold text-sm line-clamp-1">{itemData.name}</h3>
+            <p className="text-xs text-muted-foreground line-clamp-2">{itemData.description}</p>
           </div>
 
-          <div className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-            <Users className="w-2.5 h-2.5" />
-            @{sellerData?.handle || 'Unknown'}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Users className="w-3 h-3" />
+            Sold by @{sellerData?.handle || 'Unknown'}
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-blue-500 text-xs">
+              <span className="font-bold text-blue-500 text-sm">
                 {listing.asking_price} XP
               </span>
             </div>
 
-            {/* Smaller button height and abbreviated text */}
             <Button
               onClick={() => handlePurchaseMarketplaceItem(listing.id, itemData.name)}
               disabled={owned || !canAfford || purchasing === listing.id}
               variant={owned ? 'outline' : 'default'}
-              className="w-full h-6 text-[10px]"
+              className="w-full h-8 text-xs"
             >
               {purchasing === listing.id ? (
-                <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                <Loader2 className="w-3 h-3 animate-spin" />
               ) : owned ? (
                 'Owned'
               ) : !canAfford ? (
-                'Need XP'
+                'Need More XP'
               ) : (
                 'Buy Now'
               )}
@@ -682,31 +663,27 @@ export default function Shop() {
     }
 
     return (
-      <div className="overflow-x-auto pb-3 -mx-4 px-4">
-        <div className="flex gap-3">
+      <div className="overflow-x-auto pb-4 -mx-4 px-4">
+        <div className="flex gap-4">
           {ownedItems.map((ownedItem) => (
             <Card 
               key={ownedItem.id}
-              // Very small card width on small screens
-              className="relative overflow-hidden w-full sm:w-36 flex-shrink-0 rounded-xl"
+              className="relative overflow-hidden w-56 flex-shrink-0"
             >
-              {/* Reduced height and emoji size */}
-              <div className="h-20 flex items-center justify-center bg-gradient-to-br from-muted/30 to-muted/10">
-                <div className="text-3xl">{ownedItem.item.emoji}</div>
+              <div className="h-32 flex items-center justify-center bg-gradient-to-br from-muted/30 to-muted/10">
+                <div className="text-6xl">{ownedItem.item.emoji}</div>
               </div>
 
-              {/* Reduced padding and text size */}
-              <div className="p-1.5 space-y-1">
+              <div className="p-3 space-y-2">
                 <div>
-                  <h3 className="font-bold text-xs line-clamp-1">{ownedItem.item.name}</h3>
-                  <p className="text-[10px] text-muted-foreground line-clamp-1">{ownedItem.item.description}</p>
+                  <h3 className="font-bold text-sm line-clamp-1">{ownedItem.item.name}</h3>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{ownedItem.item.description}</p>
                 </div>
 
-                {/* Smaller button height */}
                 <Button
                   onClick={() => openListDialog(ownedItem, ownedItem.item)}
                   variant="outline"
-                  className="w-full h-6 text-[10px]"
+                  className="w-full h-8 text-xs"
                 >
                   List on Marketplace
                 </Button>
@@ -717,7 +694,6 @@ export default function Shop() {
       </div>
     );
   };
-  // --- END: Small, Rich Card Implementation ---
 
   if (!user) {
     return (
@@ -791,7 +767,7 @@ export default function Shop() {
           </div>
         ) : activeTab === 'shop' ? (
           <div className="space-y-8">
-            {/* Live Auctions (Horizontal Scroll) */}
+            {/* Live Auctions */}
             {renderSection(
               'Live Auctions',
               <Hammer className="w-6 h-6 text-purple-500" />,
@@ -799,7 +775,7 @@ export default function Shop() {
               'from-purple-500/10 via-pink-500/10 to-purple-500/10 border border-purple-500/20'
             )}
 
-            {/* Featured Items (Horizontal Scroll) */}
+            {/* Featured Items */}
             {renderSection(
               'Limited Edition',
               <Zap className="w-6 h-6 text-yellow-500" />,
@@ -807,35 +783,35 @@ export default function Shop() {
               'from-yellow-500/10 via-orange-500/10 to-red-500/10 border border-yellow-500/20'
             )}
 
-            {/* All Items (Responsive Grid) */}
+            {/* All Items */}
             {renderSection(
               'All Items',
               <ShoppingBag className="w-6 h-6" />,
               items
             )}
 
-            {/* Accessories (Responsive Grid) */}
+            {/* Accessories */}
             {renderSection(
               'Accessories',
               <Sparkles className="w-6 h-6" />,
               getItemsByType('accessory')
             )}
 
-            {/* Themes (Responsive Grid) */}
+            {/* Themes */}
             {renderSection(
               'Themes',
               <TrendingUp className="w-6 h-6" />,
               getItemsByType('theme')
             )}
 
-            {/* Effects (Responsive Grid) */}
+            {/* Effects */}
             {renderSection(
               'Effects',
               <Zap className="w-6 h-6" />,
               getItemsByType('effect')
             )}
 
-            {/* Badges (Responsive Grid) */}
+            {/* Badges */}
             {renderSection(
               'Badges',
               <Check className="w-6 h-6" />,
@@ -844,7 +820,7 @@ export default function Shop() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* My Inventory (Horizontal Scroll) */}
+            {/* My Inventory */}
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">
                 <ShoppingBag className="w-6 h-6" />
@@ -853,7 +829,7 @@ export default function Shop() {
               {renderUserInventory()}
             </div>
 
-            {/* Marketplace Listings (Responsive Grid) */}
+            {/* Marketplace Listings */}
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">
                 <Users className="w-6 h-6 text-blue-500" />
@@ -868,10 +844,11 @@ export default function Shop() {
                   <p>No marketplace listings available</p>
                 </div>
               ) : (
-                <div className="bg-gradient-to-r from-blue-500/10 via-cyan-500/10 to-blue-500/10 p-3 rounded-xl border border-blue-500/20">
-                  {/* Tighter Responsive Grid */}
-                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
-                    {marketplaceListings.map(listing => renderMarketplaceCard(listing))}
+                <div className="bg-gradient-to-r from-blue-500/10 via-cyan-500/10 to-blue-500/10 p-4 rounded-lg border border-blue-500/20">
+                  <div className="overflow-x-auto pb-4 -mx-4 px-4">
+                    <div className="flex gap-4">
+                      {marketplaceListings.map(listing => renderMarketplaceCard(listing))}
+                    </div>
                   </div>
                 </div>
               )}
