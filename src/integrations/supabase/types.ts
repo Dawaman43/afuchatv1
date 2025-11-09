@@ -682,9 +682,13 @@ export type Database = {
           config: Json
           created_at: string | null
           description: string | null
+          discount_percentage: number | null
           emoji: string | null
+          featured_end_date: string | null
+          featured_start_date: string | null
           id: string
           is_available: boolean | null
+          is_featured: boolean | null
           item_type: string
           name: string
           xp_cost: number
@@ -693,9 +697,13 @@ export type Database = {
           config?: Json
           created_at?: string | null
           description?: string | null
+          discount_percentage?: number | null
           emoji?: string | null
+          featured_end_date?: string | null
+          featured_start_date?: string | null
           id?: string
           is_available?: boolean | null
+          is_featured?: boolean | null
           item_type: string
           name: string
           xp_cost: number
@@ -704,9 +712,13 @@ export type Database = {
           config?: Json
           created_at?: string | null
           description?: string | null
+          discount_percentage?: number | null
           emoji?: string | null
+          featured_end_date?: string | null
+          featured_start_date?: string | null
           id?: string
           is_available?: boolean | null
+          is_featured?: boolean | null
           item_type?: string
           name?: string
           xp_cost?: number
@@ -1030,6 +1042,7 @@ export type Database = {
         Returns: Json
       }
       purchase_shop_item: { Args: { p_shop_item_id: string }; Returns: Json }
+      rotate_featured_items: { Args: never; Returns: undefined }
       send_gift: {
         Args: { p_gift_id: string; p_message?: string; p_receiver_id: string }
         Returns: Json
