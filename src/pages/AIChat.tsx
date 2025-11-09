@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Bot, Send, Loader2, ArrowLeft, Crown, Sparkles } from 'lucide-react'; 
+import { Bot, Send, Loader2, ArrowLeft } from 'lucide-react'; 
 import { toast } from 'sonner';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -29,7 +28,6 @@ interface LocationState {
 
 const AIChat: React.FC = () => {
   const { user } = useAuth();
-  const { tier, isPremium } = useSubscription();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -42,12 +40,9 @@ const AIChat: React.FC = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [messageCount, setMessageCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const isAIVerified = true;
-  const FREE_MESSAGE_LIMIT = 10;
-  const remainingMessages = isPremium ? Infinity : Math.max(0, FREE_MESSAGE_LIMIT - messageCount);
 
   const handleInitialSend = async (initialPrompt: string, currentMessages: Message[]) => {
     setLoading(true);
@@ -98,17 +93,6 @@ const AIChat: React.FC = () => {
   const handleSend = async () => {
     if (!input.trim() || loading) return;
 
-    // Check message limit for free users
-    if (!isPremium && messageCount >= FREE_MESSAGE_LIMIT) {
-      toast.error('Daily message limit reached. Upgrade to Premium for unlimited messages!', {
-        action: {
-          label: 'Upgrade',
-          onClick: () => navigate('/subscription'),
-        },
-      });
-      return;
-    }
-
     const userMessage: Message = {
       role: 'user',
       content: input.trim(),
@@ -118,7 +102,6 @@ const AIChat: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
-    setMessageCount(prev => prev + 1);
 
     try {
       const response = await fetch(
@@ -250,22 +233,6 @@ const AIChat: React.FC = () => {
       </div>
 
       <div className="border-t border-border bg-card p-4">
-        {!isPremium && (
-          <div className="mb-3 flex items-center justify-between px-2">
-            <p className="text-sm text-muted-foreground">
-              {remainingMessages} of {FREE_MESSAGE_LIMIT} messages remaining today
-            </p>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/subscription')}
-              className="gap-1"
-            >
-              <Sparkles className="w-3 h-3" />
-              Upgrade
-            </Button>
-          </div>
-        )}
         <div className="flex gap-2">
           <Input
             value={input}
@@ -273,11 +240,11 @@ const AIChat: React.FC = () => {
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
             placeholder="Message AfuAI..."
             className="flex-1"
-            disabled={loading || (!isPremium && messageCount >= FREE_MESSAGE_LIMIT)}
+            disabled={loading}
           />
           <Button
             onClick={handleSend}
-            disabled={!input.trim() || loading || (!isPremium && messageCount >= FREE_MESSAGE_LIMIT)}
+            disabled={!input.trim() || loading}
             className="rounded-full"
             size="icon"
           >
