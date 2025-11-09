@@ -18,6 +18,7 @@ import { OwlAvatar } from '@/components/avatar/OwlAvatar';
 import { useUserAvatar } from '@/hooks/useUserAvatar';
 import { SendGiftDialog } from '@/components/gifts/SendGiftDialog';
 import { ReadMoreText } from '@/components/ui/ReadMoreText';
+import { TipButton } from '@/components/tips/TipButton';
 
 
 // --- INTERFACES ---
@@ -487,15 +488,25 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             <Share className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-primary transition-colors" />
           </Button>
           {user && user.id !== post.author_id && (
-            <SendGiftDialog
-              receiverId={post.author_id}
-              receiverName={post.profiles.display_name}
-              trigger={
-                <Button variant="ghost" size="sm" className="flex items-center gap-0.5 sm:gap-1 group h-7 sm:h-8 px-2 sm:px-3">
-                  <Gift className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-pink-500 transition-colors" />
-                </Button>
-              }
-            />
+            <>
+              <SendGiftDialog
+                receiverId={post.author_id}
+                receiverName={post.profiles.display_name}
+                trigger={
+                  <Button variant="ghost" size="sm" className="flex items-center gap-0.5 sm:gap-1 group h-7 sm:h-8 px-2 sm:px-3">
+                    <Gift className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-pink-500 transition-colors" />
+                  </Button>
+                }
+              />
+              <TipButton
+                receiverId={post.author_id}
+                receiverName={post.profiles.display_name}
+                postId={post.id}
+                variant="ghost"
+                size="sm"
+                showLabel={false}
+              />
+            </>
           )}
         </div>
 

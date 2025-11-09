@@ -677,6 +677,42 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_items: {
+        Row: {
+          config: Json
+          created_at: string | null
+          description: string | null
+          emoji: string | null
+          id: string
+          is_available: boolean | null
+          item_type: string
+          name: string
+          xp_cost: number
+        }
+        Insert: {
+          config?: Json
+          created_at?: string | null
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          is_available?: boolean | null
+          item_type: string
+          name: string
+          xp_cost: number
+        }
+        Update: {
+          config?: Json
+          created_at?: string | null
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          is_available?: boolean | null
+          item_type?: string
+          name?: string
+          xp_cost?: number
+        }
+        Relationships: []
+      }
       supported_languages: {
         Row: {
           code: string
@@ -697,6 +733,44 @@ export type Database = {
           native_name?: string
         }
         Relationships: []
+      }
+      tips: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string | null
+          post_id: string | null
+          receiver_id: string
+          sender_id: string
+          xp_amount: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          post_id?: string | null
+          receiver_id: string
+          sender_id: string
+          xp_amount: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          post_id?: string | null
+          receiver_id?: string
+          sender_id?: string
+          xp_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tips_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       typing_indicators: {
         Row: {
@@ -859,6 +933,38 @@ export type Database = {
         }
         Relationships: []
       }
+      user_shop_purchases: {
+        Row: {
+          id: string
+          purchased_at: string | null
+          shop_item_id: string
+          user_id: string
+          xp_paid: number
+        }
+        Insert: {
+          id?: string
+          purchased_at?: string | null
+          shop_item_id: string
+          user_id: string
+          xp_paid: number
+        }
+        Update: {
+          id?: string
+          purchased_at?: string | null
+          shop_item_id?: string
+          user_id?: string
+          xp_paid?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_shop_purchases_shop_item_id_fkey"
+            columns: ["shop_item_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -923,6 +1029,7 @@ export type Database = {
         Args: { p_referral_code: string; p_referred_id: string }
         Returns: Json
       }
+      purchase_shop_item: { Args: { p_shop_item_id: string }; Returns: Json }
       send_gift: {
         Args: { p_gift_id: string; p_message?: string; p_receiver_id: string }
         Returns: Json
@@ -938,6 +1045,15 @@ export type Database = {
       send_message: {
         Args: { p_chat_id: string; p_plain_content: string }
         Returns: undefined
+      }
+      send_tip: {
+        Args: {
+          p_message?: string
+          p_post_id?: string
+          p_receiver_id: string
+          p_xp_amount: number
+        }
+        Returns: Json
       }
     }
     Enums: {

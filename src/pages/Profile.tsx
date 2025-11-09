@@ -16,6 +16,8 @@ import { XPProgressBar } from '@/components/gamification/XPProgressBar';
 import { AchievementBadges } from '@/components/gamification/AchievementBadges';
 import { ReferralSystem } from '@/components/gamification/ReferralSystem';
 import { ReceivedGifts } from '@/components/gifts/ReceivedGifts';
+import { TipStats } from '@/components/tips/TipStats';
+import { TipButton } from '@/components/tips/TipButton';
 import ProfileActionsSheet from '@/components/ProfileActionsSheet';
 import { OwlAvatar } from '@/components/avatar/OwlAvatar';
 import { useUserAvatar } from '@/hooks/useUserAvatar';
@@ -605,6 +607,13 @@ const Profile = () => {
 										<MessageSquare className="h-5 w-5" />
 									</Button>
 								)}
+								<TipButton
+									receiverId={profileId}
+									receiverName={profile.display_name}
+									variant="outline"
+									size="default"
+									showLabel={true}
+								/>
 								<Button
 									onClick={handleFollow}
 									variant={isFollowing ? "outline" : "default"}
@@ -750,11 +759,12 @@ const Profile = () => {
 							<AchievementBadges userId={profileId!} />
 						</div>
 					</TabsContent>
-					<TabsContent value="gifts">
-						<div className="p-4">
-							<ReceivedGifts userId={profileId!} />
-						</div>
-					</TabsContent>
+				<TabsContent value="gifts">
+					<div className="p-4 space-y-4">
+						<TipStats userId={profileId!} />
+						<ReceivedGifts userId={profileId!} />
+					</div>
+				</TabsContent>
 					{user?.id === profileId && (
 						<TabsContent value="referrals">
 							<div className="p-4">

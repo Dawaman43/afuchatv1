@@ -100,6 +100,30 @@ const Settings = () => {
             <p className="text-muted-foreground mt-1">{t('settings.subtitle')}</p>
           </div>
 
+          <Card className="p-4 sm:p-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Shield className="h-5 w-5 text-muted-foreground" />
+                <h2 className="text-lg font-semibold">Shop & Rewards</h2>
+              </div>
+              <Separator />
+              <button
+                onClick={() => navigate('/shop')}
+                className="w-full flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted transition-colors text-left"
+              >
+                <span>Cosmetic Shop</span>
+                <span className="text-muted-foreground">›</span>
+              </button>
+              <button
+                onClick={() => navigate('/gift-leaderboard')}
+                className="w-full flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted transition-colors text-left"
+              >
+                <span>Gift Leaderboard</span>
+                <span className="text-muted-foreground">›</span>
+              </button>
+            </div>
+          </Card>
+
           {/* Account Settings */}
           <Card className="p-4 sm:p-6">
             <div className="space-y-4">
