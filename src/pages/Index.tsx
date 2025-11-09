@@ -9,13 +9,14 @@ import { useTranslation } from 'react-i18next';
 import Chats from './Chats';
 import Feed from './Feed';
 import Search from './Search';
+import Shop from './Shop';
 import NewPostModal from '@/components/ui/NewPostModal';
 import Logo from '@/components/Logo';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import NewChatDialog from '@/components/ui/NewChatDialog';
 import NotificationIcon from '@/components/nav/NotificationIcon';
-import AuthSheet from '@/components/ui/AuthSheet'; // 👈 IMPORT NEW SHEET COMPONENT
+import AuthSheet from '@/components/ui/AuthSheet';
 
 
 // --- FAB Components (Positioned at bottom-20, above the collapsible nav) ---
@@ -270,6 +271,9 @@ const Index = () => {
             <TabsContent value="search" className="h-full mt-0">
               <Search />
             </TabsContent>
+            <TabsContent value="shop" className="h-full mt-0">
+              <Shop />
+            </TabsContent>
             <TabsContent value="chats" className="h-full mt-0">
               <Chats />
             </TabsContent>
@@ -302,8 +306,10 @@ const Index = () => {
               <span className="text-[10px] sm:text-xs font-medium">{t('navigation.search')}</span>
             </button>
             <button
-              onClick={() => navigate('/shop')}
-              className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 transition-colors text-muted-foreground hover:text-primary"
+              onClick={() => setActiveTab('shop')}
+              className={`flex flex-col items-center justify-center gap-0.5 sm:gap-1 transition-colors ${
+                activeTab === 'shop' ? 'text-primary' : 'text-muted-foreground'
+              }`}
             >
               <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" />
               <span className="text-[10px] sm:text-xs font-medium">Shop</span>
