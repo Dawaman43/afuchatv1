@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/comp
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { ArrowLeft, Loader2, ShoppingBag, Check, Sparkles, Zap, Clock, Hammer, TrendingUp, Users } from 'lucide-react';
+import { Loader2, ShoppingBag, Check, Sparkles, Zap, Clock, Hammer, TrendingUp, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ShopItem {
@@ -716,29 +716,11 @@ export default function Shop() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="flex items-center justify-between mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            className="gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </Button>
+        <div className="mb-6 flex justify-end">
           <Badge variant="outline" className="gap-2 py-2 px-4">
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="font-bold">{userXP} XP</span>
           </Badge>
-        </div>
-
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-            <ShoppingBag className="w-8 h-8" />
-            Cosmetic Shop & Marketplace
-          </h1>
-          <p className="text-muted-foreground">
-            Purchase exclusive items or trade on the marketplace
-          </p>
         </div>
 
         {/* Tabs */}
