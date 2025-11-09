@@ -278,6 +278,61 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_listings: {
+        Row: {
+          asking_price: number
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          purchase_id: string
+          shop_item_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          asking_price: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          purchase_id: string
+          shop_item_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          asking_price?: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          purchase_id?: string
+          shop_item_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_listings_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "user_shop_purchases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_listings_shop_item_id_fkey"
+            columns: ["shop_item_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_listings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_reactions: {
         Row: {
           created_at: string | null
@@ -1055,6 +1110,10 @@ export type Database = {
       }
       check_daily_login_streak: { Args: { p_user_id: string }; Returns: Json }
       check_profile_completion: { Args: { p_user_id: string }; Returns: Json }
+      create_marketplace_listing: {
+        Args: { p_asking_price: number; p_purchase_id: string }
+        Returns: Json
+      }
       create_new_chat: { Args: { other_user_id: string }; Returns: string }
       finalize_auction: { Args: { p_shop_item_id: string }; Returns: Json }
       get_gift_price: { Args: { p_gift_id: string }; Returns: number }
@@ -1101,6 +1160,10 @@ export type Database = {
       }
       process_referral_reward: {
         Args: { p_referral_code: string; p_referred_id: string }
+        Returns: Json
+      }
+      purchase_marketplace_item: {
+        Args: { p_listing_id: string }
         Returns: Json
       }
       purchase_shop_item: { Args: { p_shop_item_id: string }; Returns: Json }

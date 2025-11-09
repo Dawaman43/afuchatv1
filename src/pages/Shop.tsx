@@ -38,6 +38,26 @@ interface Bid {
 
 interface UserPurchase {
   shop_item_id: string;
+  id?: string;
+}
+
+interface MarketplaceListing {
+  id: string;
+  user_id: string;
+  shop_item_id: string;
+  purchase_id: string;
+  asking_price: number;
+  created_at: string;
+  shop_items?: {
+    name: string;
+    description: string;
+    emoji: string;
+    item_type: string;
+  };
+  profiles?: {
+    display_name: string;
+    handle: string;
+  };
 }
 
 export default function Shop() {
@@ -46,18 +66,65 @@ export default function Shop() {
   const [items, setItems] = useState<ShopItem[]>([]);
   const [auctionItems, setAuctionItems] = useState<ShopItem[]>([]);
   const [featuredItems, setFeaturedItems] = useState<ShopItem[]>([]);
+  const [marketplaceListings, setMarketplaceListings] = useState<MarketplaceListing[]>([]);
   const [purchases, setPurchases] = useState<UserPurchase[]>([]);
   const [bids, setBids] = useState<Record<string, Bid[]>>({});
   const [userXP, setUserXP] = useState(0);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [bidDialogOpen, setBidDialogOpen] = useState(false);
+  const [listDialogOpen, setListDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
+  const [selectedPurchase, setSelectedPurchase] = useState<UserPurchase | null>(null);
   const [bidAmount, setBidAmount] = useState('');
+  const [listingPrice, setListingPrice] = useState('');
   const [placingBid, setPlacingBid] = useState(false);
+  const [activeTab, setActiveTab] = useState<'shop' | 'marketplace'>('shop');
 
   useEffect(() => {
     fetchShopData();
+  }, [user]);
+
+  // Real-time subscription for bids
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('bids-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'bids'
+        },
+        (payload) => {
+          console.log('New bid received:', payload);
+          const newBid = payload.new as Bid;
+          
+          // Update bids state
+          setBids(prev => ({
+            ...prev,
+            [newBid.shop_item_id]: [newBid, ...(prev[newBid.shop_item_id] || [])]
+          }));
+
+          // Update the current bid on auction items
+          setAuctionItems(prev => 
+            prev.map(item => 
+              item.id === newBid.shop_item_id
+                ? { ...item, current_bid: newBid.bid_amount }
+                : item
+            )
+          );
+
+          toast.info('New bid placed on an auction!');
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const fetchShopData = async () => {
@@ -126,10 +193,25 @@ export default function Shop() {
 
       setItems((itemsData || []) as ShopItem[]);
 
+      // Fetch marketplace listings
+      const { data: marketplaceData, error: marketplaceError } = await supabase
+        .from('marketplace_listings')
+        .select(`
+          *,
+          shop_items (name, description, emoji, item_type),
+          profiles (display_name, handle)
+        `)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (marketplaceError) throw marketplaceError;
+
+      setMarketplaceListings((marketplaceData || []) as MarketplaceListing[]);
+
       // Fetch user purchases
       const { data: purchasesData, error: purchasesError } = await supabase
         .from('user_shop_purchases')
-        .select('shop_item_id')
+        .select('id, shop_item_id')
         .eq('user_id', user.id);
 
       if (purchasesError) throw purchasesError;
@@ -226,6 +308,81 @@ export default function Shop() {
     const minBid = (item.current_bid || item.starting_bid || 0) + (item.min_bid_increment || 10);
     setBidAmount(minBid.toString());
     setBidDialogOpen(true);
+  };
+
+  const openListDialog = (purchase: UserPurchase, item: ShopItem) => {
+    setSelectedPurchase(purchase);
+    setSelectedItem(item);
+    setListingPrice('');
+    setListDialogOpen(true);
+  };
+
+  const handleCreateListing = async () => {
+    if (!selectedPurchase || !listingPrice) return;
+
+    setPlacingBid(true);
+    try {
+      const price = parseInt(listingPrice);
+      const { data, error } = await supabase.rpc('create_marketplace_listing', {
+        p_purchase_id: selectedPurchase.id,
+        p_asking_price: price,
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; message: string };
+
+      if (result.success) {
+        toast.success('Item listed on marketplace!');
+        setListDialogOpen(false);
+        setListingPrice('');
+        setSelectedPurchase(null);
+        setSelectedItem(null);
+        fetchShopData();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error('Listing error:', error);
+      toast.error('Failed to create listing');
+    } finally {
+      setPlacingBid(false);
+    }
+  };
+
+  const handlePurchaseMarketplaceItem = async (listingId: string, itemName: string) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    setPurchasing(listingId);
+    try {
+      const { data, error } = await supabase.rpc('purchase_marketplace_item', {
+        p_listing_id: listingId,
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; message: string; new_xp?: number };
+
+      if (result.success) {
+        toast.success(`Purchased ${itemName}!`);
+        setUserXP(result.new_xp || 0);
+        fetchShopData();
+        
+        window.dispatchEvent(new CustomEvent('xp-updated', { 
+          detail: { xp: result.new_xp } 
+        }));
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error('Purchase error:', error);
+      toast.error('Failed to complete purchase');
+    } finally {
+      setPurchasing(null);
+    }
   };
 
   const isOwned = (itemId: string) => {
@@ -419,6 +576,125 @@ export default function Shop() {
     );
   };
 
+  const renderMarketplaceCard = (listing: MarketplaceListing) => {
+    const itemData = listing.shop_items;
+    const sellerData = listing.profiles;
+    const owned = isOwned(listing.shop_item_id);
+    const canAfford = userXP >= listing.asking_price;
+
+    if (!itemData) return null;
+
+    return (
+      <Card 
+        key={listing.id}
+        className="relative overflow-hidden w-56 flex-shrink-0 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-blue-500/50 bg-gradient-to-br from-blue-500/5 to-cyan-500/5"
+      >
+        <Badge className="absolute top-2 left-2 z-10 gap-1 bg-blue-500 hover:bg-blue-600 text-white text-xs">
+          <Users className="w-3 h-3" />
+          Resale
+        </Badge>
+
+        {owned && (
+          <Badge variant="secondary" className="absolute top-2 right-2 z-10 gap-1 text-xs">
+            <Check className="w-3 h-3" />
+            Owned
+          </Badge>
+        )}
+
+        <div className="h-32 flex items-center justify-center bg-gradient-to-br from-muted/30 to-muted/10">
+          <div className="text-6xl">{itemData.emoji}</div>
+        </div>
+
+        <div className="p-3 space-y-2">
+          <div>
+            <h3 className="font-bold text-sm line-clamp-1">{itemData.name}</h3>
+            <p className="text-xs text-muted-foreground line-clamp-2">{itemData.description}</p>
+          </div>
+
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Users className="w-3 h-3" />
+            Sold by @{sellerData?.handle || 'Unknown'}
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-blue-500 text-sm">
+                {listing.asking_price} XP
+              </span>
+            </div>
+
+            <Button
+              onClick={() => handlePurchaseMarketplaceItem(listing.id, itemData.name)}
+              disabled={owned || !canAfford || purchasing === listing.id}
+              variant={owned ? 'outline' : 'default'}
+              className="w-full h-8 text-xs"
+            >
+              {purchasing === listing.id ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : owned ? (
+                'Owned'
+              ) : !canAfford ? (
+                'Need More XP'
+              ) : (
+                'Buy Now'
+              )}
+            </Button>
+          </div>
+        </div>
+      </Card>
+    );
+  };
+
+  const renderUserInventory = () => {
+    const ownedItems = purchases
+      .map(purchase => {
+        const item = [...items, ...auctionItems, ...featuredItems].find(i => i.id === purchase.shop_item_id);
+        return item ? { ...purchase, item } : null;
+      })
+      .filter(Boolean) as Array<UserPurchase & { item: ShopItem }>;
+
+    if (ownedItems.length === 0) {
+      return (
+        <div className="text-center py-12 text-muted-foreground">
+          <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p>You don't own any items yet</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="overflow-x-auto pb-4 -mx-4 px-4">
+        <div className="flex gap-4">
+          {ownedItems.map((ownedItem) => (
+            <Card 
+              key={ownedItem.id}
+              className="relative overflow-hidden w-56 flex-shrink-0"
+            >
+              <div className="h-32 flex items-center justify-center bg-gradient-to-br from-muted/30 to-muted/10">
+                <div className="text-6xl">{ownedItem.item.emoji}</div>
+              </div>
+
+              <div className="p-3 space-y-2">
+                <div>
+                  <h3 className="font-bold text-sm line-clamp-1">{ownedItem.item.name}</h3>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{ownedItem.item.description}</p>
+                </div>
+
+                <Button
+                  onClick={() => openListDialog(ownedItem, ownedItem.item)}
+                  variant="outline"
+                  className="w-full h-8 text-xs"
+                >
+                  List on Marketplace
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -458,18 +734,38 @@ export default function Shop() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
             <ShoppingBag className="w-8 h-8" />
-            Cosmetic Shop
+            Cosmetic Shop & Marketplace
           </h1>
           <p className="text-muted-foreground">
-            Purchase exclusive accessories and themes with your XP
+            Purchase exclusive items or trade on the marketplace
           </p>
+        </div>
+
+        {/* Tabs */}
+        <div className="mb-6 flex gap-2">
+          <Button
+            variant={activeTab === 'shop' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('shop')}
+            className="flex-1"
+          >
+            <ShoppingBag className="w-4 h-4 mr-2" />
+            Shop
+          </Button>
+          <Button
+            variant={activeTab === 'marketplace' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('marketplace')}
+            className="flex-1"
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Marketplace
+          </Button>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin" />
           </div>
-        ) : (
+        ) : activeTab === 'shop' ? (
           <div className="space-y-8">
             {/* Live Auctions */}
             {renderSection(
@@ -522,6 +818,42 @@ export default function Shop() {
               getItemsByType('badge')
             )}
           </div>
+        ) : (
+          <div className="space-y-8">
+            {/* My Inventory */}
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <ShoppingBag className="w-6 h-6" />
+                <h2 className="text-2xl font-bold">My Inventory</h2>
+              </div>
+              {renderUserInventory()}
+            </div>
+
+            {/* Marketplace Listings */}
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="w-6 h-6 text-blue-500" />
+                <h2 className="text-2xl font-bold">Community Marketplace</h2>
+                <Badge variant="outline" className="ml-auto">
+                  {marketplaceListings.length} listings
+                </Badge>
+              </div>
+              {marketplaceListings.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No marketplace listings available</p>
+                </div>
+              ) : (
+                <div className="bg-gradient-to-r from-blue-500/10 via-cyan-500/10 to-blue-500/10 p-4 rounded-lg border border-blue-500/20">
+                  <div className="overflow-x-auto pb-4 -mx-4 px-4">
+                    <div className="flex gap-4">
+                      {marketplaceListings.map(listing => renderMarketplaceCard(listing))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Bid Dialog */}
@@ -564,6 +896,45 @@ export default function Shop() {
               </Button>
               <Button onClick={handlePlaceBid} disabled={placingBid || !bidAmount}>
                 {placingBid ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Place Bid'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* List Item Dialog */}
+        <Dialog open={listDialogOpen} onOpenChange={setListDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>List Item on Marketplace</DialogTitle>
+              <DialogDescription>
+                {selectedItem && (
+                  <>
+                    Listing <strong>{selectedItem.name}</strong> for resale
+                  </>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Asking Price (XP)</label>
+                <Input
+                  type="number"
+                  value={listingPrice}
+                  onChange={(e) => setListingPrice(e.target.value)}
+                  placeholder="Enter your asking price"
+                  min={1}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Set a fair price for other users to purchase your item
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setListDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateListing} disabled={placingBid || !listingPrice}>
+                {placingBid ? <Loader2 className="w-4 h-4 animate-spin" /> : 'List Item'}
               </Button>
             </DialogFooter>
           </DialogContent>
