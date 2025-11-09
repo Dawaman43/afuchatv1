@@ -173,79 +173,84 @@ export default function Shop() {
     }
 
     return (
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredItems.map((item) => {
-          const owned = isOwned(item.id);
-          const discountedPrice = getDiscountedPrice(item);
-          const canAfford = userXP >= discountedPrice;
-          const isFeatured = item.is_featured && item.discount_percentage && item.discount_percentage > 0;
+      <div className="overflow-x-auto pb-4 -mx-4 px-4">
+        <div className="flex gap-4 min-w-max">
+          {filteredItems.map((item) => {
+            const owned = isOwned(item.id);
+            const discountedPrice = getDiscountedPrice(item);
+            const canAfford = userXP >= discountedPrice;
+            const isFeatured = item.is_featured && item.discount_percentage && item.discount_percentage > 0;
 
-          return (
-            <Card key={item.id} className={`${owned ? 'border-primary bg-primary/5' : ''} ${isFeatured ? 'border-2 border-yellow-500 shadow-lg' : ''}`}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="text-4xl mb-2">{item.emoji}</div>
-                  <div className="flex flex-col gap-1">
-                    {owned && (
-                      <Badge variant="secondary" className="gap-1">
-                        <Check className="w-3 h-3" />
-                        Owned
-                      </Badge>
-                    )}
-                    {isFeatured && (
-                      <Badge className="gap-1 bg-yellow-500 hover:bg-yellow-600 text-black">
-                        <Zap className="w-3 h-3" />
-                        {item.discount_percentage}% OFF
-                      </Badge>
-                    )}
+            return (
+              <Card 
+                key={item.id} 
+                className={`${owned ? 'border-primary bg-primary/5' : ''} ${isFeatured ? 'border-2 border-yellow-500 shadow-lg' : ''} w-72 flex-shrink-0`}
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="text-4xl mb-2">{item.emoji}</div>
+                    <div className="flex flex-col gap-1">
+                      {owned && (
+                        <Badge variant="secondary" className="gap-1">
+                          <Check className="w-3 h-3" />
+                          Owned
+                        </Badge>
+                      )}
+                      {isFeatured && (
+                        <Badge className="gap-1 bg-yellow-500 hover:bg-yellow-600 text-black">
+                          <Zap className="w-3 h-3" />
+                          {item.discount_percentage}% OFF
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <CardTitle className="text-lg">{item.name}</CardTitle>
-                <CardDescription>{item.description}</CardDescription>
-                {isFeatured && item.featured_end_date && (
-                  <div className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400 mt-2">
-                    <Clock className="w-3 h-3" />
-                    {getTimeRemaining(item.featured_end_date)}
-                  </div>
-                )}
-              </CardHeader>
-              <CardFooter className="flex items-center justify-between">
-                <div className="flex flex-col">
-                  {isFeatured ? (
-                    <>
-                      <div className="font-bold text-primary text-lg">
-                        {discountedPrice} XP
-                      </div>
-                      <div className="text-xs text-muted-foreground line-through">
-                        {item.xp_cost} XP
-                      </div>
-                    </>
-                  ) : (
-                    <div className="font-bold text-primary text-lg">
-                      {item.xp_cost} XP
+                  <CardTitle className="text-lg">{item.name}</CardTitle>
+                  <CardDescription>{item.description}</CardDescription>
+                  {isFeatured && item.featured_end_date && (
+                    <div className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400 mt-2">
+                      <Clock className="w-3 h-3" />
+                      {getTimeRemaining(item.featured_end_date)}
                     </div>
                   )}
-                </div>
-                <Button
-                  onClick={() => handlePurchase(item.id, item.name)}
-                  disabled={owned || !canAfford || purchasing === item.id}
-                  variant={owned ? 'outline' : 'default'}
-                  size="sm"
-                >
-                  {purchasing === item.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : owned ? (
-                    'Owned'
-                  ) : !canAfford ? (
-                    'Need More XP'
-                  ) : (
-                    'Purchase'
-                  )}
-                </Button>
-              </CardFooter>
-            </Card>
-          );
-        })}
+                </CardHeader>
+                <CardFooter className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    {isFeatured ? (
+                      <>
+                        <div className="font-bold text-primary text-lg">
+                          {discountedPrice} XP
+                        </div>
+                        <div className="text-xs text-muted-foreground line-through">
+                          {item.xp_cost} XP
+                        </div>
+                      </>
+                    ) : (
+                      <div className="font-bold text-primary text-lg">
+                        {item.xp_cost} XP
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    onClick={() => handlePurchase(item.id, item.name)}
+                    disabled={owned || !canAfford || purchasing === item.id}
+                    variant={owned ? 'outline' : 'default'}
+                    size="sm"
+                  >
+                    {purchasing === item.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : owned ? (
+                      'Owned'
+                    ) : !canAfford ? (
+                      'Need More XP'
+                    ) : (
+                      'Purchase'
+                    )}
+                  </Button>
+                </CardFooter>
+              </Card>
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -310,36 +315,49 @@ export default function Shop() {
                   <h2 className="text-2xl font-bold">Limited Edition</h2>
                   <Badge variant="outline" className="ml-auto">Weekly Deals</Badge>
                 </div>
-                <div className="bg-gradient-to-r from-yellow-500/10 via-orange-500/10 to-red-500/10 p-6 rounded-lg border-2 border-yellow-500/20">
+                <div className="bg-gradient-to-r from-yellow-500/10 via-orange-500/10 to-red-500/10 py-4 px-2 rounded-lg border-2 border-yellow-500/20">
                   {renderItems(featuredItems, true)}
                 </div>
               </div>
             )}
 
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid w-full grid-cols-5 mb-6">
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="accessory">Accessories</TabsTrigger>
-                <TabsTrigger value="theme">Themes</TabsTrigger>
-                <TabsTrigger value="effect">Effects</TabsTrigger>
-                <TabsTrigger value="badge">Badges</TabsTrigger>
-              </TabsList>
-              <TabsContent value="all">
-                {renderItems(items)}
-              </TabsContent>
-              <TabsContent value="accessory">
+            {/* All Items Section */}
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold mb-4">All Items</h2>
+              {renderItems(items)}
+            </div>
+
+            {/* Accessories Section */}
+            {getItemsByType('accessory').length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold mb-4">Accessories</h2>
                 {renderItems(getItemsByType('accessory'))}
-              </TabsContent>
-              <TabsContent value="theme">
+              </div>
+            )}
+
+            {/* Themes Section */}
+            {getItemsByType('theme').length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold mb-4">Themes</h2>
                 {renderItems(getItemsByType('theme'))}
-              </TabsContent>
-              <TabsContent value="effect">
+              </div>
+            )}
+
+            {/* Effects Section */}
+            {getItemsByType('effect').length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold mb-4">Effects</h2>
                 {renderItems(getItemsByType('effect'))}
-              </TabsContent>
-              <TabsContent value="badge">
+              </div>
+            )}
+
+            {/* Badges Section */}
+            {getItemsByType('badge').length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold mb-4">Badges</h2>
                 {renderItems(getItemsByType('badge'))}
-              </TabsContent>
-            </Tabs>
+              </div>
+            )}
           </>
         )}
       </div>
