@@ -661,6 +661,7 @@ const Feed = () => {
   const [loading, setLoading] = useState(true);
   const [forceLoaded, setForceLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<'foryou' | 'following'>('foryou');
+  const [newPostsCount, setNewPostsCount] = useState(0);
   const navigate = useNavigate();
   const feedRef = useRef<HTMLDivElement>(null);
   
@@ -956,6 +957,25 @@ const Feed = () => {
     }
   }, [user]);
 
+  // Save scroll position before navigation
+  useEffect(() => {
+    const saveScrollPosition = () => {
+      if (feedRef.current) {
+        sessionStorage.setItem('feedScrollPosition', feedRef.current.scrollTop.toString());
+      }
+    };
+
+    return saveScrollPosition;
+  }, []);
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    const savedPosition = sessionStorage.getItem('feedScrollPosition');
+    if (savedPosition && feedRef.current) {
+      feedRef.current.scrollTop = parseInt(savedPosition);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPosts();
 
@@ -965,23 +985,7 @@ const Feed = () => {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'posts' },
         async (payload) => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('display_name, handle, is_verified, is_organization_verified')
-            .eq('id', payload.new.author_id)
-            .single();
-
-          if (profile) {
-            const newPost = {
-              ...payload.new,
-              profiles: profile,
-              replies: [],
-              like_count: 0,
-              reply_count: 0,
-              has_liked: false,
-            } as Post;
-            setPosts((cur) => [newPost, ...cur]);
-          }
+          setNewPostsCount(prev => prev + 1);
         }
       )
       .subscribe();
@@ -1106,10 +1110,26 @@ const Feed = () => {
 
   const currentPosts = activeTab === 'foryou' ? posts : followingPosts;
 
+  const handleLoadNewPosts = () => {
+    fetchPosts();
+    setNewPostsCount(0);
+    if (feedRef.current) {
+      feedRef.current.scrollTop = 0;
+    }
+  };
+
   return (
     <div className="h-full flex flex-col max-w-4xl mx-auto">
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'foryou' | 'following')} className="w-full">
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          {newPostsCount > 0 && (
+            <button
+              onClick={handleLoadNewPosts}
+              className="w-full py-3 px-4 bg-primary/10 hover:bg-primary/20 text-primary font-semibold transition-colors border-b border-primary/20 flex items-center justify-center gap-2"
+            >
+              <span>Show {newPostsCount} new {newPostsCount === 1 ? 'post' : 'posts'}</span>
+            </button>
+          )}
           <TabsList className="grid grid-cols-2 w-full h-14 rounded-none bg-transparent border-b">
             <TabsTrigger
               value="foryou"
