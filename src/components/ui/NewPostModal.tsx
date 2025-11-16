@@ -51,26 +51,6 @@ const useCharacterCount = (text: string) => {
     return { remaining, variant: getVariant(), length };
 };
 
-// Unique preview component for post
-const PostPreview: React.FC<{ content: string }> = ({ content }) => (
-    // Ensured outer card and content are hidden if overflow occurs
-    <Card className="mt-4 p-3 sm:p-4 bg-gradient-to-r from-muted/20 to-accent/20 border-border/50 rounded-xl overflow-hidden">
-        <CardContent className="p-0">
-            {/* KEY FIX: Added 'break-words' to force long strings to wrap and prevent horizontal expansion */}
-            <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90 overflow-hidden break-words">
-                {content || "Your post will appear here..."}
-            </p>
-            <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border/20">
-                <Badge variant="outline" className="text-xs">Public</Badge>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <TrendingUp className="h-3 w-3" />
-                    <span>Visible to followers</span>
-                </div>
-            </div>
-        </CardContent>
-    </Card>
-);
-
 // Error Boundary Component (wraps modal to catch crashes)
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
     constructor(props: any) {
@@ -101,7 +81,6 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
     const { awardXP } = useXP();
     const [newPost, setNewPost] = useState('');
     const [isPosting, setIsPosting] = useState(false);
-    const [showPreview, setShowPreview] = useState(false);
     const [showAIAssist, setShowAIAssist] = useState(false);
     const [aiTopic, setAiTopic] = useState('');
     const [aiTone, setAiTone] = useState('casual');
@@ -212,27 +191,19 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                 }
             }
 
-            const { error } = { error: null };
-
-            if (error) {
-                console.error("Supabase Post Error:", error);
-                toast.error('Failed to post. Please try again.');
-            } else {
-                // Award XP for creating a post
-                awardXP('create_post', { content: postContent.substring(0, 50) }, true);
-                
-                setNewPost(''); 
-                setSelectedImages([]);
-                setImagePreviews([]);
-                setShowPreview(false);
-                setShowAIAssist(false);
-                setAiTopic('');
-                onClose(); // Close modal on success
-                toast.success('Post created! ✨', {
-                    description: 'Your thoughts are now live.',
-                    duration: 3000,
-                });
-            }
+            // Award XP for creating a post
+            awardXP('create_post', { content: postContent.substring(0, 50) }, true);
+            
+            setNewPost(''); 
+            setSelectedImages([]);
+            setImagePreviews([]);
+            setShowAIAssist(false);
+            setAiTopic('');
+            onClose(); // Close modal on success
+            toast.success('Post created! ✨', {
+                description: 'Your thoughts are now live.',
+                duration: 3000,
+            });
         } catch (err) {
             console.error('Post Error:', err);
             toast.error('Network error—check connection.');
@@ -288,15 +259,6 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
             setGeneratingAI(false);
         }
     };
-
-    // Unique feature: Auto-show preview after typing a few characters
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (newPost.length > 10) setShowPreview(true);
-            else setShowPreview(false);
-        }, 500);
-        return () => clearTimeout(timer);
-    }, [newPost]);
 
     const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
@@ -429,7 +391,6 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
 
     // Fallback for animations
     const MotionDiv = motion ? motion.div : (({ children, ...props }: any) => <div {...props}>{children}</div>);
-    const MotionSend = motion ? motion.div : (({ children, ...props }: any) => <div {...props}>{children}</div>);
 
     return (
         <ErrorBoundary>
@@ -472,6 +433,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                         initial={motion ? { opacity: 0, y: -20 } : {}}
                         animate={motion ? { opacity: 1, y: 0 } : {}}
                         exit={motion ? { opacity: 0, y: -20 } : {}}
+                        transition={motion ? { duration: 0.2, ease: "easeInOut" } : {}}
                         className="p-4 border-b border-muted-foreground/10 flex flex-row items-center justify-between bg-gradient-to-r from-primary/5 to-secondary/5"
                     >
                         <DialogTitle className="text-xl font-extrabold text-foreground flex items-center gap-2">
@@ -486,18 +448,24 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                         {!showAIAssist ? (
                             <>
                                 {/* Textarea: Max height and forced vertical scroll, blocked horizontal expansion */}
-                                <Textarea
-                                    placeholder="Share your thoughts... What's on your mind today? (Text-only, max 280 characters)"
-                                    value={newPost}
-                                    onChange={(e) => setNewPost(e.target.value)}
-                                    maxLength={280}
-                                    rows={4}
-                                    className={cn(
-                                        "mb-3 resize-none focus-visible:ring-primary min-h-[100px] max-h-40 overflow-y-auto overflow-x-hidden",
-                                        "placeholder:text-muted-foreground/70"
-                                    )}
-                                    disabled={isPosting}
-                                />
+                                <MotionDiv
+                                    initial={motion ? { opacity: 0, scale: 0.95 } : {}}
+                                    animate={motion ? { opacity: 1, scale: 1 } : {}}
+                                    transition={motion ? { duration: 0.15, ease: "easeOut" } : {}}
+                                >
+                                    <Textarea
+                                        placeholder="Share your thoughts... What's on your mind today? (Text-only, max 280 characters)"
+                                        value={newPost}
+                                        onChange={(e) => setNewPost(e.target.value)}
+                                        maxLength={280}
+                                        rows={4}
+                                        className={cn(
+                                            "mb-3 resize-none focus-visible:ring-primary min-h-[100px] max-h-40 overflow-y-auto overflow-x-hidden",
+                                            "placeholder:text-muted-foreground/70 transition-all duration-200 ease-in-out"
+                                        )}
+                                        disabled={isPosting}
+                                    />
+                                </MotionDiv>
 
                                 {/* Image Upload Section */}
                                 <div className="space-y-3">
@@ -511,23 +479,32 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                     />
                                     
                                     {imagePreviews.length === 0 ? (
-                                        <Button
-                                            type="button"
-                                            onClick={() => fileInputRef.current?.click()}
-                                            variant="outline"
-                                            size="sm"
-                                            className="w-full flex items-center gap-2"
-                                            disabled={isPosting}
+                                        <MotionDiv
+                                            initial={motion ? { opacity: 0, y: 10 } : {}}
+                                            animate={motion ? { opacity: 1, y: 0 } : {}}
+                                            transition={motion ? { duration: 0.2, ease: "easeOut" } : {}}
                                         >
-                                            <ImageIcon className="h-4 w-4" />
-                                            Add Images (Up to 4)
-                                        </Button>
+                                            <Button
+                                                type="button"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                variant="outline"
+                                                size="sm"
+                                                className="w-full flex items-center gap-2 transition-all duration-200 hover:scale-105"
+                                                disabled={isPosting}
+                                            >
+                                                <ImageIcon className="h-4 w-4" />
+                                                Add Images (Up to 4)
+                                            </Button>
+                                        </MotionDiv>
                                      ) : (
                                         <div className="space-y-3">
                                             <div className="grid grid-cols-2 gap-2">
                                                 {imagePreviews.map((preview, index) => (
-                                                    <div 
+                                                    <MotionDiv 
                                                         key={index} 
+                                                        initial={motion ? { opacity: 0, scale: 0.9 } : {}}
+                                                        animate={motion ? { opacity: 1, scale: 1 } : {}}
+                                                        transition={motion ? { duration: 0.15, delay: index * 0.05 } : {}}
                                                         className="space-y-2 cursor-move"
                                                         draggable
                                                         onDragStart={(e) => {
@@ -561,22 +538,22 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                                             }
                                                         }}
                                                     >
-                                                        <div className="relative rounded-lg overflow-hidden border-2 border-border group">
+                                                        <div className="relative rounded-lg overflow-hidden border-2 border-border group transition-all duration-200 hover:border-primary/50">
                                                             <div className="absolute top-1 left-1 bg-background/80 text-xs px-2 py-0.5 rounded z-10">
                                                                 {index + 1}
                                                             </div>
                                                             <img 
                                                                 src={preview} 
                                                                 alt={imageAltTexts[index] || `Preview ${index + 1}`} 
-                                                                className="w-full h-32 object-cover"
+                                                                className="w-full h-32 object-cover transition-transform duration-200 group-hover:scale-105"
                                                             />
-                                                            <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
                                                                 <Button
                                                                     type="button"
                                                                     onClick={() => handleEditImage(index)}
                                                                     variant="secondary"
                                                                     size="icon"
-                                                                    className="h-7 w-7"
+                                                                    className="h-7 w-7 hover:scale-110"
                                                                     disabled={isPosting || uploadingImage}
                                                                 >
                                                                     <Pencil className="h-3 w-3" />
@@ -586,14 +563,14 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                                                     onClick={() => handleRemoveImage(index)}
                                                                     variant="destructive"
                                                                     size="icon"
-                                                                    className="h-7 w-7"
+                                                                    className="h-7 w-7 hover:scale-110"
                                                                     disabled={isPosting || uploadingImage}
                                                                 >
                                                                     <X className="h-3 w-3" />
                                                                 </Button>
                                                             </div>
                                                             {uploadingImage && (
-                                                                <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+                                                                <div className="absolute inset-0 bg-background/80 flex items-center justify-center transition-opacity duration-200">
                                                                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
                                                                 </div>
                                                             )}
@@ -616,7 +593,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                                             }}
                                                             isGenerating={isGenerating}
                                                         />
-                                                    </div>
+                                                    </MotionDiv>
                                                 ))}
                                             </div>
                                             
@@ -627,7 +604,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                                         onClick={() => fileInputRef.current?.click()}
                                                         variant="outline"
                                                         size="sm"
-                                                        className="flex-1 flex items-center gap-2"
+                                                        className="flex-1 flex items-center gap-2 transition-all duration-200 hover:scale-105"
                                                         disabled={isPosting}
                                                     >
                                                         <ImageIcon className="h-4 w-4" />
@@ -640,7 +617,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                                         onClick={() => setShowBatchEditor(true)}
                                                         variant="secondary"
                                                         size="sm"
-                                                        className="flex-1 flex items-center gap-2"
+                                                        className="flex-1 flex items-center gap-2 transition-all duration-200 hover:scale-105"
                                                         disabled={isPosting || uploadingImage}
                                                     >
                                                         <Wand2 className="h-4 w-4" />
@@ -653,25 +630,31 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                 </div>
 
                                 {/* AI Assist Button */}
-                                <Button
-                                    onClick={() => setShowAIAssist(true)}
-                                    variant="outline"
-                                    size="sm"
-                                    className="w-full flex items-center gap-2"
+                                <MotionDiv
+                                    initial={motion ? { opacity: 0, y: 10 } : {}}
+                                    animate={motion ? { opacity: 1, y: 0 } : {}}
+                                    transition={motion ? { duration: 0.2, ease: "easeOut" } : {}}
                                 >
-                                    <Wand2 className="h-4 w-4" />
-                                    Need help? Let AI generate a post
-                                </Button>
+                                    <Button
+                                        onClick={() => setShowAIAssist(true)}
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full flex items-center gap-2 transition-all duration-200 hover:scale-105"
+                                    >
+                                        <Wand2 className="h-4 w-4" />
+                                        Need help? Let AI generate a post
+                                    </Button>
+                                </MotionDiv>
 
                                 {/* Character counter with progress bar */}
                                 <div className="flex items-center justify-between">
-                                    <Badge variant={variant as "default" | "destructive" | "outline" | "secondary"} className="text-xs">
+                                    <Badge variant={variant as "default" | "destructive" | "outline" | "secondary"} className="text-xs transition-colors duration-200">
                                         {remaining} left • {length}/280
                                     </Badge>
-                                    <div className="w-20 bg-muted rounded-full h-1.5">
+                                    <div className="w-20 bg-muted rounded-full h-1.5 overflow-hidden">
                                         <div 
                                             className={cn(
-                                                "h-1.5 rounded-full transition-all duration-300",
+                                                "h-1.5 rounded-full transition-all duration-300 ease-in-out",
                                                 length > 250 ? "bg-destructive" : length > 200 ? "bg-secondary" : "bg-primary"
                                             )} 
                                             style={{ width: `${(length / 280) * 100}%` }}
@@ -679,53 +662,63 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                     </div>
                                 </div>
 
-                                {/* Unique Post Preview */}
-                                {showPreview && <PostPreview content={newPost} />}
-
-                                <Separator />
+                                <Separator className="transition-opacity duration-200" />
 
                                 {/* Post Button with loading state */}
-                                <Button 
-                                    onClick={handlePost} 
-                                    disabled={!newPost.trim() || newPost.length > 280 || isPosting} 
-                                    className={cn(
-                                        "w-full flex items-center justify-center space-x-2 shadow-lg rounded-full px-6 py-3 h-12 font-bold transition-all duration-200",
-                                        "hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]",
-                                        (newPost.trim() && newPost.length <= 280 && !isPosting) 
-                                            ? "bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90" 
-                                            : "bg-muted cursor-not-allowed"
-                                    )}
+                                <MotionDiv
+                                    initial={motion ? { opacity: 0, scale: 0.95 } : {}}
+                                    animate={motion ? { opacity: 1, scale: 1 } : {}}
+                                    transition={motion ? { duration: 0.2, ease: "easeOut" } : {}}
                                 >
-                                    {isPosting ? (
-                                        <div className="flex items-center space-x-2">
-                                            <Send className="h-4 w-4 animate-spin" />
-                                            <span>Posting...</span>
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-center space-x-2">
-                                            <Send className="h-4 w-4" />
-                                            <span>Share Post</span>
-                                        </div>
-                                    )}
-                                </Button>
+                                    <Button 
+                                        onClick={handlePost} 
+                                        disabled={!newPost.trim() || newPost.length > 280 || isPosting} 
+                                        className={cn(
+                                            "w-full flex items-center justify-center space-x-2 shadow-lg rounded-full px-6 py-3 h-12 font-bold transition-all duration-300 ease-in-out",
+                                            "hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]",
+                                            (newPost.trim() && newPost.length <= 280 && !isPosting) 
+                                                ? "bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90" 
+                                                : "bg-muted cursor-not-allowed"
+                                        )}
+                                    >
+                                        {isPosting ? (
+                                            <div className="flex items-center space-x-2">
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                <span>Posting...</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center space-x-2">
+                                                <Send className="h-4 w-4" />
+                                                <span>Share Post</span>
+                                            </div>
+                                        )}
+                                    </Button>
+                                </MotionDiv>
                             </>
                         ) : (
                             <>
                                 {/* AI Generation Form */}
                                 <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-semibold flex items-center gap-2">
-                                            <Wand2 className="h-4 w-4 text-primary" />
-                                            AI Post Generator
-                                        </h3>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => setShowAIAssist(false)}
-                                        >
-                                            Back
-                                        </Button>
-                                    </div>
+                                    <MotionDiv
+                                        initial={motion ? { opacity: 0, y: 20 } : {}}
+                                        animate={motion ? { opacity: 1, y: 0 } : {}}
+                                        transition={motion ? { duration: 0.2, ease: "easeOut" } : {}}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-sm font-semibold flex items-center gap-2">
+                                                <Wand2 className="h-4 w-4 text-primary" />
+                                                AI Post Generator
+                                            </h3>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setShowAIAssist(false)}
+                                                className="transition-all duration-200 hover:scale-105"
+                                            >
+                                                Back
+                                            </Button>
+                                        </div>
+                                    </MotionDiv>
 
                                     <div className="space-y-3">
                                         <div>
@@ -735,14 +728,14 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                                 value={aiTopic}
                                                 onChange={(e) => setAiTopic(e.target.value)}
                                                 placeholder="e.g., morning motivation, tech trends, funny story..."
-                                                className="mt-1"
+                                                className="mt-1 transition-all duration-200 focus:scale-[1.01]"
                                             />
                                         </div>
 
                                         <div>
                                             <Label htmlFor="tone" className="text-xs">Tone</Label>
                                             <Select value={aiTone} onValueChange={setAiTone}>
-                                                <SelectTrigger className="mt-1">
+                                                <SelectTrigger className="mt-1 transition-all duration-200">
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -757,7 +750,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                         <div>
                                             <Label htmlFor="length" className="text-xs">Length</Label>
                                             <Select value={aiLength} onValueChange={setAiLength}>
-                                                <SelectTrigger className="mt-1">
+                                                <SelectTrigger className="mt-1 transition-all duration-200">
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -772,7 +765,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                     <Button
                                         onClick={handleGenerateAI}
                                         disabled={generatingAI || !aiTopic.trim()}
-                                        className="w-full"
+                                        className="w-full transition-all duration-300 ease-in-out hover:scale-[1.02]"
                                     >
                                         {generatingAI ? (
                                             <>
