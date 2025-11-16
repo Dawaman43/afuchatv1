@@ -14,6 +14,7 @@ import { useAITranslation } from '@/hooks/useAITranslation';
 import PostActionsSheet from '@/components/PostActionsSheet';
 import DeletePostSheet from '@/components/DeletePostSheet';
 import ReportPostSheet from '@/components/ReportPostSheet';
+import { EditPostModal } from '@/components/EditPostModal';
 import { OwlAvatar } from '@/components/avatar/OwlAvatar';
 import { useUserAvatar } from '@/hooks/useUserAvatar';
 import { SendGiftDialog } from '@/components/gifts/SendGiftDialog';
@@ -273,7 +274,7 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: { reply: Reply; navig
 
 // --- POST CARD (Updated to accept and pass through new props) ---
 
-const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost, onReportPost }:
+const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost, onReportPost, onEditPost }:
   { 
       post: Post; 
       addReply: (postId: string, reply: Reply) => void; 
@@ -282,6 +283,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       onAcknowledge: (postId: string, hasLiked: boolean) => void;
       onDeletePost: (postId: string) => void;
       onReportPost: (postId: string) => void;
+      onEditPost: (postId: string) => void;
   }) => {
 
   const { t, i18n } = useTranslation();
@@ -445,6 +447,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                 navigate={navigate}
                 onDelete={onDeletePost}
                 onReport={onReportPost}
+                onEdit={onEditPost}
             />
           </div>
         </div>
@@ -596,6 +599,7 @@ const Feed = () => {
   
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [reportPostId, setReportPostId] = useState<string | null>(null);
+  const [editPost, setEditPost] = useState<Post | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const addReply = useCallback((postId: string, newReply: Reply) => {
@@ -745,6 +749,25 @@ const Feed = () => {
 
       // In a real app, you would insert a record into a 'post_reports' table here.
   }, [user]);
+
+  // Edit Post Handler - Opens edit modal
+  const handleEditPost = useCallback((postId: string) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    const post = posts.find(p => p.id === postId) || followingPosts.find(p => p.id === postId);
+    if (post) {
+      setEditPost(post);
+    }
+  }, [user, navigate, posts, followingPosts]);
+
+  // After post is updated, refresh the posts
+  const handlePostUpdated = useCallback(() => {
+    fetchPosts();
+    setEditPost(null);
+  }, []);
+
 
 
   const fetchPosts = useCallback(async () => {
@@ -1042,6 +1065,7 @@ const Feed = () => {
                 onAcknowledge={handleAcknowledge}
                 onDeletePost={handleDeletePost}
                 onReportPost={handleReportPost}
+                onEditPost={handleEditPost}
               />
             ))
           )}
@@ -1062,6 +1086,16 @@ const Feed = () => {
         onClose={() => setReportPostId(null)}
         onReport={confirmReportPost}
       />
+
+      {/* Edit Post Modal */}
+      {editPost && (
+        <EditPostModal
+          isOpen={!!editPost}
+          onClose={() => setEditPost(null)}
+          post={editPost}
+          onPostUpdated={handlePostUpdated}
+        />
+      )}
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { 
-  Ellipsis, Trash2, Flag, Maximize2, Share, LogIn, EyeOff, UserPlus, List, Volume2, UserX, AlertTriangle, MessageCircle 
+  Ellipsis, Trash2, Flag, Maximize2, Share, LogIn, EyeOff, UserPlus, List, Volume2, UserX, AlertTriangle, MessageCircle, Pencil 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -14,6 +14,7 @@ interface Post {
     created_at: string;
     updated_at: string;
     author_id: string;
+    image_url: string | null;
     profiles: {
         display_name: string;
         handle: string;
@@ -42,12 +43,13 @@ interface PostActionsSheetProps {
   navigate: (path: string) => void;
   onDelete: (postId: string) => void;
   onReport: (postId: string) => void;
+  onEdit?: (postId: string) => void;
 }
 
 /**
  * Renders a type-safe bottom sheet modal for contextual post actions with a richer UI.
  */
-const PostActionsSheet: React.FC<PostActionsSheetProps> = ({ post, user, navigate, onDelete, onReport }) => {
+const PostActionsSheet: React.FC<PostActionsSheetProps> = ({ post, user, navigate, onDelete, onReport, onEdit }) => {
     const isAuthor = user?.id === post.author_id;
     const closeRef = useRef<HTMLButtonElement>(null);
     const dragRef = useRef<HTMLDivElement>(null);
@@ -305,6 +307,20 @@ const PostActionsSheet: React.FC<PostActionsSheetProps> = ({ post, user, navigat
                             <span className="font-normal transition-colors duration-300 group-hover:text-foreground">Request community note</span>
                         </Button>
                     </SheetClose>
+
+                    {/* Edit (Author Only) */}
+                    {isAuthor && onEdit && (
+                        <SheetClose asChild>
+                            <Button 
+                                variant="ghost" 
+                                className="justify-start w-full text-left py-3.5 h-auto text-foreground hover:bg-muted/80 text-sm rounded-lg transition-all duration-300 ease-out hover:scale-[1.005] hover:shadow-sm group"
+                                onClick={() => onEdit(post.id)}
+                            >
+                                <Pencil className="h-4 w-4 mr-4 flex-shrink-0 text-muted-foreground transition-colors duration-300 group-hover:text-foreground" />
+                                <span className="font-normal transition-colors duration-300 group-hover:text-foreground">Edit Post</span>
+                            </Button>
+                        </SheetClose>
+                    )}
 
                     {/* Delete (Author Only) - added at end with red styling */}
                     {isAuthor && (

@@ -5,7 +5,8 @@ import { useXP } from '@/hooks/useXP';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Send, X, Sparkles, Image as ImageIcon, Loader2, TrendingUp, Wand2 } from 'lucide-react';
+import { Send, X, Sparkles, Image as ImageIcon, Loader2, TrendingUp, Wand2, Pencil } from 'lucide-react';
+import { ImageEditor } from '@/components/image-editor/ImageEditor';
 import { postSchema, aiTopicSchema, aiToneSchema, aiLengthSchema } from '@/lib/validation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
@@ -105,6 +106,8 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
     const [selectedImage, setSelectedImage] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [showImageEditor, setShowImageEditor] = useState(false);
+    const [editingImagePreview, setEditingImagePreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { remaining, variant, length } = useCharacterCount(newPost);
@@ -269,9 +272,43 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
     const handleRemoveImage = () => {
         setSelectedImage(null);
         setImagePreview(null);
+        setEditingImagePreview(null);
+        setShowImageEditor(false);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
+    };
+
+    const handleEditImage = () => {
+        if (imagePreview) {
+            setEditingImagePreview(imagePreview);
+            setShowImageEditor(true);
+        }
+    };
+
+    const handleImageEditorSave = (editedBlob: Blob) => {
+        // Convert blob to file
+        const file = new File([editedBlob], selectedImage?.name || 'edited-image.png', {
+            type: 'image/png',
+        });
+        
+        setSelectedImage(file);
+        
+        // Update preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setImagePreview(reader.result as string);
+            setShowImageEditor(false);
+            setEditingImagePreview(null);
+        };
+        reader.readAsDataURL(file);
+        
+        toast.success('Image edited successfully!');
+    };
+
+    const handleImageEditorCancel = () => {
+        setShowImageEditor(false);
+        setEditingImagePreview(null);
     };
 
     // Fallback for animations
@@ -280,6 +317,22 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
 
     return (
         <ErrorBoundary>
+            {/* Image Editor Dialog */}
+            {showImageEditor && editingImagePreview && (
+                <Dialog open={showImageEditor} onOpenChange={handleImageEditorCancel}>
+                    <DialogContent className="max-w-4xl">
+                        <DialogHeader>
+                            <DialogTitle>Edit Image</DialogTitle>
+                        </DialogHeader>
+                        <ImageEditor
+                            image={editingImagePreview}
+                            onSave={handleImageEditorSave}
+                            onCancel={handleImageEditorCancel}
+                        />
+                    </DialogContent>
+                </Dialog>
+            )}
+
             {/* The Dialog component handles the backdrop click close (the implicit "cancel") */}
             <Dialog open={isOpen} onOpenChange={onClose}>
                 {/* DialogContent Styling: Enforced small centered size (90vw and max-w-sm) */}
@@ -349,16 +402,26 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                                 alt="Preview" 
                                                 className="w-full h-48 object-cover"
                                             />
-                                            <Button
-                                                type="button"
-                                                onClick={handleRemoveImage}
-                                                variant="destructive"
-                                                size="icon"
-                                                className="absolute top-2 right-2"
-                                                disabled={isPosting || uploadingImage}
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </Button>
+                                            <div className="absolute top-2 right-2 flex gap-2">
+                                                <Button
+                                                    type="button"
+                                                    onClick={handleEditImage}
+                                                    variant="secondary"
+                                                    size="icon"
+                                                    disabled={isPosting || uploadingImage}
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    onClick={handleRemoveImage}
+                                                    variant="destructive"
+                                                    size="icon"
+                                                    disabled={isPosting || uploadingImage}
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            </div>
                                             {uploadingImage && (
                                                 <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
                                                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
