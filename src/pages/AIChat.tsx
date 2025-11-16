@@ -48,26 +48,14 @@ const AIChat: React.FC = () => {
     setLoading(true);
 
     try {
-        const response = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-with-afuai`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-                },
-                body: JSON.stringify({
-                    message: initialPrompt,
-                    history: [...currentMessages, { role: 'user', content: initialPrompt, timestamp: new Date() }].slice(-6), 
-                }),
+        const { data, error } = await supabase.functions.invoke('chat-with-afuai', {
+            body: {
+                message: initialPrompt,
+                history: [...currentMessages, { role: 'user', content: initialPrompt, timestamp: new Date() }].slice(-6), 
             }
-        );
+        });
 
-        if (!response.ok) {
-            throw new Error('Failed to get initial AI response');
-        }
-
-        const data = await response.json();
+        if (error) throw error;
         
         const assistantMessage: Message = {
             role: 'assistant',
@@ -103,36 +91,39 @@ const AIChat: React.FC = () => {
     setInput('');
     setLoading(true);
 
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-with-afuai`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            message: userMessage.content,
-            history: messages.slice(-5),
-          }),
-        }
-      );
+  const handleSend = async () => {
+    if (!input.trim() || loading) return;
 
-      if (!response.ok) {
-        if (response.status === 429) {
+    const userMessage: Message = {
+      role: 'user',
+      content: input.trim(),
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('chat-with-afuai', {
+        body: {
+          message: userMessage.content,
+          history: messages.slice(-5),
+        }
+      });
+
+      if (error) {
+        if (error.message?.includes('429')) {
           toast.error('Rate limit exceeded. Please try again in a moment.');
           return;
         }
-        if (response.status === 402) {
+        if (error.message?.includes('402')) {
           toast.error('AI service requires payment. Please add credits.');
           return;
         }
-        throw new Error('Failed to get AI response');
+        throw error;
       }
 
-      const data = await response.json();
-      
       const assistantMessage: Message = {
         role: 'assistant',
         content: data.reply,
@@ -146,6 +137,7 @@ const AIChat: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
   };
   
   const handleAIAvatarClick = () => {
