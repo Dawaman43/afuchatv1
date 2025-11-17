@@ -680,7 +680,12 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
 
 
         <div className="flex justify-between items-center text-xs text-muted-foreground mt-1 -ml-1.5 sm:-ml-2 max-w-full sm:max-w-[450px]">
-          <Button variant="ghost" size="sm" className="flex items-center gap-0.5 sm:gap-1 group h-7 sm:h-8 px-2 sm:px-3" onClick={() => setShowComments(!showComments)}>
+          <Button variant="ghost" size="sm" className="flex items-center gap-0.5 sm:gap-1 group h-7 sm:h-8 px-2 sm:px-3" onClick={() => {
+            if (!showComments && post.profiles.handle) {
+              setReplyText(`@${post.profiles.handle} `);
+            }
+            setShowComments(!showComments);
+          }}>
             <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:text-primary transition-colors" />
             <span className="group-hover:text-primary transition-colors text-[10px] sm:text-xs">{post.reply_count > 0 ? post.reply_count : ''}</span>
           </Button>
