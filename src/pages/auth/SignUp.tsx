@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Eye, EyeOff, X, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { Eye, EyeOff, X, Loader2, CheckCircle2, XCircle, Upload, User } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { emailSchema, passwordSchema, handleSchema, displayNameSchema } from '@/lib/validation';
 import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -23,6 +24,9 @@ const SignUp = () => {
   const [githubLoading, setGithubLoading] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const [usernameError, setUsernameError] = useState('');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Capture referral code from URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -95,6 +99,32 @@ const SignUp = () => {
     }
   };
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    setAvatarFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -121,7 +151,7 @@ const SignUp = () => {
         signupData.referral_code = referralCode;
       }
 
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -137,6 +167,40 @@ const SignUp = () => {
           throw error;
         }
       } else {
+        // Upload avatar if selected
+        let avatarUrl = null;
+        if (avatarFile && authData.user) {
+          try {
+            setUploadingAvatar(true);
+            const fileExt = avatarFile.name.split('.').pop();
+            const fileName = `${authData.user.id}/${Date.now()}.${fileExt}`;
+            
+            const { error: uploadError, data: uploadData } = await supabase.storage
+              .from('avatars')
+              .upload(fileName, avatarFile);
+
+            if (uploadError) throw uploadError;
+
+            // Get public URL
+            const { data: { publicUrl } } = supabase.storage
+              .from('avatars')
+              .getPublicUrl(fileName);
+
+            avatarUrl = publicUrl;
+
+            // Update profile with avatar URL
+            await supabase
+              .from('profiles')
+              .update({ avatar_url: avatarUrl })
+              .eq('id', authData.user.id);
+          } catch (uploadError) {
+            console.error('Error uploading avatar:', uploadError);
+            // Don't block signup if avatar upload fails
+          } finally {
+            setUploadingAvatar(false);
+          }
+        }
+
         toast.success('Account created! Check your email for verification.');
         navigate('/auth/signin');
       }
@@ -285,6 +349,36 @@ const SignUp = () => {
         ) : (
           <form onSubmit={handleSignUp} className="space-y-6 animate-scale-in">
             <div className="space-y-2">
+              <Label>Profile Picture (Optional)</Label>
+              <div className="flex items-center gap-4">
+                <Avatar className="h-20 w-20">
+                  <AvatarImage src={avatarPreview || undefined} />
+                  <AvatarFallback className="bg-muted">
+                    <User className="h-8 w-8 text-muted-foreground" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    id="avatar"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                  />
+                  <Label htmlFor="avatar" className="cursor-pointer">
+                    <div className="flex items-center gap-2 px-4 py-2 border border-input rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
+                      <Upload className="h-4 w-4" />
+                      <span className="text-sm">{avatarFile ? 'Change Image' : 'Upload Image'}</span>
+                    </div>
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    JPG, PNG, or GIF (max 5MB)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="displayName">Name</Label>
               <Input
                 id="displayName"
@@ -363,12 +457,12 @@ const SignUp = () => {
             <Button
               type="submit"
               className="w-full h-12 text-base font-semibold"
-              disabled={loading || googleLoading || githubLoading || usernameStatus !== 'available'}
+              disabled={loading || googleLoading || githubLoading || usernameStatus !== 'available' || uploadingAvatar}
             >
-              {loading ? (
+              {loading || uploadingAvatar ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating account...
+                  {uploadingAvatar ? 'Uploading avatar...' : 'Creating account...'}
                 </>
               ) : (
                 'Sign up'
