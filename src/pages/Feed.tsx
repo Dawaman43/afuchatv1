@@ -133,45 +133,7 @@ const formatTime = (isoString: string) => {
   return date.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-
-  const parsePostContent = (content: string, postId: string) => {
-    const parts = content.split(/(@\w+|https?:\/\/[^\s]+|(?:www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/g);
-    
-    return parts.map((part, index) => {
-      if (part.startsWith('@')) {
-        const handle = part.substring(1);
-        return (
-          <Link 
-            key={`${postId}-mention-${index}`} 
-            to={`/profile/${handle}`}
-            className="text-primary hover:underline font-semibold"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {part}
-          </Link>
-        );
-      }
-      
-      if (part.match(/^https?:\/\//i) || part.match(/^(?:www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/)) {
-        const url = part.startsWith('http') ? part : `https://${part}`;
-        return (
-          <a
-            key={`${postId}-link-${index}`}
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {part}
-          </a>
-        );
-      }
-      
-      return part;
-    });
-  };
-  
+const parsePostContent = (content: string, postId: string, navigate: ReturnType<typeof useNavigate>) => {
   const lookupAndNavigateByHandle = async (handle: string) => {
     const { data, error } = await supabase
       .from('profiles')
@@ -367,7 +329,7 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: { reply: Reply; navig
                 </div>
 
                 <p className="text-foreground text-xs leading-snug whitespace-pre-wrap break-words mt-0.5">
-                    {parsePostContent(displayContent, navigate)}
+                    {parsePostContent(displayContent, reply.id, navigate)}
                 </p>
                 {i18n.language !== 'en' && (
                     <Button
@@ -388,7 +350,7 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: { reply: Reply; navig
 
 // --- POST CARD (Updated to accept and pass through new props) ---
 
-const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost, onReportPost, onEditPost, userProfile }:
+const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost, onReportPost, onEditPost, userProfile, expandedPosts, setExpandedPosts }:
   { 
       post: Post; 
       addReply: (postId: string, reply: Reply) => void; 
@@ -399,6 +361,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       onReportPost: (postId: string) => void;
       onEditPost: (postId: string) => void;
       userProfile: { display_name: string; avatar_url: string | null } | null;
+      expandedPosts: Set<string>;
+      setExpandedPosts: React.Dispatch<React.SetStateAction<Set<string>>>;
   }) => {
 
   const { t, i18n } = useTranslation();
@@ -634,7 +598,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           <div className="text-foreground whitespace-pre-wrap">
             {expandedPosts.has(post.id) ? (
               <>
-                {parsePostContent(translatedContent || post.content, post.id)}
+                {parsePostContent(translatedContent || post.content, post.id, navigate)}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -654,7 +618,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             ) : (
               <>
                 <div className="line-clamp-4">
-                  {parsePostContent(translatedContent || post.content, post.id)}
+                  {parsePostContent(translatedContent || post.content, post.id, navigate)}
                 </div>
                 <Button
                   variant="ghost"
@@ -769,7 +733,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                   depth={0}
                   handleViewProfile={handleViewProfile}
                   onReplyToReply={handleReplyToReply}
-                  parsePostContent={parsePostContent}
+                  parsePostContent={(content, postId) => parsePostContent(content, postId, navigate)}
                   formatTime={formatTime}
                   UserAvatarSmall={UserAvatarSmall}
                   VerifiedBadge={VerifiedBadge}
@@ -842,6 +806,7 @@ const Feed = () => {
   const [activeTab, setActiveTab] = useState<'foryou' | 'following'>('foryou');
   const [newPostsCount, setNewPostsCount] = useState(0);
   const [userProfile, setUserProfile] = useState<{ display_name: string; avatar_url: string | null } | null>(null);
+  const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const feedRef = useRef<HTMLDivElement>(null);
   
@@ -1418,6 +1383,8 @@ const Feed = () => {
                 onReportPost={handleReportPost}
                 onEditPost={handleEditPost}
                 userProfile={userProfile}
+                expandedPosts={expandedPosts}
+                setExpandedPosts={setExpandedPosts}
               />
             ))
           )}
