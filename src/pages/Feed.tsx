@@ -225,47 +225,47 @@ const parsePostContent = (content: string, postId: string, navigate: ReturnType<
 
 // Avatar Display Components
 const UserAvatarSmall = ({ userId, name, avatarUrl }: { userId: string; name: string; avatarUrl?: string | null }) => {
-	const { avatarConfig, loading } = useUserAvatar(userId);
+  const { avatarConfig, loading } = useUserAvatar(userId);
 
-	if (loading) {
-		return (
-			<div className="h-6 w-6 sm:h-7 sm:w-7 rounded-full bg-muted animate-pulse flex-shrink-0" />
-		);
-	}
+  if (loading) {
+    return (
+      <div className="h-6 w-6 sm:h-7 sm:w-7 rounded-full bg-muted animate-pulse flex-shrink-0" />
+    );
+  }
 
-	if (avatarUrl) {
-		return (
-			<img
-				src={avatarUrl}
-				alt={name}
-				className="h-6 w-6 sm:h-7 sm:w-7 rounded-full object-cover flex-shrink-0"
-			/>
-		);
-	}
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        className="h-6 w-6 sm:h-7 sm:w-7 rounded-full object-cover flex-shrink-0"
+      />
+    );
+  }
 
-	return <DefaultAvatar name={name} size={28} className="flex-shrink-0" />;
+  return <DefaultAvatar name={name} size={28} className="flex-shrink-0" />;
 };
 
 const UserAvatarMedium = ({ userId, name, avatarUrl }: { userId: string; name: string; avatarUrl?: string | null }) => {
-	const { avatarConfig, loading } = useUserAvatar(userId);
+  const { avatarConfig, loading } = useUserAvatar(userId);
 
-	if (loading) {
-		return (
-			<div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-muted animate-pulse flex-shrink-0" />
-		);
-	}
+  if (loading) {
+    return (
+      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-muted animate-pulse flex-shrink-0" />
+    );
+  }
 
-	if (avatarUrl) {
-		return (
-			<img
-				src={avatarUrl}
-				alt={name}
-				className="h-8 w-8 sm:h-10 sm:w-10 rounded-full object-cover flex-shrink-0"
-			/>
-		);
-	}
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        className="h-8 w-8 sm:h-10 sm:w-10 rounded-full object-cover flex-shrink-0"
+      />
+    );
+  }
 
-	return <DefaultAvatar name={name} size={40} className="flex-shrink-0" />;
+  return <DefaultAvatar name={name} size={40} className="flex-shrink-0" />;
 };
 
 // --- REPLY ITEM (Unchanged) ---
