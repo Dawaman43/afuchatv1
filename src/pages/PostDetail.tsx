@@ -472,6 +472,11 @@ const PostDetail = () => {
                 <Textarea
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
+                  onFocus={() => {
+                    if (!replyingTo && !replyText && post) {
+                      setReplyText(`@${post.author.handle} `);
+                    }
+                  }}
                   placeholder={replyingTo ? `Reply to @${replyingTo.authorHandle}...` : "Post your reply..."}
                   className="min-h-[80px] resize-none"
                   disabled={submittingReply}
@@ -501,7 +506,10 @@ const PostDetail = () => {
                 depth={0}
                 onTranslate={handleTranslateReply}
                 translatedReplies={translatedReplies}
-                onReplyClick={(replyId, authorHandle) => setReplyingTo({ replyId, authorHandle })}
+                onReplyClick={(replyId, authorHandle) => {
+                  setReplyingTo({ replyId, authorHandle });
+                  setReplyText(`@${authorHandle} `);
+                }}
                 VerifiedBadge={VerifiedBadge}
                 renderContentWithMentions={renderContentWithMentions}
               />

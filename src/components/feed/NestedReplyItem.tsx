@@ -140,7 +140,12 @@ export const NestedReplyItem = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowReplyInput(!showReplyInput)}
+                onClick={() => {
+                  setShowReplyInput(!showReplyInput);
+                  if (!showReplyInput) {
+                    setReplyText(`@${reply.profiles.handle} `);
+                  }
+                }}
                 className="text-[10px] sm:text-xs text-muted-foreground hover:text-primary p-0 h-auto flex items-center gap-1"
               >
                 <MessageSquare className="h-3 w-3" />
