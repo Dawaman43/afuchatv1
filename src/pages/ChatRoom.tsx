@@ -828,13 +828,17 @@ const ChatRoom = () => {
               </div>
             ) : otherUser ? (
               <>
-                <UserAvatar
-                  userId={otherUser.id}
-                  name={otherUser.display_name}
-                  avatarUrl={otherUser.avatar_url}
-                  size={44}
-                  showOwlFallback={true}
-                />
+                {otherUser.avatar_url ? (
+                  <img
+                    src={otherUser.avatar_url}
+                    alt={otherUser.display_name}
+                    className="w-11 h-11 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-medium text-lg">
+                    {otherUser.display_name?.charAt(0).toUpperCase() || '?'}
+                  </div>
+                )}
                 {online && (
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
                 )}
@@ -850,7 +854,7 @@ const ChatRoom = () => {
             <h1 className="text-base font-medium truncate">
               {chatInfo?.is_group 
                 ? (chatInfo?.name || 'Group Chat')
-                : (otherUser?.display_name || 'User')
+                : (otherUser?.display_name || otherUser?.handle || 'Chat')
               }
             </h1>
             {typingUsers.length > 0 ? (

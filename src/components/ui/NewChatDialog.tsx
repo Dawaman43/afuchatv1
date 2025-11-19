@@ -172,13 +172,19 @@ const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
                   disabled={creating}
                   className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
                 >
-                  <UserAvatar
-                    userId={profile.id}
-                    name={profile.display_name}
-                    avatarUrl={profile.avatar_url}
-                    size={40}
-                    showOwlFallback={true}
-                  />
+                  {profile.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile.display_name}
+                      className="h-10 w-10 rounded-full object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center flex-shrink-0">
+                      <span className="text-lg font-semibold text-white">
+                        {profile.display_name?.charAt(0).toUpperCase() || '?'}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex-1 text-left min-w-0">
                     <div className="flex items-center gap-1">
                       <h3 className="font-semibold text-foreground truncate">

@@ -19,6 +19,7 @@ interface Chat {
   is_group: boolean;
   updated_at: string;
   last_message_content?: string;
+  unread_count?: number;
   other_user?: {
     id: string;
     display_name: string;
@@ -146,6 +147,20 @@ const Chats = () => {
               }
             }
             
+            // Count unread messages for this chat
+            const { count: unreadCount } = await supabase
+              .from('messages')
+              .select('*', { count: 'exact', head: true })
+              .eq('chat_id', member.chats.id)
+              .neq('sender_id', user.id)
+              .not('id', 'in', `(
+                SELECT message_id FROM message_status 
+                WHERE user_id = '${user.id}' 
+                AND read_at IS NOT NULL
+              )`);
+            
+            chatData.unread_count = unreadCount || 0;
+            
             validChats.push(chatData);
           }
           
@@ -253,14 +268,19 @@ const Chats = () => {
               </div>
             ) : chat.other_user ? (
               <>
-                <UserAvatar
-                  userId={chat.other_user.id}
-                  name={chat.other_user.display_name}
-                  avatarUrl={chat.other_user.avatar_url}
-                  size={56}
-                  showOwlFallback={true}
-                  className="shadow-lg"
-                />
+                {chat.other_user.avatar_url ? (
+                  <img
+                    src={chat.other_user.avatar_url}
+                    alt={chat.other_user.display_name}
+                    className="h-14 w-14 rounded-full object-cover shadow-lg"
+                  />
+                ) : (
+                  <div className="h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
+                    <span className="text-xl font-semibold text-white">
+                      {chat.other_user.display_name?.charAt(0).toUpperCase() || '?'}
+                    </span>
+                  </div>
+                )}
                 {chat.is_online && (
                   <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-green-500 border-2 border-card" />
                 )}
@@ -293,8 +313,11 @@ const Chats = () => {
               <Clock className="h-3.5 w-3.5" />
               {timeDisplay}
             </span>
-            {/* Unread badge placeholder */}
-            {/* <Badge className="bg-primary text-primary-foreground rounded-full h-5 min-w-[20px] flex items-center justify-center text-xs font-bold px-1.5">2</Badge> */}
+            {chat.unread_count && chat.unread_count > 0 && (
+              <Badge className="bg-primary text-primary-foreground rounded-full h-5 min-w-[20px] flex items-center justify-center text-xs font-bold px-1.5">
+                {chat.unread_count > 99 ? '99+' : chat.unread_count}
+              </Badge>
+            )}
           </div>
         </div>
 
