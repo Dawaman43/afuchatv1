@@ -874,6 +874,7 @@ export type Database = {
           affiliated_business_id: string | null
           ai_chat_id: string | null
           avatar_url: string | null
+          banner_url: string | null
           bio: string | null
           created_at: string | null
           current_grade: string | null
@@ -902,6 +903,7 @@ export type Database = {
           affiliated_business_id?: string | null
           ai_chat_id?: string | null
           avatar_url?: string | null
+          banner_url?: string | null
           bio?: string | null
           created_at?: string | null
           current_grade?: string | null
@@ -930,6 +932,7 @@ export type Database = {
           affiliated_business_id?: string | null
           ai_chat_id?: string | null
           avatar_url?: string | null
+          banner_url?: string | null
           bio?: string | null
           created_at?: string | null
           current_grade?: string | null

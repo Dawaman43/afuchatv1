@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { ArrowLeft, MessageSquare, UserPlus, Pencil, Calendar, Lock, LogOut, Settings } from 'lucide-react';
+import { ArrowLeft, MessageSquare, UserPlus, Pencil, Calendar, Lock, LogOut, Settings, Camera } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -45,6 +45,7 @@ interface Profile {
 	xp: number;
 	current_grade: Grade;
 	avatar_url?: string | null;
+	banner_url?: string | null;
 	website_url?: string | null;
 	is_business_mode?: boolean;
 	affiliated_business_id?: string | null;
@@ -286,6 +287,66 @@ const Profile = () => {
 	const [profileId, setProfileId] = useState<string | null>(null);
 	const [isAdmin, setIsAdmin] = useState(false);
 	const [isActionsSheetOpen, setIsActionsSheetOpen] = useState(false);
+	const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+
+	const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		if (!e.target.files || e.target.files.length === 0 || !user || !profileId) return;
+
+		const file = e.target.files[0];
+		
+		// Validate file type
+		if (!file.type.startsWith('image/')) {
+			toast.error('Please upload an image file');
+			return;
+		}
+
+		// Validate file size (max 5MB)
+		if (file.size > 5 * 1024 * 1024) {
+			toast.error('Image size must be less than 5MB');
+			return;
+		}
+
+		setIsUploadingBanner(true);
+
+		try {
+			// Delete old banner if exists
+			if (profile?.banner_url) {
+				const oldPath = profile.banner_url.split('/').slice(-2).join('/');
+				await supabase.storage.from('profile-banners').remove([oldPath]);
+			}
+
+			// Upload new banner
+			const fileExt = file.name.split('.').pop();
+			const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+			const { error: uploadError } = await supabase.storage
+				.from('profile-banners')
+				.upload(fileName, file);
+
+			if (uploadError) throw uploadError;
+
+			// Get public URL
+			const { data: { publicUrl } } = supabase.storage
+				.from('profile-banners')
+				.getPublicUrl(fileName);
+
+			// Update profile
+			const { error: updateError } = await supabase
+				.from('profiles')
+				.update({ banner_url: publicUrl })
+				.eq('id', user.id);
+
+			if (updateError) throw updateError;
+
+			setProfile(prev => prev ? { ...prev, banner_url: publicUrl } : null);
+			toast.success('Banner updated successfully!');
+		} catch (error) {
+			console.error('Error uploading banner:', error);
+			toast.error('Failed to upload banner');
+		} finally {
+			setIsUploadingBanner(false);
+		}
+	};
 
 	const fetchFollowCounts = useCallback(async (id: string) => {
 		if (!id) return;
@@ -376,7 +437,7 @@ const Profile = () => {
 
 		let query = supabase
 			.from('profiles')
-			.select('*, created_at, last_seen, show_online_status')
+			.select('*, created_at, last_seen, show_online_status, banner_url')
 			.limit(1);
 
 		if (isParamUUID) {
@@ -744,7 +805,32 @@ const Profile = () => {
 			</div>
 
 			<div className="flex-1 overflow-y-auto">
-				<div className="h-36 bg-gray-300 dark:bg-gray-700 w-full">
+				<div className="relative h-36 bg-gray-300 dark:bg-gray-700 w-full group">
+					{profile?.banner_url ? (
+						<img 
+							src={profile.banner_url} 
+							alt="Profile banner"
+							className="w-full h-full object-cover"
+						/>
+					) : null}
+					
+					{user && user.id === profileId && (
+						<label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+							<Camera className="h-8 w-8 text-white" />
+							<input
+								type="file"
+								accept="image/*"
+								onChange={handleBannerUpload}
+								disabled={isUploadingBanner}
+								className="hidden"
+							/>
+							{isUploadingBanner && (
+								<div className="absolute inset-0 flex items-center justify-center bg-black/60">
+									<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+								</div>
+							)}
+						</label>
+					)}
 				</div>
 
 				<div className="p-4">
