@@ -129,10 +129,10 @@ const Chats = () => {
 
   // --- Rich Design: Chat Card Component (Borders Removed) ---
   const ChatCard = ({ chat }: { chat: Chat }) => {
-    const chatName = chat.name || (chat.is_group ? 'New Group' : 'Direct Message');
+    const chatName = chat.name || (chat.is_group ? t('chat.groupChat') : t('chat.oneOnOne'));
     const Icon = chat.is_group ? Users : User;
     const timeDisplay = formatTime(chat.updated_at);
-    const lastMessagePreview = chat.last_message_content || 'Tap to start conversation...';
+    const lastMessagePreview = chat.last_message_content || t('chat.startChatting');
 
     return (
       <Card
@@ -170,7 +170,7 @@ const Chats = () => {
     <div className="h-full flex flex-col">
       {/* Header - Defined by shadow, not border */}
       <div className="p-3 sm:p-4 md:p-5 bg-card shadow-sm flex items-center justify-between sticky top-0 z-10">
-        <h1 className="text-lg sm:text-xl md:text-2xl font-extrabold text-foreground">Conversations</h1>
+        <h1 className="text-lg sm:text-xl md:text-2xl font-extrabold text-foreground">{t('chat.title')}</h1>
         <Button 
           size="icon" 
           variant="default" 
@@ -184,9 +184,9 @@ const Chats = () => {
       <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-5 space-y-2 sm:space-y-3">
         {chats.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-4">
-            <p className="text-muted-foreground mb-2">No conversations found.</p>
+            <p className="text-muted-foreground mb-2">{t('chat.noChats')}</p>
             <p className="text-sm text-muted-foreground">
-              Tap the plus button to start a new chat!
+              {t('chat.startChatting')}
             </p>
           </div>
         ) : (
