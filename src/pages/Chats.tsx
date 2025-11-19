@@ -67,17 +67,34 @@ const Chats = () => {
         if (error) throw error;
 
         if (chatMembers && chatMembers.length > 0) {
-          const chatsData: Chat[] = chatMembers
-            .map((member: any) => ({
+          // Filter out chats where the user is chatting with themselves
+          const validChats: Chat[] = [];
+          
+          for (const member of chatMembers) {
+            if (!member.chats) continue;
+            
+            // Get all members of this chat
+            const { data: allMembers } = await supabase
+              .from('chat_members')
+              .select('user_id')
+              .eq('chat_id', member.chats.id);
+            
+            // Skip if it's a 1-on-1 chat with yourself
+            if (allMembers && allMembers.length === 2) {
+              const memberIds = allMembers.map(m => m.user_id);
+              if (memberIds[0] === memberIds[1]) continue;
+            }
+            
+            validChats.push({
               ...member.chats,
               last_message_content: member.chats.id.startsWith('group') ? t('chat.lastGroupMessage') : t('chat.lastOneOnOneMessage')
-            }))
-            .filter(Boolean);
+            });
+          }
           
-          chatsData.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+          validChats.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
           
-          setChats(chatsData);
-          setFilteredChats(chatsData);
+          setChats(validChats);
+          setFilteredChats(validChats);
         }
       } catch (err) {
         console.error('Error fetching chats:', err);

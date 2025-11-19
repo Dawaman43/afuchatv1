@@ -15,6 +15,7 @@ export interface Message {
   audio_url?: string;
   sender_id: string;
   sent_at: string;
+  reply_to_message_id?: string | null;
   message_reactions?: Reaction[];
   reply_to_message?: {
     audio_url?: string;
@@ -45,7 +46,7 @@ interface MessageBubbleProps {
   isGrouped: boolean; // Is it part of a group of messages?
   isOnline: boolean; // (Simulated)
   onReply: (message: Message) => void;
-  onReaction: (emoji: string) => void;
+  onReaction: (messageId: string, emoji: string) => void;
   onToggleAudio: () => void;
   audioPlayerState: { isPlaying: boolean };
 }
@@ -119,13 +120,13 @@ export const MessageBubble = ({
       </PopoverTrigger>
       <PopoverContent className="w-auto p-1">
         <div className="flex gap-1">
-          {['👍', '❤️', '😂', '😮', '😢'].map(emoji => (
+          {['👍', '❤️', '😂', '😮', '😢', '🔥'].map(emoji => (
             <Button
               key={emoji}
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-xl p-0"
-              onClick={() => onReaction(emoji)}
+              className="h-8 w-8 text-xl p-0 hover:bg-accent"
+              onClick={() => onReaction(message.id, emoji)}
             >
               {emoji}
             </Button>

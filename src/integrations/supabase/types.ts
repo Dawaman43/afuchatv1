@@ -480,6 +480,7 @@ export type Database = {
           encrypted_content: string
           id: string
           read_at: string | null
+          reply_to_message_id: string | null
           sender_id: string | null
           sent_at: string | null
           user_id: string | null
@@ -491,6 +492,7 @@ export type Database = {
           encrypted_content: string
           id?: string
           read_at?: string | null
+          reply_to_message_id?: string | null
           sender_id?: string | null
           sent_at?: string | null
           user_id?: string | null
@@ -502,6 +504,7 @@ export type Database = {
           encrypted_content?: string
           id?: string
           read_at?: string | null
+          reply_to_message_id?: string | null
           sender_id?: string | null
           sent_at?: string | null
           user_id?: string | null
@@ -512,6 +515,13 @@ export type Database = {
             columns: ["chat_id"]
             isOneToOne: false
             referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_message_id_fkey"
+            columns: ["reply_to_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
           {
