@@ -9,16 +9,32 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { ArrowLeft, Send, User, Loader2, Phone, Video, MoreVertical, Check, MessageSquare, HelpCircle, Info, Mic, MicOff, Play, Pause, Volume2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { messageSchema } from '@/lib/validation';
+import { ChatRedEnvelope } from '@/components/chat/ChatRedEnvelope';
+import { SendRedEnvelopeDialog } from '@/components/chat/SendRedEnvelopeDialog';
 
 interface Message {
   id: string;
   encrypted_content: string;
-  audio_url?: string; // New: For voice messages
+  audio_url?: string;
   sender_id: string;
   sent_at: string;
   profiles: {
     display_name: string;
     handle: string;
+  };
+}
+
+interface RedEnvelope {
+  id: string;
+  sender_id: string;
+  total_amount: number;
+  recipient_count: number;
+  claimed_count: number;
+  message: string | null;
+  created_at: string;
+  sender?: {
+    display_name: string;
+    avatar_url: string | null;
   };
 }
 
@@ -32,6 +48,7 @@ const ChatRoom = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [redEnvelopes, setRedEnvelopes] = useState<RedEnvelope[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [chatInfo, setChatInfo] = useState<ChatInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,6 +68,7 @@ const ChatRoom = () => {
 
     fetchChatInfo();
     fetchMessages();
+    fetchRedEnvelopes();
 
     const channel = supabase
       .channel(`chat-${chatId}`)
@@ -91,8 +109,44 @@ const ChatRoom = () => {
       )
       .subscribe();
 
+    // Real-time red envelope updates
+    const envelopeChannel = supabase
+      .channel(`red-envelopes-${chatId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'red_envelopes',
+          filter: `chat_id=eq.${chatId}`,
+        },
+        () => {
+          fetchRedEnvelopes();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'red_envelope_claims',
+        },
+        (payload) => {
+          // Show notification when someone claims
+          const claim = payload.new;
+          if (claim.claimer_id !== user?.id) {
+            toast.info('Someone just claimed a red envelope! 🧧', {
+              duration: 2000
+            });
+            fetchRedEnvelopes();
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(envelopeChannel);
       stopRecording();
     };
   }, [chatId, user]);
@@ -134,6 +188,22 @@ const ChatRoom = () => {
       setMessages(data as Message[]);
     }
     setLoading(false);
+  };
+
+  const fetchRedEnvelopes = async () => {
+    const { data } = await supabase
+      .from('red_envelopes')
+      .select(`
+        *,
+        sender:profiles!red_envelopes_sender_id_fkey(display_name, avatar_url)
+      `)
+      .eq('chat_id', chatId)
+      .eq('is_expired', false)
+      .order('created_at', { ascending: true });
+
+    if (data) {
+      setRedEnvelopes(data);
+    }
   };
 
   const startRecording = async () => {
@@ -333,90 +403,112 @@ const ChatRoom = () => {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ paddingBottom: '120px' }}> {/* Extra for voice UI */}
-          {messages.length === 0 ? (
+        <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ paddingBottom: '120px' }}>
+          {messages.length === 0 && redEnvelopes.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground space-y-2 px-4">
               <MessageSquare className="h-12 w-12 opacity-50" />
               <p className="text-sm">No messages yet. Start the conversation!</p>
               <p className="text-xs text-muted-foreground">Messages are encrypted end-to-end</p>
             </div>
           ) : (
-            messages.map((message) => {
-              const isOwn = message.sender_id === user?.id;
-              const time = new Date(message.sent_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-              const isVoice = !!message.audio_url;
-              const playerKey = message.id;
-              const playerState = audioPlayers[playerKey];
-              return (
-                <div
-                  key={message.id}
-                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'} w-full py-1`}
-                >
-                  {!isOwn ? (
-                    <div className="flex items-end gap-2 max-w-[85%]">
-                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                        <User className="h-4 w-4 text-foreground" />
+            <>
+              {/* Display messages and red envelopes in chronological order */}
+              {[...messages, ...redEnvelopes.map(e => ({ ...e, type: 'red_envelope' }))]
+                .sort((a, b) => {
+                  const timeA = 'sent_at' in a ? new Date(a.sent_at).getTime() : new Date(a.created_at).getTime();
+                  const timeB = 'sent_at' in b ? new Date(b.sent_at).getTime() : new Date(b.created_at).getTime();
+                  return timeA - timeB;
+                })
+                .map((item: any) => {
+                  if (item.type === 'red_envelope') {
+                    return (
+                      <div key={`envelope-${item.id}`} className="flex justify-center py-2">
+                        <ChatRedEnvelope 
+                          envelope={item} 
+                          onClaim={fetchRedEnvelopes}
+                        />
                       </div>
-                      <div className="flex flex-col min-w-0">
-                        <div className="flex items-baseline gap-2 mb-1">
-                          <span className="text-xs font-semibold text-foreground truncate">
-                            {message.profiles.display_name}
-                          </span>
-                          <span className="text-xs text-muted-foreground"> {time}</span>
-                        </div>
-                        {isVoice ? (
-                          <div className="bg-card px-3 py-2 rounded-lg shadow-sm border border-border max-w-full">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="flex items-center gap-2 w-full justify-start text-left"
-                              onClick={() => toggleAudio(playerKey, message.audio_url!)}
-                            >
-                              {playerState?.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                              <Volume2 className="h-4 w-4" />
-                              <span className="text-sm text-muted-foreground">Voice message ({Math.round((new Blob([message.audio_url!]).size / 1024))} KB)</span>
-                            </Button>
+                    );
+                  }
+                  
+                  const message = item as Message;
+                  const isOwn = message.sender_id === user?.id;
+                  const time = new Date(message.sent_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                  const isVoice = !!message.audio_url;
+                  const playerKey = message.id;
+                  const playerState = audioPlayers[playerKey];
+                  
+                  return (
+                    <div
+                      key={message.id}
+                      className={`flex ${isOwn ? 'justify-end' : 'justify-start'} w-full py-1`}
+                    >
+                      {!isOwn ? (
+                        <div className="flex items-end gap-2 max-w-[85%]">
+                          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                            <User className="h-4 w-4 text-foreground" />
                           </div>
-                        ) : (
-                          <div className="bg-card text-foreground px-3 py-2 rounded-lg shadow-sm border border-border max-w-full">
-                            <p className="text-sm whitespace-pre-wrap break-words">
-                              {message.encrypted_content}
-                            </p>
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-baseline gap-2 mb-1">
+                              <span className="text-xs font-semibold text-foreground truncate">
+                                {message.profiles.display_name}
+                              </span>
+                              <span className="text-xs text-muted-foreground"> {time}</span>
+                            </div>
+                            {isVoice ? (
+                              <div className="bg-card px-3 py-2 rounded-lg shadow-sm border border-border max-w-full">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="flex items-center gap-2 w-full justify-start text-left"
+                                  onClick={() => toggleAudio(playerKey, message.audio_url!)}
+                                >
+                                  {playerState?.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                                  <Volume2 className="h-4 w-4" />
+                                  <span className="text-sm text-muted-foreground">Voice message</span>
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="bg-card text-foreground px-3 py-2 rounded-lg shadow-sm border border-border max-w-full">
+                                <p className="text-sm whitespace-pre-wrap break-words">
+                                  {message.encrypted_content}
+                                </p>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-end max-w-[85%]">
-                      {isVoice ? (
-                        <div className="bg-primary text-primary-foreground px-3 py-2 rounded-lg shadow-sm max-w-full">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="flex items-center gap-2 w-full justify-end text-right"
-                            onClick={() => toggleAudio(playerKey, message.audio_url!)}
-                          >
-                            {playerState?.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                            <Volume2 className="h-4 w-4" />
-                            <span className="text-sm text-primary-foreground/90">Voice message ({Math.round((new Blob([message.audio_url!]).size / 1024))} KB)</span>
-                          </Button>
                         </div>
                       ) : (
-                        <div className="bg-primary text-primary-foreground px-3 py-2 rounded-lg shadow-sm max-w-full">
-                          <p className="text-sm whitespace-pre-wrap break-words">
-                            {message.encrypted_content}
-                          </p>
+                        <div className="flex flex-col items-end max-w-[85%]">
+                          {isVoice ? (
+                            <div className="bg-primary text-primary-foreground px-3 py-2 rounded-lg shadow-sm max-w-full">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="flex items-center gap-2 w-full justify-end text-right text-primary-foreground hover:bg-primary-foreground/10"
+                                onClick={() => toggleAudio(playerKey, message.audio_url!)}
+                              >
+                                <span className="text-sm">Voice message</span>
+                                <Volume2 className="h-4 w-4" />
+                                {playerState?.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="bg-primary text-primary-foreground px-3 py-2 rounded-lg shadow-sm max-w-full">
+                              <p className="text-sm whitespace-pre-wrap break-words">
+                                {message.encrypted_content}
+                              </p>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1 mt-1 mr-1">
+                            <span className="text-xs text-muted-foreground">{time}</span>
+                            <Check className="h-3 w-3 text-muted-foreground" />
+                          </div>
                         </div>
                       )}
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className="text-xs text-primary-foreground/70"> {time}</span>
-                        <Check className="h-3 w-3 text-primary-foreground/70" />
-                      </div>
                     </div>
-                  )}
-                </div>
-              );
-            })
+                  );
+                })}
+            </>
           )}
           <div ref={messagesEndRef} />
         </div>
@@ -485,14 +577,22 @@ const ChatRoom = () => {
                 {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
               </Button>
             ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-                onClick={startRecording}
-              >
-                <Mic className="h-5 w-5" />
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-12 w-12 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                  onClick={startRecording}
+                >
+                  <Mic className="h-5 w-5" />
+                </Button>
+                {chatInfo?.is_group && (
+                  <SendRedEnvelopeDialog 
+                    chatId={chatId!} 
+                    onSuccess={fetchRedEnvelopes}
+                  />
+                )}
+              </>
             )}
             <div className="flex-1 relative min-w-0">
               <Input
