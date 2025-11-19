@@ -47,6 +47,7 @@ self.addEventListener('push', (event) => {
     body: data.body,
     icon: '/logo.jpg', // Using your logo from manifest
     badge: '/logo.jpg', // Using your logo
+    vibrate: [200, 100, 200], // Vibration pattern: vibrate 200ms, pause 100ms, vibrate 200ms
     data: {
       url: data.url || '/', // We can send a URL to open on click
     },
