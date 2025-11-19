@@ -136,57 +136,12 @@ export default function AdminAffiliateRequests() {
   };
 
   const handleApprove = async (requestId: string) => {
-    setProcessing(true);
-    try {
-      const { data, error } = await supabase.rpc('approve_affiliate_request', {
-        p_request_id: requestId
-      });
-
-      if (error) throw error;
-
-      const result = data as { success: boolean; message: string };
-      if (result.success) {
-        toast.success(result.message);
-        fetchRequests();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error) {
-      console.error('Error approving request:', error);
-      toast.error('Failed to approve request');
-    } finally {
-      setProcessing(false);
-    }
+    toast.info('Affiliate requests are now managed by business owners directly');
   };
 
   const handleReject = async () => {
-    if (!selectedRequest) return;
-
-    setProcessing(true);
-    try {
-      const { data, error } = await supabase.rpc('reject_affiliate_request', {
-        p_request_id: selectedRequest,
-        p_notes: rejectNotes || null
-      });
-
-      if (error) throw error;
-
-      const result = data as { success: boolean; message: string };
-      if (result.success) {
-        toast.success(result.message);
-        fetchRequests();
-        setShowRejectDialog(false);
-        setRejectNotes('');
-        setSelectedRequest(null);
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error) {
-      console.error('Error rejecting request:', error);
-      toast.error('Failed to reject request');
-    } finally {
-      setProcessing(false);
-    }
+    toast.info('Affiliate requests are now managed by business owners directly');
+    setShowRejectDialog(false);
   };
 
   const openRejectDialog = (requestId: string) => {

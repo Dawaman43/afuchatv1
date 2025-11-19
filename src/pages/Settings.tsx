@@ -42,6 +42,8 @@ const Settings = () => {
   const [showBusinessConfirm, setShowBusinessConfirm] = useState(false);
   const [connectedProviders, setConnectedProviders] = useState<string[]>([]);
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
+  const [isAffiliate, setIsAffiliate] = useState(false);
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
 
   const languages = [
     { code: 'en', name: t('languages.en'), flag: '🇬🇧' },
@@ -98,13 +100,24 @@ const Settings = () => {
 
       const { data } = await supabase
         .from('profiles')
-        .select('is_business_mode')
+        .select('is_business_mode, is_affiliate')
         .eq('id', user.id)
         .single();
 
       if (data) {
         setBusinessMode(data.is_business_mode || false);
+        setIsAffiliate(data.is_affiliate || false);
       }
+
+      // Check for pending affiliate request
+      const { data: pendingRequest } = await supabase
+        .from('affiliate_requests')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'pending')
+        .maybeSingle();
+
+      setHasPendingRequest(!!pendingRequest);
     };
 
     fetchConnectedProviders();
@@ -282,15 +295,34 @@ const Settings = () => {
                 <h2 className="text-lg font-semibold">Business & Affiliate</h2>
               </div>
               <Separator />
-              <Link to="/affiliate-request">
-                <button className="w-full flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted transition-colors text-left">
+              {isAffiliate ? (
+                <Link to="/affiliate-dashboard">
+                  <button className="w-full flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted transition-colors text-left">
+                    <div className="flex items-center gap-2">
+                      <UserPlus className="h-4 w-4" />
+                      <span>Affiliate Dashboard</span>
+                    </div>
+                    <span className="text-muted-foreground">›</span>
+                  </button>
+                </Link>
+              ) : hasPendingRequest ? (
+                <div className="w-full flex items-center justify-between py-3 px-2 rounded-lg bg-muted/50 opacity-60">
                   <div className="flex items-center gap-2">
                     <UserPlus className="h-4 w-4" />
-                    <span>Apply for Affiliate Status</span>
+                    <span>Affiliate Request Pending</span>
                   </div>
-                  <span className="text-muted-foreground">›</span>
-                </button>
-              </Link>
+                </div>
+              ) : (
+                <Link to="/affiliate-request">
+                  <button className="w-full flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted transition-colors text-left">
+                    <div className="flex items-center gap-2">
+                      <UserPlus className="h-4 w-4" />
+                      <span>Apply for Affiliate Status</span>
+                    </div>
+                    <span className="text-muted-foreground">›</span>
+                  </button>
+                </Link>
+              )}
             </div>
           </Card>
 
