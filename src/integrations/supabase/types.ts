@@ -830,6 +830,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_account_mode: string | null
           affiliate_business_logo: string | null
           affiliate_business_name: string | null
           ai_chat_id: string | null
@@ -857,6 +858,7 @@ export type Database = {
           xp: number
         }
         Insert: {
+          active_account_mode?: string | null
           affiliate_business_logo?: string | null
           affiliate_business_name?: string | null
           ai_chat_id?: string | null
@@ -884,6 +886,7 @@ export type Database = {
           xp?: number
         }
         Update: {
+          active_account_mode?: string | null
           affiliate_business_logo?: string | null
           affiliate_business_name?: string | null
           ai_chat_id?: string | null
