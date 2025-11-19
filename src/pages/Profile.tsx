@@ -815,20 +815,30 @@ const Profile = () => {
 					) : null}
 					
 					{user && user.id === profileId && (
-						<label className="absolute top-4 right-4 p-2 rounded-full bg-background/80 hover:bg-background cursor-pointer transition-colors backdrop-blur-sm">
-							<input
-								type="file"
-								accept="image/*"
-								onChange={handleBannerUpload}
-								disabled={isUploadingBanner}
-								className="hidden"
-							/>
-							{isUploadingBanner ? (
-								<div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-							) : (
-								<Camera className="h-5 w-5 text-foreground" />
-							)}
-						</label>
+						<>
+							<Button 
+								variant="outline" 
+								className="absolute top-4 right-4 rounded-full px-4 font-bold bg-background/80 hover:bg-background backdrop-blur-sm"
+								onClick={() => navigate(`/${urlParam}/edit`)}
+							>
+								<Pencil className="h-4 w-4 mr-2" />
+								{t('profile.editProfile')}
+							</Button>
+							<label className="absolute top-4 right-36 p-2 rounded-full bg-background/80 hover:bg-background cursor-pointer transition-colors backdrop-blur-sm">
+								<input
+									type="file"
+									accept="image/*"
+									onChange={handleBannerUpload}
+									disabled={isUploadingBanner}
+									className="hidden"
+								/>
+								{isUploadingBanner ? (
+									<div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+								) : (
+									<Camera className="h-5 w-5 text-foreground" />
+								)}
+							</label>
+						</>
 					)}
 				</div>
 
@@ -848,14 +858,6 @@ const Profile = () => {
 							>
 								<Pencil className="h-4 w-4 mr-2" />
 								Customize Owl
-							</Button>
-							<Button 
-								variant="outline" 
-								className="rounded-full px-4 font-bold"
-								onClick={() => navigate(`/${urlParam}/edit`)}
-							>
-								<Pencil className="h-4 w-4 mr-2" />
-								{t('profile.editProfile')}
 							</Button>
 								{isAdmin && (
 									<Button
