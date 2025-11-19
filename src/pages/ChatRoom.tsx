@@ -760,14 +760,16 @@ const ChatRoom = () => {
               </div>
             ) : (
               <>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-11 w-11 rounded-full hover:bg-muted/30 text-muted-foreground flex-shrink-0"
-                >
-                  <Smile className="h-6 w-6" />
-                </Button>
+                {!newMessage.trim() && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-11 w-11 rounded-full hover:bg-muted/30 text-muted-foreground flex-shrink-0"
+                  >
+                    <Smile className="h-6 w-6" />
+                  </Button>
+                )}
                 <Input
                   value={newMessage}
                   onChange={(e) => handleInputChange(e.target.value)}
@@ -776,29 +778,42 @@ const ChatRoom = () => {
                   className="flex-1 bg-secondary border-none rounded-xl px-4 py-2.5 h-11 text-[15px] placeholder:text-muted-foreground/60 focus-visible:ring-0"
                   disabled={sending}
                 />
-                {chatInfo?.is_group && (
-                  <SendRedEnvelopeDialog 
-                    chatId={chatId!} 
-                    onSuccess={fetchRedEnvelopes}
-                  />
+                {newMessage.trim() ? (
+                  <Button
+                    type="submit"
+                    size="icon"
+                    className="h-11 w-11 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0"
+                    disabled={sending}
+                  >
+                    {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                  </Button>
+                ) : (
+                  <>
+                    {chatInfo?.is_group && (
+                      <SendRedEnvelopeDialog 
+                        chatId={chatId!} 
+                        onSuccess={fetchRedEnvelopes}
+                      />
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-11 w-11 rounded-full hover:bg-muted/30 text-muted-foreground flex-shrink-0"
+                    >
+                      <Paperclip className="h-6 w-6" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-11 w-11 rounded-full hover:bg-muted/30 text-muted-foreground flex-shrink-0"
+                      onClick={startRecording}
+                    >
+                      <Mic className="h-6 w-6" />
+                    </Button>
+                  </>
                 )}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-11 w-11 rounded-full hover:bg-muted/30 text-muted-foreground flex-shrink-0"
-                >
-                  <Paperclip className="h-6 w-6" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-11 w-11 rounded-full hover:bg-muted/30 text-muted-foreground flex-shrink-0"
-                  onClick={startRecording}
-                >
-                  <Mic className="h-6 w-6" />
-                </Button>
               </>
             )}
           </form>
