@@ -99,7 +99,7 @@ const ChatRoom = () => {
   const [sending, setSending] = useState(false);
   const [online, setOnline] = useState(false);
   const [presenceChannel, setPresenceChannel] = useState<any>(null);
-  const [showHelp, setShowHelp] = useState(true);
+  
   const [recording, setRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -787,9 +787,6 @@ const ChatRoom = () => {
     navigate(-1);
   };
 
-  const dismissHelp = () => {
-    setShowHelp(false);
-  };
 
   if (loading) {
     return (
@@ -973,46 +970,6 @@ const ChatRoom = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Beginner Help Overlay */}
-        {showHelp && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-card rounded-xl p-6 max-w-sm w-full">
-              <div className="flex items-center gap-2 mb-4">
-                <HelpCircle className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-semibold text-foreground">Welcome to your chat!</h2>
-              </div>
-              <ul className="space-y-2 text-sm text-muted-foreground mb-4">
-                <li className="flex items-start gap-2">
-                  <Badge variant="secondary" className="flex-shrink-0 mt-0.5">1</Badge>
-                  <span>Type your message below and hit send (or Enter).</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Badge variant="secondary" className="flex-shrink-0 mt-0.5">2</Badge>
-                  <span>Tap the mic icon to record voice messages.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Badge variant="secondary" className="flex-shrink-0 mt-0.5">3</Badge>
-                  <span>Use the back arrow to return to your chats.</span>
-                </li>
-              </ul>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={dismissHelp} className="flex-1">
-                  Got it!
-                </Button>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-10 w-10">
-                      <Info className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Need more help? Check our guide.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Reply Preview */}
         {replyToMessage && !selectedFile && (

@@ -123,16 +123,16 @@ const Chats = () => {
             }
             
             // For 1-on-1 chats, fetch the other user's profile
-            if (!member.chats.is_group) {
-              const otherUserId = allMembers?.find(m => m.user_id !== user.id)?.user_id;
+            if (!member.chats.is_group && allMembers) {
+              const otherUserId = allMembers.find(m => m.user_id !== user.id)?.user_id;
               if (otherUserId) {
-                const { data: profile } = await supabase
+                const { data: profile, error: profileError } = await supabase
                   .from('profiles')
                   .select('id, display_name, handle, avatar_url, last_seen, show_online_status')
                   .eq('id', otherUserId)
                   .single();
                 
-                if (profile) {
+                if (profile && !profileError) {
                   chatData.other_user = profile;
                   // Check if user is online (last seen within 5 minutes)
                   if (profile.last_seen && profile.show_online_status) {
@@ -140,6 +140,8 @@ const Chats = () => {
                     const now = new Date().getTime();
                     chatData.is_online = now - lastSeenTime < 5 * 60 * 1000;
                   }
+                } else {
+                  console.error('Failed to fetch profile for user:', otherUserId, profileError);
                 }
               }
             }
@@ -224,7 +226,7 @@ const Chats = () => {
   const ChatCard = ({ chat }: { chat: Chat }) => {
     const chatName = chat.is_group 
       ? (chat.name || t('chat.groupChat'))
-      : (chat.other_user?.display_name || t('chat.oneOnOne'));
+      : (chat.other_user?.display_name || chat.other_user?.handle || 'User');
     const Icon = chat.is_group ? Users : User;
     const timeDisplay = formatTime(chat.updated_at);
     const lastMessagePreview = chat.last_message_content || t('chat.startChatting');
