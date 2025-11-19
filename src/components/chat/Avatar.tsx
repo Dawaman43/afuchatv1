@@ -1,29 +1,24 @@
-import { OwlAvatar } from '@/components/avatar/OwlAvatar';
-import { useUserAvatar } from '@/hooks/useUserAvatar';
+import { Avatar as UIAvatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface AvatarProps {
   name: string;
   userId: string;
   size?: number;
+  avatarUrl?: string | null;
 }
 
-export const Avatar = ({ name, userId, size = 32 }: AvatarProps) => {
-  const { avatarConfig, loading } = useUserAvatar(userId);
-
-  if (loading) {
-    return (
-      <div 
-        className="rounded-full bg-muted animate-pulse flex-shrink-0" 
-        style={{ width: size, height: size }}
-      />
-    );
-  }
+export const Avatar = ({ name, userId, size = 32, avatarUrl }: AvatarProps) => {
+  const initials = name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
-    <OwlAvatar 
-      config={avatarConfig} 
-      size={size}
-      className="flex-shrink-0"
-    />
+    <UIAvatar style={{ width: size, height: size }} className="flex-shrink-0">
+      <AvatarImage src={avatarUrl || undefined} alt={name} />
+      <AvatarFallback>{initials}</AvatarFallback>
+    </UIAvatar>
   );
 };

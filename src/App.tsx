@@ -42,7 +42,6 @@ const QRCode = lazy(() => import("./pages/QRCode"));
 const Settings = lazy(() => import("./pages/Settings"));
 const TermsOfUse = lazy(() => import("./pages/TermsOfUse"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const AvatarEditor = lazy(() => import("@/pages/AvatarEditor"));
 const TrendingHashtags = lazy(() => import("./pages/TrendingHashtags"));
 const AdminAffiliateRequests = lazy(() => import("./pages/AdminAffiliateRequests"));
 const AffiliateRequest = lazy(() => import("./pages/AffiliateRequest"));
@@ -104,7 +103,6 @@ const AppRoutes = () => {
       <Route path="/settings" element={<Layout><Settings /></Layout>} />
       <Route path="/terms" element={<TermsOfUse />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
-      <Route path="/avatar/edit" element={<AvatarEditor />} />
       <Route path="/trending" element={<Layout><TrendingHashtags /></Layout>} />
       <Route path="/admin/affiliate-requests" element={<Layout><AdminAffiliateRequests /></Layout>} />
       <Route path="/affiliate-request" element={<Layout><AffiliateRequest /></Layout>} />

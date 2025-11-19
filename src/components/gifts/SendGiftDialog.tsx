@@ -18,7 +18,6 @@ import { SimpleGiftIcon } from './SimpleGiftIcon';
 import { GiftConfetti } from './GiftConfetti';
 import { ComboConfetti } from './ComboConfetti';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useUserAvatar } from '@/hooks/useUserAvatar';
 import { useNavigate } from 'react-router-dom';
 
 interface GiftItem {
@@ -54,7 +53,6 @@ interface SelectedGift {
 export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDialogProps) => {
   const { user } = useAuth();
   const { t } = useTranslation();
-  const { avatarConfig } = useUserAvatar(receiverId);
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [gifts, setGifts] = useState<GiftItem[]>([]);
@@ -298,7 +296,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
         <DialogHeader className="pb-3">
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12 ring-2 ring-primary/20">
-              <AvatarImage src={avatarConfig ? undefined : `https://api.dicebear.com/7.x/avataaars/svg?seed=${receiverId}`} />
+              <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${receiverId}`} />
               <AvatarFallback>{receiverName[0]?.toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
