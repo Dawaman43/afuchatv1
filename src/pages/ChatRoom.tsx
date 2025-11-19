@@ -384,7 +384,7 @@ const ChatRoom = () => {
     if (!newMessage.trim() || !user || sending) return;
 
     try {
-      messageSchema.parse({ content: newMessage });
+      messageSchema.parse(newMessage);
     } catch (error) {
       toast.error('Message is too long or invalid');
       return;
