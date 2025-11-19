@@ -46,6 +46,8 @@ import BusinessDashboard from "./pages/BusinessDashboard";
 import Moments from "./pages/Moments";
 import MiniPrograms from "./pages/MiniPrograms";
 import Transfer from "./pages/Transfer";
+import RedEnvelope from "./pages/RedEnvelope";
+import DeveloperSDK from "./pages/DeveloperSDK";
 import Layout from "./components/Layout";
 
 const queryClient = new QueryClient();
@@ -101,6 +103,8 @@ const AppRoutes = () => {
       <Route path="/moments" element={<Layout><Moments /></Layout>} />
       <Route path="/mini-programs" element={<Layout><MiniPrograms /></Layout>} />
       <Route path="/transfer" element={<Layout><Transfer /></Layout>} />
+      <Route path="/red-envelope" element={<Layout><RedEnvelope /></Layout>} />
+      <Route path="/developer-sdk" element={<Layout><DeveloperSDK /></Layout>} />
 
       <Route path="/profile/:userId" element={<ProfileRedirect />} />
 

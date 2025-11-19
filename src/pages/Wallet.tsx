@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Wallet as WalletIcon, TrendingUp, TrendingDown, Gift, Heart, ShoppingBag, Trophy } from 'lucide-react';
+import { ArrowLeft, Wallet as WalletIcon, TrendingUp, TrendingDown, Gift, Heart, ShoppingBag, Trophy, Mail, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import Logo from '@/components/Logo';
@@ -31,7 +31,7 @@ const Wallet = () => {
   const { data: transactions } = useQuery({
     queryKey: ['transactions', user?.id],
     queryFn: async () => {
-      const [gifts, tips, purchases] = await Promise.all([
+      const [gifts, tips, purchases, transfers, redEnvSent, redEnvClaimed] = await Promise.all([
         supabase
           .from('gift_transactions')
           .select('*, sender:profiles!gift_transactions_sender_id_fkey(display_name, handle), receiver:profiles!gift_transactions_receiver_id_fkey(display_name, handle), gift:gifts(*)')
@@ -49,13 +49,34 @@ const Wallet = () => {
           .select('*, item:shop_items(*)')
           .eq('user_id', user?.id)
           .order('purchased_at', { ascending: false })
+          .limit(20),
+        supabase
+          .from('xp_transfers')
+          .select('*, sender:profiles!xp_transfers_sender_id_fkey(display_name, handle), receiver:profiles!xp_transfers_receiver_id_fkey(display_name, handle)')
+          .or(`sender_id.eq.${user?.id},receiver_id.eq.${user?.id}`)
+          .order('created_at', { ascending: false })
+          .limit(20),
+        supabase
+          .from('red_envelopes')
+          .select('*')
+          .eq('sender_id', user?.id)
+          .order('created_at', { ascending: false })
+          .limit(20),
+        supabase
+          .from('red_envelope_claims')
+          .select('*, envelope:red_envelopes(*, sender:profiles(display_name, handle))')
+          .eq('claimer_id', user?.id)
+          .order('claimed_at', { ascending: false })
           .limit(20)
       ]);
 
       const all: any[] = [
         ...(gifts.data || []).map(t => ({ ...t, type: 'gift', timestamp: t.created_at })),
         ...(tips.data || []).map(t => ({ ...t, type: 'tip', timestamp: t.created_at })),
-        ...(purchases.data || []).map(t => ({ ...t, type: 'purchase', timestamp: t.purchased_at }))
+        ...(purchases.data || []).map(t => ({ ...t, type: 'purchase', timestamp: t.purchased_at })),
+        ...(transfers.data || []).map(t => ({ ...t, type: 'transfer', timestamp: t.created_at })),
+        ...(redEnvSent.data || []).map(t => ({ ...t, type: 'red_envelope_sent', timestamp: t.created_at })),
+        ...(redEnvClaimed.data || []).map(t => ({ ...t, type: 'red_envelope_claimed', timestamp: t.claimed_at }))
       ];
 
       return all.sort((a, b) => 
@@ -71,6 +92,9 @@ const Wallet = () => {
       case 'gift': return <Gift className="h-5 w-5 text-pink-500" />;
       case 'tip': return <Heart className="h-5 w-5 text-red-500" />;
       case 'purchase': return <ShoppingBag className="h-5 w-5 text-purple-500" />;
+      case 'transfer': return <Send className="h-5 w-5 text-indigo-500" />;
+      case 'red_envelope_sent': return <Mail className="h-5 w-5 text-red-500" />;
+      case 'red_envelope_claimed': return <Mail className="h-5 w-5 text-green-500" />;
       default: return <TrendingUp className="h-5 w-5" />;
     }
   };
@@ -88,10 +112,33 @@ const Wallet = () => {
         ? `Tipped @${transaction.receiver?.handle}`
         : `Received tip from @${transaction.sender?.handle}`;
     }
+    if (transaction.type === 'transfer') {
+      const isSender = transaction.sender_id === user?.id;
+      return isSender 
+        ? `Transferred to @${transaction.receiver?.handle}`
+        : `Received from @${transaction.sender?.handle}`;
+    }
+    if (transaction.type === 'red_envelope_sent') {
+      return `Red Envelope - ${transaction.recipient_count} recipients`;
+    }
+    if (transaction.type === 'red_envelope_claimed') {
+      return `Claimed from @${transaction.envelope?.sender?.handle}'s Red Envelope`;
+    }
     return `Purchased ${transaction.item?.name}`;
   };
 
   const getTransactionAmount = (transaction: any) => {
+    if (transaction.type === 'red_envelope_sent') {
+      return -transaction.total_amount;
+    }
+    if (transaction.type === 'red_envelope_claimed') {
+      return transaction.amount;
+    }
+    if (transaction.type === 'transfer') {
+      const isSender = transaction.sender_id === user?.id;
+      return isSender ? -transaction.amount : transaction.amount;
+    }
+    
     const amount = transaction.xp_cost || transaction.xp_amount || transaction.xp_paid;
     const isSender = transaction.sender_id === user?.id;
     

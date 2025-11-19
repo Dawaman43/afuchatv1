@@ -981,6 +981,102 @@ export type Database = {
           },
         ]
       }
+      red_envelope_claims: {
+        Row: {
+          amount: number
+          claimed_at: string
+          claimer_id: string
+          id: string
+          red_envelope_id: string
+        }
+        Insert: {
+          amount: number
+          claimed_at?: string
+          claimer_id: string
+          id?: string
+          red_envelope_id: string
+        }
+        Update: {
+          amount?: number
+          claimed_at?: string
+          claimer_id?: string
+          id?: string
+          red_envelope_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "red_envelope_claims_claimer_id_fkey"
+            columns: ["claimer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "red_envelope_claims_red_envelope_id_fkey"
+            columns: ["red_envelope_id"]
+            isOneToOne: false
+            referencedRelation: "red_envelopes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      red_envelopes: {
+        Row: {
+          chat_id: string | null
+          claimed_count: number
+          created_at: string
+          envelope_type: string
+          expires_at: string
+          id: string
+          is_expired: boolean
+          message: string | null
+          recipient_count: number
+          sender_id: string
+          total_amount: number
+        }
+        Insert: {
+          chat_id?: string | null
+          claimed_count?: number
+          created_at?: string
+          envelope_type?: string
+          expires_at: string
+          id?: string
+          is_expired?: boolean
+          message?: string | null
+          recipient_count: number
+          sender_id: string
+          total_amount: number
+        }
+        Update: {
+          chat_id?: string | null
+          claimed_count?: number
+          created_at?: string
+          envelope_type?: string
+          expires_at?: string
+          id?: string
+          is_expired?: boolean
+          message?: string | null
+          recipient_count?: number
+          sender_id?: string
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "red_envelopes_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "red_envelopes_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referrals: {
         Row: {
           created_at: string | null
@@ -1515,6 +1611,7 @@ export type Database = {
       }
       check_daily_login_streak: { Args: { p_user_id: string }; Returns: Json }
       check_profile_completion: { Args: { p_user_id: string }; Returns: Json }
+      claim_red_envelope: { Args: { p_envelope_id: string }; Returns: Json }
       create_marketplace_listing:
         | {
             Args: { p_asking_price: number; p_purchase_id: string }
@@ -1535,6 +1632,16 @@ export type Database = {
             }[]
           }
       create_new_chat: { Args: { other_user_id: string }; Returns: string }
+      create_red_envelope: {
+        Args: {
+          p_chat_id?: string
+          p_envelope_type?: string
+          p_message?: string
+          p_recipient_count: number
+          p_total_amount: number
+        }
+        Returns: Json
+      }
       finalize_auction: { Args: { p_shop_item_id: string }; Returns: Json }
       get_gift_price: { Args: { p_gift_id: string }; Returns: number }
       get_or_create_chat: { Args: { other_user_id: string }; Returns: string }

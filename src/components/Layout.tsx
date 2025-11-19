@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccountMode } from '@/contexts/AccountModeContext';
-import { Home, MessageSquare, Search, ShoppingBag, Bell, User, Settings, Trophy, Shield, BarChart3 } from 'lucide-react';
+import { Home, MessageSquare, Search, ShoppingBag, Bell, User, Settings, Trophy, Shield, BarChart3, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
 import NotificationIcon from '@/components/nav/NotificationIcon';
@@ -80,11 +80,11 @@ const Layout = ({ children }: LayoutProps) => {
 
   const navItems = [
     { path: '/', icon: Home, label: 'Home' },
+    { path: '/moments', icon: ImageIcon, label: 'Moments' },
     { path: '/search', icon: Search, label: 'Explore' },
     { path: '/notifications', icon: Bell, label: 'Notifications', badge: true },
     { path: '/chats', icon: MessageSquare, label: 'Messages' },
     { path: '/services', icon: ShoppingBag, label: 'Services' },
-    { path: '/leaderboard', icon: Trophy, label: 'Leaderboard' },
   ];
 
   if (user) {
