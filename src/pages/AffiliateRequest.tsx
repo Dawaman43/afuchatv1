@@ -34,6 +34,7 @@ const AffiliateRequest = () => {
   const [loading, setLoading] = useState(false);
   const [fetchingProfiles, setFetchingProfiles] = useState(true);
   const [existingRequest, setExistingRequest] = useState(false);
+  const [isAlreadyAffiliated, setIsAlreadyAffiliated] = useState(false);
 
   useEffect(() => {
     fetchBusinessProfiles();
@@ -62,6 +63,19 @@ const AffiliateRequest = () => {
     if (!user) return;
 
     try {
+      // Check if user is already affiliated
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('is_affiliate')
+        .eq('id', user.id)
+        .single();
+
+      if (!profileError && profile?.is_affiliate) {
+        setIsAlreadyAffiliated(true);
+        return;
+      }
+
+      // Check for pending request
       const { data, error } = await supabase
         .from('affiliate_requests')
         .select('id, status')
@@ -99,7 +113,7 @@ const AffiliateRequest = () => {
 
       if (error) throw error;
 
-      toast.success('Affiliate request submitted successfully! It will be reviewed by an admin.');
+      toast.success('Affiliate request submitted successfully! The business owner will review your request.');
       navigate('/settings');
     } catch (error: any) {
       console.error('Error submitting affiliate request:', error);
@@ -108,6 +122,37 @@ const AffiliateRequest = () => {
       setLoading(false);
     }
   };
+
+  if (isAlreadyAffiliated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <div className="mb-8">
+            <Logo />
+          </div>
+
+          <Card className="p-8 text-center">
+            <Building2 className="h-12 w-12 mx-auto mb-4 text-primary" />
+            <h2 className="text-2xl font-bold mb-2">Already Affiliated</h2>
+            <p className="text-muted-foreground mb-6">
+              You are already an affiliate. Visit your affiliate dashboard to manage your partnership.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/settings')}
+              >
+                Back to Settings
+              </Button>
+              <Button onClick={() => navigate('/affiliate-dashboard')}>
+                Go to Dashboard
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (existingRequest) {
     return (
@@ -121,7 +166,7 @@ const AffiliateRequest = () => {
             <Building2 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
             <h2 className="text-2xl font-bold mb-2">Request Pending</h2>
             <p className="text-muted-foreground mb-6">
-              You already have a pending affiliate request. Please wait for an admin to review it.
+              You already have a pending affiliate request. Please wait for the business owner to review it.
             </p>
             <Button onClick={() => navigate('/settings')}>
               Back to Settings

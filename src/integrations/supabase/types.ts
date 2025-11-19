@@ -17,8 +17,10 @@ export type Database = {
       affiliate_requests: {
         Row: {
           business_profile_id: string
+          commission_rate: number | null
           id: string
           notes: string | null
+          payment_terms: string | null
           requested_at: string | null
           reviewed_at: string | null
           reviewed_by: string | null
@@ -27,8 +29,10 @@ export type Database = {
         }
         Insert: {
           business_profile_id: string
+          commission_rate?: number | null
           id?: string
           notes?: string | null
+          payment_terms?: string | null
           requested_at?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -37,8 +41,10 @@ export type Database = {
         }
         Update: {
           business_profile_id?: string
+          commission_rate?: number | null
           id?: string
           notes?: string | null
+          payment_terms?: string | null
           requested_at?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -786,6 +792,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          affiliate_earnings: number | null
           affiliated_business_id: string | null
           ai_chat_id: string | null
           avatar_url: string | null
@@ -813,6 +820,7 @@ export type Database = {
           xp: number
         }
         Insert: {
+          affiliate_earnings?: number | null
           affiliated_business_id?: string | null
           ai_chat_id?: string | null
           avatar_url?: string | null
@@ -840,6 +848,7 @@ export type Database = {
           xp?: number
         }
         Update: {
+          affiliate_earnings?: number | null
           affiliated_business_id?: string | null
           ai_chat_id?: string | null
           avatar_url?: string | null
@@ -1273,10 +1282,6 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: Json
       }
-      approve_affiliate_request: {
-        Args: { p_request_id: string }
-        Returns: Json
-      }
       award_xp: {
         Args: {
           p_action_type: string
@@ -1388,10 +1393,6 @@ export type Database = {
         }[]
       }
       reject_affiliate_by_business: {
-        Args: { p_notes?: string; p_request_id: string }
-        Returns: Json
-      }
-      reject_affiliate_request: {
         Args: { p_notes?: string; p_request_id: string }
         Returns: Json
       }
