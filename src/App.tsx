@@ -38,7 +38,6 @@ import GiftLeaderboard from "./pages/GiftLeaderboard";
 import TrendingHashtags from "./pages/TrendingHashtags";
 import AffiliateRequestPage from "./pages/AffiliateRequestPage";
 import AdminAffiliateRequests from "./pages/AdminAffiliateRequests";
-import BusinessSettings from "./pages/BusinessSettings";
 import BusinessAffiliateRequests from "./pages/BusinessAffiliateRequests";
 import Layout from "./components/Layout";
 
@@ -85,7 +84,6 @@ const AppRoutes = () => {
       <Route path="/trending" element={<Layout><TrendingHashtags /></Layout>} />
       <Route path="/affiliate/request" element={<Layout><AffiliateRequestPage /></Layout>} />
       <Route path="/admin/affiliate-requests" element={<Layout><AdminAffiliateRequests /></Layout>} />
-      <Route path="/business/settings" element={<Layout><BusinessSettings /></Layout>} />
       <Route path="/business/affiliates" element={<Layout><BusinessAffiliateRequests /></Layout>} />
 
       <Route path="/profile/:userId" element={<ProfileRedirect />} />

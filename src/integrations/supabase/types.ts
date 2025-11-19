@@ -16,7 +16,7 @@ export type Database = {
     Tables: {
       affiliate_requests: {
         Row: {
-          business_id: string
+          business_profile_id: string
           id: string
           notes: string | null
           requested_at: string | null
@@ -26,7 +26,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          business_id: string
+          business_profile_id: string
           id?: string
           notes?: string | null
           requested_at?: string | null
@@ -36,7 +36,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          business_id?: string
+          business_profile_id?: string
           id?: string
           notes?: string | null
           requested_at?: string | null
@@ -47,10 +47,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "affiliate_requests_business_id_fkey"
-            columns: ["business_id"]
+            foreignKeyName: "affiliate_requests_business_profile_id_fkey"
+            columns: ["business_profile_id"]
             isOneToOne: false
-            referencedRelation: "business_accounts"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -102,50 +102,6 @@ export type Database = {
           {
             foreignKeyName: "bids_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_accounts: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: string
-          is_verified: boolean | null
-          logo_url: string | null
-          name: string
-          owner_id: string | null
-          updated_at: string | null
-          website_url: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_verified?: boolean | null
-          logo_url?: string | null
-          name: string
-          owner_id?: string | null
-          updated_at?: string | null
-          website_url?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_verified?: boolean | null
-          logo_url?: string | null
-          name?: string
-          owner_id?: string | null
-          updated_at?: string | null
-          website_url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_accounts_owner_id_fkey"
-            columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -835,6 +791,10 @@ export type Database = {
           ai_chat_id: string | null
           avatar_url: string | null
           bio: string | null
+          business_description: string | null
+          business_logo_url: string | null
+          business_name: string | null
+          business_website_url: string | null
           created_at: string | null
           current_grade: string | null
           display_name: string
@@ -863,6 +823,10 @@ export type Database = {
           ai_chat_id?: string | null
           avatar_url?: string | null
           bio?: string | null
+          business_description?: string | null
+          business_logo_url?: string | null
+          business_name?: string | null
+          business_website_url?: string | null
           created_at?: string | null
           current_grade?: string | null
           display_name: string
@@ -891,6 +855,10 @@ export type Database = {
           ai_chat_id?: string | null
           avatar_url?: string | null
           bio?: string | null
+          business_description?: string | null
+          business_logo_url?: string | null
+          business_name?: string | null
+          business_website_url?: string | null
           created_at?: string | null
           current_grade?: string | null
           display_name?: string
