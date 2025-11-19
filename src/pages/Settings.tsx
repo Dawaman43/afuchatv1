@@ -135,9 +135,9 @@ const Settings = () => {
       });
       
       if (error) throw error;
-      toast.success(`Connecting ${provider}...`);
+      toast.success(t('settings.linkAccount'));
     } catch (error: any) {
-      toast.error(error.message || `Failed to connect ${provider}`);
+      toast.error(error.message || t('common.error'));
       setLoadingProvider(null);
     }
   };
@@ -148,13 +148,13 @@ const Settings = () => {
       const identity = identities?.identities?.find(id => id.provider === provider);
       
       if (!identity) {
-        toast.error('Provider not found');
+        toast.error(t('common.error'));
         return;
       }
 
       // Check if user has other auth methods before unlinking
       if (identities?.identities && identities.identities.length <= 1) {
-        toast.error('Cannot disconnect your only sign-in method');
+        toast.error(t('settings.unlinkAccount'));
         return;
       }
 
@@ -163,9 +163,9 @@ const Settings = () => {
 
       // Update local state
       setConnectedProviders(prev => prev.filter(p => p !== provider));
-      toast.success(`${provider} disconnected successfully`);
+      toast.success(t('common.success'));
     } catch (error: any) {
-      toast.error(error.message || `Failed to disconnect ${provider}`);
+      toast.error(error.message || t('common.error'));
     }
   };
 
@@ -189,11 +189,11 @@ const Settings = () => {
       if (error) throw error;
 
       setBusinessMode(enabled);
-      toast.success(enabled ? 'Business mode enabled' : 'Business mode disabled');
+      toast.success(enabled ? t('settings.enableBusinessMode') : t('settings.disableBusinessMode'));
       setShowBusinessConfirm(false);
     } catch (error) {
       console.error('Error updating business mode:', error);
-      toast.error('Failed to update business mode');
+      toast.error(t('common.error'));
     }
   };
 

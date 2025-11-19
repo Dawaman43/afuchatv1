@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { User, Search, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslation } from 'react-i18next';
 
 interface UserProfile {
   id: string;
@@ -26,6 +27,7 @@ interface NewChatDialogProps {
 const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -119,7 +121,7 @@ const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
         hint: error.hint,
         targetUserId  // For debugging
       });
-      toast.error(error.message || 'Failed to start chat');
+      toast.error(error.message || t('chatRoom.errorSending'));
     } finally {
       setCreating(false);
     }
@@ -129,14 +131,14 @@ const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Start a New Chat</DialogTitle>
+          <DialogTitle>{t('chat.newChat')}</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search users..."
+              placeholder={t('chat.searchUsers')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1"
@@ -158,7 +160,7 @@ const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
               </>
             ) : users.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                {searchQuery ? 'No users found' : 'Follow users to start chatting'}
+                {searchQuery ? t('search.noResults') : t('chat.searchUsers')}
               </div>
             ) : (
               users.map((profile) => (
