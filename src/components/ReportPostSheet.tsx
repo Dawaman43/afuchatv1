@@ -11,6 +11,7 @@ import {
 import { AlertTriangle, X, Flag } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { useTranslation } from 'react-i18next';
 
 interface ReportPostSheetProps {
   isOpen: boolean;

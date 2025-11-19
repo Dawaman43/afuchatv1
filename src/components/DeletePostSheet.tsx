@@ -8,6 +8,7 @@ import {
   SheetDescription 
 } from '@/components/ui/sheet';
 import { Trash2, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface DeletePostSheetProps {
   isOpen: boolean;
@@ -17,6 +18,8 @@ interface DeletePostSheetProps {
 }
 
 const DeletePostSheet = ({ isOpen, onClose, onConfirm, isDeleting = false }: DeletePostSheetProps) => {
+  const { t } = useTranslation();
+  
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent 
@@ -26,7 +29,7 @@ const DeletePostSheet = ({ isOpen, onClose, onConfirm, isDeleting = false }: Del
         <div className="px-6 py-5">
           <SheetHeader className="text-left space-y-3 mb-6">
             <div className="flex items-center justify-between">
-              <SheetTitle className="text-xl font-bold">Delete Post?</SheetTitle>
+              <SheetTitle className="text-xl font-bold">{t('feed.deletePost')}</SheetTitle>
               <SheetClose asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
                   <X className="h-4 w-4" />
@@ -34,7 +37,7 @@ const DeletePostSheet = ({ isOpen, onClose, onConfirm, isDeleting = false }: Del
               </SheetClose>
             </div>
             <SheetDescription className="text-muted-foreground text-sm">
-              This can't be undone and it will be removed from your profile, the timeline of any accounts that follow you, and from AfuChat search results.
+              {t('feed.deletePostConfirm')}
             </SheetDescription>
           </SheetHeader>
 
@@ -50,12 +53,12 @@ const DeletePostSheet = ({ isOpen, onClose, onConfirm, isDeleting = false }: Del
               {isDeleting ? (
                 <>
                   <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Deleting...
+                  {t('common.loading')}
                 </>
               ) : (
                 <>
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+                  {t('common.delete')}
                 </>
               )}
             </Button>
@@ -66,7 +69,7 @@ const DeletePostSheet = ({ isOpen, onClose, onConfirm, isDeleting = false }: Del
                 className="w-full h-12 rounded-full font-bold border-border"
                 disabled={isDeleting}
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
             </SheetClose>
           </div>

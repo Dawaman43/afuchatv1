@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { 
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose 
 } from '@/components/ui/sheet'; 
+import { useTranslation } from 'react-i18next';
 
 // --- INTERFACES (Ensure these match the interfaces in your Feed.tsx) ---
 interface Post {
@@ -50,6 +51,7 @@ interface PostActionsSheetProps {
  * Renders a type-safe bottom sheet modal for contextual post actions with a richer UI.
  */
 const PostActionsSheet: React.FC<PostActionsSheetProps> = ({ post, user, navigate, onDelete, onReport, onEdit }) => {
+    const { t } = useTranslation();
     const isAuthor = user?.id === post.author_id;
     const closeRef = useRef<HTMLButtonElement>(null);
     const dragRef = useRef<HTMLDivElement>(null);

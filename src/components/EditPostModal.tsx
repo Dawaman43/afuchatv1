@@ -8,6 +8,7 @@ import { Save, X, Image as ImageIcon, Loader2, Trash2, Pencil } from 'lucide-rea
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { postSchema } from '@/lib/validation';
 import { ImageEditor } from '@/components/image-editor/ImageEditor';
+import { useTranslation } from 'react-i18next';
 
 interface EditPostModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ interface EditPostModalProps {
 
 export const EditPostModal: React.FC<EditPostModalProps> = ({ isOpen, onClose, post, onPostUpdated }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [content, setContent] = useState(post.content);
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
@@ -45,7 +47,7 @@ export const EditPostModal: React.FC<EditPostModalProps> = ({ isOpen, onClose, p
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (existingImages.length + selectedImages.length + files.length > 4) {
-      toast.error('Max 4 images per post');
+      toast.error(t('feed.maxImages'));
       return;
     }
     files.forEach(file => {
@@ -59,7 +61,7 @@ export const EditPostModal: React.FC<EditPostModalProps> = ({ isOpen, onClose, p
 
   const handleUpdate = async () => {
     if (!user) return;
-    try { postSchema.parse(content); } catch { toast.error('Invalid post'); return; }
+    try { postSchema.parse(content); } catch { toast.error(t('validation.required')); return; }
     setIsUpdating(true);
     try {
       const allImages = [...existingImages];
@@ -75,14 +77,14 @@ export const EditPostModal: React.FC<EditPostModalProps> = ({ isOpen, onClose, p
         await supabase.from('post_images').insert(allImages.map((url, i) => ({ post_id: post.id, image_url: url, display_order: i })));
       }
       const { error } = await supabase.from('posts').update({ content: content.trim(), updated_at: new Date().toISOString() }).eq('id', post.id);
-      if (!error) { toast.success('Post updated!'); onPostUpdated(); onClose(); } else toast.error('Update failed');
-    } catch { toast.error('Network error'); } finally { setIsUpdating(false); }
+      if (!error) { toast.success(t('feed.postSuccess')); onPostUpdated(); onClose(); } else toast.error(t('feed.postError'));
+    } catch { toast.error(t('errors.network')); } finally { setIsUpdating(false); }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[90vw] max-w-md rounded-xl">
-        <DialogHeader><DialogTitle>Edit Post</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('feed.editPost')}</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <Textarea value={content} onChange={(e) => setContent(e.target.value)} maxLength={280} rows={4} />
           <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageSelect} className="hidden" />
