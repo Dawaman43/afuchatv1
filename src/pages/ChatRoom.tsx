@@ -6,11 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArrowLeft, Send, User, Loader2, Phone, Video, MoreVertical, Check, MessageSquare, HelpCircle, Info, Mic, MicOff, Play, Pause, Volume2 } from 'lucide-react';
+import { ArrowLeft, Send, User, Loader2, Phone, Video, MoreVertical, Check, MessageSquare, HelpCircle, Info, Mic, MicOff, Play, Pause, Volume2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { messageSchema } from '@/lib/validation';
 import { ChatRedEnvelope } from '@/components/chat/ChatRedEnvelope';
 import { SendRedEnvelopeDialog } from '@/components/chat/SendRedEnvelopeDialog';
+import { MessageBubble } from '@/components/chat/MessageBubble';
+import { DateDivider } from '@/components/chat/DateDivider';
+import { isSameDay } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 
 interface Message {
@@ -19,6 +22,18 @@ interface Message {
   audio_url?: string;
   sender_id: string;
   sent_at: string;
+  reply_to_message_id?: string | null;
+  message_reactions?: Array<{
+    reaction_emoji: string;
+    user_id: string;
+  }>;
+  reply_to_message?: {
+    audio_url?: string;
+    encrypted_content: string;
+    profiles: {
+      display_name: string;
+    };
+  };
   profiles: {
     display_name: string;
     handle: string;
@@ -61,9 +76,12 @@ const ChatRoom = () => {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [uploading, setUploading] = useState(false);
   const [audioPlayers, setAudioPlayers] = useState<{ [key: string]: { isPlaying: boolean; audio: HTMLAudioElement | null } }>({});
+  const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!chatId || !user) return;
@@ -146,10 +164,72 @@ const ChatRoom = () => {
       )
       .subscribe();
 
+    // Subscribe to typing indicators
+    const typingChannel = supabase
+      .channel(`typing-${chatId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'typing_indicators',
+          filter: `chat_id=eq.${chatId}`,
+        },
+        async (payload) => {
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            const typingUserId = payload.new.user_id;
+            if (typingUserId !== user?.id) {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('display_name')
+                .eq('id', typingUserId)
+                .single();
+              
+              if (profile) {
+                setTypingUsers(prev => [...new Set([...prev, profile.display_name])]);
+              }
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const typingUserId = payload.old.user_id;
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('display_name')
+              .eq('id', typingUserId)
+              .single();
+            
+            if (profile) {
+              setTypingUsers(prev => prev.filter(name => name !== profile.display_name));
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to message reactions
+    const reactionsChannel = supabase
+      .channel(`reactions-${chatId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'message_reactions',
+        },
+        () => {
+          fetchMessages();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(envelopeChannel);
+      supabase.removeChannel(typingChannel);
+      supabase.removeChannel(reactionsChannel);
       stopRecording();
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
     };
   }, [chatId, user]);
 
@@ -176,7 +256,16 @@ const ChatRoom = () => {
     console.log('Fetching messages for chatId:', chatId);
     const { data, error } = await supabase
       .from('messages')
-      .select('*, profiles(display_name, handle)')
+      .select(`
+        *,
+        profiles(display_name, handle),
+        message_reactions(reaction_emoji, user_id),
+        reply_to_message:messages!reply_to_message_id(
+          encrypted_content,
+          audio_url,
+          profiles(display_name)
+        )
+      `)
       .eq('chat_id', chatId)
       .order('sent_at', { ascending: true });
 
@@ -187,7 +276,7 @@ const ChatRoom = () => {
       toast.error('Failed to load messages');
     }
     if (data) {
-      setMessages(data as Message[]);
+      setMessages(data as any);
     }
     setLoading(false);
   };
@@ -292,33 +381,95 @@ const ChatRoom = () => {
   };
 
   const handleSend = async () => {
-    if (!newMessage.trim() || !user || !chatId) return;
-    
-    // Validate message
+    if (!newMessage.trim() || !user || sending) return;
+
     try {
-      messageSchema.parse(newMessage);
-    } catch (error: any) {
-      toast.error(error.errors?.[0]?.message || 'Invalid message');
+      messageSchema.parse({ content: newMessage });
+    } catch (error) {
+      toast.error('Message is too long or invalid');
       return;
     }
 
-    const { error } = await supabase
-      .from('messages')
-      .insert({
-        chat_id: chatId,
-        sender_id: user.id,
-        encrypted_content: newMessage,
-      })
-      .select('*, profiles(display_name, handle)')
-      .single();
+    setSending(true);
+    
+    const { error } = await supabase.from('messages').insert({
+      chat_id: chatId,
+      sender_id: user.id,
+      encrypted_content: newMessage,
+      reply_to_message_id: replyToMessage?.id || null,
+    });
 
     if (error) {
-      console.error('Send error details:', error);
-      toast.error(`Failed to send: ${error.message}`);
+      toast.error('Failed to send message');
     } else {
       setNewMessage('');
+      setReplyToMessage(null);
+      removeTypingIndicator();
     }
     setSending(false);
+  };
+
+  const handleInputChange = (value: string) => {
+    setNewMessage(value);
+    
+    if (value.trim()) {
+      updateTypingIndicator();
+    } else {
+      removeTypingIndicator();
+    }
+  };
+
+  const updateTypingIndicator = async () => {
+    if (!user || !chatId) return;
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    await supabase
+      .from('typing_indicators')
+      .upsert({
+        chat_id: chatId,
+        user_id: user.id,
+        started_at: new Date().toISOString(),
+      });
+
+    typingTimeoutRef.current = setTimeout(removeTypingIndicator, 3000);
+  };
+
+  const removeTypingIndicator = async () => {
+    if (!user || !chatId) return;
+
+    await supabase
+      .from('typing_indicators')
+      .delete()
+      .eq('chat_id', chatId)
+      .eq('user_id', user.id);
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+  };
+
+  const handleReaction = async (messageId: string, emoji: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('message_reactions')
+      .insert({
+        message_id: messageId,
+        user_id: user.id,
+        reaction: emoji,
+      });
+
+    if (error) {
+      console.error('Error adding reaction:', error);
+    }
+  };
+
+  const handleReply = (message: Message) => {
+    setReplyToMessage(message);
   };
 
   const handleBack = () => {
@@ -414,102 +565,86 @@ const ChatRoom = () => {
             </div>
           ) : (
             <>
-              {/* Display messages and red envelopes in chronological order */}
-              {[...messages, ...redEnvelopes.map(e => ({ ...e, type: 'red_envelope' }))]
-                .sort((a, b) => {
-                  const timeA = 'sent_at' in a ? new Date(a.sent_at).getTime() : new Date(a.created_at).getTime();
-                  const timeB = 'sent_at' in b ? new Date(b.sent_at).getTime() : new Date(b.created_at).getTime();
-                  return timeA - timeB;
-                })
-                .map((item: any) => {
-                  if (item.type === 'red_envelope') {
-                    return (
-                      <div key={`envelope-${item.id}`} className="flex justify-center py-2">
-                        <ChatRedEnvelope 
-                          envelope={item} 
-                          onClaim={fetchRedEnvelopes}
-                        />
-                      </div>
-                    );
+              {/* Display messages and red envelopes chronologically */}
+              {(() => {
+                const sortedItems = [...messages, ...redEnvelopes.map(e => ({ ...e, type: 'red_envelope' as const }))]
+                  .sort((a, b) => {
+                    const timeA = 'sent_at' in a ? new Date(a.sent_at).getTime() : new Date(a.created_at).getTime();
+                    const timeB = 'sent_at' in b ? new Date(b.sent_at).getTime() : new Date(b.created_at).getTime();
+                    return timeA - timeB;
+                  });
+
+                const itemsWithDividers = sortedItems.reduce((acc: any[], item, index) => {
+                  const currentDate = 'sent_at' in item ? new Date(item.sent_at) : new Date(item.created_at);
+                  const prevDate = index > 0 
+                    ? ('sent_at' in sortedItems[index - 1] ? new Date((sortedItems[index - 1] as any).sent_at) : new Date((sortedItems[index - 1] as any).created_at))
+                    : null;
+
+                  if (!prevDate || !isSameDay(currentDate, prevDate)) {
+                    acc.push({ type: 'date_divider', date: currentDate });
+                  }
+                  acc.push(item);
+                  return acc;
+                }, []);
+
+                return itemsWithDividers.map((item: any, index: number) => {
+                  if (item.type === 'date_divider') {
+                    return <DateDivider key={`date-${index}`} date={item.date} />;
                   }
                   
+                  if (item.type === 'red_envelope') {
+                    return (
+                      <ChatRedEnvelope
+                        key={item.id}
+                        envelope={item}
+                        onClaim={() => {
+                          toast.success('Red envelope claimed!');
+                          fetchRedEnvelopes();
+                        }}
+                      />
+                    );
+                  }
+
                   const message = item as Message;
                   const isOwn = message.sender_id === user?.id;
-                  const time = new Date(message.sent_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                  const isVoice = !!message.audio_url;
-                  const playerKey = message.id;
-                  const playerState = audioPlayers[playerKey];
                   
+                  // Look back in the itemsWithDividers array to find the previous message
+                  let prevMessage: Message | null = null;
+                  for (let i = index - 1; i >= 0; i--) {
+                    if (itemsWithDividers[i].type !== 'red_envelope' && itemsWithDividers[i].type !== 'date_divider' && 'sender_id' in itemsWithDividers[i]) {
+                      prevMessage = itemsWithDividers[i] as Message;
+                      break;
+                    }
+                  }
+                  const isGrouped = prevMessage?.sender_id === message.sender_id;
+
                   return (
-                    <div
+                    <MessageBubble
                       key={message.id}
-                      className={`flex ${isOwn ? 'justify-end' : 'justify-start'} w-full py-1`}
-                    >
-                      {!isOwn ? (
-                        <div className="flex items-end gap-2 max-w-[85%]">
-                          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                            <User className="h-4 w-4 text-foreground" />
-                          </div>
-                          <div className="flex flex-col min-w-0">
-                            <div className="flex items-baseline gap-2 mb-1">
-                              <span className="text-xs font-semibold text-foreground truncate">
-                                {message.profiles.display_name}
-                              </span>
-                              <span className="text-xs text-muted-foreground"> {time}</span>
-                            </div>
-                            {isVoice ? (
-                              <div className="bg-card px-3 py-2 rounded-lg shadow-sm border border-border max-w-full">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="flex items-center gap-2 w-full justify-start text-left"
-                                  onClick={() => toggleAudio(playerKey, message.audio_url!)}
-                                >
-                                  {playerState?.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                                  <Volume2 className="h-4 w-4" />
-                                  <span className="text-sm text-muted-foreground">Voice message</span>
-                                </Button>
-                              </div>
-                            ) : (
-                              <div className="bg-card text-foreground px-3 py-2 rounded-lg shadow-sm border border-border max-w-full">
-                                <p className="text-sm whitespace-pre-wrap break-words">
-                                  {message.encrypted_content}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-end max-w-[85%]">
-                          {isVoice ? (
-                            <div className="bg-primary text-primary-foreground px-3 py-2 rounded-lg shadow-sm max-w-full">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="flex items-center gap-2 w-full justify-end text-right text-primary-foreground hover:bg-primary-foreground/10"
-                                onClick={() => toggleAudio(playerKey, message.audio_url!)}
-                              >
-                                <span className="text-sm">Voice message</span>
-                                <Volume2 className="h-4 w-4" />
-                                {playerState?.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="bg-primary text-primary-foreground px-3 py-2 rounded-lg shadow-sm max-w-full">
-                              <p className="text-sm whitespace-pre-wrap break-words">
-                                {message.encrypted_content}
-                              </p>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1 mt-1 mr-1">
-                            <span className="text-xs text-muted-foreground">{time}</span>
-                            <Check className="h-3 w-3 text-muted-foreground" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                      message={message}
+                      isOwn={isOwn}
+                      isGrouped={isGrouped}
+                      isOnline={online}
+                      onReply={handleReply}
+                      onReaction={handleReaction}
+                      onToggleAudio={() => message.audio_url && toggleAudio(message.id, message.audio_url)}
+                      audioPlayerState={audioPlayers[message.id] || { isPlaying: false }}
+                    />
                   );
-                })}
+                });
+              })()}
+              
+              {/* Typing indicator */}
+              {typingUsers.length > 0 && (
+                <div className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground">
+                  <div className="flex gap-1">
+                    <span className="inline-block w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="inline-block w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="inline-block w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                  <span>{typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...</span>
+                </div>
+              )}
             </>
           )}
           <div ref={messagesEndRef} />
@@ -597,10 +732,30 @@ const ChatRoom = () => {
               </>
             )}
             <div className="flex-1 relative min-w-0">
+              {replyToMessage && (
+                <div className="absolute bottom-full left-0 right-0 mb-2 px-3 py-2 bg-muted/50 rounded-lg border-l-2 border-primary flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-primary truncate">
+                      Replying to {replyToMessage.profiles.display_name}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {replyToMessage.audio_url ? '[Voice Message]' : replyToMessage.encrypted_content}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 flex-shrink-0"
+                    onClick={() => setReplyToMessage(null)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
               <Input
-                placeholder="Type a message..."
+                placeholder={t('chatRoom.typeHere')}
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={(e) => handleInputChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
                 className="h-12 pr-12 min-h-[44px]"
                 disabled={sending || uploading}

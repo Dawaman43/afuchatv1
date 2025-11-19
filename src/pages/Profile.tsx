@@ -781,11 +781,9 @@ const Profile = () => {
 							</div>
 						) : (
 							<div className="flex gap-2">
-								{isFollowing && (
-									<Button onClick={handleStartChat} variant="outline" size="icon" className="rounded-full">
-										<MessageSquare className="h-5 w-5" />
-									</Button>
-								)}
+								<Button onClick={handleStartChat} variant="outline" size="icon" className="rounded-full">
+									<MessageSquare className="h-5 w-5" />
+								</Button>
 								<TipButton
 									receiverId={profileId}
 									receiverName={profile.display_name}
