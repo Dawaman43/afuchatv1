@@ -295,7 +295,17 @@ const Settings = () => {
                 <h2 className="text-lg font-semibold">Business & Affiliate</h2>
               </div>
               <Separator />
-              {!businessMode && (
+              {businessMode ? (
+                <Link to="/business/dashboard">
+                  <button className="w-full flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted transition-colors text-left">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      <span>Business Dashboard</span>
+                    </div>
+                    <span className="text-muted-foreground">›</span>
+                  </button>
+                </Link>
+              ) : (
                 <>
                   {isAffiliate ? (
                     <Link to="/affiliate-dashboard">
