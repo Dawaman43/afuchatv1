@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Wallet, QrCode, Trophy, Users, ShoppingBag, Bot, TrendingUp, Gift, Heart, Building2, UserPlus, HelpCircle, FileText, Shield, Image as ImageIcon, MessageSquare, Send, Zap } from 'lucide-react';
+import { ArrowLeft, Wallet, QrCode, Trophy, Users, ShoppingBag, Bot, TrendingUp, Gift, Heart, Building2, UserPlus, HelpCircle, FileText, Shield, Image as ImageIcon, MessageSquare, Send, Zap, Mail, Code } from 'lucide-react';
 import Logo from '@/components/Logo';
 
 const Services = () => {
@@ -22,6 +22,7 @@ const Services = () => {
       items: [
         { icon: Wallet, title: 'Wallet', description: 'Manage your XP balance', route: '/wallet', color: 'text-blue-500' },
         { icon: Send, title: 'Transfer XP', description: 'Send XP to other users', route: '/transfer', color: 'text-indigo-500' },
+        { icon: Mail, title: 'Red Envelopes', description: 'Group XP sharing with random splits', route: '/red-envelope', color: 'text-red-500' },
         { icon: Gift, title: 'Gifts', description: 'Send virtual gifts', route: '/gifts', color: 'text-pink-500' },
         { icon: Heart, title: 'Tips', description: 'Support creators', route: '/tips', color: 'text-red-500' },
       ]
@@ -30,6 +31,7 @@ const Services = () => {
       category: 'Mini Programs',
       items: [
         { icon: Zap, title: 'App Store', description: 'Discover mini apps and games', route: '/mini-programs', color: 'text-yellow-500' },
+        { icon: Code, title: 'Developer SDK', description: 'Build your own mini programs', route: '/developer-sdk', color: 'text-purple-600' },
       ]
     },
     {
