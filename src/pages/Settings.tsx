@@ -13,6 +13,7 @@ import Logo from '@/components/Logo';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/contexts/ThemeContext';
 import EnableNotificationsButton from '@/components/EnableNotificationsButton';
+import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
 import {
   Select,
   SelectContent,
@@ -193,6 +194,9 @@ const Settings = () => {
               </button>
             </div>
           </Card>
+
+          {/* Account Mode Switcher */}
+          <AccountModeSwitcher />
 
           {/* Account Settings */}
           <Card className="p-4 sm:p-6">
