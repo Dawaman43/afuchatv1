@@ -1370,27 +1370,6 @@ export type Database = {
           },
         ]
       }
-      unlocked_accessories: {
-        Row: {
-          accessory_type: string
-          id: string
-          unlocked_at: string | null
-          user_id: string
-        }
-        Insert: {
-          accessory_type: string
-          id?: string
-          unlocked_at?: string | null
-          user_id: string
-        }
-        Update: {
-          accessory_type?: string
-          id?: string
-          unlocked_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_achievements: {
         Row: {
           achievement_type: string
@@ -1441,38 +1420,6 @@ export type Database = {
           xp_earned?: number
         }
         Relationships: []
-      }
-      user_avatars: {
-        Row: {
-          avatar_config: Json
-          created_at: string | null
-          id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          avatar_config?: Json
-          created_at?: string | null
-          id?: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          avatar_config?: Json
-          created_at?: string | null
-          id?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_avatars_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_mini_programs: {
         Row: {

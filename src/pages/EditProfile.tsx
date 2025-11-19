@@ -14,9 +14,6 @@ import { Loader2, User, Lock, Eye, MessageCircle, Upload, X, Building2 } from 'l
 import { handleSchema, displayNameSchema, bioSchema } from '@/lib/validation';
 import { useXP } from '@/hooks/useXP';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DefaultAvatar } from '@/components/avatar/DefaultAvatar';
-import { AvatarEditor } from '@/components/avatar/AvatarEditor';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Import Supabase types
 import type { Database } from '@/integrations/supabase/types';
@@ -54,8 +51,6 @@ const EditProfile: React.FC = () => {
   });
   const [loadingProfile, setLoadingProfile] = useState<boolean>(true); 
   const [saving, setSaving] = useState<boolean>(false);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [showAvatarEditor, setShowAvatarEditor] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [isBusiness, setIsBusiness] = useState(false);
   const [isAffiliate, setIsAffiliate] = useState(false);
@@ -212,9 +207,9 @@ const EditProfile: React.FC = () => {
     navigate(`/${user?.id}`);
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !user) return;
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
@@ -228,8 +223,29 @@ const EditProfile: React.FC = () => {
       return;
     }
 
-    setAvatarFile(file);
-    setShowAvatarEditor(true);
+    setUploadingAvatar(true);
+    try {
+      const fileName = `${user.id}-${Date.now()}`;
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('avatars').getPublicUrl(fileName);
+
+      await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
+
+      setProfile((prev) => ({ ...prev, avatar_url: publicUrl }));
+      toast.success('Avatar updated successfully!');
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast.error('Failed to upload avatar');
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   const handleRemoveAvatar = async () => {
@@ -288,8 +304,6 @@ const EditProfile: React.FC = () => {
       await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
 
       setProfile((prev) => ({ ...prev, avatar_url: publicUrl }));
-      setShowAvatarEditor(false);
-      setAvatarFile(null);
       toast.success('Avatar updated successfully!');
     } catch (error) {
       console.error('Error uploading avatar:', error);
@@ -325,13 +339,10 @@ const EditProfile: React.FC = () => {
             <h3 className="text-lg font-semibold border-b pb-2 text-primary">Profile Picture</h3>
             <div className="flex items-center gap-6">
               <Avatar className="h-24 w-24 border-2 border-border">
-                {profile.avatar_url ? (
-                  <AvatarImage src={profile.avatar_url} alt={profile.display_name} />
-                ) : (
-                  <AvatarFallback className="bg-muted">
-                    <DefaultAvatar name={profile.display_name} size={96} />
-                  </AvatarFallback>
-                )}
+                <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} />
+                <AvatarFallback className="bg-muted text-2xl">
+                  {profile.display_name.charAt(0).toUpperCase()}
+                </AvatarFallback>
               </Avatar>
 
               <div className="flex-1 space-y-3">
@@ -535,25 +546,6 @@ const EditProfile: React.FC = () => {
           </div>
           </CardContent>
         </Card>
-
-      {/* Avatar Editor Dialog */}
-      <Dialog open={showAvatarEditor} onOpenChange={setShowAvatarEditor}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Profile Picture</DialogTitle>
-          </DialogHeader>
-          {avatarFile && (
-            <AvatarEditor
-              imageFile={avatarFile}
-              onSave={handleSaveAvatar}
-              onCancel={() => {
-                setShowAvatarEditor(false);
-                setAvatarFile(null);
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

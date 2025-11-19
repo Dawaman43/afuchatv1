@@ -13,8 +13,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useImageDescription } from '@/hooks/useImageDescription';
 import { AltTextEditor } from '@/components/ui/AltTextEditor';
 import { compressImageFile } from '@/lib/imageCompression';
-import { DefaultAvatar } from '@/components/avatar/DefaultAvatar';
-import { useUserAvatar } from '@/hooks/useUserAvatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useLinkPreview } from '@/hooks/useLinkPreview';
 import { LinkPreviewCard } from '@/components/ui/LinkPreviewCard';
@@ -27,7 +26,6 @@ interface NewPostModalProps {
 
 const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
     const { user } = useAuth();
-    const { avatarConfig } = useUserAvatar(user?.id);
     const { awardXP } = useXP();
     const [newPost, setNewPost] = useState('');
     const [isPosting, setIsPosting] = useState(false);
@@ -305,20 +303,10 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                     <div className="p-4">
                         <div className="flex gap-3">
                             {/* Avatar */}
-                            <div className="flex-shrink-0">
-                                {userProfile?.avatar_url ? (
-                                    <img 
-                                        src={userProfile.avatar_url} 
-                                        alt={userProfile.display_name}
-                                        className="h-10 w-10 rounded-full object-cover"
-                                    />
-                                ) : (
-                                    <DefaultAvatar 
-                                        name={userProfile?.display_name || 'You'} 
-                                        size={40} 
-                                    />
-                                )}
-                            </div>
+                            <Avatar className="h-10 w-10 flex-shrink-0">
+                              <AvatarImage src={userProfile?.avatar_url || undefined} alt={userProfile?.display_name || 'You'} />
+                              <AvatarFallback>{(userProfile?.display_name || 'You').charAt(0).toUpperCase()}</AvatarFallback>
+                            </Avatar>
 
                             {/* Post Content */}
                             <div className="flex-1 min-w-0">

@@ -19,12 +19,10 @@ import { ReceivedGifts } from '@/components/gifts/ReceivedGifts';
 import { TipStats } from '@/components/tips/TipStats';
 import { TipButton } from '@/components/tips/TipButton';
 import ProfileActionsSheet from '@/components/ProfileActionsSheet';
-import { OwlAvatar } from '@/components/avatar/OwlAvatar';
-import { useUserAvatar } from '@/hooks/useUserAvatar';
 import { useAITranslation } from '@/hooks/useAITranslation';
 import { ImageCarousel } from '@/components/ui/ImageCarousel';
 import { LinkPreviewCard } from '@/components/ui/LinkPreviewCard';
-import { DefaultAvatar } from '@/components/avatar/DefaultAvatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { BusinessBadge } from '@/components/BusinessBadge';
 import { AffiliatedBadge } from '@/components/AffiliatedBadge';
@@ -192,23 +190,18 @@ const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content
 
 // Profile Avatar Display Component
 const ProfileAvatarDisplay = ({ profileId, profile }: { profileId: string | null; profile: Profile | null }) => {
-	const { avatarConfig, loading } = useUserAvatar(profileId || undefined);
 	const { user } = useAuth();
 	const navigate = useNavigate();
 
 	const isOwnProfile = user?.id === profileId;
-
-	if (loading) {
-		return (
-			<div className="w-full h-full bg-muted animate-pulse rounded-full" />
-		);
-	}
 
 	const handleClick = () => {
 		if (isOwnProfile) {
 			navigate(`/${profileId}/edit`);
 		}
 	};
+
+	const initials = profile?.display_name?.charAt(0).toUpperCase() || 'U';
 
 	// Show uploaded avatar if available
 	if (profile?.avatar_url) {
@@ -227,28 +220,14 @@ const ProfileAvatarDisplay = ({ profileId, profile }: { profileId: string | null
 		);
 	}
 
-	// Fall back to default avatar
-	if (profile?.display_name) {
-		return (
-			<div 
-				className={`w-full h-full flex items-center justify-center ${isOwnProfile ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
-				onClick={handleClick}
-				title={isOwnProfile ? 'Click to edit profile picture' : undefined}
-			>
-				<DefaultAvatar name={profile.display_name} size={128} />
-			</div>
-		);
-	}
-
-	// Fallback to owl avatar if no other option
+	// Fall back to Avatar with initials
 	return (
-		<div 
-			className={isOwnProfile ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}
+		<Avatar 
+			className={`w-full h-full ${isOwnProfile ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
 			onClick={handleClick}
-			title={isOwnProfile ? 'Click to customize your owl' : undefined}
 		>
-			<OwlAvatar config={avatarConfig} size={128} />
-		</div>
+			<AvatarFallback className="text-4xl">{initials}</AvatarFallback>
+		</Avatar>
 	);
 };
 
@@ -851,14 +830,6 @@ const Profile = () => {
 
 					{user && user.id === profileId ? (
 						<div className="flex flex-col gap-2">
-							<Button 
-								variant="outline" 
-								className="rounded-full px-4 font-bold"
-								onClick={() => navigate('/avatar/edit')}
-							>
-								<Pencil className="h-4 w-4 mr-2" />
-								Customize Owl
-							</Button>
 								{isAdmin && (
 									<Button
 										onClick={handleAdminDashboard}
