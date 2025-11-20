@@ -230,6 +230,156 @@ export type Database = {
           },
         ]
       }
+      game_challenges: {
+        Row: {
+          challenger_id: string
+          challenger_score: number | null
+          completed_at: string | null
+          created_at: string
+          difficulty: string
+          game_type: string
+          id: string
+          opponent_id: string
+          opponent_score: number | null
+          status: string
+          winner_id: string | null
+        }
+        Insert: {
+          challenger_id: string
+          challenger_score?: number | null
+          completed_at?: string | null
+          created_at?: string
+          difficulty: string
+          game_type: string
+          id?: string
+          opponent_id: string
+          opponent_score?: number | null
+          status?: string
+          winner_id?: string | null
+        }
+        Update: {
+          challenger_id?: string
+          challenger_score?: number | null
+          completed_at?: string | null
+          created_at?: string
+          difficulty?: string
+          game_type?: string
+          id?: string
+          opponent_id?: string
+          opponent_score?: number | null
+          status?: string
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_challenges_challenger_id_fkey"
+            columns: ["challenger_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_challenges_opponent_id_fkey"
+            columns: ["opponent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_challenges_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_scores: {
+        Row: {
+          created_at: string
+          difficulty: string
+          game_type: string
+          id: string
+          metadata: Json | null
+          score: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty: string
+          game_type: string
+          id?: string
+          metadata?: Json | null
+          score: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string
+          game_type?: string
+          id?: string
+          metadata?: Json | null
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_scores_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_sessions: {
+        Row: {
+          challenge_id: string | null
+          completed: boolean
+          created_at: string
+          id: string
+          metadata: Json | null
+          player_id: string
+          score: number
+          updated_at: string
+        }
+        Insert: {
+          challenge_id?: string | null
+          completed?: boolean
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          player_id: string
+          score?: number
+          updated_at?: string
+        }
+        Update: {
+          challenge_id?: string | null
+          completed?: boolean
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          player_id?: string
+          score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_sessions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "game_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_sessions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gift_statistics: {
         Row: {
           gift_id: string
