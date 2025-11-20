@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Feed from './Feed';
@@ -12,6 +13,14 @@ const Home = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [checkingFollows, setCheckingFollows] = useState(true);
+
+  useEffect(() => {
+    // Check if user has followed anyone
+    if (user) {
+      checkUserFollows();
+    }
+  }, [user]);
 
   useEffect(() => {
     // Handle app shortcut for new post
@@ -21,6 +30,33 @@ const Home = () => {
     }
   }, [searchParams, user, setSearchParams]);
 
+  const checkUserFollows = async () => {
+    if (!user) {
+      setCheckingFollows(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('follower_id', user.id)
+        .limit(1);
+
+      if (error) throw error;
+
+      // If user hasn't followed anyone, redirect to suggested users
+      if (!data || data.length === 0) {
+        navigate('/suggested-users');
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking follows:', error);
+    } finally {
+      setCheckingFollows(false);
+    }
+  };
+
   const handleNewPost = () => {
     if (!user) {
       navigate('/auth');
@@ -28,6 +64,10 @@ const Home = () => {
     }
     setIsPostModalOpen(true);
   };
+
+  if (checkingFollows) {
+    return null; // Or a loading spinner if you prefer
+  }
 
   return (
     <Layout>

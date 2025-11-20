@@ -56,6 +56,7 @@ const DeveloperSDK = lazy(() => import("./pages/DeveloperSDK"));
 const VerificationRequest = lazy(() => import("./pages/VerificationRequest"));
 const Followers = lazy(() => import("./pages/Followers"));
 const Following = lazy(() => import("./pages/Following"));
+const SuggestedUsers = lazy(() => import("./pages/SuggestedUsers"));
 import Layout from "./components/Layout";
 
 const queryClient = new QueryClient();
@@ -107,6 +108,7 @@ const AppRoutes = () => {
       <Route path="/settings" element={<Layout><Settings /></Layout>} />
       <Route path="/terms" element={<TermsOfUse />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/suggested-users" element={<SuggestedUsers />} />
       <Route path="/trending" element={<Layout><TrendingHashtags /></Layout>} />
       <Route path="/admin/affiliate-requests" element={<Layout><AdminAffiliateRequests /></Layout>} />
       <Route path="/admin/verification-requests" element={<Layout><AdminVerificationRequests /></Layout>} />
