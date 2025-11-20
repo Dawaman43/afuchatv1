@@ -1,0 +1,228 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
+
+interface SuggestedUser {
+  id: string;
+  handle: string;
+  display_name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  is_verified: boolean | null;
+}
+
+export default function SuggestedUsers() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [users, setUsers] = useState<SuggestedUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const [processingFollow, setProcessingFollow] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (user) {
+      checkIfAlreadyFollowing();
+      fetchSuggestedUsers();
+    }
+  }, [user]);
+
+  const checkIfAlreadyFollowing = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('follower_id', user.id)
+        .limit(1);
+
+      if (error) throw error;
+
+      // If user already follows someone, redirect to home
+      if (data && data.length > 0) {
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Error checking follows:', error);
+    }
+  };
+
+  const fetchSuggestedUsers = async () => {
+    setLoading(true);
+    try {
+      // Fetch pinned users first
+      const { data: pinnedUsers, error: pinnedError } = await supabase
+        .from('profiles')
+        .select('id, handle, display_name, avatar_url, bio, is_verified')
+        .in('handle', ['afuchat', 'amkaweesi']);
+
+      if (pinnedError) throw pinnedError;
+
+      // Fetch other suggested users (excluding pinned ones and current user)
+      const { data: otherUsers, error: otherError } = await supabase
+        .from('profiles')
+        .select('id, handle, display_name, avatar_url, bio, is_verified')
+        .not('handle', 'in', '(afuchat,amkaweesi)')
+        .neq('id', user?.id || '')
+        .limit(8);
+
+      if (otherError) throw otherError;
+
+      // Sort pinned users to ensure correct order
+      const sortedPinned = (pinnedUsers || []).sort((a, b) => {
+        if (a.handle === 'afuchat') return -1;
+        if (b.handle === 'afuchat') return 1;
+        if (a.handle === 'amkaweesi') return -1;
+        if (b.handle === 'amkaweesi') return 1;
+        return 0;
+      });
+
+      // Combine pinned and other users
+      setUsers([...sortedPinned, ...(otherUsers || [])]);
+    } catch (error) {
+      console.error('Error fetching suggested users:', error);
+      toast.error('Failed to load suggested users');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFollow = async (userId: string) => {
+    if (!user) return;
+
+    setProcessingFollow(prev => new Set(prev).add(userId));
+
+    try {
+      const { error } = await supabase
+        .from('follows')
+        .insert({ follower_id: user.id, following_id: userId });
+
+      if (error) throw error;
+
+      setFollowingIds(prev => new Set(prev).add(userId));
+      toast.success('Followed successfully');
+    } catch (error) {
+      console.error('Error following user:', error);
+      toast.error('Failed to follow user');
+    } finally {
+      setProcessingFollow(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(userId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleContinue = () => {
+    if (followingIds.size === 0) {
+      toast.error('Please follow at least one user to continue');
+      return;
+    }
+    navigate('/');
+  };
+
+  const isPinned = (handle: string) => {
+    return handle === 'afuchat' || handle === 'amkaweesi';
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background py-8 px-4">
+      <div className="max-w-2xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">Welcome to AfuChat! 🎉</h1>
+          <p className="text-muted-foreground">
+            Follow at least one user to get started and see their posts in your feed
+          </p>
+        </div>
+
+        <div className="space-y-3 mb-6">
+          {users.map((suggestedUser) => (
+            <Card key={suggestedUser.id} className="p-4">
+              <div className="flex items-center gap-4">
+                <Avatar
+                  className="h-12 w-12 cursor-pointer"
+                  onClick={() => navigate(`/${suggestedUser.handle}`)}
+                >
+                  <AvatarImage src={suggestedUser.avatar_url || undefined} />
+                  <AvatarFallback>
+                    {suggestedUser.display_name.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3
+                      className="font-semibold truncate cursor-pointer hover:underline"
+                      onClick={() => navigate(`/${suggestedUser.handle}`)}
+                    >
+                      {suggestedUser.display_name}
+                    </h3>
+                    {suggestedUser.is_verified && (
+                      <svg
+                        className="h-4 w-4 text-primary flex-shrink-0"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                      </svg>
+                    )}
+                    {isPinned(suggestedUser.handle) && (
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                        Recommended
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">@{suggestedUser.handle}</p>
+                  {suggestedUser.bio && (
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      {suggestedUser.bio}
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  onClick={() => handleFollow(suggestedUser.id)}
+                  disabled={followingIds.has(suggestedUser.id) || processingFollow.has(suggestedUser.id)}
+                  variant={followingIds.has(suggestedUser.id) ? "secondary" : "default"}
+                >
+                  {processingFollow.has(suggestedUser.id) ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : followingIds.has(suggestedUser.id) ? (
+                    'Following'
+                  ) : (
+                    'Follow'
+                  )}
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        <div className="sticky bottom-0 bg-background/95 backdrop-blur pt-4 pb-8">
+          <Button
+            onClick={handleContinue}
+            disabled={followingIds.size === 0}
+            className="w-full"
+            size="lg"
+          >
+            Continue to AfuChat ({followingIds.size} followed)
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
