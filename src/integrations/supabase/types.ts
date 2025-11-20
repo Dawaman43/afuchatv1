@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      active_sessions: {
+        Row: {
+          browser: string | null
+          created_at: string
+          device_name: string | null
+          expires_at: string
+          id: string
+          ip_address: string | null
+          last_active: string
+          session_token: string
+          user_id: string
+        }
+        Insert: {
+          browser?: string | null
+          created_at?: string
+          device_name?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: string | null
+          last_active?: string
+          session_token: string
+          user_id: string
+        }
+        Update: {
+          browser?: string | null
+          created_at?: string
+          device_name?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          last_active?: string
+          session_token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       affiliate_requests: {
         Row: {
           business_profile_id: string
@@ -486,6 +522,39 @@ export type Database = {
           name?: string
           rarity?: string
           season?: string | null
+        }
+        Relationships: []
+      }
+      login_history: {
+        Row: {
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          location: string | null
+          login_time: string
+          success: boolean
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          location?: string | null
+          login_time?: string
+          success?: boolean
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          location?: string | null
+          login_time?: string
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1279,6 +1348,33 @@ export type Database = {
           referred_id?: string
           referrer_id?: string
           rewarded?: boolean | null
+        }
+        Relationships: []
+      }
+      security_alerts: {
+        Row: {
+          alert_message: string
+          alert_type: string
+          created_at: string
+          id: string
+          is_read: boolean
+          user_id: string
+        }
+        Insert: {
+          alert_message: string
+          alert_type: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          user_id: string
+        }
+        Update: {
+          alert_message?: string
+          alert_type?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          user_id?: string
         }
         Relationships: []
       }

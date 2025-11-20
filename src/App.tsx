@@ -64,6 +64,8 @@ const TriviaGame = lazy(() => import("./pages/TriviaGame"));
 const Games = lazy(() => import("./pages/Games"));
 const FinancialHub = lazy(() => import("./pages/FinancialHub"));
 const SocialHub = lazy(() => import("./pages/SocialHub"));
+const SecurityDashboard = lazy(() => import("./pages/SecurityDashboard"));
+const ChangePassword = lazy(() => import("./pages/ChangePassword"));
 import Layout from "./components/Layout";
 
 const queryClient = new QueryClient();
@@ -111,6 +113,8 @@ const AppRoutes = () => {
       <Route path="/social" element={<Layout><SocialHub /></Layout>} />
       <Route path="/qr-code" element={<Layout><QRCode /></Layout>} />
       <Route path="/settings" element={<Layout><Settings /></Layout>} />
+      <Route path="/security" element={<Layout><SecurityDashboard /></Layout>} />
+      <Route path="/change-password" element={<Layout><ChangePassword /></Layout>} />
       <Route path="/terms" element={<TermsOfUse />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/suggested-users" element={<SuggestedUsers />} />
