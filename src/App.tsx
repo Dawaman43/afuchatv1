@@ -66,6 +66,12 @@ const FinancialHub = lazy(() => import("./pages/FinancialHub"));
 const SocialHub = lazy(() => import("./pages/SocialHub"));
 const SecurityDashboard = lazy(() => import("./pages/SecurityDashboard"));
 const ChangePassword = lazy(() => import("./pages/ChangePassword"));
+const SuperAppHub = lazy(() => import("./pages/SuperAppHub"));
+const FoodDelivery = lazy(() => import("./pages/FoodDelivery"));
+const Bookings = lazy(() => import("./pages/Bookings"));
+const Rides = lazy(() => import("./pages/Rides"));
+const Travel = lazy(() => import("./pages/Travel"));
+const Events = lazy(() => import("./pages/Events"));
 import Layout from "./components/Layout";
 
 const queryClient = new QueryClient();
@@ -92,7 +98,8 @@ const AppRoutes = () => {
       </div>
     }>
       <Routes>
-      <Route path="/" element={<Layout><Home /></Layout>} />
+      <Route path="/" element={<Layout><SuperAppHub /></Layout>} />
+      <Route path="/home" element={<Layout><Home /></Layout>} />
       <Route path="/auth" element={<Welcome />} />
       <Route path="/auth/signin" element={<SignIn />} />
       <Route path="/auth/signup" element={<SignUp />} />
@@ -135,6 +142,13 @@ const AppRoutes = () => {
       <Route path="/memory-game" element={<Layout><MemoryGame /></Layout>} />
       <Route path="/puzzle-game" element={<Layout><PuzzleGame /></Layout>} />
       <Route path="/trivia-game" element={<Layout><TriviaGame /></Layout>} />
+      
+      {/* New Super App Services */}
+      <Route path="/food-delivery" element={<Layout><FoodDelivery /></Layout>} />
+      <Route path="/bookings" element={<Layout><Bookings /></Layout>} />
+      <Route path="/rides" element={<Layout><Rides /></Layout>} />
+      <Route path="/travel" element={<Layout><Travel /></Layout>} />
+      <Route path="/events" element={<Layout><Events /></Layout>} />
 
       <Route path="/profile/:userId" element={<ProfileRedirect />} />
 
