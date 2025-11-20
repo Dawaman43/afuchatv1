@@ -811,26 +811,23 @@ const Profile = () => {
 					)}
 				</div>
 
-				<div className="p-4">
-					{/* Edit Profile Button - Overlaying between banner and content */}
-					{user && user.id === profileId && (
-						<div className="flex justify-center -mt-12 mb-8">
-							<Button 
-								variant="outline" 
-								className="rounded-full px-6 font-bold bg-background hover:bg-muted shadow-lg border-2"
-								onClick={() => navigate(`/${urlParam}/edit`)}
-							>
-								<Pencil className="h-4 w-4 mr-2" />
-								{t('profile.editProfile')}
-							</Button>
-						</div>
-					)}
-					
+				<div className="p-4 relative">
 					<div className="flex justify-between items-end -mt-20 sm:-mt-16">
-						<div className="relative h-24 w-24 sm:h-32 sm:w-32 rounded-full overflow-hidden bg-background">
+						<div className="relative h-24 w-24 sm:h-32 sm:w-32 rounded-full overflow-hidden bg-background border-4 border-background">
 							<ProfileAvatarDisplay profileId={profileId} profile={profile} />
 							<OnlineStatus lastSeen={profile.last_seen} showOnlineStatus={profile.show_online_status} />
 						</div>
+						
+						{/* Edit Profile Button - Right side, overlapping banner/content */}
+						{user && user.id === profileId && (
+							<Button 
+								variant="outline" 
+								className="rounded-full px-6 py-2 font-bold bg-background hover:bg-muted border-2 h-auto"
+								onClick={() => navigate(`/${urlParam}/edit`)}
+							>
+								{t('profile.editProfile')}
+							</Button>
+						)}
 
 					{user && user.id === profileId ? (
 						<div className="flex flex-col gap-2">
