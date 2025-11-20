@@ -111,6 +111,9 @@ const Layout = ({ children }: LayoutProps) => {
     return location.pathname.startsWith(path);
   };
 
+  // Show FAB only on home and chat pages
+  const showFAB = location.pathname === '/' || location.pathname.startsWith('/chat');
+  
   // Hide bottom navigation in chat rooms
   const isChatRoom = location.pathname.startsWith('/chat/');
 
@@ -211,8 +214,8 @@ const Layout = ({ children }: LayoutProps) => {
         </nav>
       )}
 
-      {/* Floating Action Button - Hidden in chat rooms */}
-      {!isChatRoom && <FloatingActionButton />}
+      {/* Floating Action Button - Only on home and chat pages */}
+      {showFAB && <FloatingActionButton />}
     </div>
   );
 };
