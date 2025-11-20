@@ -37,7 +37,9 @@ const VerifiedBadge = ({ isVerified, isOrgVerified }: { isVerified?: boolean; is
 
 // --- Utility to render text with clickable mentions ---
 const renderContentWithMentions = (content: string) => {
-  const parts = content.split(/(@[\w]+)/g);
+  // Ensure content is a string
+  const safeContent = typeof content === 'string' ? content : String(content || '');
+  const parts = safeContent.split(/(@[\w]+)/g);
 
   return parts.map((part, index) => {
     if (part.startsWith('@')) {

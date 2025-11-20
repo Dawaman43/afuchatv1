@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
+import { extractText } from '@/lib/textUtils';
 
 interface ReceivedGiftDetailsModalProps {
   gift: {
@@ -70,13 +71,13 @@ export const ReceivedGiftDetailsModal = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center">{gift.gift.name}</DialogTitle>
+          <DialogTitle className="text-center">{extractText(gift.gift.name)}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Gift Display */}
           <div className="flex flex-col items-center gap-3 p-4 bg-gradient-to-br from-primary/5 to-accent/5 rounded-lg">
-            <SimpleGiftIcon emoji={gift.gift.emoji} size={80} />
+            <SimpleGiftIcon emoji={extractText(gift.gift.emoji)} size={80} />
             <Badge 
               className="text-xs font-semibold"
               style={{ backgroundColor: getRarityColor(gift.gift.rarity) }}
@@ -117,7 +118,7 @@ export const ReceivedGiftDetailsModal = ({
           {/* Description */}
           {gift.gift.description && (
             <p className="text-sm text-muted-foreground text-center px-2">
-              {gift.gift.description}
+              {extractText(gift.gift.description)}
             </p>
           )}
 

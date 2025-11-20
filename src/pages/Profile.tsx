@@ -90,18 +90,21 @@ const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content
 	const [isTranslating, setIsTranslating] = useState(false);
 	const navigate = useNavigate();
 
+	// Ensure content is a string
+	const safeContent = typeof content === 'string' ? content : String(content || '');
+
 	const handleTranslate = async () => {
 		if (translatedContent) {
 			setTranslatedContent(null);
 			return;
 		}
 		setIsTranslating(true);
-		const translated = await translateText(content, i18n.language);
+		const translated = await translateText(safeContent, i18n.language);
 		setTranslatedContent(translated);
 		setIsTranslating(false);
 	};
 
-	const displayContent = translatedContent || content;
+	const displayContent = translatedContent || safeContent;
 	
 	// Parse mentions, hashtags, and links (including plain domains like afuchat.com)
 	const combinedRegex = /(@[a-zA-Z0-9_-]+|#\w+|https?:\/\/[^\s]+|(?:www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/g;

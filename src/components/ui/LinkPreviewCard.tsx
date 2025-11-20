@@ -1,5 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 import { Card } from './card';
+import { extractText } from '@/lib/textUtils';
 
 interface LinkPreviewCardProps {
   url: string;
@@ -16,6 +17,12 @@ export const LinkPreviewCard = ({
   image_url,
   site_name,
 }: LinkPreviewCardProps) => {
+  // Safely extract text from potentially nested objects
+  const safeTitle = extractText(title);
+  const safeDescription = extractText(description);
+  const safeSiteName = extractText(site_name);
+  const safeImageUrl = extractText(image_url);
+
   return (
     <a
       href={url}
@@ -26,30 +33,30 @@ export const LinkPreviewCard = ({
     >
       <Card className="overflow-hidden hover:bg-accent/50 transition-colors cursor-pointer border border-border/50">
         <div className="flex gap-3">
-          {image_url && (
+          {safeImageUrl && (
             <div className="w-32 h-32 flex-shrink-0">
               <img
-                src={image_url}
-                alt={title || 'Link preview'}
+                src={safeImageUrl}
+                alt={safeTitle || 'Link preview'}
                 className="w-full h-full object-cover"
               />
             </div>
           )}
           <div className="flex-1 p-3 min-w-0">
-            {site_name && (
+            {safeSiteName && (
               <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
                 <ExternalLink className="h-3 w-3" />
-                {site_name}
+                {safeSiteName}
               </p>
             )}
-            {title && (
+            {safeTitle && (
               <h4 className="text-sm font-semibold line-clamp-2 mb-1">
-                {title}
+                {safeTitle}
               </h4>
             )}
-            {description && (
+            {safeDescription && (
               <p className="text-xs text-muted-foreground line-clamp-2">
-                {description}
+                {safeDescription}
               </p>
             )}
           </div>

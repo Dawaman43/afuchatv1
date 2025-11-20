@@ -128,6 +128,9 @@ const formatTime = (isoString: string) => {
 };
 
 const parsePostContent = (content: string, postId: string, navigate: ReturnType<typeof useNavigate>) => {
+  // Ensure content is a string
+  const safeContent = typeof content === 'string' ? content : String(content || '');
+  
   const lookupAndNavigateByHandle = async (handle: string) => {
     const { data, error } = await supabase
       .from('profiles')
@@ -149,14 +152,14 @@ const parsePostContent = (content: string, postId: string, navigate: ReturnType<
   const parts: (string | JSX.Element)[] = [];
   let lastIndex = 0;
   
-  const matches = Array.from(content.matchAll(combinedRegex));
+  const matches = Array.from(safeContent.matchAll(combinedRegex));
   
   matches.forEach((match, idx) => {
     const matchText = match[0];
     const index = match.index!;
     
     if (index > lastIndex) {
-      parts.push(content.substring(lastIndex, index));
+      parts.push(safeContent.substring(lastIndex, index));
     }
     
     if (matchText.startsWith('@')) {
@@ -210,8 +213,8 @@ const parsePostContent = (content: string, postId: string, navigate: ReturnType<
     lastIndex = index + matchText.length;
   });
 
-  if (lastIndex < content.length) {
-    parts.push(content.substring(lastIndex));
+  if (lastIndex < safeContent.length) {
+    parts.push(safeContent.substring(lastIndex));
   }
   
   return <>{parts}</>;

@@ -96,7 +96,7 @@ export const NestedReplyItem = ({
             </div>
             
             <p className="text-foreground mt-1 whitespace-pre-wrap">
-              {renderContentWithMentions(translatedReplies[reply.id] || reply.content)}
+              {renderContentWithMentions(translatedReplies[reply.id] || (typeof reply.content === 'string' ? reply.content : String(reply.content || '')))}
             </p>
             
             <div className="flex gap-2 mt-2">
