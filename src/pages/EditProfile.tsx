@@ -191,8 +191,8 @@ const EditProfile: React.FC = () => {
       navigate(`/${user.id}`);
     } catch (error: any) {
       console.error('Update error:', error);
-      if (error.code === '23505') { 
-          toast.error('The handle is already taken. Please choose another.');
+      if (error.code === '23505' || error.message.includes('already taken')) { 
+          toast.error('Username is already taken (usernames are case-insensitive)');
       } else if (error.code === '42501' || error.message.includes('permission denied')) {
           toast.error('Permission denied. Please ensure RLS policies are correct in Supabase.');
       } else {
