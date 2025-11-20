@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Wallet, QrCode, Trophy, Users, ShoppingBag, Bot, TrendingUp, Gift, Heart, Building2, UserPlus, HelpCircle, FileText, Shield, Image as ImageIcon, MessageSquare, Send, Zap, Mail, Code } from 'lucide-react';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft, Wallet, QrCode, Trophy, Users, ShoppingBag, Bot, TrendingUp, Building2, UserPlus, HelpCircle, FileText, Shield, Image as ImageIcon, MessageSquare, Send, Zap, Mail, Code } from 'lucide-react';
 import Logo from '@/components/Logo';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const Services = () => {
   const navigate = useNavigate();
@@ -11,61 +12,61 @@ const Services = () => {
 
   const services = [
     {
-      category: t('services.socialContent'),
+      category: 'Social & Content',
       items: [
-        { icon: ImageIcon, title: t('services.moments'), description: t('services.momentsDesc'), route: '/moments', color: 'text-pink-500' },
-        { icon: MessageSquare, title: t('services.chats'), description: t('services.chatsDesc'), route: '/chats', color: 'text-green-500' },
-        { icon: Users, title: t('services.discover'), description: t('services.discoverDesc'), route: '/search', color: 'text-purple-500' },
-        { icon: TrendingUp, title: t('services.trending'), description: t('services.trendingDesc'), route: '/trending', color: 'text-orange-500' },
+        { icon: ImageIcon, title: 'Moments', description: 'Share photos and stories', route: '/moments', color: 'text-pink-500' },
+        { icon: MessageSquare, title: 'Chats', description: 'Message friends privately', route: '/chats', color: 'text-green-500' },
+        { icon: Users, title: 'Discover', description: 'Find new connections', route: '/search', color: 'text-purple-500' },
+        { icon: TrendingUp, title: 'Trending', description: 'Explore trending topics', route: '/trending', color: 'text-orange-500' },
       ]
     },
     {
-      category: t('services.financial'),
+      category: 'Financial',
       items: [
-        { icon: Wallet, title: t('services.wallet'), description: t('services.walletDesc'), route: '/wallet', color: 'text-blue-500' },
-        { icon: Send, title: t('services.transfer'), description: t('services.transferDesc'), route: '/transfer', color: 'text-indigo-500' },
-        { icon: Mail, title: t('services.redEnvelopes'), description: t('services.redEnvelopesDesc'), route: '/red-envelope', color: 'text-red-500' },
+        { icon: Wallet, title: 'Wallet', description: 'Manage your XP balance', route: '/wallet', color: 'text-blue-500' },
+        { icon: Send, title: 'Transfer XP', description: 'Send XP to other users', route: '/transfer', color: 'text-indigo-500' },
+        { icon: Mail, title: 'Red Envelopes', description: 'Send lucky money gifts', route: '/red-envelope', color: 'text-red-500' },
       ]
     },
     {
-      category: t('services.miniPrograms'),
+      category: 'Mini Programs',
       items: [
-        { icon: Zap, title: t('services.appStore'), description: t('services.appStoreDesc'), route: '/mini-programs', color: 'text-yellow-500' },
-        { icon: Code, title: t('services.developerSDK'), description: t('services.developerSDKDesc'), route: '/developer-sdk', color: 'text-purple-600' },
+        { icon: Zap, title: 'App Store', description: 'Discover mini apps', route: '/mini-programs', color: 'text-yellow-500' },
+        { icon: Code, title: 'Developer SDK', description: 'Build your own apps', route: '/developer-sdk', color: 'text-purple-600' },
       ]
     },
     {
-      category: t('services.gamification'),
+      category: 'Gamification',
       items: [
-        { icon: Trophy, title: t('services.leaderboard'), description: t('services.leaderboardDesc'), route: '/leaderboard', color: 'text-yellow-600' },
-        { icon: QrCode, title: t('services.qrCode'), description: t('services.qrCodeDesc'), route: '/qr-code', color: 'text-blue-500' },
+        { icon: Trophy, title: 'Leaderboard', description: 'View top users and rankings', route: '/leaderboard', color: 'text-yellow-600' },
+        { icon: QrCode, title: 'QR Code', description: 'Share your profile easily', route: '/qr-code', color: 'text-blue-500' },
       ]
     },
     {
-      category: t('services.shopping'),
+      category: 'Shopping',
       items: [
-        { icon: ShoppingBag, title: t('services.shop'), description: t('services.shopDesc'), route: '/shop', color: 'text-purple-500' },
+        { icon: ShoppingBag, title: 'Shop', description: 'Browse and purchase items', route: '/shop', color: 'text-purple-500' },
       ]
     },
     {
-      category: t('services.business'),
+      category: 'Business',
       items: [
-        { icon: Building2, title: t('services.businessDashboard'), description: t('services.businessDashboardDesc'), route: '/business/dashboard', color: 'text-blue-600' },
-        { icon: UserPlus, title: t('services.affiliates'), description: t('services.affiliatesDesc'), route: '/affiliate-request', color: 'text-indigo-500' },
+        { icon: Building2, title: 'Business Dashboard', description: 'Manage your business', route: '/business/dashboard', color: 'text-blue-600' },
+        { icon: UserPlus, title: 'Affiliates', description: 'Join affiliate program', route: '/affiliate-request', color: 'text-indigo-500' },
       ]
     },
     {
-      category: t('services.aiTools'),
+      category: 'AI Tools',
       items: [
-        { icon: Bot, title: t('services.afuAI'), description: t('services.afuAIDesc'), route: '/ai-chat', color: 'text-cyan-500' },
+        { icon: Bot, title: 'AfuAI', description: 'Chat with AI assistant', route: '/ai-chat', color: 'text-cyan-500' },
       ]
     },
     {
-      category: t('services.support'),
+      category: 'Support',
       items: [
-        { icon: HelpCircle, title: t('services.supportCenter'), description: t('services.supportCenterDesc'), route: '/support', color: 'text-gray-500' },
-        { icon: FileText, title: t('services.terms'), description: t('services.termsDesc'), route: '/terms', color: 'text-gray-500' },
-        { icon: Shield, title: t('services.privacy'), description: t('services.privacyDesc'), route: '/privacy', color: 'text-gray-500' },
+        { icon: HelpCircle, title: 'Support Center', description: 'Get help and support', route: '/support', color: 'text-gray-500' },
+        { icon: FileText, title: 'Terms', description: 'Terms of service', route: '/terms', color: 'text-gray-500' },
+        { icon: Shield, title: 'Privacy', description: 'Privacy policy', route: '/privacy', color: 'text-gray-500' },
       ]
     }
   ];
@@ -84,40 +85,43 @@ const Services = () => {
         </div>
       </header>
 
-      <main className="container max-w-4xl mx-auto px-4 py-6">
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">{t('services.title')}</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">{t('services.subtitle')}</p>
+      <main className="container max-w-4xl mx-auto py-6">
+        <div className="mb-6 px-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Services</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Discover all available features and tools</p>
         </div>
 
         <div className="space-y-6">
           {services.map((category, idx) => (
             <div key={idx}>
-              <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 px-1">{category.category}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                {category.items.map((item, itemIdx) => {
-                  const Icon = item.icon;
-                  return (
-                    <Card 
-                      key={itemIdx} 
-                      className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg group overflow-hidden"
-                      onClick={() => navigate(item.route)}
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start gap-3">
-                          <div className={`p-2 rounded-lg bg-background/50 ${item.color} group-hover:scale-110 transition-transform`}>
-                            <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+              <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 px-4">{category.category}</h2>
+              <ScrollArea className="w-full whitespace-nowrap">
+                <div className="flex gap-3 px-4 pb-4">
+                  {category.items.map((item, itemIdx) => {
+                    const Icon = item.icon;
+                    return (
+                      <Card 
+                        key={itemIdx} 
+                        className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg group flex-shrink-0 w-[280px]"
+                        onClick={() => navigate(item.route)}
+                      >
+                        <CardHeader className="p-4">
+                          <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-lg bg-muted/50 ${item.color} group-hover:scale-110 transition-transform`}>
+                              <Icon className="h-5 w-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className="text-base mb-1">{item.title}</CardTitle>
+                              <p className="text-xs text-muted-foreground">{item.description}</p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <CardTitle className="text-base sm:text-lg mb-1 truncate">{item.title}</CardTitle>
-                            <CardDescription className="text-xs sm:text-sm line-clamp-2">{item.description}</CardDescription>
-                          </div>
-                        </div>
-                      </CardHeader>
-                    </Card>
-                  );
-                })}
-              </div>
+                        </CardHeader>
+                      </Card>
+                    );
+                  })}
+                </div>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
             </div>
           ))}
         </div>
