@@ -35,7 +35,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AIChat = lazy(() => import("./pages/AIChat"));
 const Install = lazy(() => import("./pages/Install"));
 const Support = lazy(() => import("./pages/Support"));
-const Services = lazy(() => import("./pages/Services"));
+
 const UnifiedLeaderboard = lazy(() => import("./pages/UnifiedLeaderboard"));
 const Wallet = lazy(() => import("./pages/Wallet"));
 const QRCode = lazy(() => import("./pages/QRCode"));
@@ -104,12 +104,9 @@ const AppRoutes = () => {
       <Route path="/ai-chat" element={<AIChat />} />
       <Route path="/install" element={<Install />} />
       <Route path="/support" element={<Support />} />
-      <Route path="/services" element={<Layout><Services /></Layout>} />
       <Route path="/leaderboard" element={<Layout><UnifiedLeaderboard /></Layout>} />
       <Route path="/wallet" element={<Layout><Wallet /></Layout>} />
       <Route path="/qr-code" element={<Layout><QRCode /></Layout>} />
-      <Route path="/gifts" element={<Layout><Services /></Layout>} />
-      <Route path="/tips" element={<Layout><Services /></Layout>} />
       <Route path="/settings" element={<Layout><Settings /></Layout>} />
       <Route path="/terms" element={<TermsOfUse />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
