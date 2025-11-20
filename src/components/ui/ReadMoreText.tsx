@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from './button';
+import { toRenderableText } from '@/lib/textUtils';
 
 interface ReadMoreTextProps {
   text: React.ReactNode;
@@ -12,6 +13,9 @@ export const ReadMoreText = ({ text, maxLines = 4, className = '' }: ReadMoreTex
   const [shouldShowButton, setShouldShowButton] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Ensure text is safely renderable
+  const safeText = toRenderableText(text);
+
   useEffect(() => {
     if (contentRef.current) {
       const lineHeight = parseInt(window.getComputedStyle(contentRef.current).lineHeight);
@@ -20,7 +24,7 @@ export const ReadMoreText = ({ text, maxLines = 4, className = '' }: ReadMoreTex
       
       setShouldShowButton(lines > maxLines);
     }
-  }, [text, maxLines]);
+  }, [safeText, maxLines]);
 
   return (
     <div className={className}>
@@ -35,7 +39,7 @@ export const ReadMoreText = ({ text, maxLines = 4, className = '' }: ReadMoreTex
           WebkitBoxOrient: 'vertical',
         } : {}}
       >
-        {text}
+        {safeText}
       </div>
       {shouldShowButton && (
         <Button

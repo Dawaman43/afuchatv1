@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslation } from 'react-i18next';
 import { SimpleGiftIcon } from './SimpleGiftIcon';
 import { ReceivedGiftDetailsModal } from './ReceivedGiftDetailsModal';
+import { extractText } from '@/lib/textUtils';
 
 interface GiftTransaction {
   id: string;
@@ -219,12 +220,12 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
             className="group flex flex-col items-center gap-3 p-4 rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer hover:ring-2 hover:ring-primary/30"
           >
             <SimpleGiftIcon 
-              emoji={gift.gift.emoji}
+              emoji={extractText(gift.gift.emoji)}
               size={56}
             />
             <div className="text-center w-full space-y-1">
               <div className="text-xs font-semibold text-foreground truncate w-full group-hover:text-primary transition-colors">
-                {gift.gift.name}
+                {extractText(gift.gift.name)}
               </div>
               <div className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
                 {gift.xp_cost} XP

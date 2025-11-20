@@ -82,7 +82,9 @@ export const NestedReplyItem = ({
       return;
     }
     setIsTranslating(true);
-    const translated = await translateText(reply.content, i18n.language);
+    // Ensure content is a string before translating
+    const contentToTranslate = typeof reply.content === 'string' ? reply.content : String(reply.content || '');
+    const translated = await translateText(contentToTranslate, i18n.language);
     setTranslatedContent(translated);
     setIsTranslating(false);
   };
@@ -98,7 +100,7 @@ export const NestedReplyItem = ({
     }
   };
 
-  const displayContent = translatedContent || reply.content;
+  const displayContent = translatedContent || (typeof reply.content === 'string' ? reply.content : String(reply.content || ''));
   const leftMargin = Math.min(depth * 16, 48); // Cap the left margin
 
   return (
