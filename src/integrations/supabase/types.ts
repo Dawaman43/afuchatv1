@@ -1513,17 +1513,22 @@ export type Database = {
       verification_requests: {
         Row: {
           account_type: string
+          business_registration: string | null
           created_at: string | null
           email: string
+          engagement_rate: string | null
+          follower_count: string | null
           full_name: string
           id: string
           phone: string | null
+          primary_platform: string | null
           rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           social_links: Json | null
           status: string
           supporting_documents: string[] | null
+          tax_id: string | null
           updated_at: string | null
           user_id: string
           verification_reason: string
@@ -1531,17 +1536,22 @@ export type Database = {
         }
         Insert: {
           account_type: string
+          business_registration?: string | null
           created_at?: string | null
           email: string
+          engagement_rate?: string | null
+          follower_count?: string | null
           full_name: string
           id?: string
           phone?: string | null
+          primary_platform?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           social_links?: Json | null
           status?: string
           supporting_documents?: string[] | null
+          tax_id?: string | null
           updated_at?: string | null
           user_id: string
           verification_reason: string
@@ -1549,17 +1559,22 @@ export type Database = {
         }
         Update: {
           account_type?: string
+          business_registration?: string | null
           created_at?: string | null
           email?: string
+          engagement_rate?: string | null
+          follower_count?: string | null
           full_name?: string
           id?: string
           phone?: string | null
+          primary_platform?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           social_links?: Json | null
           status?: string
           supporting_documents?: string[] | null
+          tax_id?: string | null
           updated_at?: string | null
           user_id?: string
           verification_reason?: string
