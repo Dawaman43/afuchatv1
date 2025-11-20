@@ -52,17 +52,18 @@ const SignUp = () => {
     setUsernameStatus('checking');
 
     try {
+      // Case-insensitive username check
       const { data, error } = await supabase
         .from('profiles')
         .select('handle')
-        .eq('handle', username)
+        .ilike('handle', username)
         .maybeSingle();
 
       if (error) throw error;
 
       if (data) {
         setUsernameStatus('taken');
-        setUsernameError('Username is already taken');
+        setUsernameError('Username is already taken (usernames are case-insensitive)');
       } else {
         setUsernameStatus('available');
         setUsernameError('');
@@ -205,7 +206,14 @@ const SignUp = () => {
         navigate('/auth/signin');
       }
     } catch (error: any) {
-      toast.error(error.errors?.[0]?.message || error.message || 'An error occurred.');
+      // Check for username already taken errors (including case-insensitive)
+      if (error.message?.includes('already taken') || 
+          error.message?.includes('case-insensitive') ||
+          error.code === '23505') {
+        toast.error('Username is already taken (usernames are case-insensitive)');
+      } else {
+        toast.error(error.errors?.[0]?.message || error.message || 'An error occurred.');
+      }
     } finally {
       setLoading(false);
     }
@@ -424,7 +432,7 @@ const SignUp = () => {
                 <p className="text-xs text-green-500">Username is available!</p>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  At least 4 characters. Letters, numbers, and underscores only
+                  Usernames are case-insensitive (e.g., "User" and "user" are the same)
                 </p>
               )}
             </div>
