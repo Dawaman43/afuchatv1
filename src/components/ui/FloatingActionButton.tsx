@@ -22,8 +22,7 @@ const FloatingActionButton = () => {
       onClick: () => {
         navigate('/');
         setTimeout(() => {
-          const newPostButton = document.querySelector('[data-new-post]') as HTMLButtonElement;
-          newPostButton?.click();
+          window.dispatchEvent(new Event('open-new-post'));
         }, 100);
         setIsOpen(false);
       },
