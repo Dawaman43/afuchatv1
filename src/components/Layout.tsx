@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccountMode } from '@/contexts/AccountModeContext';
-import { Home, MessageSquare, Search, ShoppingBag, Bell, User, Settings, Trophy, Shield, BarChart3, Image as ImageIcon } from 'lucide-react';
+import { Home, MessageSquare, Search, Bell, User, Settings, Shield, BarChart3, Image as ImageIcon, Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
 import NotificationIcon from '@/components/nav/NotificationIcon';
@@ -87,7 +87,7 @@ const Layout = ({ children }: LayoutProps) => {
     { path: '/search', icon: Search, label: t('search.title') },
     { path: '/notifications', icon: Bell, label: t('common.notifications'), badge: true },
     { path: '/chats', icon: MessageSquare, label: t('common.messages') },
-    { path: '/services', icon: ShoppingBag, label: t('services.title') },
+    { path: '/games', icon: Gamepad2, label: 'Games' },
   ];
 
   if (user) {
@@ -189,7 +189,7 @@ const Layout = ({ children }: LayoutProps) => {
             {[
               { path: '/', icon: Home },
               { path: '/search', icon: Search },
-              { path: '/services', icon: ShoppingBag },
+              { path: '/games', icon: Gamepad2 },
               { path: '/chats', icon: MessageSquare },
               { path: user ? `/${user.id}` : '/auth', icon: User }
             ].map((item) => (
