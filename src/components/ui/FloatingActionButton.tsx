@@ -50,12 +50,6 @@ const FloatingActionButton = () => {
       label: 'Play Games',
       onClick: () => handleActionClick(() => navigate('/services')),
       color: 'bg-purple-500 hover:bg-purple-600'
-    },
-    {
-      icon: <Zap className="h-5 w-5" />,
-      label: 'Quick Chat',
-      onClick: () => handleActionClick(() => navigate('/chats')),
-      color: 'bg-orange-500 hover:bg-orange-600'
     }
   ];
 
