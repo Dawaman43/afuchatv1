@@ -71,37 +71,39 @@ const FloatingActionButton = () => {
       )}
 
       {/* FAB Container */}
-      <div className="fixed bottom-20 right-6 z-50 flex flex-col-reverse items-end gap-4">
-        {/* Main FAB Button */}
-        {!isOpen && (
+      <div className="fixed bottom-20 right-6 z-50">
+        {!isOpen ? (
+          /* Main FAB Button */
           <Button
             size="icon"
-            className="h-16 w-16 rounded-full shadow-2xl transition-all bg-primary hover:bg-primary/90 hover:scale-110"
+            className="h-14 w-14 rounded-full shadow-2xl transition-all bg-blue-500 hover:bg-blue-600 hover:scale-110"
             onClick={() => setIsOpen(true)}
           >
-            <Plus className="h-7 w-7" />
+            <Plus className="h-6 w-6" />
           </Button>
+        ) : (
+          /* Action Buttons */
+          <div className="flex flex-col-reverse items-end gap-4">
+            {actions.map((action, index) => (
+              <button
+                key={action.label}
+                onClick={action.onClick}
+                className="flex items-center gap-4 animate-scale-in group"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <span className="text-white text-lg font-semibold whitespace-nowrap">
+                  {action.label}
+                </span>
+                <div className={cn(
+                  "h-14 w-14 rounded-full shadow-xl flex items-center justify-center text-white transition-transform group-hover:scale-110",
+                  action.color
+                )}>
+                  {action.icon}
+                </div>
+              </button>
+            ))}
+          </div>
         )}
-        
-        {/* Action Buttons */}
-        {isOpen && actions.map((action, index) => (
-          <button
-            key={action.label}
-            onClick={action.onClick}
-            className="flex items-center gap-4 animate-scale-in group"
-            style={{ animationDelay: `${index * 50}ms` }}
-          >
-            <span className="text-white text-lg font-semibold whitespace-nowrap">
-              {action.label}
-            </span>
-            <div className={cn(
-              "h-14 w-14 rounded-full shadow-xl flex items-center justify-center text-white transition-transform group-hover:scale-110",
-              action.color
-            )}>
-              {action.icon}
-            </div>
-          </button>
-        ))}
       </div>
     </>
   );
