@@ -16,10 +16,8 @@ const Home = () => {
   const [checkingFollows, setCheckingFollows] = useState(true);
 
   useEffect(() => {
-    // Check if user has followed anyone
-    if (user) {
-      checkUserFollows();
-    }
+    // Check if user has followed anyone (or allow visitors)
+    checkUserFollows();
   }, [user]);
 
   useEffect(() => {
