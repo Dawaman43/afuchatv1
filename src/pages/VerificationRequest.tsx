@@ -28,6 +28,13 @@ export default function VerificationRequest() {
     websiteUrl: "",
     socialLinks: "",
     verificationReason: "",
+    // Business-specific fields
+    businessRegistration: "",
+    taxId: "",
+    // Influencer-specific fields
+    primaryPlatform: "",
+    followerCount: "",
+    engagementRate: "",
   });
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,6 +130,13 @@ export default function VerificationRequest() {
           verification_reason: formData.verificationReason,
           supporting_documents: uploadedFiles.map(f => f.url),
           status: "pending",
+          // Business-specific fields
+          business_registration: formData.accountType === "business" ? formData.businessRegistration : null,
+          tax_id: formData.accountType === "business" ? formData.taxId : null,
+          // Influencer-specific fields
+          primary_platform: formData.accountType === "influencer" ? formData.primaryPlatform : null,
+          follower_count: formData.accountType === "influencer" ? formData.followerCount : null,
+          engagement_rate: formData.accountType === "influencer" ? formData.engagementRate : null,
         });
 
       if (error) throw error;
@@ -200,25 +214,29 @@ export default function VerificationRequest() {
 
               {/* Full Name */}
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name / Business Name *</Label>
+                <Label htmlFor="fullName">
+                  {formData.accountType === "business" ? "Business Name *" : "Full Name / Stage Name *"}
+                </Label>
                 <Input
                   id="fullName"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  placeholder="Enter your full name or business name"
+                  placeholder={formData.accountType === "business" ? "Your registered business name" : "Your full name or stage name"}
                   required
                 />
               </div>
 
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address *</Label>
+                <Label htmlFor="email">
+                  {formData.accountType === "business" ? "Business Email *" : "Email Address *"}
+                </Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="your@email.com"
+                  placeholder={formData.accountType === "business" ? "business@company.com" : "your@email.com"}
                   required
                 />
               </div>
@@ -235,33 +253,122 @@ export default function VerificationRequest() {
                 />
               </div>
 
-              {/* Website */}
-              <div className="space-y-2">
-                <Label htmlFor="website">Website URL (Optional)</Label>
-                <Input
-                  id="website"
-                  type="url"
-                  value={formData.websiteUrl}
-                  onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
-                  placeholder="https://yourwebsite.com"
-                />
-              </div>
+              {/* Business-specific fields */}
+              {formData.accountType === "business" && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="businessRegistration">Business Registration Number *</Label>
+                    <Input
+                      id="businessRegistration"
+                      value={formData.businessRegistration}
+                      onChange={(e) => setFormData({ ...formData, businessRegistration: e.target.value })}
+                      placeholder="Enter your business registration number"
+                      required
+                    />
+                  </div>
 
-              {/* Social Links */}
-              <div className="space-y-2">
-                <Label htmlFor="socialLinks">Social Media Links (Optional)</Label>
-                <Textarea
-                  id="socialLinks"
-                  value={formData.socialLinks}
-                  onChange={(e) => setFormData({ ...formData, socialLinks: e.target.value })}
-                  placeholder="Enter social media profile URLs, separated by commas
-Example: https://twitter.com/yourprofile, https://instagram.com/yourprofile"
-                  rows={3}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Provide links to your social media profiles to help us verify your identity
-                </p>
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="taxId">Tax ID / EIN (Optional)</Label>
+                    <Input
+                      id="taxId"
+                      value={formData.taxId}
+                      onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
+                      placeholder="Enter your tax identification number"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="website">Business Website URL *</Label>
+                    <Input
+                      id="website"
+                      type="url"
+                      value={formData.websiteUrl}
+                      onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
+                      placeholder="https://yourbusiness.com"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="socialLinks">Social Media Links (Optional)</Label>
+                    <Textarea
+                      id="socialLinks"
+                      value={formData.socialLinks}
+                      onChange={(e) => setFormData({ ...formData, socialLinks: e.target.value })}
+                      placeholder="Enter business social media URLs, separated by commas
+Example: https://twitter.com/yourbusiness, https://linkedin.com/company/yourbusiness"
+                      rows={3}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Influencer-specific fields */}
+              {formData.accountType === "influencer" && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="primaryPlatform">Primary Social Media Platform *</Label>
+                    <Input
+                      id="primaryPlatform"
+                      value={formData.primaryPlatform}
+                      onChange={(e) => setFormData({ ...formData, primaryPlatform: e.target.value })}
+                      placeholder="e.g., Instagram, YouTube, TikTok"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="followerCount">Total Follower/Subscriber Count *</Label>
+                    <Input
+                      id="followerCount"
+                      value={formData.followerCount}
+                      onChange={(e) => setFormData({ ...formData, followerCount: e.target.value })}
+                      placeholder="e.g., 50,000"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Combined followers across all platforms
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="engagementRate">Average Engagement Rate (Optional)</Label>
+                    <Input
+                      id="engagementRate"
+                      value={formData.engagementRate}
+                      onChange={(e) => setFormData({ ...formData, engagementRate: e.target.value })}
+                      placeholder="e.g., 5.2%"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="socialLinks">Social Media Profile Links *</Label>
+                    <Textarea
+                      id="socialLinks"
+                      value={formData.socialLinks}
+                      onChange={(e) => setFormData({ ...formData, socialLinks: e.target.value })}
+                      placeholder="Enter all your social media profile URLs, separated by commas
+Example: https://instagram.com/yourprofile, https://youtube.com/@yourchannel, https://tiktok.com/@yourprofile"
+                      rows={4}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Provide all relevant social media profiles to verify your influence
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="website">Portfolio/Website URL (Optional)</Label>
+                    <Input
+                      id="website"
+                      type="url"
+                      value={formData.websiteUrl}
+                      onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
+                      placeholder="https://yourportfolio.com"
+                    />
+                  </div>
+                </>
+              )}
 
               {/* Verification Reason */}
               <div className="space-y-2">
@@ -364,15 +471,26 @@ Example: https://twitter.com/yourprofile, https://instagram.com/yourprofile"
 
                   <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
                     <p className="text-xs font-medium text-blue-900 dark:text-blue-100 mb-2">
-                      Accepted Documents:
+                      {formData.accountType === "business" ? "Accepted Business Documents:" : "Accepted Influencer Documents:"}
                     </p>
-                    <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1 ml-4">
-                      <li>• Business registration or incorporation documents</li>
-                      <li>• Government-issued ID (passport, driver's license)</li>
-                      <li>• Screenshots of social media following/engagement</li>
-                      <li>• Media coverage, press mentions, or publications</li>
-                      <li>• Professional certifications or awards</li>
-                    </ul>
+                    {formData.accountType === "business" ? (
+                      <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1 ml-4">
+                        <li>• Business registration or incorporation certificate</li>
+                        <li>• Tax registration documents or EIN letter</li>
+                        <li>• Business license or permit</li>
+                        <li>• Proof of business address (utility bill, lease)</li>
+                        <li>• Company letterhead or official documentation</li>
+                      </ul>
+                    ) : (
+                      <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1 ml-4">
+                        <li>• Screenshots of verified social media accounts</li>
+                        <li>• Analytics dashboard showing follower counts and engagement</li>
+                        <li>• Media coverage, press mentions, or interviews</li>
+                        <li>• Government-issued ID (passport, driver's license)</li>
+                        <li>• Collaboration emails with brands or media outlets</li>
+                        <li>• Awards, certifications, or recognition documents</li>
+                      </ul>
+                    )}
                   </div>
                 </div>
               </div>
@@ -388,7 +506,9 @@ Example: https://twitter.com/yourprofile, https://instagram.com/yourprofile"
                   !formData.email || 
                   !formData.verificationReason || 
                   formData.verificationReason.length < 50 ||
-                  uploadedFiles.length === 0
+                  uploadedFiles.length === 0 ||
+                  (formData.accountType === "business" && (!formData.businessRegistration || !formData.websiteUrl)) ||
+                  (formData.accountType === "influencer" && (!formData.primaryPlatform || !formData.followerCount || !formData.socialLinks))
                 }
               >
                 {loading ? (
