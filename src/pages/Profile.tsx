@@ -812,14 +812,9 @@ const Profile = () => {
 				</div>
 
 				<div className="p-4 relative">
-					<div className="flex justify-between items-end -mt-20 sm:-mt-16">
-						<div className="relative h-24 w-24 sm:h-32 sm:w-32 rounded-full overflow-hidden bg-background border-4 border-background">
-							<ProfileAvatarDisplay profileId={profileId} profile={profile} />
-							<OnlineStatus lastSeen={profile.last_seen} showOnlineStatus={profile.show_online_status} />
-						</div>
-						
-						{/* Edit Profile Button - Right side, overlapping banner/content */}
-						{user && user.id === profileId && (
+					{/* Edit Profile Button - Right side, overlapping banner/content */}
+					{user && user.id === profileId && (
+						<div className="absolute top-4 right-4 z-10">
 							<Button 
 								variant="outline" 
 								className="rounded-full px-6 py-2 font-bold bg-background hover:bg-muted border-2 h-auto"
@@ -827,7 +822,14 @@ const Profile = () => {
 							>
 								{t('profile.editProfile')}
 							</Button>
-						)}
+						</div>
+					)}
+					
+					<div className="flex items-end -mt-20 sm:-mt-16">
+						<div className="relative h-24 w-24 sm:h-32 sm:w-32 rounded-full overflow-hidden bg-background border-4 border-background">
+							<ProfileAvatarDisplay profileId={profileId} profile={profile} />
+							<OnlineStatus lastSeen={profile.last_seen} showOnlineStatus={profile.show_online_status} />
+						</div>
 
 					{user && user.id === profileId ? (
 						<div className="flex flex-col gap-2">
