@@ -31,6 +31,7 @@ const Home = () => {
   }, [searchParams, user, setSearchParams]);
 
   const checkUserFollows = async () => {
+    // Allow non-logged-in users to view the feed
     if (!user) {
       setCheckingFollows(false);
       return;
@@ -45,7 +46,7 @@ const Home = () => {
 
       if (error) throw error;
 
-      // If user hasn't followed anyone, redirect to suggested users
+      // Only redirect authenticated users who haven't followed anyone
       if (!data || data.length === 0) {
         navigate('/suggested-users');
         return;
