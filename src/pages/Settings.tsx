@@ -185,9 +185,28 @@ const Settings = () => {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Privacy</h2>
-              <p className="text-muted-foreground">Manage your privacy preferences</p>
+              <h2 className="text-2xl font-bold mb-2">Security & Privacy</h2>
+              <p className="text-muted-foreground">Manage your account security and privacy settings</p>
             </div>
+
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Account Security</h3>
+              <div className="space-y-3">
+                <SettingItem
+                  label="Change Password"
+                  description="Update your account password"
+                  icon={<Lock className="h-5 w-5" />}
+                  onClick={() => navigate('/change-password')}
+                />
+                <Separator />
+                <SettingItem
+                  label="Security Dashboard"
+                  description="View login history and active sessions"
+                  icon={<Shield className="h-5 w-5" />}
+                  onClick={() => navigate('/security')}
+                />
+              </div>
+            </Card>
 
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">Privacy Settings</h3>
