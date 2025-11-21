@@ -136,7 +136,9 @@ const Travel = () => {
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                       <div className="flex items-center gap-4 flex-1">
-                        <span className="text-4xl">{flight.airline}</span>
+                        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 flex items-center justify-center border">
+                          <Plane className="w-8 h-8 text-blue-600" />
+                        </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <div className="text-center">
@@ -199,9 +201,12 @@ const Travel = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {hotels.filter(h => h.featured).map((hotel) => (
                   <Card key={hotel.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
-                    <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-7xl relative overflow-hidden">
+                    <div className="aspect-video bg-gradient-to-br from-blue-500/20 via-cyan-500/10 to-teal-500/5 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 opacity-30">
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.4),transparent_60%)]" />
+                      </div>
+                      <Hotel className="w-24 h-24 text-blue-600/40" />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      {hotel.image}
                     </div>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-2">
@@ -250,8 +255,9 @@ const Travel = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {hotels.filter(h => !h.featured).map((hotel) => (
                   <Card key={hotel.id} className="overflow-hidden hover:shadow-lg transition-all">
-                    <div className="aspect-video bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center text-6xl">
-                      {hotel.image}
+                    <div className="aspect-video bg-gradient-to-br from-muted via-muted/80 to-muted/50 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_40%_60%,rgba(59,130,246,0.3),transparent)]" />
+                      <Hotel className="w-20 h-20 text-muted-foreground/40" />
                     </div>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-2">

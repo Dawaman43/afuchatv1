@@ -159,7 +159,9 @@ const Bookings = () => {
                     <Card key={service.id} className="cursor-pointer hover:shadow-xl transition-all duration-300 overflow-hidden group">
                       <CardContent className="p-5">
                         <div className="flex gap-4">
-                          <div className="text-6xl">{service.image}</div>
+                          <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/10 flex items-center justify-center border flex-shrink-0">
+                            <CalendarCheck className="w-10 h-10 text-purple-600" />
+                          </div>
                           <div className="flex-1">
                             <div className="flex items-start justify-between mb-2">
                               <div>
@@ -206,7 +208,9 @@ const Bookings = () => {
                     <Card key={service.id} className="cursor-pointer hover:shadow-lg transition-all">
                       <CardContent className="p-4">
                         <div className="flex gap-4">
-                          <div className="text-5xl">{service.image}</div>
+                          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center border flex-shrink-0">
+                            <CalendarIcon className="w-8 h-8 text-muted-foreground" />
+                          </div>
                           <div className="flex-1">
                             <div className="flex items-start justify-between mb-2">
                               <div>

@@ -171,9 +171,12 @@ const Events = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {featuredEvents.map((event) => (
                     <Card key={event.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
-                      <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-7xl relative overflow-hidden">
+                      <div className="aspect-video bg-gradient-to-br from-violet-500/20 via-purple-500/10 to-pink-500/5 flex items-center justify-center relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-30">
+                          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(120,119,198,0.4),transparent_50%)]" />
+                        </div>
+                        <Ticket className="w-24 h-24 text-primary/40" />
                         <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        {event.image}
                         <Button
                           size="icon"
                           variant="ghost"
@@ -233,8 +236,9 @@ const Events = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {regularEvents.map((event) => (
                     <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-all duration-300">
-                      <div className="aspect-video bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center text-6xl">
-                        {event.image}
+                      <div className="aspect-video bg-gradient-to-br from-muted via-muted/80 to-muted/50 flex items-center justify-center relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_50%,rgba(120,119,198,0.3),transparent)]" />
+                        <Calendar className="w-20 h-20 text-muted-foreground/40" />
                       </div>
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-2">

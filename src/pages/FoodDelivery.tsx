@@ -173,9 +173,12 @@ const FoodDelivery = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredRestaurants.filter(r => r.featured).map((restaurant) => (
                     <Card key={restaurant.id} className="overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group">
-                      <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-7xl relative overflow-hidden">
+                      <div className="aspect-video bg-gradient-to-br from-orange-500/20 via-red-500/10 to-yellow-500/5 flex items-center justify-center relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-30">
+                          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,0.4),transparent_60%)]" />
+                        </div>
+                        <Utensils className="w-24 h-24 text-orange-600/40" />
                         <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        {restaurant.image}
                         <Button
                           size="icon"
                           variant="ghost"
@@ -222,8 +225,9 @@ const FoodDelivery = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredRestaurants.filter(r => !r.featured).map((restaurant) => (
                   <Card key={restaurant.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-all">
-                    <div className="aspect-video bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center text-6xl relative">
-                      {restaurant.image}
+                    <div className="aspect-video bg-gradient-to-br from-muted via-muted/80 to-muted/50 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_50%_50%,rgba(249,115,22,0.3),transparent)]" />
+                      <Utensils className="w-20 h-20 text-muted-foreground/40" />
                       {restaurant.deliveryFee === '0' && (
                         <Badge className="absolute top-2 left-2 bg-green-600 text-xs">Free Delivery</Badge>
                       )}

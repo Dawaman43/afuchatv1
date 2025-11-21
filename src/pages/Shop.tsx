@@ -475,9 +475,12 @@ export default function Shop() {
           )}
         </div>
 
-        {/* Emoji/Image */}
-        <div className="h-24 flex items-center justify-center bg-gradient-to-br from-muted/30 to-muted/10 relative">
-          <div className="text-5xl">{item.emoji}</div>
+        {/* Product Image */}
+        <div className="h-32 flex items-center justify-center bg-gradient-to-br from-primary/20 via-primary/10 to-accent/5 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.3),rgba(255,255,255,0))]" />
+          </div>
+          <ShoppingBag className="w-12 h-12 text-primary/60" />
           {isAuction && item.auction_end_time && (
             <div className="absolute bottom-1 left-1 right-1 bg-black/70 backdrop-blur-sm rounded-md px-1.5 py-0.5">
               <div className="flex items-center justify-center gap-1 text-xs text-white">
