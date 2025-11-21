@@ -446,8 +446,7 @@ const Settings = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile Header */}
-      <header className="lg:hidden sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur">
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur hidden lg:block">
         <div className="flex h-14 items-center px-4">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />

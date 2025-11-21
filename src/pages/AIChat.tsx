@@ -183,7 +183,7 @@ const AIChat: React.FC = () => {
   return (
     <div className="flex flex-col h-screen bg-background">
       <div className="border-b border-border bg-card p-4 flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full hidden lg:inline-flex">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         
