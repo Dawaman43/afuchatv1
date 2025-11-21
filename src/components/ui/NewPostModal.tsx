@@ -381,7 +381,8 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                         >
                                             <ImageIcon className="h-5 w-5" />
                                         </Button>
-                                        <Button
+                                        {/* AI Generation disabled for users */}
+                                        {/* <Button
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => {
@@ -403,7 +404,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                                     Soon
                                                 </Badge>
                                             )}
-                                        </Button>
+                                        </Button> */}
                                         <Button
                                             variant="ghost"
                                             size="icon"
