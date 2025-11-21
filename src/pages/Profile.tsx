@@ -300,17 +300,22 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 		try {
 			// Delete old banner if exists
 			if (profile?.banner_url) {
-				const oldPath = profile.banner_url.split('/').slice(-2).join('/');
-				await supabase.storage.from('profile-banners').remove([oldPath]);
+				const oldFileName = profile.banner_url.split('/profile-banners/').pop();
+				if (oldFileName) {
+					await supabase.storage.from('profile-banners').remove([oldFileName]);
+				}
 			}
 
-			// Upload new banner
+			// Upload new banner with proper folder structure
 			const fileExt = file.name.split('.').pop();
 			const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
 			const { error: uploadError } = await supabase.storage
 				.from('profile-banners')
-				.upload(fileName, file);
+				.upload(fileName, file, {
+					cacheControl: '3600',
+					upsert: true
+				});
 
 			if (uploadError) throw uploadError;
 
@@ -329,9 +334,9 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 
 			setProfile(prev => prev ? { ...prev, banner_url: publicUrl } : null);
 			toast.success('Banner updated successfully!');
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Error uploading banner:', error);
-			toast.error('Failed to upload banner');
+			toast.error(error.message || 'Failed to upload banner');
 		} finally {
 			setIsUploadingBanner(false);
 		}

@@ -225,10 +225,23 @@ const EditProfile: React.FC = () => {
 
     setUploadingAvatar(true);
     try {
-      const fileName = `${user.id}-${Date.now()}`;
+      // Delete old avatar if exists
+      if (profile.avatar_url) {
+        const oldFileName = profile.avatar_url.split('/avatars/').pop();
+        if (oldFileName) {
+          await supabase.storage.from('avatars').remove([oldFileName]);
+        }
+      }
+
+      // Upload with proper folder structure: {user_id}/{timestamp}.ext
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
@@ -240,9 +253,9 @@ const EditProfile: React.FC = () => {
 
       setProfile((prev) => ({ ...prev, avatar_url: publicUrl }));
       toast.success('Avatar updated successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading avatar:', error);
-      toast.error('Failed to upload avatar');
+      toast.error(error.message || 'Failed to upload avatar');
     } finally {
       setUploadingAvatar(false);
     }
@@ -255,9 +268,9 @@ const EditProfile: React.FC = () => {
     try {
       // Remove from storage if exists
       if (profile.avatar_url) {
-        const fileName = profile.avatar_url.split('/').pop();
+        const fileName = profile.avatar_url.split('/avatars/').pop();
         if (fileName) {
-          await supabase.storage.from('avatars').remove([`${user.id}/${fileName}`]);
+          await supabase.storage.from('avatars').remove([fileName]);
         }
       }
 
@@ -266,9 +279,9 @@ const EditProfile: React.FC = () => {
 
       setProfile((prev) => ({ ...prev, avatar_url: null }));
       toast.success('Avatar removed');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error removing avatar:', error);
-      toast.error('Failed to remove avatar');
+      toast.error(error.message || 'Failed to remove avatar');
     } finally {
       setUploadingAvatar(false);
     }
@@ -281,17 +294,20 @@ const EditProfile: React.FC = () => {
     try {
       // Delete old avatar if exists
       if (profile.avatar_url) {
-        const oldFileName = profile.avatar_url.split('/').pop();
+        const oldFileName = profile.avatar_url.split('/avatars/').pop();
         if (oldFileName) {
-          await supabase.storage.from('avatars').remove([`${user.id}/${oldFileName}`]);
+          await supabase.storage.from('avatars').remove([oldFileName]);
         }
       }
 
-      // Upload new avatar
+      // Upload new avatar with proper folder structure
       const fileName = `${user.id}/${Date.now()}.png`;
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, blob);
+        .upload(fileName, blob, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
@@ -305,9 +321,9 @@ const EditProfile: React.FC = () => {
 
       setProfile((prev) => ({ ...prev, avatar_url: publicUrl }));
       toast.success('Avatar updated successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading avatar:', error);
-      toast.error('Failed to upload avatar');
+      toast.error(error.message || 'Failed to upload avatar');
     } finally {
       setUploadingAvatar(false);
     }
