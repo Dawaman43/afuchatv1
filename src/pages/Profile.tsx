@@ -776,18 +776,18 @@ const Profile = () => {
 
 	return (
 		<div className="h-full flex flex-col">
-			<div className="p-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10">
-				<div className="flex items-center justify-between">
-					<div className="flex items-center">
-						<Button
-							variant="ghost"
-							size="icon"
-							// 🚨 MODIFICATION 2: Changed navigate(-1) to navigate('/')
-							onClick={() => navigate('/')}
-							className="rounded-full mr-4 hidden lg:inline-flex"
-						>
-							<ArrowLeft className="h-5 w-5" />
-						</Button>
+		<div className="p-4 sticky top-0 bg-background/95 backdrop-blur z-10 border-b border-border">
+			<div className="flex items-center justify-between">
+				<div className="flex items-center">
+					<Button
+						variant="ghost"
+						size="icon"
+						// 🚨 MODIFICATION 2: Changed navigate(-1) to navigate('/')
+						onClick={() => navigate('/')}
+						className="rounded-full mr-4 hidden lg:inline-flex"
+					>
+						<ArrowLeft className="h-5 w-5" />
+					</Button>
 						<div>
 							<h1 className="text-xl font-bold">{profile.display_name}</h1>
 							<p className="text-xs text-muted-foreground">{posts.length} {t('profile.posts')}</p>
