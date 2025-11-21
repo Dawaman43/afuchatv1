@@ -281,11 +281,8 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                     if (processedCount === validFiles.length) {
                         setSelectedImages(prev => [...prev, ...validFiles]);
                         setImagePreviews(prev => [...prev, ...newPreviews]);
-                        const newAltTexts: string[] = [];
-                        for (const preview of newPreviews) {
-                            const altText = await generateDescription(preview);
-                            newAltTexts.push(altText || '');
-                        }
+                        // Skip AI description generation - add empty alt texts
+                        const newAltTexts: string[] = newPreviews.map(() => '');
                         setImageAltTexts(prev => [...prev, ...newAltTexts]);
                         toast.success('Images ready!');
                     }
