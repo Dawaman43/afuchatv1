@@ -93,44 +93,6 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
         }
 
         setIsPosting(true);
-        
-        // Create optimistic post with temporary ID
-        const tempId = `temp-${Date.now()}`;
-        const optimisticPost = {
-            id: tempId,
-            content: newPost,
-            author_id: user?.id,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            image_url: imagePreviews.length > 0 ? imagePreviews[0] : null,
-            post_images: imagePreviews.map((preview, index) => ({
-                image_url: preview,
-                display_order: index,
-                alt_text: imageAltTexts[index] || '',
-            })),
-            post_link_previews: linkPreviews,
-            profiles: {
-                display_name: userProfile?.display_name || 'You',
-                handle: user?.user_metadata?.handle || 'user',
-                avatar_url: userProfile?.avatar_url || null,
-                is_verified: user?.user_metadata?.is_verified || false,
-                is_organization_verified: user?.user_metadata?.is_organization_verified || false,
-                is_affiliate: false,
-                is_business_mode: false,
-            },
-            replies: [],
-            reply_count: 0,
-            like_count: 0,
-            has_liked: false,
-            _optimistic: true,
-        };
-
-        // Emit custom event to add optimistic post to feed
-        window.dispatchEvent(new CustomEvent('optimistic-post-add', { detail: optimisticPost }));
-        
-        // Close modal immediately for better UX
-        handleClose();
-        toast.info('Posting...');
 
         try {
             const imageUrls: string[] = [];
@@ -193,15 +155,10 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                 await supabase.from('post_link_previews').insert(previewInserts);
             }
 
-            // Remove optimistic post and let real-time subscription add the real one
-            window.dispatchEvent(new CustomEvent('optimistic-post-success', { detail: { tempId, realId: postData.id } }));
-
-            await awardNexa('create_post');
             toast.success('Post created successfully!');
+            handleClose();
         } catch (error) {
             console.error('Error creating post:', error);
-            // Remove optimistic post on error
-            window.dispatchEvent(new CustomEvent('optimistic-post-error', { detail: tempId }));
             toast.error('Failed to create post. Please try again.');
         } finally {
             setIsPosting(false);
