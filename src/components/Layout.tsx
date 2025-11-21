@@ -10,6 +10,7 @@ import InstallPromptBanner from '@/components/InstallPromptBanner';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
 import FloatingActionButton from '@/components/ui/FloatingActionButton';
+import { MobileMenuSheet } from '@/components/MobileMenuSheet';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -190,7 +191,6 @@ const Layout = ({ children }: LayoutProps) => {
             {[
               { path: '/', icon: Home },
               { path: '/search', icon: Search },
-              { path: '/games', icon: Gamepad2 },
               { path: '/chats', icon: MessageSquare },
               { path: user ? `/${user.id}` : '/auth', icon: User }
             ].map((item) => (
@@ -208,6 +208,7 @@ const Layout = ({ children }: LayoutProps) => {
                 )} />
               </Link>
             ))}
+            <MobileMenuSheet />
           </div>
         </nav>
       )}
