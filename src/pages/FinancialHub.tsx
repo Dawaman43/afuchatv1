@@ -401,6 +401,17 @@ const FinancialHub = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      {/* Hero Header */}
+      <div className="bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-background border-b">
+        <div className="container max-w-4xl mx-auto px-4 py-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Wallet className="h-8 w-8 text-blue-600" />
+            <h1 className="text-3xl md:text-4xl font-bold">Financial Hub</h1>
+          </div>
+          <p className="text-muted-foreground text-lg">Manage your XP, transfers, and transactions</p>
+        </div>
+      </div>
+
       <main className="container max-w-4xl mx-auto py-6 px-4">
         {/* Balance Card */}
         <Card className="mb-6 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 border-2">
