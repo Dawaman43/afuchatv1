@@ -213,6 +213,7 @@ const Gifts = () => {
 
                       <div className="text-center">
                         <h3 className="font-semibold text-xs truncate">{gift.name}</h3>
+                        <p className="text-xs text-muted-foreground font-medium">{gift.base_xp_cost} XP</p>
                       </div>
 
                       <div className="text-center space-y-1">
@@ -291,6 +292,7 @@ const Gifts = () => {
 
                         <div className="text-center">
                           <h3 className="font-semibold text-xs truncate">{gift.name}</h3>
+                          <p className="text-xs text-muted-foreground font-medium">{gift.base_xp_cost} XP</p>
                         </div>
                       </div>
                     </div>

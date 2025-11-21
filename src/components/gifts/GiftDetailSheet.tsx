@@ -158,7 +158,7 @@ export const GiftDetailSheet = ({ giftId, open, onOpenChange }: GiftDetailSheetP
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+      <SheetContent side="bottom" className="w-full max-h-[90vh] overflow-y-auto">
         {loading || !gift || !stats ? (
           <div className="space-y-6">
             <Skeleton className="h-20 w-20 rounded-lg" />
