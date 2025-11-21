@@ -184,10 +184,10 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Mobile Bottom Navigation - Hidden in chat rooms */}
       {!isChatRoom && (
         <nav className={cn(
-          "lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 transition-transform duration-300",
+          "lg:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border z-50 transition-transform duration-300 safe-area-inset-bottom",
           isScrollingDown ? "translate-y-full" : "translate-y-0"
         )}>
-          <div className="flex justify-around items-center h-16 px-2">
+          <div className="flex justify-around items-center h-16 px-2 pb-safe">
             {[
               { path: '/', icon: Home },
               { path: '/search', icon: Search },
