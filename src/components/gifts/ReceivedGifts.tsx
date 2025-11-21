@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Gift, Loader2 } from 'lucide-react';
+import { Gift, TrendingUp, Sparkles } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslation } from 'react-i18next';
-import { SimpleGiftIcon } from './SimpleGiftIcon';
+import { GiftImage } from './GiftImage';
 import { ReceivedGiftDetailsModal } from './ReceivedGiftDetailsModal';
 import { extractText } from '@/lib/textUtils';
 
@@ -38,10 +38,14 @@ interface ReceivedGiftsProps {
   userId: string;
 }
 
-const rarityColors: Record<string, string> = {
-  common: 'bg-gray-500',
-  rare: 'bg-blue-500',
-  legendary: 'bg-purple-500',
+const getRarityColor = (rarity: string) => {
+  switch (rarity.toLowerCase()) {
+    case 'legendary': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+    case 'epic': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+    case 'rare': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+    case 'uncommon': return 'bg-green-500/10 text-green-500 border-green-500/20';
+    default: return 'bg-muted text-muted-foreground';
+  }
 };
 
 export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
@@ -212,23 +216,52 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-6">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
         {gifts.map((gift) => (
           <div 
             key={gift.id} 
             onClick={() => handleGiftClick(gift)}
-            className="group flex flex-col items-center gap-3 p-4 rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer hover:ring-2 hover:ring-primary/30"
+            className="cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group relative p-2 sm:p-4"
           >
-            <SimpleGiftIcon 
-              emoji={extractText(gift.gift.emoji)}
-              size={56}
-            />
-            <div className="text-center w-full space-y-1">
-              <div className="text-xs font-semibold text-foreground truncate w-full group-hover:text-primary transition-colors">
-                {extractText(gift.gift.name)}
+            <div className="relative space-y-2">
+              <div className="relative">
+                <GiftImage
+                  giftId={gift.gift.id}
+                  giftName={gift.gift.name}
+                  emoji={gift.gift.emoji}
+                  rarity={gift.gift.rarity}
+                  size="lg"
+                  className="mx-auto"
+                />
+                <Badge className={`absolute -top-2 -right-2 ${getRarityColor(gift.gift.rarity)} text-[10px] px-1.5 py-0.5`}>
+                  {gift.gift.rarity}
+                </Badge>
               </div>
-              <div className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
-                {gift.xp_cost} XP
+
+              <div className="text-center">
+                <h3 className="font-semibold text-xs truncate">{gift.gift.name}</h3>
+                <p className="text-xs text-muted-foreground font-medium">{gift.gift.base_xp_cost || gift.xp_cost} XP</p>
+              </div>
+
+              <div className="text-center space-y-1">
+                <div className="flex items-center justify-center gap-1">
+                  <span className="text-xs font-bold text-primary">
+                    {calculatePrice(gift.gift_id, gift.gift.base_xp_cost || gift.xp_cost).toLocaleString()} XP
+                  </span>
+                  {giftStats[gift.gift_id] && giftStats[gift.gift_id].price_multiplier !== 1 && (
+                    <div className="flex items-center gap-0.5 text-[10px] text-green-500">
+                      <TrendingUp className="h-2.5 w-2.5" />
+                      <span>{((giftStats[gift.gift_id].price_multiplier * 100) - 100).toFixed(0)}%</span>
+                    </div>
+                  )}
+                </div>
+
+                {giftStats[gift.gift_id] && giftStats[gift.gift_id].total_sent > 0 && (
+                  <div className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+                    <Sparkles className="h-2.5 w-2.5" />
+                    <span>{giftStats[gift.gift_id].total_sent.toLocaleString()}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
