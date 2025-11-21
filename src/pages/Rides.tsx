@@ -1,18 +1,53 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Search, MapPin, Star, Car, Users, Clock } from 'lucide-react';
+import { MapPin, Star, Car, Users, Clock, Navigation, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 
 const rideOptions = [
-  { id: 'economy', name: 'Economy', description: '4 passengers', price: '50', icon: '🚗', time: '3 min' },
-  { id: 'comfort', name: 'Comfort', description: '4 passengers, premium', price: '75', icon: '🚙', time: '5 min' },
-  { id: 'xl', name: 'XL', description: '6 passengers', price: '100', icon: '🚐', time: '6 min' },
-  { id: 'premium', name: 'Premium', description: 'Luxury ride', price: '150', icon: '🏎️', time: '8 min' },
+  { 
+    id: 'economy', 
+    name: 'Economy', 
+    description: 'Affordable everyday rides', 
+    capacity: '4 passengers', 
+    price: '50', 
+    icon: '🚗', 
+    time: '3 min',
+    features: ['Standard seating', 'AC', 'Music']
+  },
+  { 
+    id: 'comfort', 
+    name: 'Comfort', 
+    description: 'Extra space and comfort', 
+    capacity: '4 passengers', 
+    price: '75', 
+    icon: '🚙', 
+    time: '5 min',
+    features: ['Spacious seats', 'Premium AC', 'USB charging']
+  },
+  { 
+    id: 'xl', 
+    name: 'XL', 
+    description: 'Extra room for groups', 
+    capacity: '6 passengers', 
+    price: '100', 
+    icon: '🚐', 
+    time: '6 min',
+    features: ['Large vehicle', 'Group travel', 'Extra luggage']
+  },
+  { 
+    id: 'premium', 
+    name: 'Premium', 
+    description: 'Luxury experience', 
+    capacity: '4 passengers', 
+    price: '150', 
+    icon: '🏎️', 
+    time: '8 min',
+    features: ['Luxury sedan', 'Professional driver', 'Premium service']
+  },
 ];
 
 const Rides = () => {
@@ -30,93 +65,142 @@ const Rides = () => {
     toast.success(`Booking ${ride?.name} ride...`);
   };
 
+  const selectedRideData = rideOptions.find(r => r.id === selectedRide);
+
   return (
-    <div className="min-h-screen bg-background">
-      <main className="container max-w-4xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left: Map Placeholder & Form */}
-          <div className="space-y-6">
-            <Card className="aspect-square bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+    <div className="min-h-screen bg-background pb-20">
+      {/* Hero Header */}
+      <div className="bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-background border-b">
+        <div className="container max-w-6xl mx-auto px-4 py-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Car className="h-8 w-8 text-green-600" />
+            <h1 className="text-3xl md:text-4xl font-bold">Book a Ride</h1>
+          </div>
+          <p className="text-muted-foreground text-lg">Fast, reliable rides at your fingertips</p>
+        </div>
+      </div>
+
+      <main className="container max-w-6xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Left: Map & Form */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Map Placeholder */}
+            <Card className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border-2">
               <div className="text-center">
-                <MapPin className="h-16 w-16 mx-auto mb-4 text-primary" />
-                <p className="text-muted-foreground">Map View</p>
+                <Navigation className="h-20 w-20 mx-auto mb-4 text-primary animate-pulse" />
+                <p className="text-muted-foreground text-lg font-medium">Live Map View</p>
+                <p className="text-sm text-muted-foreground mt-1">Track your ride in real-time</p>
               </div>
             </Card>
 
-            <Card className="p-6 space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Pickup Location</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+            {/* Location Form */}
+            <Card className="border-2 shadow-lg">
+              <CardContent className="p-6 space-y-4">
+                <div>
+                  <label className="text-sm font-semibold mb-2 block flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-green-600" />
+                    Pickup Location
+                  </label>
                   <Input
-                    placeholder="Enter pickup location..."
+                    placeholder="Enter pickup address..."
                     value={pickup}
                     onChange={(e) => setPickup(e.target.value)}
-                    className="pl-10"
+                    className="h-11"
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">Destination</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
+                <div>
+                  <label className="text-sm font-semibold mb-2 block flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-red-600" />
+                    Destination
+                  </label>
                   <Input
-                    placeholder="Where to?"
+                    placeholder="Where are you going?"
                     value={destination}
                     onChange={(e) => setDestination(e.target.value)}
-                    className="pl-10"
+                    className="h-11"
                   />
                 </div>
-              </div>
+
+                {selectedRideData && (
+                  <div className="pt-4 border-t">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-muted-foreground">Selected Ride</span>
+                      <Badge variant="secondary">{selectedRideData.name}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Estimated fare</span>
+                      <span className="text-2xl font-bold text-primary">{selectedRideData.price} XP</span>
+                    </div>
+                  </div>
+                )}
+
+                <Button className="w-full h-12 text-base" size="lg" onClick={handleBookRide}>
+                  Confirm Ride
+                </Button>
+              </CardContent>
             </Card>
           </div>
 
           {/* Right: Ride Options */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Choose a ride</h2>
+          <div className="lg:col-span-2 space-y-4">
+            <h2 className="text-xl font-bold">Choose Your Ride</h2>
             
             {rideOptions.map((ride) => (
               <Card
                 key={ride.id}
-                className={`p-4 cursor-pointer transition-all ${
+                className={`cursor-pointer transition-all duration-300 ${
                   selectedRide === ride.id
-                    ? 'border-primary border-2 shadow-lg'
-                    : 'hover:shadow-md'
+                    ? 'border-primary border-2 shadow-xl bg-primary/5'
+                    : 'hover:shadow-lg hover:border-primary/50'
                 }`}
                 onClick={() => setSelectedRide(ride.id)}
               >
-                <div className="flex items-center gap-4">
-                  <div className="text-4xl">{ride.icon}</div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold">{ride.name}</h3>
-                      <span className="text-lg font-bold">{ride.price} XP</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        {ride.description}
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-4">
+                    <div className="text-5xl">{ride.icon}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-bold text-lg">{ride.name}</h3>
+                        <div className="text-right">
+                          <div className="text-xl font-bold text-primary">{ride.price} XP</div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {ride.time} away
+                      <p className="text-sm text-muted-foreground mb-2">{ride.description}</p>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {ride.capacity}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {ride.time} away
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {ride.features.map((feature, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">
+                            {feature}
+                          </Badge>
+                        ))}
                       </div>
                     </div>
                   </div>
-                </div>
+                </CardContent>
               </Card>
             ))}
 
-            <Button className="w-full" size="lg" onClick={handleBookRide}>
-              Book Ride
-            </Button>
-
-            <Card className="p-4 bg-muted/50">
-              <h3 className="font-semibold mb-2">Payment with XP</h3>
-              <p className="text-sm text-muted-foreground">
-                All rides are paid using your XP balance. Make sure you have enough XP before booking.
-              </p>
+            {/* Info Card */}
+            <Card className="bg-muted/50">
+              <CardContent className="p-4">
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-primary" />
+                  Payment Info
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  All rides are paid using your XP balance. Ensure you have sufficient XP before booking.
+                </p>
+              </CardContent>
             </Card>
           </div>
         </div>

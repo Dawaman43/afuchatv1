@@ -118,49 +118,71 @@ const Moments = () => {
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <div className="max-w-4xl mx-auto">
+        {/* Hero Header */}
+        <div className="bg-gradient-to-br from-pink-500/10 via-purple-500/5 to-background border-b">
+          <div className="px-4 py-8">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <div className="text-4xl">📸</div>
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold">Moments</h1>
+                  <p className="text-muted-foreground">Share your day, 24 hours at a time</p>
+                </div>
+              </div>
+              <Button onClick={() => setCreateDialogOpen(true)} size="lg" className="gap-2">
+                <Plus className="h-5 w-5" />
+                <span className="hidden sm:inline">Create</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {/* Stories Grid */}
         <div className="p-4 space-y-6">
           {/* My Story */}
           <div>
-            <h2 className="text-sm font-medium text-muted-foreground mb-3">Your Story</h2>
+            <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+              <Eye className="h-5 w-5 text-primary" />
+              Your Stories
+            </h2>
             <div className="flex gap-4 overflow-x-auto pb-2">
-              <Card 
-                className="flex-shrink-0 w-24 cursor-pointer hover:ring-2 hover:ring-primary transition-all"
-                onClick={() => setCreateDialogOpen(true)}
-              >
-                <CardContent className="p-0 relative h-32">
-                  <div className="absolute inset-0 flex items-center justify-center bg-muted">
-                    <Plus className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <div className="absolute bottom-2 left-0 right-0 text-center">
-                    <p className="text-xs font-medium">Add Story</p>
-                  </div>
-                </CardContent>
-              </Card>
+              {myStories.length === 0 && (
+                <Card 
+                  className="flex-shrink-0 w-28 h-40 cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                  onClick={() => setCreateDialogOpen(true)}
+                >
+                  <CardContent className="p-0 relative h-full">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+                      <Plus className="h-10 w-10 text-primary mb-2" />
+                      <p className="text-xs font-medium px-2 text-center">Create Story</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {myStories.map((story) => (
                 <Card 
                   key={story.id}
-                  className="flex-shrink-0 w-24 cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                  className="flex-shrink-0 w-28 h-40 cursor-pointer hover:ring-2 hover:ring-primary transition-all overflow-hidden group"
                   onClick={() => handleStoryClick(story)}
                 >
-                  <CardContent className="p-0 relative h-32">
+                  <CardContent className="p-0 relative h-full">
                     {story.media_type === 'image' ? (
                       <img 
                         src={story.media_url} 
                         alt="Story" 
-                        className="w-full h-full object-cover rounded-lg"
+                        className="w-full h-full object-cover"
                       />
                     ) : (
                       <video 
                         src={story.media_url} 
-                        className="w-full h-full object-cover rounded-lg"
+                        className="w-full h-full object-cover"
                       />
                     )}
-                    <div className="absolute bottom-2 left-0 right-0 bg-black/50 backdrop-blur-sm px-2 py-1">
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-2">
                       <div className="flex items-center justify-center gap-1 text-white">
                         <Eye className="h-3 w-3" />
-                        <p className="text-xs">{story.view_count}</p>
+                        <p className="text-xs font-medium">{story.view_count}</p>
                       </div>
                     </div>
                   </CardContent>

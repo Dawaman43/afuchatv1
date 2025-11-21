@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  ArrowLeft, Search, MapPin, Clock, Star, Utensils,
-  Pizza, Coffee, IceCream, Sandwich, Fish, Salad
+  Search, MapPin, Clock, Star, Utensils,
+  Pizza, Coffee, IceCream, Sandwich, Fish, Salad, TrendingUp, Heart
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -22,12 +22,78 @@ const categories = [
 ];
 
 const restaurants = [
-  { id: 1, name: 'Italian Delights', cuisine: 'Italian', rating: 4.8, deliveryTime: '25-35', image: '🍕', category: 'pizza', featured: true },
-  { id: 2, name: 'Coffee House', cuisine: 'Cafe', rating: 4.7, deliveryTime: '15-20', image: '☕', category: 'coffee', featured: true },
-  { id: 3, name: 'Sweet Treats', cuisine: 'Desserts', rating: 4.9, deliveryTime: '20-30', image: '🍰', category: 'dessert', featured: false },
-  { id: 4, name: 'Burger Palace', cuisine: 'American', rating: 4.6, deliveryTime: '30-40', image: '🍔', category: 'fast', featured: true },
-  { id: 5, name: 'Ocean Fresh', cuisine: 'Seafood', rating: 4.8, deliveryTime: '35-45', image: '🦞', category: 'seafood', featured: false },
-  { id: 6, name: 'Green Bowl', cuisine: 'Healthy', rating: 4.7, deliveryTime: '20-25', image: '🥗', category: 'healthy', featured: false },
+  { 
+    id: 1, 
+    name: 'Italian Delights', 
+    cuisine: 'Italian', 
+    rating: 4.8, 
+    deliveryTime: '25-35', 
+    image: '🍕', 
+    category: 'pizza', 
+    featured: true,
+    minOrder: '50',
+    deliveryFee: '10'
+  },
+  { 
+    id: 2, 
+    name: 'Coffee House', 
+    cuisine: 'Cafe', 
+    rating: 4.7, 
+    deliveryTime: '15-20', 
+    image: '☕', 
+    category: 'coffee', 
+    featured: true,
+    minOrder: '20',
+    deliveryFee: '5'
+  },
+  { 
+    id: 3, 
+    name: 'Sweet Treats', 
+    cuisine: 'Desserts', 
+    rating: 4.9, 
+    deliveryTime: '20-30', 
+    image: '🍰', 
+    category: 'dessert', 
+    featured: false,
+    minOrder: '30',
+    deliveryFee: '8'
+  },
+  { 
+    id: 4, 
+    name: 'Burger Palace', 
+    cuisine: 'American', 
+    rating: 4.6, 
+    deliveryTime: '30-40', 
+    image: '🍔', 
+    category: 'fast', 
+    featured: true,
+    minOrder: '40',
+    deliveryFee: '0'
+  },
+  { 
+    id: 5, 
+    name: 'Ocean Fresh', 
+    cuisine: 'Seafood', 
+    rating: 4.8, 
+    deliveryTime: '35-45', 
+    image: '🦞', 
+    category: 'seafood', 
+    featured: false,
+    minOrder: '80',
+    deliveryFee: '15'
+  },
+  { 
+    id: 6, 
+    name: 'Green Bowl', 
+    cuisine: 'Healthy', 
+    rating: 4.7, 
+    deliveryTime: '20-25', 
+    image: '🥗', 
+    category: 'healthy', 
+    featured: false,
+    minOrder: '35',
+    deliveryFee: '5'
+  },
 ];
 
 const FoodDelivery = () => {
@@ -47,21 +113,35 @@ const FoodDelivery = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
+      {/* Hero Header */}
+      <div className="bg-gradient-to-br from-orange-500/10 via-red-500/5 to-background border-b">
+        <div className="container max-w-6xl mx-auto px-4 py-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Utensils className="h-8 w-8 text-orange-600" />
+            <h1 className="text-3xl md:text-4xl font-bold">Food Delivery</h1>
+          </div>
+          <div className="flex items-center gap-2 text-muted-foreground text-lg">
+            <MapPin className="h-5 w-5" />
+            <span>Deliver to Current Location</span>
+          </div>
+        </div>
+      </div>
+
       <main className="container max-w-6xl mx-auto px-4 py-6 space-y-6">
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             placeholder="Search restaurants or cuisines..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 h-12 text-base"
           />
         </div>
 
         {/* Categories */}
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {categories.map((cat) => (
             <Button
               key={cat.id}
@@ -77,26 +157,40 @@ const FoodDelivery = () => {
         </div>
 
         <Tabs defaultValue="delivery" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="delivery">Delivery</TabsTrigger>
-            <TabsTrigger value="pickup">Pickup</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 h-12">
+            <TabsTrigger value="delivery" className="text-base">Delivery</TabsTrigger>
+            <TabsTrigger value="pickup" className="text-base">Pickup</TabsTrigger>
           </TabsList>
 
           <TabsContent value="delivery" className="space-y-6 mt-6">
             {/* Featured */}
             {filteredRestaurants.some(r => r.featured) && (
               <section>
-                <h2 className="text-lg font-semibold mb-4">Featured</h2>
+                <div className="flex items-center gap-2 mb-4">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  <h2 className="text-xl font-bold">Featured Restaurants</h2>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredRestaurants.filter(r => r.featured).map((restaurant) => (
-                    <Card key={restaurant.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-all">
-                      <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-6xl">
+                    <Card key={restaurant.id} className="overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group">
+                      <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-7xl relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         {restaurant.image}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="absolute top-2 right-2 bg-background/80 hover:bg-background"
+                        >
+                          <Heart className="h-4 w-4" />
+                        </Button>
+                        {restaurant.deliveryFee === '0' && (
+                          <Badge className="absolute top-2 left-2 bg-green-600">Free Delivery</Badge>
+                        )}
                       </div>
-                      <div className="p-4">
+                      <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <h3 className="font-semibold">{restaurant.name}</h3>
+                            <h3 className="font-bold text-lg">{restaurant.name}</h3>
                             <p className="text-sm text-muted-foreground">{restaurant.cuisine}</p>
                           </div>
                           <Badge variant="secondary" className="gap-1">
@@ -109,11 +203,13 @@ const FoodDelivery = () => {
                             <Clock className="h-3 w-3" />
                             {restaurant.deliveryTime} min
                           </div>
+                          <span>•</span>
+                          <span>Min {restaurant.minOrder} XP</span>
                         </div>
                         <Button className="w-full" onClick={() => handleOrder(restaurant.name)}>
                           Order Now
                         </Button>
-                      </div>
+                      </CardContent>
                     </Card>
                   ))}
                 </div>
@@ -122,14 +218,17 @@ const FoodDelivery = () => {
 
             {/* All Restaurants */}
             <section>
-              <h2 className="text-lg font-semibold mb-4">All Restaurants</h2>
+              <h2 className="text-xl font-bold mb-4">All Restaurants</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredRestaurants.map((restaurant) => (
-                  <Card key={restaurant.id} className="overflow-hidden cursor-pointer hover:shadow-md transition-all">
-                    <div className="aspect-video bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center text-6xl">
+                {filteredRestaurants.filter(r => !r.featured).map((restaurant) => (
+                  <Card key={restaurant.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-all">
+                    <div className="aspect-video bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center text-6xl relative">
                       {restaurant.image}
+                      {restaurant.deliveryFee === '0' && (
+                        <Badge className="absolute top-2 left-2 bg-green-600 text-xs">Free Delivery</Badge>
+                      )}
                     </div>
-                    <div className="p-4">
+                    <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <h3 className="font-semibold">{restaurant.name}</h3>
@@ -142,22 +241,32 @@ const FoodDelivery = () => {
                       </div>
                       <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
                         <Clock className="h-3 w-3" />
-                        {restaurant.deliveryTime} min
+                        {restaurant.deliveryTime} min • Min {restaurant.minOrder} XP
                       </div>
                       <Button variant="outline" className="w-full" onClick={() => handleOrder(restaurant.name)}>
                         View Menu
                       </Button>
-                    </div>
+                    </CardContent>
                   </Card>
                 ))}
               </div>
             </section>
+
+            {filteredRestaurants.length === 0 && (
+              <div className="text-center py-16">
+                <Utensils className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <p className="text-muted-foreground text-lg">No restaurants found</p>
+                <p className="text-sm text-muted-foreground mt-2">Try adjusting your search</p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="pickup" className="mt-6">
-            <div className="text-center py-12">
-              <Utensils className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">Pickup feature coming soon!</p>
+            <div className="text-center py-16">
+              <Utensils className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-xl font-semibold mb-2">Pickup Feature</h3>
+              <p className="text-muted-foreground mb-4">Skip the delivery fee and pick up your order</p>
+              <Button>Coming Soon</Button>
             </div>
           </TabsContent>
         </Tabs>

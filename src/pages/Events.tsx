@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Search, Ticket, Calendar, MapPin, Clock, Users, Star } from 'lucide-react';
+import { Calendar, Search, Ticket, MapPin, Clock, Users, Star, TrendingUp, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 
 const events = [
@@ -18,7 +18,9 @@ const events = [
     category: 'Music',
     image: '🎵',
     rating: 4.9,
-    attendees: '5K+'
+    attendees: '5K+',
+    featured: true,
+    description: 'Three days of non-stop music featuring top artists'
   },
   {
     id: 2,
@@ -29,7 +31,9 @@ const events = [
     category: 'Tech',
     image: '💻',
     rating: 4.8,
-    attendees: '2K+'
+    attendees: '2K+',
+    featured: true,
+    description: 'Latest innovations and networking opportunities'
   },
   {
     id: 3,
@@ -40,7 +44,9 @@ const events = [
     category: 'Food',
     image: '🍷',
     rating: 4.7,
-    attendees: '3K+'
+    attendees: '3K+',
+    featured: false,
+    description: 'Taste exceptional wines and culinary delights'
   },
   {
     id: 4,
@@ -51,7 +57,9 @@ const events = [
     category: 'Art',
     image: '🎨',
     rating: 4.6,
-    attendees: '500+'
+    attendees: '500+',
+    featured: false,
+    description: 'Exclusive preview of contemporary art collection'
   },
   {
     id: 5,
@@ -62,7 +70,9 @@ const events = [
     category: 'Sports',
     image: '⚽',
     rating: 4.9,
-    attendees: '10K+'
+    attendees: '10K+',
+    featured: true,
+    description: 'Experience the thrill of championship finals'
   },
   {
     id: 6,
@@ -73,7 +83,9 @@ const events = [
     category: 'Comedy',
     image: '😂',
     rating: 4.7,
-    attendees: '300+'
+    attendees: '300+',
+    featured: false,
+    description: 'An evening of laughter with top comedians'
   },
 ];
 
@@ -91,21 +103,35 @@ const Events = () => {
     return matchesSearch && matchesCategory;
   });
 
+  const featuredEvents = filteredEvents.filter(e => e.featured);
+  const regularEvents = filteredEvents.filter(e => !e.featured);
+
   const handleBookTicket = (eventTitle: string) => {
     toast.success(`Booking ticket for ${eventTitle}...`);
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
+      {/* Hero Header */}
+      <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border-b">
+        <div className="container max-w-6xl mx-auto px-4 py-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Ticket className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl md:text-4xl font-bold">Events & Tickets</h1>
+          </div>
+          <p className="text-muted-foreground text-lg">Discover and book amazing events near you</p>
+        </div>
+      </div>
+
       <main className="container max-w-6xl mx-auto px-4 py-6 space-y-6">
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             placeholder="Search events, venues, or locations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 h-12 text-base"
           />
         </div>
 
@@ -125,70 +151,155 @@ const Events = () => {
         </div>
 
         <Tabs defaultValue="upcoming" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-            <TabsTrigger value="popular">Popular</TabsTrigger>
-            <TabsTrigger value="nearby">Nearby</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 h-12">
+            <TabsTrigger value="upcoming" className="text-sm md:text-base">Upcoming</TabsTrigger>
+            <TabsTrigger value="popular" className="text-sm md:text-base">
+              <TrendingUp className="h-4 w-4 mr-1.5" />
+              Popular
+            </TabsTrigger>
+            <TabsTrigger value="nearby" className="text-sm md:text-base">Nearby</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="upcoming" className="space-y-4 mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredEvents.map((event) => (
-                <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-all">
-                  <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-6xl">
-                    {event.image}
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <Badge variant="secondary" className="mb-2">{event.category}</Badge>
-                        <h3 className="font-semibold mb-1">{event.title}</h3>
+          <TabsContent value="upcoming" className="space-y-6 mt-6">
+            {/* Featured Events */}
+            {featuredEvents.length > 0 && (
+              <section>
+                <div className="flex items-center gap-2 mb-4">
+                  <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                  <h2 className="text-xl font-bold">Featured Events</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {featuredEvents.map((event) => (
+                    <Card key={event.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
+                      <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-7xl relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        {event.image}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="absolute top-2 right-2 bg-background/80 hover:bg-background"
+                        >
+                          <Heart className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Badge variant="outline" className="gap-1">
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        {event.rating}
-                      </Badge>
-                    </div>
-                    
-                    <div className="space-y-2 text-sm text-muted-foreground mb-3">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-3 w-3" />
-                        {event.date}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-3 w-3" />
-                        {event.location}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Users className="h-3 w-3" />
-                        {event.attendees} attending
-                      </div>
-                    </div>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <Badge variant="secondary" className="mb-2">{event.category}</Badge>
+                            <h3 className="font-bold text-lg mb-1">{event.title}</h3>
+                            <p className="text-xs text-muted-foreground line-clamp-2">{event.description}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2 text-sm text-muted-foreground my-3">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-primary" />
+                            <span className="font-medium">{event.date}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-primary" />
+                            {event.location}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4" />
+                              {event.attendees} attending
+                            </div>
+                            <Badge variant="outline" className="gap-1">
+                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                              {event.rating}
+                            </Badge>
+                          </div>
+                        </div>
 
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-primary">{event.price} XP</span>
-                      <Button size="sm" onClick={() => handleBookTicket(event.title)}>
-                        <Ticket className="h-4 w-4 mr-2" />
-                        Book
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+                        <div className="flex items-center justify-between pt-3 border-t">
+                          <span className="text-xl font-bold text-primary">{event.price} XP</span>
+                          <Button size="sm" onClick={() => handleBookTicket(event.title)} className="gap-2">
+                            <Ticket className="h-4 w-4" />
+                            Book Now
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* All Events */}
+            {regularEvents.length > 0 && (
+              <section>
+                <h2 className="text-xl font-bold mb-4">All Events</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {regularEvents.map((event) => (
+                    <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-all duration-300">
+                      <div className="aspect-video bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center text-6xl">
+                        {event.image}
+                      </div>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <Badge variant="secondary" className="mb-2">{event.category}</Badge>
+                            <h3 className="font-semibold mb-1">{event.title}</h3>
+                          </div>
+                          <Badge variant="outline" className="gap-1">
+                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            {event.rating}
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-1.5 text-sm text-muted-foreground mb-3">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-3 w-3" />
+                            {event.date}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-3 w-3" />
+                            {event.location}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Users className="h-3 w-3" />
+                            {event.attendees} attending
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-lg font-bold text-primary">{event.price} XP</span>
+                          <Button size="sm" variant="outline" onClick={() => handleBookTicket(event.title)}>
+                            <Ticket className="h-4 w-4 mr-2" />
+                            Book
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {filteredEvents.length === 0 && (
+              <div className="text-center py-12">
+                <Ticket className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <p className="text-muted-foreground text-lg">No events found</p>
+                <p className="text-sm text-muted-foreground mt-2">Try adjusting your search or filters</p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="popular" className="mt-6">
-            <div className="text-center py-12">
-              <Star className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">Popular events coming soon!</p>
+            <div className="text-center py-16">
+              <TrendingUp className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-xl font-semibold mb-2">Popular Events</h3>
+              <p className="text-muted-foreground">Check back soon for trending events!</p>
             </div>
           </TabsContent>
 
           <TabsContent value="nearby" className="mt-6">
-            <div className="text-center py-12">
-              <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">Enable location to see nearby events</p>
+            <div className="text-center py-16">
+              <MapPin className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-xl font-semibold mb-2">Events Near You</h3>
+              <p className="text-muted-foreground mb-4">Enable location to see events nearby</p>
+              <Button>Enable Location</Button>
             </div>
           </TabsContent>
         </Tabs>
