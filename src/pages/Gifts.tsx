@@ -181,7 +181,7 @@ const Gifts = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto p-4">
+      <div className="max-w-6xl mx-auto p-3 sm:p-4">
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="all">All Gifts</TabsTrigger>
@@ -189,11 +189,11 @@ const Gifts = () => {
           </TabsList>
 
           <TabsContent value="all" className="space-y-6">
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-6">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
               {allGifts.map(gift => (
                   <div
                     key={gift.id}
-                    className="cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group relative p-4"
+                    className="cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group relative p-2 sm:p-4"
                     onClick={() => handleGiftClick(gift)}
                   >
                     <div className="relative space-y-2">
@@ -260,7 +260,7 @@ const Gifts = () => {
                 </p>
               </Card>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-6">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
                 {ownedGifts.map(({ gift, received_count, last_received }) => {
                   const giftWithStats = allGifts.find(g => g.id === gift.id) || {
                     ...gift,
@@ -272,7 +272,7 @@ const Gifts = () => {
                   return (
                     <div
                       key={gift.id}
-                      className="cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group relative p-4"
+                      className="cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group relative p-2 sm:p-4"
                       onClick={() => handleGiftClick(giftWithStats)}
                     >
                       <div className="space-y-2">
