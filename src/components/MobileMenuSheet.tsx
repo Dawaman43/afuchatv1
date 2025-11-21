@@ -23,7 +23,8 @@ import {
   Hash,
   Bell,
   TrendingUp,
-  Settings
+  Settings,
+  Bot
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
@@ -72,6 +73,7 @@ export function MobileMenuSheet() {
   };
 
   const menuItems: MenuItem[] = [
+    { icon: Bot, label: 'AI Chat', path: '/ai-chat', requiresAuth: true },
     { icon: ShoppingBag, label: 'Shop', path: '/shop' },
     { icon: Wallet, label: 'Wallet', path: '/wallet', requiresAuth: true },
     { icon: Send, label: 'Transfer', path: '/transfer', requiresAuth: true },
