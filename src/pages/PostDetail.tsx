@@ -415,7 +415,7 @@ const PostDetail = () => {
         <Button 
           variant="ghost" 
           onClick={() => navigate(-1)} 
-          className="p-2"
+          className="p-2 hidden lg:inline-flex"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
