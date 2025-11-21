@@ -48,10 +48,18 @@ export const useAITranslation = () => {
   const [loading, setLoading] = useState(false);
   const retryCount = useRef<Map<string, number>>(new Map());
 
+  // AI Features coming soon - disable translations
+  const AI_COMING_SOON = true;
+
   const translateText = useCallback(async (
     text: string,
     targetLanguage: string
   ): Promise<string> => {
+    // Return original text when AI features are disabled
+    if (AI_COMING_SOON) {
+      return text;
+    }
+
     // Check cache first
     const cacheKey = `${text}-${targetLanguage}`;
     if (translationCache[cacheKey]) {
