@@ -1400,7 +1400,121 @@ const Feed = () => {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'posts' },
         async (payload) => {
-          setNewPostsCount(prev => prev + 1);
+          // Fetch complete post data with profile info
+          const { data: newPost, error } = await supabase
+            .from('posts')
+            .select(`
+              *,
+              profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status),
+              post_images(image_url, display_order, alt_text),
+              post_link_previews(url, title, description, image_url, site_name)
+            `)
+            .eq('id', payload.new.id)
+            .single();
+
+          if (!error && newPost) {
+            // Fetch affiliated business data if needed
+            let affiliated_business = null;
+            if (newPost.profiles?.affiliated_business_id) {
+              const { data: businessData } = await supabase
+                .from('profiles')
+                .select('avatar_url, display_name')
+                .eq('id', newPost.profiles.affiliated_business_id)
+                .single();
+              affiliated_business = businessData || null;
+            }
+
+            const formattedPost: Post = {
+              ...newPost,
+              profiles: newPost.profiles 
+                ? { ...newPost.profiles, affiliated_business }
+                : { 
+                    display_name: 'Unknown', 
+                    handle: 'unknown', 
+                    is_verified: false, 
+                    is_organization_verified: false,
+                    is_affiliate: false,
+                    is_business_mode: false,
+                    avatar_url: null,
+                    affiliated_business_id: null,
+                    affiliated_business: null,
+                    last_seen: null,
+                    show_online_status: false
+                  },
+              replies: [],
+              reply_count: 0,
+              like_count: 0,
+              has_liked: false,
+            };
+
+            // Add to both feeds
+            setPosts(prev => [formattedPost, ...prev]);
+            
+            // Check if post is from someone user follows for "Following" feed
+            if (user) {
+              const { data: isFollowing } = await supabase
+                .from('follows')
+                .select('id')
+                .eq('follower_id', user.id)
+                .eq('following_id', newPost.author_id)
+                .single();
+              
+              if (isFollowing) {
+                setFollowingPosts(prev => [formattedPost, ...prev]);
+              }
+            }
+            
+            setNewPostsCount(prev => prev + 1);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'posts' },
+        async (payload) => {
+          // Fetch updated post data
+          const { data: updatedPost, error } = await supabase
+            .from('posts')
+            .select(`
+              *,
+              profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status),
+              post_images(image_url, display_order, alt_text),
+              post_link_previews(url, title, description, image_url, site_name)
+            `)
+            .eq('id', payload.new.id)
+            .single();
+
+          if (!error && updatedPost) {
+            // Update post in both feeds while preserving replies and likes
+            const updatePost = (currentPosts: Post[]) =>
+              currentPosts.map((p) =>
+                p.id === payload.new.id
+                  ? {
+                      ...updatedPost,
+                      profiles: updatedPost.profiles || p.profiles,
+                      replies: p.replies, // preserve existing replies
+                      reply_count: p.reply_count,
+                      like_count: p.like_count,
+                      has_liked: p.has_liked,
+                    }
+                  : p
+              );
+            
+            setPosts(updatePost);
+            setFollowingPosts(updatePost);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'posts' },
+        (payload) => {
+          // Remove deleted post from both feeds
+          const removePost = (currentPosts: Post[]) =>
+            currentPosts.filter((p) => p.id !== payload.old.id);
+          
+          setPosts(removePost);
+          setFollowingPosts(removePost);
         }
       )
       .subscribe();
@@ -1413,7 +1527,7 @@ const Feed = () => {
         async (payload) => {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('display_name, handle, is_verified, is_organization_verified, is_affiliate, affiliated_business_id')
+            .select('display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status')
             .eq('id', payload.new.author_id)
             .single();
 
@@ -1465,6 +1579,51 @@ const Feed = () => {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'post_replies' },
+        (payload) => {
+          // Update reply (useful for pinning/unpinning)
+          const updateReply = (currentPosts: Post[]) =>
+            currentPosts.map((p) => {
+              if (p.id === payload.new.post_id) {
+                return {
+                  ...p,
+                  replies: p.replies.map((r) =>
+                    r.id === payload.new.id
+                      ? { ...r, ...payload.new }
+                      : r
+                  ),
+                };
+              }
+              return p;
+            });
+          
+          setPosts(updateReply);
+          setFollowingPosts(updateReply);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'post_replies' },
+        (payload) => {
+          // Remove deleted reply
+          const removeReply = (currentPosts: Post[]) =>
+            currentPosts.map((p) => {
+              if (p.id === payload.old.post_id) {
+                return {
+                  ...p,
+                  replies: p.replies.filter((r) => r.id !== payload.old.id),
+                  reply_count: Math.max(0, p.reply_count - 1),
+                };
+              }
+              return p;
+            });
+          
+          setPosts(removeReply);
+          setFollowingPosts(removeReply);
+        }
+      )
       .subscribe();
 
     const acksChannel = supabase
@@ -1473,14 +1632,40 @@ const Feed = () => {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'post_acknowledgments' },
         (payload) => {
-          fetchPosts();
+          // Optimistically update like count and status
+          const updateLike = (currentPosts: Post[]) =>
+            currentPosts.map((p) =>
+              p.id === payload.new.post_id
+                ? {
+                    ...p,
+                    like_count: p.like_count + 1,
+                    has_liked: payload.new.user_id === user?.id ? true : p.has_liked,
+                  }
+                : p
+            );
+          
+          setPosts(updateLike);
+          setFollowingPosts(updateLike);
         }
       )
       .on(
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'post_acknowledgments' },
         (payload) => {
-          fetchPosts();
+          // Optimistically update like count and status
+          const updateUnlike = (currentPosts: Post[]) =>
+            currentPosts.map((p) =>
+              p.id === payload.old.post_id
+                ? {
+                    ...p,
+                    like_count: Math.max(0, p.like_count - 1),
+                    has_liked: payload.old.user_id === user?.id ? false : p.has_liked,
+                  }
+                : p
+            );
+          
+          setPosts(updateUnlike);
+          setFollowingPosts(updateUnlike);
         }
       )
       .subscribe();
@@ -1490,7 +1675,7 @@ const Feed = () => {
       supabase.removeChannel(repliesChannel);
       supabase.removeChannel(acksChannel);
     };
-  }, [user, addReply, fetchPosts]);
+  }, [user, addReply]);
   
   useEffect(() => {
       if (feedRef.current) {
