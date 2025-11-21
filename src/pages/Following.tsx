@@ -194,12 +194,12 @@ export default function Following() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
         <div className="flex items-center gap-4 p-4">
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full"
+            className="rounded-full hidden lg:inline-flex"
             onClick={() => navigate(-1)}
           >
             <ArrowLeft className="h-5 w-5" />

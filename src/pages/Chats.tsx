@@ -229,7 +229,7 @@ const Chats = () => {
   if (effectiveLoading) {
     return (
       <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/20">
-        <div className="sticky top-0 z-10 backdrop-blur-xl bg-background/80 p-6">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border p-6">
           <div className="flex items-center justify-between mb-4">
             <Skeleton className="h-8 w-32" />
             <Skeleton className="h-10 w-10 rounded-full" />
@@ -343,7 +343,7 @@ const Chats = () => {
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/20">
       {/* Header */}
-      <div className="sticky top-0 z-10 backdrop-blur-xl bg-background/80 p-6">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border p-6">
         <div className="p-6 pb-4">
           <div className="flex items-center justify-between mb-5">
             <div>

@@ -812,11 +812,11 @@ const ChatRoom = () => {
     <TooltipProvider delayDuration={200}>
       <div className="h-dvh flex flex-col bg-background overflow-hidden dark">
         {/* Header - Telegram style */}
-        <div className="bg-card sticky top-0 z-10 flex items-center px-4 py-3 gap-3">
+        <div className="bg-background/95 backdrop-blur border-b border-border sticky top-0 z-10 flex items-center px-4 py-3 gap-3">
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 p-0 hover:bg-muted/50 rounded-full flex-shrink-0"
+            className="h-10 w-10 p-0 hover:bg-muted/50 rounded-full flex-shrink-0 hidden lg:inline-flex"
             onClick={handleBack}
           >
             <ArrowLeft className="h-6 w-6" />
