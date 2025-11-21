@@ -202,9 +202,6 @@ const Gifts = () => {
 
                       <div className="text-center">
                         <h3 className="font-semibold text-xs truncate">{gift.name}</h3>
-                        <p className="text-[10px] text-muted-foreground line-clamp-1">
-                          {gift.description || 'A special gift'}
-                        </p>
                       </div>
 
                       <div className="text-center space-y-1">
@@ -275,9 +272,6 @@ const Gifts = () => {
 
                         <div className="text-center">
                           <h3 className="font-semibold text-xs truncate">{gift.name}</h3>
-                          <p className="text-[10px] text-muted-foreground">
-                            {new Date(last_received).toLocaleDateString()}
-                          </p>
                         </div>
                       </div>
                     </div>
