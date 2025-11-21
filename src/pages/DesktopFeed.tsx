@@ -12,6 +12,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import Feed from './Feed';
+import { StoryAvatar } from '@/components/moments/StoryAvatar';
 
 interface TrendingTopic {
   topic: string;
@@ -153,12 +154,14 @@ const DesktopFeed = () => {
                 className="w-full justify-start"
                 onClick={() => navigate(`/${user.id}`)}
               >
-                <Avatar className="h-10 w-10 mr-3">
-                  <AvatarImage src={user.user_metadata?.avatar_url || ''} />
-                  <AvatarFallback>
-                    {user.user_metadata?.display_name?.[0] || user.user_metadata?.handle?.[0] || 'U'}
-                  </AvatarFallback>
-                </Avatar>
+							<StoryAvatar 
+								userId={user.id}
+								avatarUrl={user.user_metadata?.avatar_url}
+								name={user.user_metadata?.display_name || 'User'}
+								size="md"
+								className="mr-3"
+								showStoryRing={true}
+							/>
                 <div className="text-left flex-1">
                   <p className="font-semibold text-sm line-clamp-1">
                     {user.user_metadata?.display_name || 'User'}
@@ -237,15 +240,15 @@ const DesktopFeed = () => {
             <div className="space-y-4">
               {suggested.map((suggestedUser) => (
                 <div key={suggestedUser.id} className="flex items-center gap-3">
-                  <Avatar
-                    className="h-10 w-10 cursor-pointer"
+                  <StoryAvatar 
+                    userId={suggestedUser.id}
+                    avatarUrl={suggestedUser.avatar_url}
+                    name={suggestedUser.display_name}
+                    size="md"
+                    className="cursor-pointer"
+                    showStoryRing={true}
                     onClick={() => navigate(`/${suggestedUser.id}`)}
-                  >
-                    <AvatarImage src={suggestedUser.avatar_url || ''} />
-                    <AvatarFallback>
-                      {suggestedUser.display_name[0]}
-                    </AvatarFallback>
-                  </Avatar>
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1">
                       <p

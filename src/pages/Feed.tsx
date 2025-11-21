@@ -27,6 +27,7 @@ import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { BusinessBadge } from '@/components/BusinessBadge';
 import { AffiliatedBadge } from '@/components/AffiliatedBadge';
 import { OnlineStatus } from '@/components/OnlineStatus';
+import { StoryAvatar } from '@/components/moments/StoryAvatar';
 
 // --- INTERFACES ---
 
@@ -236,10 +237,13 @@ const UserAvatarSmall = ({
 }) => {
   return (
     <div className="relative">
-      <Avatar className="h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0">
-        <AvatarImage src={avatarUrl || undefined} alt={name} />
-        <AvatarFallback className="text-xs">{name?.substring(0, 2).toUpperCase()}</AvatarFallback>
-      </Avatar>
+      <StoryAvatar 
+        userId={userId}
+        avatarUrl={avatarUrl}
+        name={name}
+        size="sm"
+        showStoryRing={true}
+      />
       <OnlineStatus 
         lastSeen={lastSeen} 
         showOnlineStatus={showOnlineStatus}
@@ -264,10 +268,13 @@ const UserAvatarMedium = ({
 }) => {
   return (
     <div className="relative">
-      <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
-        <AvatarImage src={avatarUrl || undefined} alt={name} />
-        <AvatarFallback className="text-sm">{name?.substring(0, 2).toUpperCase()}</AvatarFallback>
-      </Avatar>
+      <StoryAvatar 
+        userId={userId}
+        avatarUrl={avatarUrl}
+        name={name}
+        size="md"
+        showStoryRing={true}
+      />
       <OnlineStatus 
         lastSeen={lastSeen}
         showOnlineStatus={showOnlineStatus}
