@@ -158,7 +158,9 @@ const Rides = () => {
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
-                    <div className="text-5xl">{ride.icon}</div>
+                    <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 flex items-center justify-center border flex-shrink-0">
+                      <Car className="w-10 h-10 text-green-600" />
+                    </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <h3 className="font-bold text-lg">{ride.name}</h3>
