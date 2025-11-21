@@ -29,6 +29,7 @@ import { AffiliatedBadge } from '@/components/AffiliatedBadge';
 import { AffiliateDetailsSheet } from '@/components/AffiliateDetailsSheet';
 import { VerifiedDetailsSheet } from '@/components/VerifiedDetailsSheet';
 import { OnlineStatus } from '@/components/OnlineStatus';
+import { StoryAvatar } from '@/components/moments/StoryAvatar';
 
 interface Profile {
 	id: string;
@@ -818,11 +819,18 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 					</div>
 				)}
 					
-					<div className="flex items-end -mt-20 sm:-mt-16">
-						<div className="relative h-24 w-24 sm:h-32 sm:w-32 rounded-full overflow-hidden bg-background border-4 border-background">
-							<ProfileAvatarDisplay profileId={profileId} profile={profile} />
-							<OnlineStatus lastSeen={profile.last_seen} showOnlineStatus={profile.show_online_status} />
-						</div>
+				<div className="flex items-end -mt-20 sm:-mt-16">
+					<div className="relative">
+						<StoryAvatar 
+							userId={profileId}
+							avatarUrl={profile.avatar_url}
+							name={profile.display_name}
+							size="xl"
+							className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-background"
+							showStoryRing={true}
+						/>
+						<OnlineStatus lastSeen={profile.last_seen} showOnlineStatus={profile.show_online_status} />
+					</div>
 
 					{user && user.id === profileId ? (
 						<div className="flex flex-col gap-2">
@@ -1098,10 +1106,14 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 											className="p-4 hover:bg-muted/10 cursor-pointer transition-colors flex items-center gap-3"
 											onClick={() => navigate(`/${affiliatedUser.handle}`)}
 										>
-											<Avatar className="w-12 h-12 flex-shrink-0">
-												<AvatarImage src={affiliatedUser.avatar_url || undefined} alt={affiliatedUser.display_name} />
-												<AvatarFallback>{affiliatedUser.display_name?.substring(0, 2).toUpperCase()}</AvatarFallback>
-											</Avatar>
+										<StoryAvatar 
+											userId={affiliatedUser.id}
+											avatarUrl={affiliatedUser.avatar_url}
+											name={affiliatedUser.display_name}
+											size="lg"
+											className="flex-shrink-0"
+											showStoryRing={true}
+										/>
 											<div className="flex-1 min-w-0">
 												<div className="flex items-center gap-1">
 													<span className="font-bold truncate">{affiliatedUser.display_name}</span>
