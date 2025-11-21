@@ -10,26 +10,20 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import {
   Grid3x3,
   ShoppingBag,
   Building2,
-  Gamepad2,
-  Star,
   Wallet,
   Send,
   Gift,
   Shield,
   BarChart3,
   Image as ImageIcon,
-  Settings,
-  Users,
-  TrendingUp,
   Hash,
   Zap,
-  Globe,
-  Bell
+  Bell,
+  TrendingUp
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,7 +33,6 @@ interface MenuItem {
   icon: React.ElementType;
   label: string;
   path: string;
-  description?: string;
   requiresAuth?: boolean;
   requiresAdmin?: boolean;
   requiresBusiness?: boolean;
@@ -78,79 +71,47 @@ export function MobileMenuSheet() {
     }
   };
 
-  const menuSections = [
-    {
-      title: 'Shopping & Finance',
-      items: [
-        { icon: ShoppingBag, label: 'Shop', path: '/shop', description: 'Browse items' },
-        { icon: Wallet, label: 'Wallet', path: '/wallet', description: 'Manage XP', requiresAuth: true },
-        { icon: Send, label: 'Transfer', path: '/transfer', description: 'Send XP', requiresAuth: true },
-        { icon: Gift, label: 'Gifts', path: '/wallet', description: 'Send gifts', requiresAuth: true },
-      ] as MenuItem[]
-    },
-    {
-      title: 'Games & Entertainment',
-      items: [
-        { icon: Gamepad2, label: 'Games', path: '/games', description: 'Play games' },
-        { icon: Star, label: 'Leaderboard', path: '/leaderboard', description: 'Top players' },
-      ] as MenuItem[]
-    },
-    {
-      title: 'Content & Social',
-      items: [
-        { icon: ImageIcon, label: 'Moments', path: '/moments', description: 'Stories & moments' },
-        { icon: Hash, label: 'Trending', path: '/trending', description: 'Trending hashtags' },
-        { icon: Users, label: 'Discover', path: '/suggested-users', description: 'Find users' },
-      ] as MenuItem[]
-    },
-    {
-      title: 'Super App',
-      items: [
-        { icon: Grid3x3, label: 'Mini Programs', path: '/mini-programs', description: 'Apps & tools' },
-        { icon: Zap, label: 'Super App Hub', path: '/super-app', description: 'All services' },
-        { icon: Globe, label: 'Travel', path: '/travel', description: 'Book trips' },
-      ] as MenuItem[]
-    }
+  const menuItems: MenuItem[] = [
+    { icon: ShoppingBag, label: 'Shop', path: '/shop' },
+    { icon: Wallet, label: 'Wallet', path: '/wallet', requiresAuth: true },
+    { icon: Send, label: 'Transfer', path: '/transfer', requiresAuth: true },
+    { icon: Gift, label: 'Gifts', path: '/wallet', requiresAuth: true },
+    { icon: ImageIcon, label: 'Moments', path: '/moments' },
+    { icon: Hash, label: 'Trending', path: '/trending' },
+    { icon: Grid3x3, label: 'Mini Programs', path: '/mini-programs' },
+    { icon: Zap, label: 'Super App', path: '/super-app' },
+    { icon: Bell, label: 'Notifications', path: '/notifications', requiresAuth: true },
   ];
 
-  // Add business section if user has business mode
+  // Add business mode item
   if (isBusinessMode && mode === 'business') {
-    menuSections.push({
-      title: 'Business',
-      items: [
-        { icon: BarChart3, label: 'Dashboard', path: '/business/dashboard', description: 'Business analytics', requiresBusiness: true },
-      ] as MenuItem[]
+    menuItems.push({ 
+      icon: BarChart3, 
+      label: 'Business', 
+      path: '/business/dashboard', 
+      requiresBusiness: true 
     });
   }
 
-  // Add affiliate section if user is affiliate
+  // Add affiliate item
   if (isAffiliate) {
-    menuSections.push({
-      title: 'Affiliate',
-      items: [
-        { icon: TrendingUp, label: 'Affiliate Dashboard', path: '/affiliate/dashboard', description: 'Track earnings', requiresAffiliate: true },
-      ] as MenuItem[]
+    menuItems.push({ 
+      icon: TrendingUp, 
+      label: 'Affiliate', 
+      path: '/affiliate/dashboard', 
+      requiresAffiliate: true 
     });
   }
 
-  // Add admin section if user is admin
+  // Add admin item
   if (isAdmin) {
-    menuSections.push({
-      title: 'Admin',
-      items: [
-        { icon: Shield, label: 'Admin Panel', path: '/admin', description: 'Manage platform', requiresAdmin: true },
-      ] as MenuItem[]
+    menuItems.push({ 
+      icon: Shield, 
+      label: 'Admin', 
+      path: '/admin', 
+      requiresAdmin: true 
     });
   }
-
-  // Always add settings and notifications
-  menuSections.push({
-    title: 'Account',
-    items: [
-      { icon: Bell, label: 'Notifications', path: '/notifications', description: 'Your alerts', requiresAuth: true },
-      { icon: Settings, label: 'Settings', path: '/settings', description: 'Preferences' },
-    ] as MenuItem[]
-  });
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -169,47 +130,35 @@ export function MobileMenuSheet() {
       </SheetTrigger>
       <SheetContent 
         side="bottom" 
-        className="h-[85vh] rounded-t-3xl"
+        className="h-auto max-h-[60vh] rounded-t-3xl pb-8"
       >
-        <SheetHeader className="pb-4">
-          <SheetTitle className="text-2xl font-bold">All Features</SheetTitle>
+        <SheetHeader className="pb-6">
+          <SheetTitle className="text-xl font-bold">Quick Access</SheetTitle>
         </SheetHeader>
         
-        <div className="overflow-y-auto h-[calc(85vh-80px)] pb-6">
-          {menuSections.map((section, idx) => (
-            <div key={section.title} className="mb-6">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">
-                {section.title}
-              </h3>
-              <div className="space-y-1">
-                {section.items.map((item) => {
-                  // Check if item should be shown based on requirements
-                  if (item.requiresAuth && !user) return null;
-                  if (item.requiresAdmin && !isAdmin) return null;
-                  if (item.requiresBusiness && (!isBusinessMode || mode !== 'business')) return null;
-                  if (item.requiresAffiliate && !isAffiliate) return null;
+        <div className="grid grid-cols-4 gap-4 px-2">
+          {menuItems.map((item) => {
+            // Check if item should be shown based on requirements
+            if (item.requiresAuth && !user) return null;
+            if (item.requiresAdmin && !isAdmin) return null;
+            if (item.requiresBusiness && (!isBusinessMode || mode !== 'business')) return null;
+            if (item.requiresAffiliate && !isAffiliate) return null;
 
-                  return (
-                    <Button
-                      key={item.path}
-                      variant="ghost"
-                      className="w-full justify-start h-auto py-3 px-4 hover:bg-muted"
-                      onClick={() => handleNavigate(item.path)}
-                    >
-                      <item.icon className="h-5 w-5 mr-3 text-primary flex-shrink-0" />
-                      <div className="flex flex-col items-start flex-1 min-w-0">
-                        <span className="font-medium text-base">{item.label}</span>
-                        {item.description && (
-                          <span className="text-xs text-muted-foreground">{item.description}</span>
-                        )}
-                      </div>
-                    </Button>
-                  );
-                })}
-              </div>
-              {idx < menuSections.length - 1 && <Separator className="mt-4" />}
-            </div>
-          ))}
+            return (
+              <button
+                key={item.path}
+                className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-muted transition-colors active:scale-95"
+                onClick={() => handleNavigate(item.path)}
+              >
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <item.icon className="h-6 w-6 text-primary" />
+                </div>
+                <span className="text-xs font-medium text-center leading-tight">
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </SheetContent>
     </Sheet>
