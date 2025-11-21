@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Trophy, Zap, Brain, Puzzle, Gamepad2 } from 'lucide-react';
+import { ArrowLeft, Trophy, Zap, Brain, Puzzle, Gamepad2, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Image } from 'lucide-react';
 import Logo from '@/components/Logo';
 
 const Games = () => {
@@ -43,6 +43,16 @@ const Games = () => {
     },
   ];
 
+  const services = [
+    { icon: Calendar, route: '/events', label: 'Events' },
+    { icon: Plane, route: '/travel', label: 'Travel' },
+    { icon: UtensilsCrossed, route: '/food', label: 'Food' },
+    { icon: Car, route: '/rides', label: 'Rides' },
+    { icon: CalendarCheck, route: '/bookings', label: 'Bookings' },
+    { icon: Wallet, route: '/financial', label: 'Finance' },
+    { icon: Image, route: '/moments', label: 'Moments' },
+  ];
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur">
@@ -55,6 +65,25 @@ const Games = () => {
             <Button variant="ghost" size="icon" onClick={() => navigate('/leaderboard')}>
               <Trophy className="h-5 w-5" />
             </Button>
+          </div>
+          
+          {/* Services Navigation */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-hide">
+            {services.map((service) => {
+              const ServiceIcon = service.icon;
+              return (
+                <Button
+                  key={service.route}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate(service.route)}
+                  className="flex-shrink-0 gap-2"
+                >
+                  <ServiceIcon className="h-4 w-4" />
+                  <span className="text-xs">{service.label}</span>
+                </Button>
+              );
+            })}
           </div>
         </div>
       </header>
