@@ -514,14 +514,13 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
     }
 
     const trimmedReplyText = replyText.trim();
-    // Append mention at the end if it exists
     const mention = post.profiles.handle ? `@${post.profiles.handle}` : '';
     const finalContent = mention ? `${trimmedReplyText} ${mention}` : trimmedReplyText;
+    const tempId = `temp-reply-${Date.now()}`;
     
-    setReplyText(''); 
-
+    // Create optimistic reply
     const optimisticReply: Reply = {
-      id: new Date().getTime().toString(),
+      id: tempId,
       post_id: post.id,
       author_id: user.id,
       content: finalContent,
@@ -535,25 +534,72 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
         is_organization_verified: user?.user_metadata?.is_organization_verified || false,
         is_affiliate: false,
         avatar_url: userProfile?.avatar_url || null,
+        is_business_mode: false,
       },
     };
+    
+    // Add optimistic reply immediately
     addReply(post.id, optimisticReply);
+    setReplyText('');
     setShowComments(true);
 
-    const { error } = await supabase.from('post_replies').insert({
-      post_id: post.id,
-      author_id: user.id,
-      content: finalContent,
-      parent_reply_id: null,
-    });
+    try {
+      const { data: newReply, error } = await supabase
+        .from('post_replies')
+        .insert({
+          post_id: post.id,
+          author_id: user.id,
+          content: finalContent,
+          parent_reply_id: null,
+        })
+        .select('*, profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status)')
+        .single();
 
-    if (error) {
-      toast.error('Failed to post reply');
-      console.error(error);
-    } else {
-      // Award Nexa for creating a reply
-      toast.success('Reply posted!');
-      awardNexa('create_reply', { post_id: post.id });
+      if (error) throw error;
+
+      if (newReply) {
+        // Fetch affiliated business data if needed
+        let affiliated_business = null;
+        if (newReply.profiles?.affiliated_business_id) {
+          const { data: businessData } = await supabase
+            .from('profiles')
+            .select('avatar_url, display_name')
+            .eq('id', newReply.profiles.affiliated_business_id)
+            .single();
+          affiliated_business = businessData || null;
+        }
+
+        // Real-time subscription will handle adding the actual reply
+        // Just show success message
+        toast.success('Reply posted!');
+        awardNexa('create_reply', { post_id: post.id });
+        
+        // Award XP to post author
+        fetch('https://rhnsjqqtdzlkvqazfcbg.supabase.co/functions/v1/award-xp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
+          body: JSON.stringify({
+            userId: post.author_id,
+            actionType: 'receive_reply',
+            xpAmount: 3,
+            metadata: { post_id: post.id, from_user_id: user.id }
+          }),
+        });
+      }
+    } catch (error) {
+      console.error('Reply error:', error);
+      toast.error('Failed to post reply. Please try again.');
+      
+      // Rollback: Remove the optimistic reply
+      window.dispatchEvent(new CustomEvent('remove-optimistic-reply', { 
+        detail: { postId: post.id, replyId: tempId } 
+      }));
+      
+      // Restore the reply text so user can try again
+      setReplyText(trimmedReplyText);
     }
   };
 
@@ -563,22 +609,57 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
       return;
     }
 
-    const { error } = await supabase.from('post_replies').insert({
+    const tempId = `temp-nested-reply-${Date.now()}`;
+    
+    // Create optimistic nested reply
+    const optimisticReply: Reply = {
+      id: tempId,
       post_id: post.id,
       author_id: user.id,
       content: content,
+      created_at: new Date().toISOString(),
       parent_reply_id: parentReplyId,
-    });
+      nested_replies: [],
+      profiles: {
+        display_name: user?.user_metadata?.display_name || 'User',
+        handle: user?.user_metadata?.handle || 'user',
+        is_verified: user?.user_metadata?.is_verified || false,
+        is_organization_verified: user?.user_metadata?.is_organization_verified || false,
+        is_affiliate: false,
+        avatar_url: userProfile?.avatar_url || null,
+        is_business_mode: false,
+      },
+    };
 
-    if (error) {
-      toast.error('Failed to post reply');
-      console.error(error);
-      return;
+    // Add optimistic reply immediately
+    addReply(post.id, optimisticReply);
+
+    try {
+      const { data: newReply, error } = await supabase
+        .from('post_replies')
+        .insert({
+          post_id: post.id,
+          author_id: user.id,
+          content: content,
+          parent_reply_id: parentReplyId,
+        })
+        .select('*, profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status)')
+        .single();
+
+      if (error) throw error;
+
+      // Real-time subscription will handle adding the actual reply
+      toast.success('Reply posted!');
+      awardNexa('create_reply', { post_id: post.id });
+    } catch (error) {
+      console.error('Nested reply error:', error);
+      toast.error('Failed to post reply. Please try again.');
+      
+      // Rollback: Remove the optimistic reply
+      window.dispatchEvent(new CustomEvent('remove-optimistic-reply', { 
+        detail: { postId: post.id, replyId: tempId } 
+      }));
     }
-
-    // Refetch replies would happen through realtime subscription
-    toast.success('Reply posted!');
-    awardNexa('create_reply', { post_id: post.id });
   };
 
   const handlePinReply = async (replyId: string, currentPinnedState: boolean) => {
@@ -1059,6 +1140,58 @@ const Feed = () => {
     setFollowingPosts(updateWithReply);
   }, []);
 
+  // Listen for optimistic post and reply events
+  useEffect(() => {
+    const handleOptimisticPostAdd = (event: CustomEvent) => {
+      const optimisticPost = event.detail;
+      setPosts(prev => [optimisticPost, ...prev]);
+      setFollowingPosts(prev => [optimisticPost, ...prev]);
+    };
+
+    const handleOptimisticPostSuccess = (event: CustomEvent) => {
+      const { tempId } = event.detail;
+      // Remove optimistic post - real-time subscription will add the real one
+      setPosts(prev => prev.filter(p => p.id !== tempId));
+      setFollowingPosts(prev => prev.filter(p => p.id !== tempId));
+    };
+
+    const handleOptimisticPostError = (event: CustomEvent) => {
+      const tempId = event.detail;
+      // Remove failed optimistic post
+      setPosts(prev => prev.filter(p => p.id !== tempId));
+      setFollowingPosts(prev => prev.filter(p => p.id !== tempId));
+    };
+
+    const handleRemoveOptimisticReply = (event: CustomEvent) => {
+      const { postId, replyId } = event.detail;
+      const removeReply = (currentPosts: Post[]) =>
+        currentPosts.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                replies: p.replies.filter((r) => r.id !== replyId),
+                reply_count: Math.max(0, p.reply_count - 1),
+              }
+            : p
+        );
+      
+      setPosts(removeReply);
+      setFollowingPosts(removeReply);
+    };
+
+    window.addEventListener('optimistic-post-add', handleOptimisticPostAdd as EventListener);
+    window.addEventListener('optimistic-post-success', handleOptimisticPostSuccess as EventListener);
+    window.addEventListener('optimistic-post-error', handleOptimisticPostError as EventListener);
+    window.addEventListener('remove-optimistic-reply', handleRemoveOptimisticReply as EventListener);
+
+    return () => {
+      window.removeEventListener('optimistic-post-add', handleOptimisticPostAdd as EventListener);
+      window.removeEventListener('optimistic-post-success', handleOptimisticPostSuccess as EventListener);
+      window.removeEventListener('optimistic-post-error', handleOptimisticPostError as EventListener);
+      window.removeEventListener('remove-optimistic-reply', handleRemoveOptimisticReply as EventListener);
+    };
+  }, []);
+
   const handleAcknowledge = useCallback(async (postId: string, currentHasLiked: boolean) => {
     if (!user) {
       navigate('/auth');
@@ -1392,6 +1525,39 @@ const Feed = () => {
       setLoading(false);
     }
   }, [user]);
+
+  // Listen for optimistic post events
+  useEffect(() => {
+    const handleOptimisticPostAdd = (event: CustomEvent) => {
+      const optimisticPost = event.detail;
+      setPosts(prev => [optimisticPost, ...prev]);
+      setFollowingPosts(prev => [optimisticPost, ...prev]);
+    };
+
+    const handleOptimisticPostSuccess = (event: CustomEvent) => {
+      const { tempId } = event.detail;
+      // Remove optimistic post - real-time subscription will add the real one
+      setPosts(prev => prev.filter(p => p.id !== tempId));
+      setFollowingPosts(prev => prev.filter(p => p.id !== tempId));
+    };
+
+    const handleOptimisticPostError = (event: CustomEvent) => {
+      const tempId = event.detail;
+      // Remove failed optimistic post
+      setPosts(prev => prev.filter(p => p.id !== tempId));
+      setFollowingPosts(prev => prev.filter(p => p.id !== tempId));
+    };
+
+    window.addEventListener('optimistic-post-add', handleOptimisticPostAdd as EventListener);
+    window.addEventListener('optimistic-post-success', handleOptimisticPostSuccess as EventListener);
+    window.addEventListener('optimistic-post-error', handleOptimisticPostError as EventListener);
+
+    return () => {
+      window.removeEventListener('optimistic-post-add', handleOptimisticPostAdd as EventListener);
+      window.removeEventListener('optimistic-post-success', handleOptimisticPostSuccess as EventListener);
+      window.removeEventListener('optimistic-post-error', handleOptimisticPostError as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     const postsChannel = supabase
