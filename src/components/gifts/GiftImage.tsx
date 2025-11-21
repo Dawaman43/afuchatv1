@@ -30,7 +30,7 @@ export const GiftImage = ({
   const sizeClass = sizeClasses[size];
 
   if (isLoading) {
-    return <Skeleton className={`${sizeClass} rounded-lg ${className}`} />;
+    return <div className={`${sizeClass} ${className}`} />;
   }
 
   if (error || !imageUrl) {

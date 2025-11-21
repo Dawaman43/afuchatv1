@@ -141,10 +141,10 @@ const Gifts = () => {
     return (
       <div className="min-h-screen bg-background p-4">
         <div className="max-w-6xl mx-auto space-y-6">
-          <Skeleton className="h-12 w-48" />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="h-12 w-48 bg-muted/20 rounded animate-pulse" />
+          <div className="flex gap-4 overflow-x-auto pb-4">
             {[...Array(8)].map((_, i) => (
-              <Skeleton key={i} className="h-40" />
+              <div key={i} className="flex-shrink-0 w-32 h-32 animate-pulse" />
             ))}
           </div>
         </div>
@@ -176,58 +176,60 @@ const Gifts = () => {
           </TabsList>
 
           <TabsContent value="all" className="space-y-6">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {allGifts.map(gift => (
-                <div
-                  key={gift.id}
-                  className="cursor-pointer transition-all duration-300 hover:scale-110 group relative"
-                  onClick={() => handleGiftClick(gift.id)}
-                >
-                  <div className="relative space-y-2">
-                    <div className="relative">
-                      <GiftImage
-                        giftId={gift.id}
-                        giftName={gift.name}
-                        emoji={gift.emoji}
-                        rarity={gift.rarity}
-                        size="lg"
-                        className="mx-auto drop-shadow-2xl group-hover:drop-shadow-[0_0_20px_rgba(var(--primary),0.5)]"
-                      />
-                      <Badge className={`absolute top-0 right-0 ${getRarityColor(gift.rarity)} text-[10px]`}>
-                        {gift.rarity}
-                      </Badge>
-                    </div>
+            <div className="overflow-x-auto pb-4">
+              <div className="flex gap-6 min-w-max px-2">
+                {allGifts.map(gift => (
+                  <div
+                    key={gift.id}
+                    className="cursor-pointer transition-all duration-300 hover:scale-110 group relative flex-shrink-0 w-32"
+                    onClick={() => handleGiftClick(gift.id)}
+                  >
+                    <div className="relative space-y-2">
+                      <div className="relative">
+                        <GiftImage
+                          giftId={gift.id}
+                          giftName={gift.name}
+                          emoji={gift.emoji}
+                          rarity={gift.rarity}
+                          size="lg"
+                          className="mx-auto drop-shadow-2xl group-hover:drop-shadow-[0_0_20px_rgba(var(--primary),0.5)]"
+                        />
+                        <Badge className={`absolute -top-2 -right-2 ${getRarityColor(gift.rarity)} text-[10px] px-1.5 py-0.5`}>
+                          {gift.rarity}
+                        </Badge>
+                      </div>
 
-                    <div className="text-center">
-                      <h3 className="font-semibold text-sm truncate">{gift.name}</h3>
-                      <p className="text-xs text-muted-foreground line-clamp-1">
-                        {gift.description || 'A special gift'}
-                      </p>
-                    </div>
+                      <div className="text-center">
+                        <h3 className="font-semibold text-xs truncate">{gift.name}</h3>
+                        <p className="text-[10px] text-muted-foreground line-clamp-1">
+                          {gift.description || 'A special gift'}
+                        </p>
+                      </div>
 
-                    <div className="text-center space-y-1">
-                      <div className="flex items-center justify-center gap-2">
-                        <span className="text-sm font-bold text-primary">
-                          {gift.current_price.toLocaleString()} XP
-                        </span>
-                        {gift.price_multiplier !== 1 && (
-                          <div className="flex items-center gap-1 text-xs text-green-500">
-                            <TrendingUp className="h-3 w-3" />
-                            <span>{(gift.price_multiplier * 100 - 100).toFixed(0)}%</span>
+                      <div className="text-center space-y-1">
+                        <div className="flex items-center justify-center gap-1">
+                          <span className="text-xs font-bold text-primary">
+                            {gift.current_price.toLocaleString()}
+                          </span>
+                          {gift.price_multiplier !== 1 && (
+                            <div className="flex items-center gap-0.5 text-[10px] text-green-500">
+                              <TrendingUp className="h-2.5 w-2.5" />
+                              <span>{(gift.price_multiplier * 100 - 100).toFixed(0)}%</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {gift.total_sent > 0 && (
+                          <div className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+                            <Sparkles className="h-2.5 w-2.5" />
+                            <span>{gift.total_sent.toLocaleString()}</span>
                           </div>
                         )}
                       </div>
-
-                      {gift.total_sent > 0 && (
-                        <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
-                          <Sparkles className="h-3 w-3" />
-                          <span>{gift.total_sent.toLocaleString()}</span>
-                        </div>
-                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </TabsContent>
 
@@ -249,37 +251,39 @@ const Gifts = () => {
                 </p>
               </Card>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {ownedGifts.map(({ gift, received_count, last_received }) => (
-                  <div
-                    key={gift.id}
-                    className="cursor-pointer transition-all duration-300 hover:scale-110 group relative"
-                    onClick={() => handleGiftClick(gift.id)}
-                  >
-                    <div className="space-y-2">
-                      <div className="relative">
-                        <GiftImage
-                          giftId={gift.id}
-                          giftName={gift.name}
-                          emoji={gift.emoji}
-                          rarity={gift.rarity}
-                          size="lg"
-                          className="mx-auto drop-shadow-2xl group-hover:drop-shadow-[0_0_20px_rgba(var(--primary),0.5)]"
-                        />
-                        <Badge variant="secondary" className="absolute top-0 right-0 text-xs font-bold">
-                          x{received_count}
-                        </Badge>
-                      </div>
+              <div className="overflow-x-auto pb-4">
+                <div className="flex gap-6 min-w-max px-2">
+                  {ownedGifts.map(({ gift, received_count, last_received }) => (
+                    <div
+                      key={gift.id}
+                      className="cursor-pointer transition-all duration-300 hover:scale-110 group relative flex-shrink-0 w-32"
+                      onClick={() => handleGiftClick(gift.id)}
+                    >
+                      <div className="space-y-2">
+                        <div className="relative">
+                          <GiftImage
+                            giftId={gift.id}
+                            giftName={gift.name}
+                            emoji={gift.emoji}
+                            rarity={gift.rarity}
+                            size="lg"
+                            className="mx-auto drop-shadow-2xl group-hover:drop-shadow-[0_0_20px_rgba(var(--primary),0.5)]"
+                          />
+                          <Badge variant="secondary" className="absolute -top-2 -right-2 text-xs font-bold px-1.5 py-0.5">
+                            x{received_count}
+                          </Badge>
+                        </div>
 
-                      <div className="text-center">
-                        <h3 className="font-semibold text-sm truncate">{gift.name}</h3>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(last_received).toLocaleDateString()}
-                        </p>
+                        <div className="text-center">
+                          <h3 className="font-semibold text-xs truncate">{gift.name}</h3>
+                          <p className="text-[10px] text-muted-foreground">
+                            {new Date(last_received).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </TabsContent>
