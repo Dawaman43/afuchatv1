@@ -31,6 +31,9 @@ const AIChat: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
+  // AI Features coming soon
+  const AI_COMING_SOON = true;
+  
   useEffect(() => {
     if (!user) {
       toast.error('Please log in to chat with AfuAI');
@@ -179,6 +182,57 @@ const AIChat: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+
+  if (AI_COMING_SOON) {
+    return (
+      <div className="flex flex-col h-screen bg-background">
+        <div className="border-b border-border bg-card p-4 flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          
+          <div className="flex items-center gap-2">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Bot className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="font-bold text-foreground">AfuAI</h1>
+              <p className="text-xs text-muted-foreground">AI Assistant</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 flex items-center justify-center p-8">
+          <Card className="max-w-md w-full p-8 text-center space-y-6">
+            <div className="flex justify-center">
+              <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <Bot className="h-10 w-10 text-primary" />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold">AI Features Coming Soon</h2>
+              <p className="text-muted-foreground">
+                We're working hard to bring you amazing AI-powered features. Stay tuned!
+              </p>
+            </div>
+
+            <Badge variant="secondary" className="text-sm px-4 py-2">
+              Under Development
+            </Badge>
+
+            <Button 
+              onClick={() => navigate(-1)} 
+              variant="outline"
+              className="w-full"
+            >
+              Go Back
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-background">

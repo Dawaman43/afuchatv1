@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useXP } from '@/hooks/useXP';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { X, Sparkles, Image as ImageIcon, Loader2, Globe } from 'lucide-react';
@@ -27,6 +28,10 @@ interface NewPostModalProps {
 const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
     const { user } = useAuth();
     const { awardXP } = useXP();
+    
+    // AI Features coming soon
+    const AI_COMING_SOON = true;
+    
     const [newPost, setNewPost] = useState('');
     const [isPosting, setIsPosting] = useState(false);
     const [showAIDialog, setShowAIDialog] = useState(false);
@@ -161,6 +166,12 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
     };
 
     const handleAIGenerate = async () => {
+        // AI Features coming soon - don't execute
+        if (AI_COMING_SOON) {
+            toast.info('AI features are coming soon! 🚀');
+            return;
+        }
+
         if (!aiTopic.trim()) {
             toast.error('Please enter a topic');
             return;
@@ -377,10 +388,25 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose }) => {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            onClick={() => setShowAIDialog(true)}
-                                            className="h-9 w-9 rounded-full text-primary hover:bg-primary/10"
+                                            onClick={() => {
+                                                if (AI_COMING_SOON) {
+                                                    toast.info('AI features are coming soon! 🚀');
+                                                } else {
+                                                    setShowAIDialog(true);
+                                                }
+                                            }}
+                                            className="h-9 w-9 rounded-full text-primary hover:bg-primary/10 relative"
+                                            title={AI_COMING_SOON ? "Coming Soon" : "Generate with AI"}
                                         >
                                             <Sparkles className="h-5 w-5" />
+                                            {AI_COMING_SOON && (
+                                                <Badge 
+                                                    variant="secondary" 
+                                                    className="absolute -top-1 -right-1 text-[8px] px-1 py-0 h-4"
+                                                >
+                                                    Soon
+                                                </Badge>
+                                            )}
                                         </Button>
                                         <Button
                                             variant="ghost"
