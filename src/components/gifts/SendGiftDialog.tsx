@@ -11,10 +11,10 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Gift, Loader2 } from 'lucide-react';
+import { Gift, Loader2, TrendingUp, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { SimpleGiftIcon } from './SimpleGiftIcon';
+import { GiftImage } from './GiftImage';
 import { GiftConfetti } from './GiftConfetti';
 import { ComboConfetti } from './ComboConfetti';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -63,6 +63,16 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
   const [showConfetti, setShowConfetti] = useState(false);
   const [showComboConfetti, setShowComboConfetti] = useState(false);
   const [sentGiftEmojis, setSentGiftEmojis] = useState<string[]>([]);
+
+  const getRarityColor = (rarity: string) => {
+    switch (rarity.toLowerCase()) {
+      case 'legendary': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+      case 'epic': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+      case 'rare': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+      case 'uncommon': return 'bg-green-500/10 text-green-500 border-green-500/20';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -346,19 +356,22 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
           {t('gifts.tapToCombo')}
         </div>
 
-        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
           {gifts.map((gift) => {
             const currentPrice = calculatePrice(gift.id, gift.base_xp_cost);
             const isSelected = selectedGift?.id === gift.id;
+            const stats = giftStats[gift.id];
+            const priceMultiplier = stats?.price_multiplier || 1;
+            const totalSent = stats?.total_sent || 0;
 
             return (
               <div
                 key={gift.id}
                 onClick={() => !loading && handleGiftTap(gift)}
-                className={`group relative flex flex-col items-center gap-1.5 p-2 rounded-lg cursor-pointer transition-all duration-200 border ${
+                className={`cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group relative p-2 sm:p-3 rounded-lg ${
                   isSelected
-                    ? 'ring-2 ring-primary shadow-lg bg-primary/10 border-primary scale-105'
-                    : 'hover:shadow-md hover:scale-105 hover:ring-1 hover:ring-primary/30 border-border/50 bg-card'
+                    ? 'ring-2 ring-primary shadow-lg bg-primary/10 scale-105'
+                    : 'hover:shadow-md hover:ring-1 hover:ring-primary/30 bg-card'
                 }`}
               >
                 {isSelected && selectedGift && (
@@ -366,16 +379,46 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
                     {selectedGift.count}
                   </div>
                 )}
-                <SimpleGiftIcon 
-                  emoji={gift.emoji}
-                  size={32}
-                />
-                <div className="text-center w-full">
-                  <div className="text-[10px] font-semibold text-foreground truncate w-full leading-tight">
-                    {gift.name}
+                
+                <div className="relative space-y-1.5 sm:space-y-2">
+                  <div className="relative">
+                    <GiftImage
+                      giftId={gift.id}
+                      giftName={gift.name}
+                      emoji={gift.emoji}
+                      rarity={gift.rarity}
+                      size="lg"
+                      className="mx-auto"
+                    />
+                    <Badge className={`absolute -top-2 -right-2 ${getRarityColor(gift.rarity)} text-[10px] px-1.5 py-0.5`}>
+                      {gift.rarity}
+                    </Badge>
                   </div>
-                  <div className="text-[10px] font-bold text-primary mt-0.5">
-                    {currentPrice} XP
+
+                  <div className="text-center">
+                    <h3 className="font-semibold text-xs truncate">{gift.name}</h3>
+                    <p className="text-xs text-muted-foreground font-medium">{gift.base_xp_cost} XP</p>
+                  </div>
+
+                  <div className="text-center space-y-1">
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="text-xs font-bold text-primary">
+                        {currentPrice.toLocaleString()} XP
+                      </span>
+                      {priceMultiplier !== 1 && (
+                        <div className="flex items-center gap-0.5 text-[10px] text-green-500">
+                          <TrendingUp className="h-2.5 w-2.5" />
+                          <span>{((priceMultiplier * 100) - 100).toFixed(0)}%</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {totalSent > 0 && (
+                      <div className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+                        <Sparkles className="h-2.5 w-2.5" />
+                        <span>{totalSent.toLocaleString()}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
