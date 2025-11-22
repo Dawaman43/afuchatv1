@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import Feed from './Feed';
 import { StoryAvatar } from '@/components/moments/StoryAvatar';
 
@@ -31,6 +32,7 @@ interface SuggestedUser {
 const DesktopFeed = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { openSettings } = useSettings();
   const [trending, setTrending] = useState<TrendingTopic[]>([]);
   const [suggested, setSuggested] = useState<SuggestedUser[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -170,7 +172,7 @@ const DesktopFeed = () => {
             <Button
               variant="ghost"
               className="w-full justify-start text-xl h-auto py-3 px-4"
-              onClick={() => navigate('/settings')}
+              onClick={() => openSettings()}
             >
               <Settings className="h-6 w-6 mr-4" />
               <span>Settings</span>
