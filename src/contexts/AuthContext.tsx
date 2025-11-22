@@ -66,27 +66,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Set up auth state listener FIRST to catch all events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        // Only synchronous state updates here to avoid deadlocks
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Record session on sign in or token refresh
+        // Defer any Supabase calls to avoid doing them inside the callback
         if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
-          await recordUserSession(session);
+          setTimeout(() => {
+            recordUserSession(session).catch((error) => {
+              console.error('Error recording session from auth state change:', error);
+            });
+          }, 0);
         }
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
       
-      // Record session if one exists
       if (session) {
-        await recordUserSession(session);
+        // Defer Supabase RPC calls to avoid doing them directly in the promise chain
+        setTimeout(() => {
+          recordUserSession(session).catch((error) => {
+            console.error('Error recording existing session:', error);
+          });
+        }, 0);
       }
     }).catch((error) => {
       console.error('Error getting session:', error);
