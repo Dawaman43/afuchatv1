@@ -6,6 +6,8 @@ import { ArrowLeft, User, Bell, Shield, Palette, Database, LogOut, UserX, Key, A
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+// Settings components
 import { AccountSettings } from '@/components/settings/AccountSettings';
 import { SecuritySettings } from '@/components/settings/SecuritySettings';
 import { NotificationsSettings } from '@/components/settings/NotificationsSettings';
