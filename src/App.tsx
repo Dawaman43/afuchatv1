@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-
 import { AuthProvider } from "./contexts/AuthContext";
 import { AccountModeProvider } from "./contexts/AccountModeContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { SettingsProvider } from "./contexts/SettingsContext";
+import { SettingsSheet } from "./components/SettingsSheet";
 import { useDailyLogin } from "./hooks/useDailyLogin";
 import { useLanguageSync } from "./hooks/useLanguageSync";
 import { useScrollRestoration } from "./hooks/useScrollRestoration";
@@ -194,13 +196,16 @@ const App = () => (
     <ThemeProvider>
       <AuthProvider>
         <AccountModeProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter future={{ v7_startTransition: true }}>
-              <AppRoutes />
-            </BrowserRouter>
-          </TooltipProvider>
+          <SettingsProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter future={{ v7_startTransition: true }}>
+                <AppRoutes />
+              </BrowserRouter>
+              <SettingsSheet />
+            </TooltipProvider>
+          </SettingsProvider>
         </AccountModeProvider>
       </AuthProvider>
     </ThemeProvider>

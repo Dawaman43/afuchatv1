@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccountMode } from '@/contexts/AccountModeContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import { Home, MessageSquare, Search, Bell, User, Settings, Shield, BarChart3, Grid3x3, Gamepad2, Bot, ShoppingBag, Wallet, Send, Gift, Image as ImageIcon, Hash, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
@@ -21,6 +22,7 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const { user } = useAuth();
   const { mode, canUseBusiness } = useAccountMode();
+  const { openSettings } = useSettings();
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -198,7 +200,7 @@ const Layout = ({ children }: LayoutProps) => {
 
         {user && (
           <Button
-            onClick={() => navigate('/settings')}
+            onClick={() => openSettings()}
             variant="ghost"
             className="mt-4 w-full justify-start gap-4 px-4 py-6 rounded-full hover:bg-muted"
           >
