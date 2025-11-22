@@ -588,24 +588,22 @@ const Settings = () => {
 
         {/* Mobile Section Selector */}
         <div className="lg:hidden border-b border-border/40 bg-background/95 backdrop-blur sticky top-0 z-40">
-          <div className="overflow-x-auto scrollbar-hide">
-            <div className="flex gap-2 p-3 min-w-max">
-              {sidebarItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleSectionChange(item.id)}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-xl whitespace-nowrap transition-all duration-200",
-                    activeSection === item.id
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                      : "bg-card text-muted-foreground hover:bg-card/80 border border-border/40"
-                  )}
-                >
-                  <item.icon className="h-4 w-4" />
-                  <span className="text-sm font-medium">{item.label}</span>
-                </button>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-2 p-3">
+            {sidebarItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleSectionChange(item.id)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2.5 rounded-xl whitespace-nowrap transition-all duration-200",
+                  activeSection === item.id
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                    : "bg-card text-muted-foreground hover:bg-card/80 border border-border/40"
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                <span className="text-sm font-medium">{item.label}</span>
+              </button>
+            ))}
           </div>
         </div>
 
