@@ -20,7 +20,9 @@ export const ChatStoriesHeader = () => {
   const [loading, setLoading] = useState(true);
   const [expandProgress, setExpandProgress] = useState(0);
   const [startY, setStartY] = useState(0);
+  const [startX, setStartX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isHorizontalScroll, setIsHorizontalScroll] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -94,12 +96,25 @@ export const ChatStoriesHeader = () => {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setStartY(e.touches[0].clientY);
+    setStartX(e.touches[0].clientX);
     setIsDragging(true);
+    setIsHorizontalScroll(false);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (isDragging) {
-      const deltaY = e.touches[0].clientY - startY;
+    if (!isDragging) return;
+    
+    const deltaY = e.touches[0].clientY - startY;
+    const deltaX = Math.abs(e.touches[0].clientX - startX);
+    
+    // If horizontal movement is greater, it's horizontal scrolling
+    if (deltaX > Math.abs(deltaY) && deltaX > 10) {
+      setIsHorizontalScroll(true);
+      return;
+    }
+    
+    // Only handle vertical swipe if not horizontal scrolling and expanded
+    if (!isHorizontalScroll && expandProgress < 1) {
       if (deltaY > 0) {
         const progress = Math.min(deltaY / 150, 1);
         setExpandProgress(progress);
@@ -108,12 +123,15 @@ export const ChatStoriesHeader = () => {
   };
 
   const handleTouchEnd = () => {
-    setIsDragging(false);
-    if (expandProgress < 0.5) {
-      setExpandProgress(0);
-    } else {
-      setExpandProgress(1);
+    if (!isHorizontalScroll) {
+      if (expandProgress < 0.5) {
+        setExpandProgress(0);
+      } else {
+        setExpandProgress(1);
+      }
     }
+    setIsDragging(false);
+    setIsHorizontalScroll(false);
   };
 
   const handleCreateStory = () => {
@@ -129,7 +147,10 @@ export const ChatStoriesHeader = () => {
   return (
     <div
       ref={headerRef}
-      className="transition-all duration-300 ease-out"
+      className={cn(
+        "transition-all duration-300 ease-out bg-background",
+        isExpanded && "fixed top-0 left-0 right-0 z-50"
+      )}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
