@@ -65,7 +65,8 @@ const Chats = () => {
   const [showFab, setShowFab] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
-  const [shouldCollapseStories, setShouldCollapseStories] = useState(false);
+  const [shouldCollapseStories, setShouldCollapseStories] = useState(true); // Start collapsed by default
+  const [hasReachedBottom, setHasReachedBottom] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -217,24 +218,36 @@ const Chats = () => {
     const handleScroll = () => {
       if (!scrollRef.current) return;
       
-      const currentScrollY = scrollRef.current.scrollTop;
-      const scrollingDown = currentScrollY > lastScrollY.current;
+      const scrollElement = scrollRef.current;
+      const currentScrollY = scrollElement.scrollTop;
+      const scrollHeight = scrollElement.scrollHeight;
+      const clientHeight = scrollElement.clientHeight;
+      const scrollingUp = currentScrollY < lastScrollY.current;
       
-      // Collapse stories when scrolling down past threshold
-      if (currentScrollY > 50 && scrollingDown && !shouldCollapseStories) {
-        setShouldCollapseStories(true);
-      } 
-      // Expand stories when at the very top
-      else if (currentScrollY <= 10 && shouldCollapseStories) {
+      // Check if near bottom (within 100px)
+      const isNearBottom = scrollHeight - (currentScrollY + clientHeight) < 100;
+      
+      if (isNearBottom) {
+        setHasReachedBottom(true);
+      }
+      
+      // Expand stories only when scrolling up AND has reached bottom
+      if (scrollingUp && hasReachedBottom && shouldCollapseStories && currentScrollY < 50) {
         setShouldCollapseStories(false);
+        setHasReachedBottom(false); // Reset so it doesn't keep expanding
+      }
+      
+      // Collapse when scrolling down
+      if (!scrollingUp && currentScrollY > 50 && !shouldCollapseStories) {
+        setShouldCollapseStories(true);
       }
       
       // FAB visibility based on scroll position
       if (currentScrollY < 10) {
         setShowFab(true);
-      } else if (scrollingDown && currentScrollY > 50) {
+      } else if (!scrollingUp && currentScrollY > 50) {
         setShowFab(false);
-      } else if (!scrollingDown) {
+      } else if (scrollingUp) {
         setShowFab(true);
       }
       
@@ -251,7 +264,7 @@ const Chats = () => {
         scrollElement.removeEventListener('scroll', handleScroll);
       }
     };
-  }, [shouldCollapseStories]);
+  }, [shouldCollapseStories, hasReachedBottom]);
 
   if (loading) {
     return (
