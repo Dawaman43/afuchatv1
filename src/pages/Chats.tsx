@@ -67,6 +67,7 @@ const Chats = () => {
   const lastScrollY = useRef(0);
   const [scrollDirection, setScrollDirection] = useState<'up' | 'down'>('down');
   const [isAtTop, setIsAtTop] = useState(true);
+  const [isAtBottom, setIsAtBottom] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -225,6 +226,10 @@ const Chats = () => {
       // At top when close to scrollTop 0
       const atTop = currentScrollY <= 10;
       setIsAtTop(atTop);
+
+      // At bottom when within 40px of end
+      const atBottom = scrollHeight - (currentScrollY + clientHeight) <= 40;
+      setIsAtBottom(atBottom);
       
       // Determine scroll direction
       if (currentScrollY > lastScrollY.current) {
@@ -248,9 +253,13 @@ const Chats = () => {
     const scrollElement = scrollRef.current;
     scrollElement?.addEventListener('scroll', handleScroll);
 
-    // Initial top state
+    // Initial top/bottom state
     if (scrollElement) {
-      setIsAtTop(scrollElement.scrollTop <= 10);
+      const currentScrollY = scrollElement.scrollTop;
+      const scrollHeight = scrollElement.scrollHeight;
+      const clientHeight = scrollElement.clientHeight;
+      setIsAtTop(currentScrollY <= 10);
+      setIsAtBottom(scrollHeight - (currentScrollY + clientHeight) <= 40);
     }
 
     return () => scrollElement?.removeEventListener('scroll', handleScroll);
@@ -280,6 +289,7 @@ const Chats = () => {
       {/* Stories Header - Expandable */}
       <ChatStoriesHeader 
         isAtTop={isAtTop}
+        isAtBottom={isAtBottom}
         scrollDirection={scrollDirection}
       />
 
