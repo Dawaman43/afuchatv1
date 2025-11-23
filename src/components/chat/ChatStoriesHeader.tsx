@@ -30,11 +30,11 @@ export const ChatStoriesHeader = ({ isAtTop = true, scrollDirection = 'down' }: 
   // Handle expand/collapse based on scroll position from Chats
   useEffect(() => {
     if (storyUsers.length > 0) {
-      // When user is at the top and keeps scrolling up (pull-down gesture), expand stories
-      if (isAtTop && scrollDirection === 'up') {
+      // Expand whenever list is at the very top
+      if (isAtTop) {
         setIsExpanded(true);
       }
-      // When user scrolls down away from the top, collapse stories
+      // Collapse once user scrolls down away from the top
       else if (!isAtTop && scrollDirection === 'down' && isExpanded) {
         setIsExpanded(false);
       }
@@ -153,7 +153,7 @@ export const ChatStoriesHeader = ({ isAtTop = true, scrollDirection = 'down' }: 
     >
       {/* Collapsed view - single row */}
       <div
-        className="flex items-center justify-between px-4 h-20 border-b border-border"
+        className="flex items-center justify-between px-4 h-20"
         style={{
           opacity: isExpanded ? 0 : 1,
           pointerEvents: isExpanded ? 'none' : 'auto',
@@ -219,7 +219,7 @@ export const ChatStoriesHeader = ({ isAtTop = true, scrollDirection = 'down' }: 
         }}
       >
         {/* Top bar */}
-        <div className="flex items-center justify-between px-4 h-16 border-b border-border">
+        <div className="flex items-center justify-between px-4 h-16">
           <button className="p-2">
             <Menu className="h-7 w-7 text-foreground" />
           </button>
