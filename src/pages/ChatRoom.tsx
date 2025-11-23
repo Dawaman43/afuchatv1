@@ -826,7 +826,7 @@ const ChatRoom = () => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="h-dvh flex flex-col bg-background overflow-hidden dark">
+      <div className="h-dvh flex flex-col bg-background overflow-hidden">
         {/* Messages - Telegram background */}
         <div className="flex-1 overflow-y-auto px-4 py-4 telegram-bg" style={{ paddingBottom: '120px' }}>
           {messages.length === 0 && redEnvelopes.length === 0 ? (
