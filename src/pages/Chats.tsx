@@ -72,12 +72,21 @@ const Chats = () => {
 
     const fetchChats = async () => {
       try {
-        // Fetch all chat data in parallel with optimized queries
+        // Fetch all chat data with member profiles in a single query
         const { data: chatMembers, error } = await supabase
           .from('chat_members')
           .select(`
             chat_id,
-            chats!inner(id, name, is_group, updated_at)
+            chats!inner(
+              id, 
+              name, 
+              is_group, 
+              updated_at,
+              chat_members!inner(
+                user_id,
+                profiles(id, display_name, handle, avatar_url, is_verified, is_organization_verified)
+              )
+            )
           `)
           .eq('user_id', user.id);
 
@@ -90,12 +99,6 @@ const Chats = () => {
         }
 
         const chatIds = chatMembers.map(m => m.chats.id);
-
-        // Batch fetch all members for all chats
-        const { data: allChatMembers } = await supabase
-          .from('chat_members')
-          .select('chat_id, user_id')
-          .in('chat_id', chatIds);
 
         // Batch fetch last messages for all chats
         const messagesPromises = chatIds.map(chatId =>
@@ -123,33 +126,15 @@ const Chats = () => {
           Promise.all(unreadPromises)
         ]);
 
-        // Get unique other user IDs
-        const otherUserIds = new Set<string>();
-        chatMembers.forEach((member) => {
-          if (!member.chats.is_group) {
-            const members = allChatMembers?.filter(m => m.chat_id === member.chats.id);
-            const otherUserId = members?.find(m => m.user_id !== user.id)?.user_id;
-            if (otherUserId) otherUserIds.add(otherUserId);
-          }
-        });
-
-        // Batch fetch all profiles
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, display_name, handle, avatar_url, is_verified, is_organization_verified')
-          .in('id', Array.from(otherUserIds));
-
-        const profileMap = new Map(profiles?.map(p => [p.id, p]));
-
-        // Build chat data
+        // Build chat data with profiles from nested query
         const validChats: Chat[] = [];
         chatMembers.forEach((member, index) => {
           const chatId = member.chats.id;
-          const members = allChatMembers?.filter(m => m.chat_id === chatId);
+          const chatMemb = member.chats.chat_members || [];
 
           // Skip self-chats
-          if (members && members.length === 2) {
-            const memberIds = members.map(m => m.user_id);
+          if (chatMemb.length === 2) {
+            const memberIds = chatMemb.map((m: any) => m.user_id);
             if (memberIds[0] === memberIds[1]) return;
           }
 
@@ -178,12 +163,17 @@ const Chats = () => {
           }
 
           if (!member.chats.is_group) {
-            const otherUserId = members?.find(m => m.user_id !== user.id)?.user_id;
-            if (otherUserId) {
-              const profile = profileMap.get(otherUserId);
-              if (profile) {
-                chatData.other_user = profile;
-              }
+            // Find the other user's profile from the nested chat_members data
+            const otherMember = chatMemb.find((m: any) => m.user_id !== user.id);
+            if (otherMember?.profiles) {
+              chatData.other_user = {
+                id: otherMember.profiles.id,
+                display_name: otherMember.profiles.display_name,
+                handle: otherMember.profiles.handle,
+                avatar_url: otherMember.profiles.avatar_url,
+                is_verified: otherMember.profiles.is_verified,
+                is_organization_verified: otherMember.profiles.is_organization_verified
+              };
             }
           }
 
