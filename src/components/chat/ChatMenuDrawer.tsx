@@ -4,26 +4,17 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { 
   MessageSquare, 
   Users, 
-  Sparkles, 
   Settings, 
   Moon, 
   Sun, 
   HelpCircle, 
-  Info, 
   LogOut,
-  User,
   Bell,
   Shield,
-  Palette,
   Globe,
-  Gift,
-  Camera,
-  Wallet,
-  TrendingUp,
-  Archive,
-  Bookmark,
   Star,
-  ChevronRight
+  ChevronRight,
+  Archive
 } from 'lucide-react';
 import {
   Sheet,
@@ -51,7 +42,6 @@ export const ChatMenuDrawer = ({ isOpen, onClose }: ChatMenuDrawerProps) => {
     display_name: string;
     handle: string;
     avatar_url: string | null;
-    xp: number;
   } | null>(null);
 
   useEffect(() => {
@@ -65,7 +55,7 @@ export const ChatMenuDrawer = ({ isOpen, onClose }: ChatMenuDrawerProps) => {
     
     const { data } = await supabase
       .from('profiles')
-      .select('display_name, handle, avatar_url, xp')
+      .select('display_name, handle, avatar_url')
       .eq('id', user.id)
       .single();
     
@@ -94,51 +84,26 @@ export const ChatMenuDrawer = ({ isOpen, onClose }: ChatMenuDrawerProps) => {
 
   const menuSections = [
     {
-      title: 'Main',
+      title: 'Chats',
       items: [
-        { icon: MessageSquare, label: 'Chats', path: '/chats', color: 'text-blue-500' },
-        { icon: Camera, label: 'Moments', path: '/moments', color: 'text-purple-500' },
-        { icon: Users, label: 'Social Hub', path: '/social-hub', color: 'text-green-500' },
-        { icon: Sparkles, label: 'AI Chat', path: '/ai-chat', color: 'text-pink-500' },
+        { icon: MessageSquare, label: 'All Chats', path: '/chats', color: 'text-blue-500' },
+        { icon: Archive, label: 'Archived', path: '/archived-chats', color: 'text-gray-500' },
+        { icon: Star, label: 'Favorites', path: '/favorite-chats', color: 'text-yellow-500' },
+        { icon: Users, label: 'New Group', path: '/new-group', color: 'text-green-500' },
       ]
     },
     {
-      title: 'Features',
+      title: 'Chat Settings',
       items: [
-        { icon: Gift, label: 'Gifts', path: '/gifts', color: 'text-red-500' },
-        { icon: Wallet, label: 'Wallet', path: '/wallet', color: 'text-yellow-500' },
-        { icon: TrendingUp, label: 'Leaderboard', path: '/unified-leaderboard', color: 'text-indigo-500' },
-        { icon: Star, label: 'Suggested Users', path: '/suggested-users', color: 'text-orange-500' },
-      ]
-    },
-    {
-      title: 'Saved',
-      items: [
-        { icon: Bookmark, label: 'Bookmarks', path: '/bookmarks', color: 'text-cyan-500' },
-        { icon: Archive, label: 'Archived', path: '/archived', color: 'text-gray-500' },
-      ]
-    },
-    {
-      title: 'Account',
-      items: [
-        { icon: User, label: 'Profile', path: `/${user?.id}`, color: 'text-foreground' },
-        { icon: Settings, label: 'Settings', path: '/settings', color: 'text-foreground' },
-        { icon: Bell, label: 'Notifications', path: '/notifications', color: 'text-foreground' },
-        { icon: Shield, label: 'Privacy & Security', path: '/settings?tab=security', color: 'text-foreground' },
-      ]
-    },
-    {
-      title: 'Preferences',
-      items: [
-        { icon: Palette, label: 'Appearance', path: '/settings?tab=appearance', color: 'text-foreground' },
-        { icon: Globe, label: 'Language', path: '/settings?tab=account', color: 'text-foreground' },
+        { icon: Bell, label: 'Notifications', path: '/settings?tab=notifications', color: 'text-foreground' },
+        { icon: Shield, label: 'Privacy', path: '/settings?tab=security', color: 'text-foreground' },
+        { icon: Globe, label: 'Data & Storage', path: '/settings?tab=data', color: 'text-foreground' },
       ]
     },
     {
       title: 'Support',
       items: [
-        { icon: HelpCircle, label: 'Help Center', path: '/support', color: 'text-foreground' },
-        { icon: Info, label: 'About', path: '/about', color: 'text-foreground' },
+        { icon: HelpCircle, label: 'Help', path: '/support', color: 'text-foreground' },
       ]
     }
   ];
@@ -161,10 +126,6 @@ export const ChatMenuDrawer = ({ isOpen, onClose }: ChatMenuDrawerProps) => {
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-lg truncate">{profile?.display_name || 'User'}</h3>
               <p className="text-sm text-muted-foreground truncate">@{profile?.handle || 'user'}</p>
-              <div className="flex items-center gap-1 mt-1">
-                <Sparkles className="h-3 w-3 text-primary" />
-                <span className="text-xs font-medium text-primary">{profile?.xp || 0} XP</span>
-              </div>
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </div>
