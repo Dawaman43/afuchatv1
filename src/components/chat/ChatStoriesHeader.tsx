@@ -12,12 +12,21 @@ interface StoryUser {
   story_count: number;
 }
 
-export const ChatStoriesHeader = () => {
+interface ChatStoriesHeaderProps {
+  shouldCollapse?: boolean;
+}
+
+export const ChatStoriesHeader = ({ shouldCollapse = false }: ChatStoriesHeaderProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [storyUsers, setStoryUsers] = useState<StoryUser[]>([]);
   const [currentUserProfile, setCurrentUserProfile] = useState<{ avatar_url: string | null; display_name: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    setIsCollapsed(shouldCollapse);
+  }, [shouldCollapse]);
 
   useEffect(() => {
     if (!user) return;
@@ -118,7 +127,7 @@ export const ChatStoriesHeader = () => {
   };
 
   return (
-    <div className="sticky top-0 z-50 bg-background">
+    <div className="sticky top-0 z-50 bg-background transition-all duration-300" style={{ height: isCollapsed ? '0px' : 'auto', overflow: 'hidden' }}>
       {/* Header with Menu, Title, and Search */}
       <div className="flex items-center justify-between px-4 h-16">
         <button className="p-2">
