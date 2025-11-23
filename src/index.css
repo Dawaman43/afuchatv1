@@ -16,21 +16,21 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Twitter/X Verified Blue */
-    --primary: 203 89% 53%;
+    /* Vibrant Cyan from chat bubbles */
+    --primary: 187 100% 42%;
     --primary-foreground: 0 0% 100%;
     
-    /* Lighter verified blue accent */
-    --accent: 203 89% 60%;
+    /* Lighter cyan accent */
+    --accent: 187 100% 50%;
     --accent-foreground: 0 0% 100%;
     
     /* Clean white backgrounds */
     --background: 0 0% 100%;
     --foreground: 0 0% 13%;
     
-    /* Soft blue-gray muted */
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 16% 47%;
+    /* Light gray muted (from gray bubbles) */
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 47%;
     
     /* Card with subtle elevation */
     --card: 0 0% 100%;
@@ -41,12 +41,12 @@ All colors MUST be HSL.
     --popover-foreground: 0 0% 13%;
     
     /* Refined borders */
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 203 89% 53%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 187 100% 42%;
     
     /* Secondary light gray */
-    --secondary: 210 20% 96%;
+    --secondary: 0 0% 92%;
     --secondary-foreground: 0 0% 13%;
     
     /* Destructive red */
@@ -56,62 +56,62 @@ All colors MUST be HSL.
     --radius: 0.5rem;
     
     /* Sidebar */
-    --sidebar-background: 210 20% 98%;
+    --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 0 0% 13%;
-    --sidebar-primary: 203 89% 53%;
+    --sidebar-primary: 187 100% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 203 89% 60%;
+    --sidebar-accent: 187 100% 50%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 203 89% 53%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 187 100% 42%;
   }
 
   .dark {
-    /* Twitter/X Verified Blue - Dark mode */
-    --primary: 203 89% 58%;
+    /* Vibrant Cyan - Dark mode */
+    --primary: 187 100% 45%;
     --primary-foreground: 0 0% 100%;
     
-    /* Lighter accent for dark mode */
-    --accent: 203 89% 65%;
+    /* Lighter cyan accent */
+    --accent: 187 100% 55%;
     --accent-foreground: 0 0% 100%;
     
-    /* Dark blue-gray backgrounds */
-    --background: 216 28% 7%;
-    --foreground: 213 31% 91%;
+    /* Dark backgrounds */
+    --background: 0 0% 7%;
+    --foreground: 0 0% 95%;
     
-    /* Message bubbles - darker blue */
-    --muted: 215 28% 17%;
-    --muted-foreground: 217 20% 70%;
+    /* Dark gray message bubbles */
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 70%;
     
     /* Card elevated surface */
-    --card: 215 27% 12%;
-    --card-foreground: 213 31% 91%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
     
-    --popover: 215 27% 12%;
-    --popover-foreground: 213 31% 91%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
     
-    /* Subtle blue borders */
-    --border: 215 25% 20%;
-    --input: 215 25% 20%;
-    --ring: 203 89% 58%;
+    /* Subtle borders */
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 187 100% 45%;
     
     /* Secondary surface */
-    --secondary: 215 28% 15%;
-    --secondary-foreground: 213 31% 91%;
+    --secondary: 0 0% 13%;
+    --secondary-foreground: 0 0% 95%;
     
     /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     
     /* Sidebar */
-    --sidebar-background: 215 27% 12%;
-    --sidebar-foreground: 213 31% 91%;
-    --sidebar-primary: 203 89% 58%;
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 187 100% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 203 89% 65%;
+    --sidebar-accent: 187 100% 55%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 215 25% 20%;
-    --sidebar-ring: 203 89% 58%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 187 100% 45%;
   }
 }
 
