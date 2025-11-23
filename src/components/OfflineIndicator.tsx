@@ -29,16 +29,11 @@ export const OfflineIndicator = () => {
   if (!showOfflineAlert) return null;
 
   return (
-    <Alert className="fixed bottom-4 left-4 right-4 z-50 border-yellow-500 bg-yellow-500/10 md:left-auto md:right-4 md:max-w-md">
-      <WifiOff className="h-4 w-4 text-yellow-500" />
-      <AlertDescription className="text-sm">
-        <strong>You're offline</strong>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Available: View cached posts, read messages
-          <br />
-          Unavailable: Create posts, send messages, react
-        </p>
-      </AlertDescription>
-    </Alert>
+    <div className="fixed top-0 left-0 right-0 z-50 bg-destructive text-destructive-foreground shadow-lg">
+      <div className="container mx-auto px-4 py-2 flex items-center justify-center gap-2">
+        <WifiOff className="h-4 w-4" />
+        <span className="text-sm font-medium">You're offline - Limited functionality available</span>
+      </div>
+    </div>
   );
 };
