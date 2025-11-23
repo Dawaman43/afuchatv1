@@ -540,30 +540,58 @@ const ChatRoom = () => {
 
     setUploading(true);
     try {
-      const fileName = `voice-${Date.now()}.webm`;
+      // Use user folder structure for RLS compliance
+      const fileName = `${user.id}/voice-${Date.now()}.webm`;
       const { data, error } = await supabase.storage
-        .from('voice-messages') // Assume bucket created
-        .upload(fileName, audioBlob, { contentType: 'audio/webm' });
+        .from('voice-messages')
+        .upload(fileName, audioBlob, { 
+          contentType: 'audio/webm',
+          upsert: false 
+        });
 
       if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('voice-messages')
+        .getPublicUrl(data.path);
 
       const { data: inserted, error: insertError } = await supabase
         .from('messages')
         .insert({
           chat_id: chatId,
           sender_id: user.id,
-          encrypted_content: '[Voice Message]', // Placeholder text
-          audio_url: supabase.storage.from('voice-messages').getPublicUrl(data.path).data.publicUrl,
+          encrypted_content: '[Voice Message]',
+          audio_url: publicUrl,
         })
         .select('*, profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, affiliated_business_id)')
         .single();
 
       if (insertError) throw insertError;
 
+      // Create message_status entries for other chat members
+      const { data: members } = await supabase
+        .from('chat_members')
+        .select('user_id')
+        .eq('chat_id', chatId)
+        .neq('user_id', user.id);
+
+      if (members && members.length > 0 && inserted) {
+        const statusEntries = members.map(member => ({
+          message_id: inserted.id,
+          user_id: member.user_id,
+          delivered_at: new Date().toISOString(),
+        }));
+
+        await supabase
+          .from('message_status')
+          .insert(statusEntries);
+      }
+
       if (inserted) {
         setMessages((prev) => [...prev, inserted as Message]);
       }
       setAudioBlob(null);
+      toast.success('Voice message sent');
     } catch (err) {
       toast.error('Failed to send voice message');
       console.error(err);
