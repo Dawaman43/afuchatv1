@@ -144,14 +144,14 @@ export const ChatStoriesHeader = ({ scrollPosition = 0, isAtBottom = false, scro
   return (
     <div
       ref={headerRef}
-      className="sticky top-0 z-50 bg-background border-b border-border transition-all duration-300"
+      className="sticky top-0 z-50 bg-background transition-all duration-300"
       style={{
-        height: isExpanded ? '200px' : '80px',
+        height: isExpanded ? '220px' : '80px',
       }}
     >
       {/* Collapsed view - single row */}
       <div
-        className="flex items-center justify-between px-4 h-20"
+        className="flex items-center justify-between px-4 h-20 border-b border-border"
         style={{
           opacity: isExpanded ? 0 : 1,
           pointerEvents: isExpanded ? 'none' : 'auto',
@@ -160,30 +160,30 @@ export const ChatStoriesHeader = ({ scrollPosition = 0, isAtBottom = false, scro
       >
         {/* Left: Menu */}
         <button className="p-2">
-          <Menu className="h-6 w-6 text-foreground" />
+          <Menu className="h-7 w-7 text-foreground" />
         </button>
 
         {/* Center: Overlapping avatars + count */}
         <div className="flex items-center gap-3 flex-1 justify-center">
           {hasStories && (
             <>
-              <div className="flex items-center -space-x-3">
+              <div className="flex items-center -space-x-4">
                 {storyUsers.slice(0, 3).map((storyUser, index) => (
                   <div
                     key={storyUser.user_id}
                     className="relative"
                     style={{ zIndex: 30 - index * 10 }}
                   >
-                    <div className="p-[2px] rounded-full bg-gradient-to-tr from-cyan-400 to-teal-500">
+                    <div className="p-[3px] rounded-full bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500">
                       {storyUser.avatar_url ? (
                         <img
                           src={storyUser.avatar_url}
                           alt={storyUser.display_name}
-                          className="h-12 w-12 rounded-full object-cover border-2 border-background"
+                          className="h-14 w-14 rounded-full object-cover border-[3px] border-background"
                         />
                       ) : (
-                        <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center border-2 border-background">
-                          <span className="text-sm font-semibold text-white">
+                        <div className="h-14 w-14 rounded-full bg-primary flex items-center justify-center border-[3px] border-background">
+                          <span className="text-sm font-semibold text-primary-foreground">
                             {storyUser.display_name?.charAt(0).toUpperCase()}
                           </span>
                         </div>
@@ -192,7 +192,7 @@ export const ChatStoriesHeader = ({ scrollPosition = 0, isAtBottom = false, scro
                   </div>
                 ))}
               </div>
-              <span className="text-xl font-semibold text-foreground">
+              <span className="text-xl font-bold text-foreground">
                 {totalStories} {totalStories === 1 ? 'Story' : 'Stories'}
               </span>
             </>
@@ -207,7 +207,7 @@ export const ChatStoriesHeader = ({ scrollPosition = 0, isAtBottom = false, scro
 
       {/* Expanded view */}
       <div
-        className="absolute inset-0 bg-background"
+        className="absolute inset-0 bg-background flex flex-col"
         style={{
           opacity: isExpanded ? 1 : 0,
           pointerEvents: isExpanded ? 'auto' : 'none',
@@ -215,43 +215,43 @@ export const ChatStoriesHeader = ({ scrollPosition = 0, isAtBottom = false, scro
         }}
       >
         {/* Top bar */}
-        <div className="flex items-center justify-between px-4 h-16">
+        <div className="flex items-center justify-between px-4 h-16 border-b border-border">
           <button className="p-2">
-            <Menu className="h-6 w-6 text-foreground" />
+            <Menu className="h-7 w-7 text-foreground" />
           </button>
-          <h1 className="text-2xl font-bold text-foreground">AfuChat</h1>
+          <h1 className="text-xl font-semibold text-foreground">AfuChat</h1>
           <button className="p-2">
             <Search className="h-6 w-6 text-foreground" />
           </button>
         </div>
 
         {/* Stories horizontal scroll */}
-        <div className="overflow-x-auto scrollbar-hide px-4 pb-4">
-          <div className="flex gap-4">
+        <div className="flex-1 overflow-x-auto scrollbar-hide px-4 py-6">
+          <div className="flex gap-5 h-full items-start">
             {/* My Story */}
             <div
               onClick={handleCreateStory}
-              className="flex-shrink-0 cursor-pointer"
+              className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-2"
             >
               <div className="relative">
                 {currentUserProfile?.avatar_url ? (
                   <img
                     src={currentUserProfile.avatar_url}
                     alt="My Story"
-                    className="h-16 w-16 rounded-full object-cover border-2 border-background"
+                    className="h-[72px] w-[72px] rounded-full object-cover border-2 border-border"
                   />
                 ) : (
-                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center border-2 border-background">
-                    <span className="text-lg font-semibold text-foreground">
+                  <div className="h-[72px] w-[72px] rounded-full bg-muted flex items-center justify-center border-2 border-border">
+                    <span className="text-xl font-semibold text-muted-foreground">
                       {currentUserProfile?.display_name?.charAt(0).toUpperCase() || 'M'}
                     </span>
                   </div>
                 )}
-                <div className="absolute bottom-0 right-0 h-5 w-5 rounded-full bg-primary flex items-center justify-center border-2 border-background">
-                  <Plus className="h-3 w-3 text-white" />
+                <div className="absolute bottom-0 right-0 h-6 w-6 rounded-full bg-primary flex items-center justify-center border-2 border-background shadow-md">
+                  <Plus className="h-4 w-4 text-primary-foreground" />
                 </div>
               </div>
-              <p className="text-xs text-center mt-1.5 font-medium w-16 truncate">My Story</p>
+              <p className="text-xs text-center font-medium text-foreground w-20 truncate">My Story</p>
             </div>
 
             {/* Other stories */}
@@ -259,24 +259,24 @@ export const ChatStoriesHeader = ({ scrollPosition = 0, isAtBottom = false, scro
               <div
                 key={storyUser.user_id}
                 onClick={() => handleStoryClick(storyUser.user_id)}
-                className="flex-shrink-0 cursor-pointer"
+                className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-2"
               >
-                <div className="p-[2px] rounded-full bg-gradient-to-tr from-cyan-400 to-teal-500">
+                <div className="p-[3px] rounded-full bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500">
                   {storyUser.avatar_url ? (
                     <img
                       src={storyUser.avatar_url}
                       alt={storyUser.display_name}
-                      className="h-16 w-16 rounded-full object-cover border-2 border-background"
+                      className="h-[72px] w-[72px] rounded-full object-cover border-[3px] border-background"
                     />
                   ) : (
-                    <div className="h-16 w-16 rounded-full bg-primary flex items-center justify-center border-2 border-background">
-                      <span className="text-lg font-semibold text-white">
+                    <div className="h-[72px] w-[72px] rounded-full bg-primary flex items-center justify-center border-[3px] border-background">
+                      <span className="text-xl font-semibold text-primary-foreground">
                         {storyUser.display_name?.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-center mt-1.5 font-medium w-16 truncate">
+                <p className="text-xs text-center font-medium text-foreground w-20 truncate">
                   {storyUser.display_name}
                 </p>
               </div>
