@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import NewChatDialog from '@/components/ui/NewChatDialog';
 import { Button } from '@/components/ui/button';
 import { ChatStoriesHeader } from '@/components/chat/ChatStoriesHeader';
+import { StoryAvatar } from '@/components/moments/StoryAvatar';
 
 interface Chat {
   id: string;
@@ -317,22 +318,16 @@ const Chats = () => {
               onClick={() => navigate(`/chat/${chat.id}`)}
               className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 cursor-pointer transition-colors"
             >
-              {/* Avatar */}
-              <div className="relative flex-shrink-0">
-                {chat.other_user?.avatar_url ? (
-                  <img
-                    src={chat.other_user.avatar_url}
-                    alt={chatName}
-                    className="h-14 w-14 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
-                    <span className="text-xl font-semibold text-muted-foreground">
-                      {chatName.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
-              </div>
+              {/* Avatar with Story Ring */}
+              {chat.other_user && (
+                <StoryAvatar
+                  userId={chat.other_user.id}
+                  avatarUrl={chat.other_user.avatar_url}
+                  name={chat.other_user.display_name}
+                  size="lg"
+                  showStoryRing={true}
+                />
+              )}
 
               {/* Chat info */}
               <div className="flex-1 min-w-0">
