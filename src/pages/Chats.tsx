@@ -65,6 +65,7 @@ const Chats = () => {
   const [showFab, setShowFab] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
+  const [shouldCollapseStories, setShouldCollapseStories] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -218,6 +219,13 @@ const Chats = () => {
       
       const currentScrollY = scrollRef.current.scrollTop;
       
+      // Collapse stories when scrolling down past 50px
+      if (currentScrollY > 50) {
+        setShouldCollapseStories(true);
+      } else {
+        setShouldCollapseStories(false);
+      }
+      
       // FAB visibility
       if (currentScrollY < 10) {
         setShowFab(true);
@@ -256,8 +264,8 @@ const Chats = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      {/* Stories Header - Always Expanded */}
-      <ChatStoriesHeader />
+      {/* Stories Header - Collapses on scroll down */}
+      <ChatStoriesHeader shouldCollapse={shouldCollapseStories} />
 
       {/* Chat List */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
