@@ -1992,19 +1992,10 @@ const Feed = () => {
       }
   }, [posts]);
 
-  const PostSkeleton = () => (
-    <div className="flex items-center justify-center py-8">
-      <CustomLoader size="md" />
-    </div>
-  );
-
-
   if (loading) {
     return (
-      <div className="flex flex-col h-full">
-        {[...Array(3)].map((_, i) => (
-          <PostSkeleton key={i} />
-        ))}
+      <div className="flex items-center justify-center h-full">
+        <CustomLoader size="lg" text={t('common.loading') || 'Loading...'} />
       </div>
     );
   }
