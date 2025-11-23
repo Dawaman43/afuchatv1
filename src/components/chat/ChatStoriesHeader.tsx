@@ -17,6 +17,7 @@ export const ChatStoriesHeader = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [storyUsers, setStoryUsers] = useState<StoryUser[]>([]);
+  const [currentUserProfile, setCurrentUserProfile] = useState<{ avatar_url: string | null; display_name: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandProgress, setExpandProgress] = useState(0);
   const [startY, setStartY] = useState(0);
@@ -27,7 +28,15 @@ export const ChatStoriesHeader = () => {
 
   useEffect(() => {
     if (!user) return;
-    fetchActiveStories();
+    
+    const fetchData = async () => {
+      await Promise.all([
+        fetchActiveStories(),
+        fetchCurrentUserProfile()
+      ]);
+    };
+    
+    fetchData();
 
     const channel = supabase
       .channel('chat-stories-updates')
@@ -48,6 +57,23 @@ export const ChatStoriesHeader = () => {
       supabase.removeChannel(channel);
     };
   }, [user]);
+
+  const fetchCurrentUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('avatar_url, display_name')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+      setCurrentUserProfile(data);
+    } catch (error) {
+      console.error('Error fetching current user profile:', error);
+    }
+  };
 
   const fetchActiveStories = async () => {
     try {
@@ -247,10 +273,21 @@ export const ChatStoriesHeader = () => {
               className="flex-shrink-0 cursor-pointer"
             >
               <div className="relative">
-                <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-                  <div className="h-14 w-14 rounded-full bg-background flex items-center justify-center">
-                    <Plus className="h-6 w-6 text-primary" />
+                {currentUserProfile?.avatar_url ? (
+                  <img
+                    src={currentUserProfile.avatar_url}
+                    alt="My Story"
+                    className="h-16 w-16 rounded-full object-cover border-2 border-background"
+                  />
+                ) : (
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center border-2 border-background">
+                    <span className="text-lg font-semibold text-foreground">
+                      {currentUserProfile?.display_name?.charAt(0).toUpperCase() || 'M'}
+                    </span>
                   </div>
+                )}
+                <div className="absolute bottom-0 right-0 h-5 w-5 rounded-full bg-primary flex items-center justify-center border-2 border-background">
+                  <Plus className="h-3 w-3 text-white" />
                 </div>
               </div>
               <p className="text-xs text-center mt-1.5 font-medium w-16 truncate">My Story</p>
