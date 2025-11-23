@@ -198,13 +198,12 @@ export const MessageBubble = ({
         </div>
       )}
       
-      {/* --- Timestamp & Status --- */}
+      {/* --- Timestamp --- */}
       <div className={`flex items-center justify-end gap-1 px-3 pb-1.5 ${isVoice ? 'mt-0' : '-mt-1'}`}>
         {message.edited_at && (
           <span className="text-[11px] opacity-50">edited</span>
         )}
         <span className="text-[11px] opacity-60">{time}</span>
-        {isOwn && <ReadStatus />}
       </div>
     </div>
   );
