@@ -15,10 +15,11 @@ interface StoryUser {
 
 interface ChatStoriesHeaderProps {
   isAtTop?: boolean;
+  isAtBottom?: boolean;
   scrollDirection?: 'up' | 'down';
 }
 
-export const ChatStoriesHeader = ({ isAtTop = true, scrollDirection = 'down' }: ChatStoriesHeaderProps) => {
+export const ChatStoriesHeader = ({ isAtTop = true, isAtBottom = false, scrollDirection = 'down' }: ChatStoriesHeaderProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [storyUsers, setStoryUsers] = useState<StoryUser[]>([]);
@@ -30,16 +31,16 @@ export const ChatStoriesHeader = ({ isAtTop = true, scrollDirection = 'down' }: 
   // Handle expand/collapse based on scroll position from Chats
   useEffect(() => {
     if (storyUsers.length > 0) {
-      // Expand whenever list is at the very top
-      if (isAtTop) {
+      // Expand when user scrolls to bottom of chat list
+      if (isAtBottom && scrollDirection === 'down') {
         setIsExpanded(true);
       }
-      // Collapse once user scrolls down away from the top
-      else if (!isAtTop && scrollDirection === 'down' && isExpanded) {
+      // Collapse once user starts scrolling up from bottom
+      else if (!isAtBottom && scrollDirection === 'up' && isExpanded) {
         setIsExpanded(false);
       }
     }
-  }, [isAtTop, scrollDirection, storyUsers.length, isExpanded]);
+  }, [isAtBottom, scrollDirection, storyUsers.length, isExpanded]);
 
   useEffect(() => {
     if (!user) return;
