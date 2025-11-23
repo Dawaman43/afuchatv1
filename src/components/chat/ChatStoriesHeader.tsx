@@ -20,7 +20,10 @@ export const ChatStoriesHeader = ({ shouldCollapse = false }: ChatStoriesHeaderP
   const { user } = useAuth();
   const navigate = useNavigate();
   const [storyUsers, setStoryUsers] = useState<StoryUser[]>([]);
-  const [currentUserProfile, setCurrentUserProfile] = useState<{ avatar_url: string | null; display_name: string } | null>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<{
+    avatar_url: string | null;
+    display_name: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -30,14 +33,11 @@ export const ChatStoriesHeader = ({ shouldCollapse = false }: ChatStoriesHeaderP
 
   useEffect(() => {
     if (!user) return;
-    
+
     const fetchData = async () => {
-      await Promise.all([
-        fetchActiveStories(),
-        fetchCurrentUserProfile()
-      ]);
+      await Promise.all([fetchActiveStories(), fetchCurrentUserProfile()]);
     };
-    
+
     fetchData();
 
     const channel = supabase
@@ -47,7 +47,7 @@ export const ChatStoriesHeader = ({ shouldCollapse = false }: ChatStoriesHeaderP
         {
           event: '*',
           schema: 'public',
-          table: 'stories'
+          table: 'stories',
         },
         () => {
           fetchActiveStories();
@@ -62,14 +62,14 @@ export const ChatStoriesHeader = ({ shouldCollapse = false }: ChatStoriesHeaderP
 
   const fetchCurrentUserProfile = async () => {
     if (!user) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('avatar_url, display_name')
         .eq('id', user.id)
         .single();
-      
+
       if (error) throw error;
       setCurrentUserProfile(data);
     } catch (error) {
@@ -81,20 +81,22 @@ export const ChatStoriesHeader = ({ shouldCollapse = false }: ChatStoriesHeaderP
     try {
       const { data: stories, error } = await supabase
         .from('stories')
-        .select(`
+        .select(
+          `
           user_id,
           profiles (display_name, avatar_url, handle)
-        `)
+        `
+        )
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
       const userMap = new Map<string, StoryUser>();
-      
+
       stories?.forEach((story: any) => {
         if (!story.profiles) return;
-        
+
         const userId = story.user_id;
         if (userMap.has(userId)) {
           const existing = userMap.get(userId)!;
@@ -105,7 +107,7 @@ export const ChatStoriesHeader = ({ shouldCollapse = false }: ChatStoriesHeaderP
             display_name: story.profiles.display_name,
             avatar_url: story.profiles.avatar_url,
             handle: story.profiles.handle,
-            story_count: 1
+            story_count: 1,
           });
         }
       });
@@ -127,29 +129,69 @@ export const ChatStoriesHeader = ({ shouldCollapse = false }: ChatStoriesHeaderP
   };
 
   return (
-    <div className="sticky top-0 z-50 bg-background transition-all duration-300 ease-out" style={{ 
-      maxHeight: isCollapsed ? '0px' : '500px',
-      opacity: isCollapsed ? 0 : 1,
-      overflow: 'hidden'
-    }}>
-      {/* Header with Menu, Title, and Search */}
+    <div
+      className={`sticky top-0 z-50 bg-background transition-all duration-300 ease-out ${
+        isCollapsed ? 'shadow-sm' : ''
+      }`}
+    >
+      {/* Header with compact stories summary, Telegram-style */}
       <div className="flex items-center justify-between px-4 h-16">
         <button className="p-2">
           <Menu className="h-7 w-7 text-foreground" />
         </button>
-        <h1 className="text-xl font-semibold text-foreground">AfuChat</h1>
+
+        <div className="flex items-center gap-3 overflow-hidden">
+          {/* Overlapping story bubbles when collapsed, regular spacing when expanded */}
+          <div
+            className={`flex items-center transition-all duration-300 ease-out ${
+              isCollapsed ? 'gap-[-8px] mr-1' : 'gap-3'
+            }`}
+          >
+            {storyUsers.slice(0, 3).map((storyUser) => (
+              <div
+                key={storyUser.user_id}
+                className={`rounded-full border-2 border-background bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500 flex items-center justify-center overflow-hidden transition-all duration-300 ease-out ${
+                  isCollapsed ? 'h-9 w-9 -ml-2 first:ml-0' : 'h-11 w-11'
+                }`}
+              >
+                {storyUser.avatar_url ? (
+                  <img
+                    src={storyUser.avatar_url}
+                    alt={storyUser.display_name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-xs font-semibold text-primary-foreground">
+                    {storyUser.display_name?.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <h1 className="text-lg font-semibold text-foreground truncate">
+            {storyUsers.length > 0 ? `${storyUsers.length} Stories` : 'Stories'}
+          </h1>
+        </div>
+
         <button className="p-2">
           <Search className="h-6 w-6 text-foreground" />
         </button>
       </div>
 
-      {/* Stories horizontal scroll */}
-      <div className="overflow-x-auto scrollbar-hide px-4 pb-4">
+      {/* Stories horizontal scroll - slides closed when collapsed instead of fully disappearing */}
+      <div
+        className={`overflow-x-auto scrollbar-hide px-4 transition-all duration-300 ease-out ${
+          isCollapsed
+            ? 'pb-1 max-h-0 opacity-0 pointer-events-none'
+            : 'pb-4 max-h-[140px] opacity-100'
+        }`}
+      >
         <div className="flex gap-5">
           {/* My Story */}
           <div
             onClick={handleCreateStory}
-            className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-2"
+            className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-2 hover-scale"
           >
             <div className="relative">
               {currentUserProfile?.avatar_url ? (
@@ -169,7 +211,9 @@ export const ChatStoriesHeader = ({ shouldCollapse = false }: ChatStoriesHeaderP
                 <Plus className="h-4 w-4 text-primary-foreground" />
               </div>
             </div>
-            <p className="text-xs text-center font-medium text-foreground w-20 truncate">My Story</p>
+            <p className="text-xs text-center font-medium text-foreground w-20 truncate story-link">
+              My Story
+            </p>
           </div>
 
           {/* Other stories */}
@@ -177,7 +221,7 @@ export const ChatStoriesHeader = ({ shouldCollapse = false }: ChatStoriesHeaderP
             <div
               key={storyUser.user_id}
               onClick={() => handleStoryClick(storyUser.user_id)}
-              className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-2"
+              className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-2 hover-scale"
             >
               <div className="p-[3px] rounded-full bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500">
                 {storyUser.avatar_url ? (
@@ -194,7 +238,7 @@ export const ChatStoriesHeader = ({ shouldCollapse = false }: ChatStoriesHeaderP
                   </div>
                 )}
               </div>
-              <p className="text-xs text-center font-medium text-foreground w-20 truncate">
+              <p className="text-xs text-center font-medium text-foreground w-20 truncate story-link">
                 {storyUser.display_name}
               </p>
             </div>
