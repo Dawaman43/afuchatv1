@@ -356,9 +356,9 @@ const Chats = () => {
                   </span>
                 </div>
                 {chat.unread_count && chat.unread_count > 0 && (
-                  <div className="bg-muted rounded-full h-5 min-w-[20px] flex items-center justify-center px-1.5">
-                    <span className="text-xs font-semibold text-muted-foreground">
-                      {chat.unread_count}
+                  <div className="bg-foreground text-background rounded-full h-5 min-w-[20px] flex items-center justify-center px-1.5">
+                    <span className="text-xs font-semibold">
+                      {chat.unread_count > 99 ? '99+' : chat.unread_count}
                     </span>
                   </div>
                 )}
