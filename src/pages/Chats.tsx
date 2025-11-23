@@ -65,9 +65,8 @@ const Chats = () => {
   const [showFab, setShowFab] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const [isAtBottom, setIsAtBottom] = useState(false);
   const [scrollDirection, setScrollDirection] = useState<'up' | 'down'>('down');
+  const [isAtTop, setIsAtTop] = useState(true);
 
   useEffect(() => {
     if (!user) return;
@@ -223,9 +222,9 @@ const Chats = () => {
       const scrollHeight = scrollRef.current.scrollHeight;
       const clientHeight = scrollRef.current.clientHeight;
       
-      // Check if at bottom (within 100px threshold for easier triggering)
-      const atBottom = scrollHeight - (currentScrollY + clientHeight) < 100;
-      setIsAtBottom(atBottom);
+      // At top when close to scrollTop 0
+      const atTop = currentScrollY <= 10;
+      setIsAtTop(atTop);
       
       // Determine scroll direction
       if (currentScrollY > lastScrollY.current) {
@@ -234,9 +233,7 @@ const Chats = () => {
         setScrollDirection('up');
       }
       
-      setScrollPosition(currentScrollY);
-      
-      // FAB visibility
+      // FAB visibility (unchanged)
       if (currentScrollY < 10) {
         setShowFab(true);
       } else if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
@@ -250,15 +247,12 @@ const Chats = () => {
 
     const scrollElement = scrollRef.current;
     scrollElement?.addEventListener('scroll', handleScroll);
-    
-    // Check initial position
+
+    // Initial top state
     if (scrollElement) {
-      const scrollHeight = scrollElement.scrollHeight;
-      const clientHeight = scrollElement.clientHeight;
-      const atBottom = scrollHeight - clientHeight < 100;
-      setIsAtBottom(atBottom);
+      setIsAtTop(scrollElement.scrollTop <= 10);
     }
-    
+
     return () => scrollElement?.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -285,8 +279,7 @@ const Chats = () => {
     <div className="h-screen flex flex-col bg-background">
       {/* Stories Header - Expandable */}
       <ChatStoriesHeader 
-        scrollPosition={scrollPosition}
-        isAtBottom={isAtBottom}
+        isAtTop={isAtTop}
         scrollDirection={scrollDirection}
       />
 
