@@ -137,11 +137,6 @@ export const MessageBubble = ({
         }`}>
           <Reply className="h-3 w-3 mt-0.5 flex-shrink-0 opacity-60" />
           <div className="flex flex-col min-w-0 flex-1">
-            <span className={`text-xs font-medium truncate ${
-              isOwn ? 'text-primary-foreground' : 'text-primary'
-            }`}>
-              {repliedMessage.profiles?.display_name || 'User'}
-            </span>
             <span className={`text-xs truncate ${
               isOwn ? 'text-primary-foreground/80' : 'text-muted-foreground'
             }`}>
@@ -283,15 +278,6 @@ export const MessageBubble = ({
         isLastInGroup ? 'mb-2' : 'mb-0.5'
       }`}
     >
-      {/* Swipe Reply Indicator */}
-      <motion.div 
-        className={`absolute top-1/2 -translate-y-1/2 ${isOwn ? 'right-full mr-2' : 'left-full ml-2'}`}
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 0, scale: 0 }}
-      >
-        <Reply className="h-5 w-5 text-primary" />
-      </motion.div>
-      
       <div className={`flex items-end gap-1.5 max-w-[75%] sm:max-w-[65%] ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
         
         {/* --- Avatar --- */}
