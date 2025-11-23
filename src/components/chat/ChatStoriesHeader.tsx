@@ -137,7 +137,7 @@ export const ChatStoriesHeader = ({ shouldCollapse = false, onToggleCollapse }: 
 
   return (
     <div
-      className={`sticky top-0 z-50 bg-background border-b border-border/10 transition-all duration-300 ease-in-out ${
+      className={`sticky top-0 z-50 bg-background transition-all duration-300 ease-in-out ${
         isCollapsed ? 'shadow-sm' : ''
       }`}
     >
