@@ -134,47 +134,47 @@ export const ChatStoriesHeader = ({ shouldCollapse = false }: ChatStoriesHeaderP
         isCollapsed ? 'shadow-sm' : ''
       }`}
     >
-      {/* Header with compact stories summary, Telegram-style */}
+      {/* Header - shows compact bubbles ONLY when collapsed */}
       <div className="flex items-center justify-between px-4 h-16">
         <button className="p-2 hover:bg-muted/20 rounded-full transition-colors">
           <Menu className="h-7 w-7 text-foreground" />
         </button>
 
-        <div className="flex items-center gap-3 overflow-hidden">
-          {/* Overlapping story bubbles when collapsed */}
-          <div
-            className={`flex items-center transition-all duration-300 ease-in-out ${
-              isCollapsed ? '-space-x-2' : 'gap-3'
-            }`}
-          >
-            {storyUsers.slice(0, 3).map((storyUser, index) => (
-              <div
-                key={storyUser.user_id}
-                onClick={() => handleStoryClick(storyUser.user_id)}
-                className={`rounded-full border-2 border-background bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500 flex items-center justify-center overflow-hidden transition-all duration-300 ease-in-out cursor-pointer hover:scale-110 ${
-                  isCollapsed ? 'h-9 w-9' : 'h-11 w-11'
-                }`}
-                style={{ zIndex: 3 - index }}
-              >
-                {storyUser.avatar_url ? (
-                  <img
-                    src={storyUser.avatar_url}
-                    alt={storyUser.display_name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="text-xs font-semibold text-primary-foreground">
-                    {storyUser.display_name?.charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-            ))}
+        {/* Compact overlapping bubbles - ONLY visible when collapsed */}
+        {isCollapsed && (
+          <div className="flex items-center gap-3 overflow-hidden animate-fade-in">
+            <div className="flex items-center -space-x-2">
+              {storyUsers.slice(0, 3).map((storyUser, index) => (
+                <div
+                  key={storyUser.user_id}
+                  onClick={() => handleStoryClick(storyUser.user_id)}
+                  className="h-9 w-9 rounded-full border-2 border-background bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500 flex items-center justify-center overflow-hidden cursor-pointer hover:scale-110 transition-transform"
+                  style={{ zIndex: 3 - index }}
+                >
+                  {storyUser.avatar_url ? (
+                    <img
+                      src={storyUser.avatar_url}
+                      alt={storyUser.display_name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-xs font-semibold text-primary-foreground">
+                      {storyUser.display_name?.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <h1 className="text-lg font-semibold text-foreground">
+              {storyUsers.length} {storyUsers.length === 1 ? 'Story' : 'Stories'}
+            </h1>
           </div>
+        )}
 
-          <h1 className="text-lg font-semibold text-foreground truncate">
-            {storyUsers.length > 0 ? `${storyUsers.length} Stories` : 'Stories'}
-          </h1>
-        </div>
+        {/* Title when expanded */}
+        {!isCollapsed && (
+          <h1 className="text-xl font-semibold text-foreground animate-fade-in">AfuChat</h1>
+        )}
 
         <button className="p-2 hover:bg-muted/20 rounded-full transition-colors">
           <Search className="h-6 w-6 text-foreground" />
