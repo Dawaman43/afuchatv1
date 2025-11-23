@@ -101,7 +101,7 @@ const AuthSheetContent: React.FC<AuthSheetContentProps> = ({ onClose }) => {
   };
 
   return (
-    <Card className="w-full rounded-2xl flex flex-col h-full bg-white dark:bg-gray-900">
+    <Card className="w-full rounded-2xl flex flex-col h-full bg-card">
       <CardHeader className="pt-4 pb-2 relative flex flex-col items-center">
         {/* The icon has been removed from here */}
 
