@@ -292,10 +292,10 @@ const Chats = () => {
           
           return (
             <div
-              key={chat.id}
-              onClick={() => navigate(`/chat/${chat.id}`)}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 cursor-pointer transition-colors"
-            >
+               key={chat.id}
+               onClick={() => navigate(`/chat/${chat.id}`)}
+               className="flex items-center gap-3 px-4 py-3 hover:bg-muted/10 cursor-pointer transition-colors"
+             >
               {/* Avatar with Story Ring */}
               <div className="relative flex-shrink-0">
                 {chat.other_user ? (
