@@ -269,10 +269,10 @@ export default function Shop() {
 
       {/* Purchase Sheet */}
       <Sheet open={!!selectedListing} onOpenChange={() => setSelectedListing(null)}>
-        <SheetContent side="bottom" className="max-h-[70vh] flex flex-col rounded-t-3xl bg-background/95 backdrop-blur-xl border-t border-border/50">
+        <SheetContent side="bottom" className="max-h-[70vh] flex flex-col rounded-t-3xl bg-background/95 backdrop-blur-xl border-t border-border/50 p-0">
           {selectedListing && (
             <>
-              <SheetHeader className="space-y-1 pb-3 border-b border-border/40 flex-shrink-0">
+              <SheetHeader className="space-y-1 pb-3 pt-6 px-6 border-b border-border/40 flex-shrink-0">
                 <SheetTitle className="text-lg font-bold">
                   Gift Details
                 </SheetTitle>
@@ -281,7 +281,7 @@ export default function Shop() {
                 </SheetDescription>
               </SheetHeader>
 
-              <div className="space-y-3 mt-3 pb-6 overflow-y-auto flex-1">
+              <div className="space-y-3 mt-3 px-6 pb-3 overflow-y-auto flex-1">
                 {/* Gift Display with Animation */}
                 <motion.div 
                   className="flex flex-col items-center text-center space-y-1"
@@ -397,33 +397,29 @@ export default function Shop() {
                     </div>
                   </motion.div>
                 )}
+              </div>
 
-                {/* Purchase Button */}
+              {/* Fixed Footer with Purchase Button */}
+              <div className="flex-shrink-0 border-t border-border/40 p-6 pt-4 bg-background/95 backdrop-blur-xl">
                 {!isOwnListing && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
+                  <Button
+                    onClick={handlePurchase}
+                    disabled={purchasing || !user || userXP < selectedListing.asking_price}
+                    className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                    size="lg"
                   >
-                    <Button
-                      onClick={handlePurchase}
-                      disabled={purchasing || !user || userXP < selectedListing.asking_price}
-                      className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                      size="lg"
-                    >
-                      {purchasing ? (
-                        <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          Processing Purchase...
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingCart className="mr-2 h-5 w-5" />
-                          Complete Purchase
-                        </>
-                      )}
-                    </Button>
-                  </motion.div>
+                    {purchasing ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Processing Purchase...
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="mr-2 h-5 w-5" />
+                        Complete Purchase
+                      </>
+                    )}
+                  </Button>
                 )}
 
                 {isOwnListing && (
