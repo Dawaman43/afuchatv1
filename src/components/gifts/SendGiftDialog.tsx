@@ -424,7 +424,8 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
                       handleSendGift();
                     }}
                     disabled={loading}
-                    className="w-full h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-200 animate-[scale-in_0.3s_ease-out]"
+                    size="sm"
+                    className="h-8 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs rounded-full shadow-md hover:shadow-lg transition-all duration-200 animate-[scale-in_0.3s_ease-out]"
                   >
                     {loading ? t('gifts.sending') : t('gifts.send')}
                   </Button>
