@@ -20,6 +20,7 @@ i18n
       sw: { translation: sw },
     },
     fallbackLng: 'en',
+    lng: 'en', // Set default to English
     interpolation: {
       escapeValue: false,
     },
@@ -27,6 +28,12 @@ i18n
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
     },
+    react: {
+      useSuspense: false, // Disable suspense to prevent loading flashes
+    },
+    returnEmptyString: false,
+    returnNull: false,
+    returnObjects: false,
   });
 
 export default i18n;
