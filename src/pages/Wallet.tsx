@@ -96,8 +96,8 @@ const Wallet = () => {
   });
 
   const getTransactionIcon = (type: string) => {
-    const iconClasses = "h-5 w-5";
-    const wrapperClasses = "p-2.5 rounded-full";
+    const iconClasses = "h-4 w-4";
+    const wrapperClasses = "p-2 rounded-xl";
     
     switch (type) {
       case 'gift': 
@@ -193,23 +193,23 @@ const Wallet = () => {
           <div className="flex h-14 sm:h-16 items-center justify-between">
             <Button
               variant="ghost"
-              size="icon"
+              size="sm"
               onClick={() => navigate(-1)}
-              className="shrink-0"
+              className="shrink-0 rounded-full h-9 w-9"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="absolute left-1/2 -translate-x-1/2">
               <Logo size="sm" />
             </div>
             <Button
               variant="ghost"
-              size="icon"
+              size="sm"
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="shrink-0"
+              className="shrink-0 rounded-full h-9 w-9"
             >
-              <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             </Button>
           </div>
         </div>
@@ -227,28 +227,28 @@ const Wallet = () => {
             whileHover={{ scale: 1.02 }}
             className="cursor-pointer"
           >
-            <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-background shadow-lg hover:shadow-xl transition-shadow">
+            <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-background shadow-lg hover:shadow-xl transition-shadow rounded-2xl">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
-              <CardContent className="relative p-6">
-                <div className="flex items-center justify-between mb-4">
+              <CardContent className="relative p-5">
+                <div className="flex items-center justify-between mb-3">
                   <motion.div 
-                    className="p-3 bg-primary/10 rounded-full"
+                    className="p-2 bg-primary/10 rounded-xl"
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.6 }}
                   >
-                    <WalletIcon className="h-6 w-6 text-primary" />
+                    <WalletIcon className="h-5 w-5 text-primary" />
                   </motion.div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <Button
                       variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
+                      size="sm"
+                      className="h-7 w-7 rounded-full"
                       onClick={() => setShowBalance(!showBalance)}
                     >
-                      {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                      {showBalance ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                     </Button>
-                    <Badge variant="outline" className="font-semibold">
+                    <Badge variant="outline" className="text-xs font-semibold rounded-full px-2 py-0.5">
                       {profile?.current_grade || 'Newcomer'}
                     </Badge>
                   </div>
@@ -289,25 +289,25 @@ const Wallet = () => {
             whileHover={{ scale: 1.02 }}
             className="cursor-pointer"
           >
-            <Card className="relative overflow-hidden border-yellow-500/20 bg-gradient-to-br from-yellow-500/10 via-orange-500/5 to-background shadow-lg hover:shadow-xl transition-shadow">
+            <Card className="relative overflow-hidden border-yellow-500/20 bg-gradient-to-br from-yellow-500/10 via-orange-500/5 to-background shadow-lg hover:shadow-xl transition-shadow rounded-2xl">
               <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent" />
               <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-3xl" />
-              <CardContent className="relative p-6">
-                <div className="flex items-center justify-between mb-4">
+              <CardContent className="relative p-5">
+                <div className="flex items-center justify-between mb-3">
                   <motion.div 
-                    className="p-3 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-full"
+                    className="p-2 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-xl"
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.6 }}
                   >
-                    <Coins className="h-6 w-6 text-yellow-600" />
+                    <Coins className="h-5 w-5 text-yellow-600" />
                   </motion.div>
                   <Button 
                     size="sm" 
                     variant="ghost"
                     onClick={() => navigate('/premium')}
-                    className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-500/10"
+                    className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-500/10 h-7 rounded-full text-xs px-2.5"
                   >
-                    <Sparkles className="h-4 w-4 mr-1" />
+                    <Sparkles className="h-3.5 w-3.5 mr-1" />
                     Premium
                   </Button>
                 </div>
@@ -346,9 +346,9 @@ const Wallet = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2, type: "spring" }}
         >
-          <Card className="shadow-md">
-            <CardContent className="p-6">
-              <div className="grid grid-cols-3 gap-4">
+          <Card className="shadow-md rounded-2xl">
+            <CardContent className="p-5">
+              <div className="grid grid-cols-3 gap-3">
                 <motion.div 
                   className="text-center"
                   whileHover={{ scale: 1.05 }}
@@ -359,8 +359,8 @@ const Wallet = () => {
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <div className="p-2 bg-green-500/10 rounded-full">
-                      <ArrowDownRight className="h-4 w-4 text-green-500" />
+                    <div className="p-1.5 bg-green-500/10 rounded-xl">
+                      <ArrowDownRight className="h-3.5 w-3.5 text-green-500" />
                     </div>
                   </motion.div>
                   <p className="text-sm text-muted-foreground mb-1">Received</p>
@@ -383,8 +383,8 @@ const Wallet = () => {
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <div className="p-2 bg-red-500/10 rounded-full">
-                      <ArrowUpRight className="h-4 w-4 text-red-500" />
+                    <div className="p-1.5 bg-red-500/10 rounded-xl">
+                      <ArrowUpRight className="h-3.5 w-3.5 text-red-500" />
                     </div>
                   </motion.div>
                   <p className="text-sm text-muted-foreground mb-1">Sent</p>
@@ -407,8 +407,8 @@ const Wallet = () => {
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <div className="p-2 bg-primary/10 rounded-full">
-                      <TrendingUp className="h-4 w-4 text-primary" />
+                    <div className="p-1.5 bg-primary/10 rounded-xl">
+                      <TrendingUp className="h-3.5 w-3.5 text-primary" />
                     </div>
                   </motion.div>
                   <p className="text-sm text-muted-foreground mb-1">Transactions</p>
@@ -454,9 +454,9 @@ const Wallet = () => {
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button 
               onClick={() => navigate('/transfer')} 
-              className="w-full h-auto py-6 flex items-center justify-center gap-3 text-lg font-semibold shadow-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+              className="w-full h-auto py-4 rounded-2xl flex items-center justify-center gap-2 text-base font-semibold shadow-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
             >
-              <Send className="h-6 w-6" />
+              <Send className="h-4 w-4" />
               <span>Transfer Nexa</span>
             </Button>
           </motion.div>
@@ -469,21 +469,21 @@ const Wallet = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.5, type: "spring" }}
         >
-          <Card className="shadow-md">
-            <CardContent className="p-6">
+          <Card className="shadow-md rounded-2xl">
+            <CardContent className="p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Recent Activity</h2>
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <Filter className="h-4 w-4" />
+                <h2 className="text-lg font-semibold">Recent Activity</h2>
+                <Button variant="ghost" size="sm" className="gap-1.5 h-7 rounded-full text-xs px-2.5">
+                  <Filter className="h-3.5 w-3.5" />
                   Filter
                 </Button>
               </div>
               
               <Tabs defaultValue="all" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="received">Received</TabsTrigger>
-                  <TabsTrigger value="sent">Sent</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 mb-4 rounded-xl h-9">
+                  <TabsTrigger value="all" className="text-xs rounded-lg">All</TabsTrigger>
+                  <TabsTrigger value="received" className="text-xs rounded-lg">Received</TabsTrigger>
+                  <TabsTrigger value="sent" className="text-xs rounded-lg">Sent</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="all" className="space-y-3 mt-0">
@@ -495,11 +495,11 @@ const Wallet = () => {
                         transition={{ duration: 0.3 }}
                         className="text-center py-12"
                       >
-                        <div className="inline-flex p-4 bg-muted rounded-full mb-4">
-                          <WalletIcon className="h-8 w-8 text-muted-foreground" />
+                        <div className="inline-flex p-3 bg-muted rounded-2xl mb-3">
+                          <WalletIcon className="h-6 w-6 text-muted-foreground" />
                         </div>
-                        <p className="text-muted-foreground font-medium">No transactions yet</p>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-muted-foreground font-medium text-sm">No transactions yet</p>
+                        <p className="text-xs text-muted-foreground mt-1">
                           Start by sending gifts or tips to friends
                         </p>
                       </motion.div>
@@ -516,7 +516,7 @@ const Wallet = () => {
                             exit={{ opacity: 0, x: 20 }}
                             transition={{ duration: 0.3, delay: index * 0.05 }}
                             whileHover={{ scale: 1.02 }}
-                            className="flex items-center gap-4 p-4 rounded-xl border border-border/50 hover:border-border hover:bg-muted/30 transition-all cursor-pointer"
+                            className="flex items-center gap-3 p-3 rounded-2xl border border-border/50 hover:border-border hover:bg-muted/30 transition-all cursor-pointer"
                           >
                             <motion.div
                               whileHover={{ rotate: 360 }}
@@ -525,10 +525,10 @@ const Wallet = () => {
                               {getTransactionIcon(transaction.type)}
                             </motion.div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm truncate">
+                              <p className="font-medium text-xs truncate">
                                 {getTransactionLabel(transaction)}
                               </p>
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
                                 {formatDistanceToNow(new Date(transaction.timestamp), { addSuffix: true })}
                               </p>
                             </div>
@@ -537,11 +537,11 @@ const Wallet = () => {
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
                                 transition={{ delay: index * 0.05 + 0.2, type: "spring" }}
-                                className={`text-lg font-bold ${isNegative ? 'text-red-500' : 'text-green-500'}`}
+                                className={`text-base font-bold ${isNegative ? 'text-red-500' : 'text-green-500'}`}
                               >
                                 {isNegative ? '' : '+'}{Math.abs(amount).toLocaleString()}
                               </motion.p>
-                              <p className="text-xs text-muted-foreground">Nexa</p>
+                              <p className="text-[10px] text-muted-foreground">Nexa</p>
                             </div>
                           </motion.div>
                         );
@@ -556,7 +556,7 @@ const Wallet = () => {
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="text-center py-8 text-muted-foreground"
+                        className="text-center py-8 text-muted-foreground text-sm"
                       >
                         No received transactions
                       </motion.div>
@@ -572,7 +572,7 @@ const Wallet = () => {
                             exit={{ opacity: 0, x: 20 }}
                             transition={{ duration: 0.3, delay: index * 0.05 }}
                             whileHover={{ scale: 1.02 }}
-                            className="flex items-center gap-4 p-4 rounded-xl border border-border/50 hover:border-border hover:bg-muted/30 transition-all cursor-pointer"
+                            className="flex items-center gap-3 p-3 rounded-2xl border border-border/50 hover:border-border hover:bg-muted/30 transition-all cursor-pointer"
                           >
                             <motion.div
                               whileHover={{ rotate: 360 }}
@@ -581,10 +581,10 @@ const Wallet = () => {
                               {getTransactionIcon(transaction.type)}
                             </motion.div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm truncate">
+                              <p className="font-medium text-xs truncate">
                                 {getTransactionLabel(transaction)}
                               </p>
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
                                 {formatDistanceToNow(new Date(transaction.timestamp), { addSuffix: true })}
                               </p>
                             </div>
@@ -593,11 +593,11 @@ const Wallet = () => {
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
                                 transition={{ delay: index * 0.05 + 0.2, type: "spring" }}
-                                className="text-lg font-bold text-green-500"
+                                className="text-base font-bold text-green-500"
                               >
                                 +{amount.toLocaleString()}
                               </motion.p>
-                              <p className="text-xs text-muted-foreground">Nexa</p>
+                              <p className="text-[10px] text-muted-foreground">Nexa</p>
                             </div>
                           </motion.div>
                         );
@@ -612,7 +612,7 @@ const Wallet = () => {
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="text-center py-8 text-muted-foreground"
+                        className="text-center py-8 text-muted-foreground text-sm"
                       >
                         No sent transactions
                       </motion.div>
@@ -628,7 +628,7 @@ const Wallet = () => {
                             exit={{ opacity: 0, x: 20 }}
                             transition={{ duration: 0.3, delay: index * 0.05 }}
                             whileHover={{ scale: 1.02 }}
-                            className="flex items-center gap-4 p-4 rounded-xl border border-border/50 hover:border-border hover:bg-muted/30 transition-all cursor-pointer"
+                            className="flex items-center gap-3 p-3 rounded-2xl border border-border/50 hover:border-border hover:bg-muted/30 transition-all cursor-pointer"
                           >
                             <motion.div
                               whileHover={{ rotate: 360 }}
@@ -637,10 +637,10 @@ const Wallet = () => {
                               {getTransactionIcon(transaction.type)}
                             </motion.div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm truncate">
+                              <p className="font-medium text-xs truncate">
                                 {getTransactionLabel(transaction)}
                               </p>
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
                                 {formatDistanceToNow(new Date(transaction.timestamp), { addSuffix: true })}
                               </p>
                             </div>
@@ -649,11 +649,11 @@ const Wallet = () => {
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
                                 transition={{ delay: index * 0.05 + 0.2, type: "spring" }}
-                                className="text-lg font-bold text-red-500"
+                                className="text-base font-bold text-red-500"
                               >
                                 {amount.toLocaleString()}
                               </motion.p>
-                              <p className="text-xs text-muted-foreground">Nexa</p>
+                              <p className="text-[10px] text-muted-foreground">Nexa</p>
                             </div>
                           </motion.div>
                         );
