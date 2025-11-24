@@ -32,6 +32,7 @@ const ChatsPage = lazy(() => import("./pages/Chats"));
 const ChatRoom = lazy(() => import("./pages/ChatRoom"));
 const SearchPage = lazy(() => import("./pages/Search"));
 const ShopPage = lazy(() => import("./pages/Shop"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
 const Profile = lazy(() => import("./pages/Profile"));
 const EditProfile = lazy(() => import("./pages/EditProfile"));
 const Notifications = lazy(() => import("./pages/Notifications"));
@@ -128,6 +129,7 @@ const AppRoutes = () => {
       <Route path="/chat/:chatId" element={<Layout><ChatRoom /></Layout>} />
       <Route path="/search" element={<Layout><SearchPage /></Layout>} />
       <Route path="/shop" element={<Layout><ShopPage /></Layout>} />
+      <Route path="/marketplace" element={<Layout><Marketplace /></Layout>} />
       <Route path="/notifications" element={<Layout><Notifications /></Layout>} />
       <Route path="/post/:postId" element={<Layout><PostDetail /></Layout>} />
       <Route path="/admin" element={<Layout><AdminDashboard /></Layout>} />
