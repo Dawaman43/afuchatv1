@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
+import { GiftStatisticsSheet } from './GiftStatisticsSheet';
 
 interface GiftDetails {
   id: string;
@@ -58,6 +59,7 @@ const getRarityPercentage = (rarity: string) => {
 export const PinnedGiftDetailSheet = ({ giftId, open, onOpenChange }: PinnedGiftDetailSheetProps) => {
   const [gift, setGift] = useState<GiftDetails | null>(null);
   const [loading, setLoading] = useState(false);
+  const [statsSheetOpen, setStatsSheetOpen] = useState(false);
 
   useEffect(() => {
     if (giftId && open) {
@@ -236,8 +238,7 @@ export const PinnedGiftDetailSheet = ({ giftId, open, onOpenChange }: PinnedGift
               </Button>
               <Button 
                 onClick={() => {
-                  onOpenChange(false);
-                  window.location.href = `/gifts/${giftId}`;
+                  setStatsSheetOpen(true);
                 }}
                 className="h-14 text-lg rounded-2xl bg-primary hover:bg-primary/90"
               >
@@ -247,6 +248,13 @@ export const PinnedGiftDetailSheet = ({ giftId, open, onOpenChange }: PinnedGift
           </div>
         ) : null}
       </SheetContent>
+
+      {/* Statistics Sheet */}
+      <GiftStatisticsSheet 
+        giftId={giftId}
+        open={statsSheetOpen}
+        onOpenChange={setStatsSheetOpen}
+      />
     </Sheet>
   );
 };
