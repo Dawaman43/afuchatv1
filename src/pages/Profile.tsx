@@ -979,7 +979,16 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 							</div>
 						)}
 
-						<p className="text-muted-foreground text-sm">@{profile.handle}</p>
+					<p 
+						className="text-muted-foreground text-sm select-text cursor-pointer hover:text-primary transition-colors"
+						onClick={() => {
+							navigator.clipboard.writeText(profile.handle);
+							toast.success('Username copied to clipboard!');
+						}}
+						title="Click to copy username"
+					>
+						@{profile.handle}
+					</p>
 					</div>
 
 					{profile.bio && (
