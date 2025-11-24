@@ -269,7 +269,7 @@ export default function Shop() {
 
       {/* Purchase Sheet */}
       <Sheet open={!!selectedListing} onOpenChange={() => setSelectedListing(null)}>
-        <SheetContent side="bottom" className="max-h-[70vh] flex flex-col rounded-t-3xl bg-background/95 backdrop-blur-xl border-t border-border/50 p-0">
+        <SheetContent side="bottom" className="max-h-[65vh] flex flex-col rounded-t-3xl bg-background/95 backdrop-blur-xl border-t border-border/50 p-0">
           {selectedListing && (
             <>
               <SheetHeader className="space-y-1 pb-3 pt-6 px-6 border-b border-border/40 flex-shrink-0">
@@ -400,7 +400,7 @@ export default function Shop() {
               </div>
 
               {/* Fixed Footer with Purchase Button */}
-              <div className="flex-shrink-0 border-t border-border/40 p-6 pt-4 bg-background/95 backdrop-blur-xl">
+              <div className="flex-shrink-0 border-t border-border/40 p-6 pt-4 pb-8 bg-background/95 backdrop-blur-xl">
                 {!isOwnListing && (
                   <Button
                     onClick={handlePurchase}
