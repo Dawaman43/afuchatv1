@@ -913,6 +913,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               size="sm"
               onClick={(e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 handleTranslate();
               }}
               disabled={isTranslating}
@@ -943,6 +944,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             size="sm" 
             className="flex items-center gap-0.5 sm:gap-1 group h-7 sm:h-8 px-2 sm:px-3"
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               setShowViewsSheet(true);
             }}
