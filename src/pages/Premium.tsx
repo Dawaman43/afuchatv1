@@ -22,9 +22,14 @@ interface SubscriptionPlan {
 interface UserSubscription {
   id: string;
   plan_id: string;
+  started_at: string;
   expires_at: string;
   is_active: boolean;
   acoin_paid: number;
+  subscription_plans?: {
+    name: string;
+    duration_days: number;
+  };
 }
 
 export default function Premium() {
@@ -73,10 +78,16 @@ export default function Premium() {
       setAcoinBalance(profileData.acoin || 0);
     }
 
-    // Fetch active subscription
+    // Fetch active subscription with plan details
     const { data: subData } = await supabase
       .from('user_subscriptions')
-      .select('*')
+      .select(`
+        *,
+        subscription_plans (
+          name,
+          duration_days
+        )
+      `)
       .eq('user_id', user.id)
       .eq('is_active', true)
       .gt('expires_at', new Date().toISOString())
@@ -193,24 +204,60 @@ export default function Premium() {
         {/* Current Subscription Status */}
         {currentSubscription && (
           <Card className="p-6 mb-8 border-primary bg-gradient-to-br from-primary/5 to-transparent">
-            <div className="flex items-start justify-between">
+            <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-primary/20 rounded-full">
                   <Crown className="h-6 w-6 text-primary" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
                     <Badge className="bg-primary">Active Premium</Badge>
                     <Badge variant="outline" className="text-xs">Verified</Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground flex items-center gap-2 mb-1">
-                    <Calendar className="h-4 w-4" />
-                    Subscription ends: <span className="font-semibold text-foreground">{formatDate(currentSubscription.expires_at)}</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Your verified badge and premium features will expire on this date
+                  <p className="text-sm font-semibold">
+                    {currentSubscription.subscription_plans?.name || 'Premium Plan'}
                   </p>
                 </div>
+              </div>
+
+              <Separator />
+
+              <div className="grid gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    <span>Started:</span>
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">
+                    {formatDate(currentSubscription.started_at)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    <span>Expires:</span>
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">
+                    {formatDate(currentSubscription.expires_at)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Sparkles className="h-4 w-4" />
+                    <span>Duration:</span>
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">
+                    {currentSubscription.subscription_plans?.duration_days || 0} days
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-2 p-3 bg-muted/30 rounded-lg">
+                <p className="text-xs text-muted-foreground text-center">
+                  Your verified badge and premium features will expire on {formatDate(currentSubscription.expires_at)}
+                </p>
               </div>
             </div>
           </Card>
