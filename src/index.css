@@ -129,12 +129,30 @@ All colors MUST be HSL.
 @layer base {
   * {
     @apply border-0;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
   }
+  
   body {
     @apply bg-background text-foreground smooth-scroll;
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Remove all click/tap markers and outlines */
+  button, a, input, textarea, select {
+    -webkit-tap-highlight-color: transparent;
+    outline: none !important;
+  }
+  
+  button:focus, a:focus, input:focus, textarea:focus, select:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  
+  button:active, a:active {
+    -webkit-tap-highlight-color: transparent;
   }
   
   /* Performance: reduce animations on low-end devices */
