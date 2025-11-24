@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Gift, TrendingUp, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 import { GiftImage } from './GiftImage';
 import { GiftConfetti } from './GiftConfetti';
 import { ComboConfetti } from './ComboConfetti';
@@ -58,7 +57,6 @@ interface PreviewGift extends GiftItem {
 
 export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDialogProps) => {
   const { user } = useAuth();
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [gifts, setGifts] = useState<GiftItem[]>([]);
@@ -146,7 +144,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
     if (!selectedGift || selectedGift.id !== gift.id) {
       // Start new combo or switch gift
       if (currentPrice > userXP) {
-        toast.error(t('gifts.notEnoughNexa'));
+        toast.error("Not enough Nexa");
         return;
       }
       
@@ -162,7 +160,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
       const totalCost = calculateComboTotalCost(gift.id, gift.base_xp_cost, newCount);
       
       if (totalCost > userXP) {
-        toast.error(t('gifts.notEnoughNexa'));
+        toast.error("Not enough Nexa");
         return;
       }
       
@@ -235,8 +233,8 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
           
           const savedNexa = (result.original_cost || 0) - (result.discounted_cost || 0);
           toast.success(
-            t('gifts.comboSent', { saved: savedNexa }),
-            { description: result.new_grade ? `${t('gamification.grade')}: ${result.new_grade}` : undefined }
+            `Combo sent! You saved ${savedNexa} Nexa`,
+            { description: result.new_grade ? `Grade: ${result.new_grade}` : undefined }
           );
           setOpen(false);
           setSelectedGift(null);
@@ -271,8 +269,8 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
           setShowConfetti(true);
           
           toast.success(
-            t('gifts.giftSent'),
-            { description: result.new_grade ? `${t('gamification.grade')}: ${result.new_grade}` : undefined }
+            "Gift sent successfully!",
+            { description: result.new_grade ? `Grade: ${result.new_grade}` : undefined }
           );
           setOpen(false);
           setSelectedGift(null);
@@ -287,7 +285,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
       }
     } catch (error) {
       console.error('Error sending gift:', error);
-      toast.error(t('gifts.giftFailed'));
+      toast.error("Failed to send gift");
     } finally {
       setLoading(false);
     }
@@ -320,7 +318,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
           {trigger || (
             <Button variant="outline" size="sm" className="gap-2 hover:scale-105 transition-transform">
               <Gift className="h-4 w-4" />
-              {t('gifts.sendGift')}
+              Send Gift
             </Button>
           )}
         </SheetTrigger>
@@ -332,10 +330,10 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
               <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground">{receiverName[0]?.toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <SheetTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">{t('gifts.sendGiftTo', { name: receiverName })}</SheetTitle>
+              <SheetTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Send Gift to {receiverName}</SheetTitle>
               <SheetDescription className="text-sm font-medium flex items-center gap-1.5 mt-1">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
-                {t('gifts.yourNexa', { nexa: userXP.toLocaleString() })}
+                Your Nexa: {userXP.toLocaleString()}
               </SheetDescription>
             </div>
           </div>
@@ -343,7 +341,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
 
 
         <div className="text-sm text-center text-muted-foreground mb-6 bg-gradient-to-r from-muted/40 via-muted/60 to-muted/40 rounded-xl p-3 border border-border/50">
-          <span className="font-medium">💡 {t('gifts.tapToCombo')}</span>
+          <span className="font-medium">💡 Tap same gift multiple times to build a combo!</span>
         </div>
 
         <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-6">
@@ -427,7 +425,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
                     size="sm"
                     className="h-8 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs rounded-full shadow-md hover:shadow-lg transition-all duration-200 animate-[scale-in_0.3s_ease-out]"
                   >
-                    {loading ? t('gifts.sending') : t('gifts.send')}
+                    {loading ? "Sending..." : "Send"}
                   </Button>
                 )}
               </div>
