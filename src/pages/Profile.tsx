@@ -838,8 +838,8 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				)}
 					
 				<div className="flex items-end -mt-20 sm:-mt-16">
-					<div className="relative w-36 h-36 sm:w-40 sm:h-40">
-						<div className="absolute inset-[20%] rounded-full overflow-hidden bg-background">
+					<div className="relative w-32 h-32 sm:w-36 sm:h-36">
+						<div className="absolute inset-[18%] rounded-full overflow-hidden bg-background">
 							<StoryAvatar 
 								userId={profileId}
 								avatarUrl={profile.avatar_url}
@@ -849,7 +849,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 							/>
 						</div>
 						<PinnedGiftsDisplay userId={profileId} />
-						<div className="absolute inset-[20%]">
+						<div className="absolute inset-[18%]">
 							<OnlineStatus lastSeen={profile.last_seen} showOnlineStatus={profile.show_online_status} />
 						</div>
 					</div>
