@@ -69,8 +69,8 @@ export function VerifiedBadge({
     );
   }
 
-  // Show verified badge only if user has active premium subscription
-  if (isVerified && isPremium) {
+  // Show verified badge if user is verified (regardless of premium status)
+  if (isVerified) {
     return (
       <svg
         viewBox="0 0 22 22"
