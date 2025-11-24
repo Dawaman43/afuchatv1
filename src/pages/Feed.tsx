@@ -29,6 +29,7 @@ import { AffiliatedBadge } from '@/components/AffiliatedBadge';
 import { OnlineStatus } from '@/components/OnlineStatus';
 import { StoryAvatar } from '@/components/moments/StoryAvatar';
 import { ViewsAnalyticsSheet } from '@/components/ViewsAnalyticsSheet';
+import { SEO } from '@/components/SEO';
 
 // --- INTERFACES ---
 
@@ -2110,6 +2111,11 @@ const Feed = () => {
 
   return (
     <div className="h-full flex flex-col max-w-4xl mx-auto">
+      <SEO 
+        title="Feed — Latest Posts, Updates & Trending Topics | AfuChat"
+        description="Discover the latest posts, trending topics, viral content, and updates from your network on AfuChat's social feed. Share your thoughts, like posts, comment, and connect with friends and creators. Join conversations happening now on social media."
+        keywords="social feed, latest posts, trending topics, social media feed, viral content, user posts, trending hashtags, social updates, share posts, like and comment, follow friends, online feed, social stream, community posts, news feed"
+      />
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'foryou' | 'following')} className="w-full">
         <div>
           {newPostsCount > 0 && (

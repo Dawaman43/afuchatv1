@@ -30,6 +30,7 @@ import { AffiliateDetailsSheet } from '@/components/AffiliateDetailsSheet';
 import { VerifiedDetailsSheet } from '@/components/VerifiedDetailsSheet';
 import { OnlineStatus } from '@/components/OnlineStatus';
 import { StoryAvatar } from '@/components/moments/StoryAvatar';
+import { SEO } from '@/components/SEO';
 
 interface Profile {
 	id: string;
@@ -787,6 +788,11 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 
 	return (
 		<div className="h-full flex flex-col">
+			<SEO 
+				title={`${profile?.display_name || 'User'} (@${profile?.handle || 'user'}) — Profile | AfuChat`}
+				description={`View ${profile?.display_name}'s profile on AfuChat. ${profile?.bio ? profile.bio.substring(0, 150) : `Follow ${profile?.display_name} to see their posts, updates, and connect with them on the social platform.`} Join AfuChat to discover profiles, connect with people, and stay updated.`}
+				keywords={`${profile?.handle} profile, ${profile?.display_name}, user profile, social profile, follow ${profile?.handle}, ${profile?.display_name} posts, connect with ${profile?.display_name}, user page, profile page, social media profile`}
+			/>
 			<div className="flex-1 overflow-y-auto">
 				<div className="relative h-36 bg-gray-300 dark:bg-gray-700 w-full">
 					{profile?.banner_url ? (

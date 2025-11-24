@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Check, Sparkles, Zap, Clock, Hammer, TrendingUp, Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { SEO } from '@/components/SEO';
 
 interface ShopItem {
   id: string;

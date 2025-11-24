@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import NewChatDialog from '@/components/ui/NewChatDialog';
 import NotificationIcon from '@/components/nav/NotificationIcon';
 import AuthSheet from '@/components/ui/AuthSheet';
+import { SEO } from '@/components/SEO';
 
 
 // --- FAB Components (Positioned at bottom-20, above the collapsible nav) ---
@@ -228,7 +229,12 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col"> 
+    <div className="min-h-screen bg-background flex flex-col">
+      <SEO 
+        title="AfuChat — Post, Chat, Shop & AI | All-in-One Social Platform"
+        description="AfuChat combines the best features: post updates like Twitter, chat privately like Telegram, shop on AfuMall marketplace, and use AI assistant. Join millions connecting, sharing, chatting, and shopping in one powerful social app. Free messaging, secure chats, trending posts, and smart AI help."
+        keywords="social media app, messaging platform, chat application, online shopping mall, AI chatbot, post updates, share photos, instant messaging, group chat, private chat, buy online, sell online, marketplace, social networking site, connect with friends, online community, trending topics, social commerce"
+      />
       
       {/* Header (Hides on Scroll Down) */}
       <header 
