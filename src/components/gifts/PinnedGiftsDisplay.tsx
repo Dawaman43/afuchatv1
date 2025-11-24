@@ -98,7 +98,7 @@ export const PinnedGiftsDisplay = ({ userId, className = '' }: PinnedGiftsDispla
                 setDetailsOpen(true);
               }}
             >
-              <div className="relative text-3xl drop-shadow-lg" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+              <div className="relative text-xl drop-shadow-lg" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
                 {pinnedGift.gift.emoji}
               </div>
             </motion.div>
