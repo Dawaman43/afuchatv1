@@ -228,13 +228,14 @@ export default function Premium() {
           {plans.map((plan, index) => {
             const isPopular = index === 1; // Middle plan
             const canAfford = acoinBalance >= plan.acoin_price;
+            const hasActiveSubscription = !!currentSubscription;
 
             return (
               <Card
                 key={plan.id}
                 className={`p-6 relative ${
                   isPopular ? 'border-primary shadow-lg scale-105' : ''
-                }`}
+                } ${hasActiveSubscription ? 'opacity-60' : ''}`}
               >
                 {isPopular && (
                   <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -270,12 +271,14 @@ export default function Premium() {
 
                 <Button
                   onClick={() => handlePurchase(plan.id, plan.acoin_price)}
-                  disabled={!canAfford || purchasing === plan.id}
+                  disabled={!canAfford || purchasing === plan.id || hasActiveSubscription}
                   className="w-full"
                   variant={isPopular ? 'default' : 'outline'}
                 >
                   {purchasing === plan.id ? (
                     'Processing...'
+                  ) : hasActiveSubscription ? (
+                    'Already Subscribed'
                   ) : !canAfford ? (
                     'Insufficient ACoin'
                   ) : (
@@ -283,9 +286,14 @@ export default function Premium() {
                   )}
                 </Button>
 
-                {!canAfford && (
+                {!canAfford && !hasActiveSubscription && (
                   <p className="text-xs text-center text-muted-foreground mt-2">
                     Need {plan.acoin_price - acoinBalance} more ACoin
+                  </p>
+                )}
+                {hasActiveSubscription && (
+                  <p className="text-xs text-center text-muted-foreground mt-2">
+                    Wait until your current subscription expires
                   </p>
                 )}
               </Card>
