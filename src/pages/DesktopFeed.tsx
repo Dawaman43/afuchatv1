@@ -233,85 +233,85 @@ const DesktopFeed = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-[1440px] mx-auto flex">
+      <div className="max-w-[1400px] mx-auto flex">
         {/* Left Sidebar - Navigation */}
-        <aside className="hidden xl:flex w-[275px] flex-col gap-2 p-4 border-r border-border sticky top-0 h-screen">
-          <div className="mb-4">
-            <h2 className="text-2xl font-bold px-4">AfuChat</h2>
+        <aside className="hidden lg:flex w-[260px] flex-col gap-1 px-2 py-2 border-r border-border sticky top-0 h-screen">
+          <div className="mb-2 px-3 py-2">
+            <h2 className="text-xl font-bold">AfuChat</h2>
           </div>
 
-          <nav className="space-y-2">
+          <nav className="space-y-1">
             <Button
               variant="ghost"
-              className="w-full justify-start text-xl h-auto py-3 px-4"
+              className="w-full justify-start text-base h-auto py-2.5 px-3 rounded-full hover:bg-muted/70"
               onClick={() => navigate('/')}
             >
-              <Sparkles className="h-6 w-6 mr-4" />
-              <span>Hub</span>
+              <Sparkles className="h-5 w-5 mr-3" />
+              <span className="font-medium">Hub</span>
             </Button>
 
             <Button
               variant="ghost"
-              className="w-full justify-start text-xl h-auto py-3 px-4"
+              className="w-full justify-start text-base h-auto py-2.5 px-3 rounded-full hover:bg-muted/70"
               onClick={() => navigate('/home')}
             >
-              <Hash className="h-6 w-6 mr-4" />
-              <span>Feed</span>
+              <Hash className="h-5 w-5 mr-3" />
+              <span className="font-medium">Feed</span>
             </Button>
 
             <Button
               variant="ghost"
-              className="w-full justify-start text-xl h-auto py-3 px-4"
+              className="w-full justify-start text-base h-auto py-2.5 px-3 rounded-full hover:bg-muted/70"
               onClick={() => navigate('/chats')}
             >
-              <MessageSquare className="h-6 w-6 mr-4" />
-              <span>Messages</span>
+              <MessageSquare className="h-5 w-5 mr-3" />
+              <span className="font-medium">Messages</span>
             </Button>
 
             <Button
               variant="ghost"
-              className="w-full justify-start text-xl h-auto py-3 px-4"
+              className="w-full justify-start text-base h-auto py-2.5 px-3 rounded-full hover:bg-muted/70"
               onClick={() => navigate('/notifications')}
             >
-              <Bell className="h-6 w-6 mr-4" />
-              <span>Notifications</span>
+              <Bell className="h-5 w-5 mr-3" />
+              <span className="font-medium">Notifications</span>
             </Button>
 
             <Button
               variant="ghost"
-              className="w-full justify-start text-xl h-auto py-3 px-4"
+              className="w-full justify-start text-base h-auto py-2.5 px-3 rounded-full hover:bg-muted/70"
               onClick={() => user && navigate(`/${user.id}`)}
             >
-              <User className="h-6 w-6 mr-4" />
-              <span>Profile</span>
+              <User className="h-5 w-5 mr-3" />
+              <span className="font-medium">Profile</span>
             </Button>
 
             <Button
               variant="ghost"
-              className="w-full justify-start text-xl h-auto py-3 px-4"
+              className="w-full justify-start text-base h-auto py-2.5 px-3 rounded-full hover:bg-muted/70"
               onClick={() => openSettings()}
             >
-              <Settings className="h-6 w-6 mr-4" />
-              <span>Settings</span>
+              <Settings className="h-5 w-5 mr-3" />
+              <span className="font-medium">Settings</span>
             </Button>
           </nav>
 
-          <div className="mt-auto">
+          <div className="mt-auto p-2">
             {user && (
               <Button
-                variant="outline"
-                className="w-full justify-start"
+                variant="ghost"
+                className="w-full justify-start rounded-full hover:bg-muted/70 h-auto py-2"
                 onClick={() => navigate(`/${user.id}`)}
               >
 							<StoryAvatar 
 								userId={user.id}
 								avatarUrl={user.user_metadata?.avatar_url}
 								name={user.user_metadata?.display_name || 'User'}
-								size="md"
-								className="mr-3"
+								size="sm"
+								className="mr-2"
 								showStoryRing={true}
 							/>
-                <div className="text-left flex-1">
+                <div className="text-left flex-1 min-w-0">
                   <p className="font-semibold text-sm line-clamp-1">
                     {user.user_metadata?.display_name || 'User'}
                   </p>
@@ -325,75 +325,70 @@ const DesktopFeed = () => {
         </aside>
 
         {/* Center - Feed */}
-        <main className="flex-1 min-w-0 border-r border-border max-w-[600px]">
+        <main className="flex-1 min-w-0 border-r border-border max-w-[680px]">
           <Feed />
         </main>
 
         {/* Right Sidebar - Trending & Suggestions */}
-        <aside className="hidden lg:block w-[350px] p-4 space-y-6">
+        <aside className="hidden xl:block w-[360px] p-3 space-y-4 overflow-y-auto h-screen">
           {/* Search */}
-          <div className="sticky top-0 bg-background pb-4 z-10">
+          <div className="sticky top-0 bg-background pb-3 z-10">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search AfuChat"
+                placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-10 rounded-full bg-muted/50"
+                className="pl-10 rounded-full bg-muted/50 border-0"
               />
             </div>
           </div>
 
           {/* Trending */}
-          <Card className="p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="h-5 w-5" />
-              <h3 className="font-bold text-lg">Trending</h3>
-            </div>
-            <div className="space-y-4">
+          <div className="bg-muted/30 rounded-2xl p-4">
+            <h3 className="font-bold text-lg mb-3">Trending</h3>
+            <div className="space-y-3">
               {trending.slice(0, 5).map((topic, index) => (
                 <button
                   key={index}
-                  className="w-full text-left hover:bg-muted/50 p-2 rounded-lg transition-colors"
+                  className="w-full text-left hover:bg-background/50 p-2 rounded-xl transition-colors"
                   onClick={() => navigate(`/search?q=${encodeURIComponent(topic.topic)}`)}
                 >
-                  <p className="text-sm text-muted-foreground">{index + 1} · Trending</p>
-                  <p className="font-semibold">#{topic.topic}</p>
-                  <p className="text-sm text-muted-foreground">{topic.count} posts</p>
+                  <p className="text-xs text-muted-foreground">{index + 1} · Trending</p>
+                  <p className="font-semibold text-sm">#{topic.topic}</p>
+                  <p className="text-xs text-muted-foreground">{topic.count} posts</p>
                 </button>
               ))}
               {trending.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No trending topics yet
+                  No trending topics
                 </p>
               )}
               {trending.length > 0 && (
                 <Button
                   variant="ghost"
-                  className="w-full text-primary"
+                  size="sm"
+                  className="w-full text-primary hover:bg-background/50"
                   onClick={() => navigate('/trending')}
                 >
                   Show more
                 </Button>
               )}
             </div>
-          </Card>
+          </div>
 
           {/* Suggested Users */}
-          <Card className="p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Users className="h-5 w-5" />
-              <h3 className="font-bold text-lg">Who to follow</h3>
-            </div>
-            <div className="space-y-4">
+          <div className="bg-muted/30 rounded-2xl p-4">
+            <h3 className="font-bold text-lg mb-3">Who to follow</h3>
+            <div className="space-y-3">
               {suggested.map((suggestedUser) => (
-                <div key={suggestedUser.id} className="flex items-center gap-3">
+                <div key={suggestedUser.id} className="flex items-start gap-2 p-2 hover:bg-background/50 rounded-xl transition-colors">
                   <StoryAvatar 
                     userId={suggestedUser.id}
                     avatarUrl={suggestedUser.avatar_url}
                     name={suggestedUser.display_name}
-                    size="md"
+                    size="sm"
                     className="cursor-pointer"
                     showStoryRing={true}
                     onClick={() => navigate(`/${suggestedUser.id}`)}
@@ -407,7 +402,7 @@ const DesktopFeed = () => {
                         {suggestedUser.display_name}
                       </p>
                       {suggestedUser.is_verified && (
-                        <Badge variant="secondary" className="h-4 px-1 text-xs">✓</Badge>
+                        <Badge variant="secondary" className="h-3 px-1 text-[10px]">✓</Badge>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-1">
@@ -416,49 +411,41 @@ const DesktopFeed = () => {
                   </div>
                   <Button 
                     size="sm" 
-                    variant={followingIds.has(suggestedUser.id) ? "secondary" : "outline"}
+                    variant={followingIds.has(suggestedUser.id) ? "secondary" : "default"}
+                    className="rounded-full h-8 px-4 text-xs"
                     onClick={() => handleFollow(suggestedUser.id)}
                     disabled={processingFollow.has(suggestedUser.id)}
                   >
-                    {followingIds.has(suggestedUser.id) ? (
-                      <>
-                        <UserCheck className="h-3 w-3 mr-1" />
-                        Following
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="h-3 w-3 mr-1" />
-                        Follow
-                      </>
-                    )}
+                    {followingIds.has(suggestedUser.id) ? "Following" : "Follow"}
                   </Button>
                 </div>
               ))}
               {suggested.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No suggestions available
+                  No suggestions
                 </p>
               )}
               {suggested.length > 0 && (
                 <Button
                   variant="ghost"
-                  className="w-full text-primary"
+                  size="sm"
+                  className="w-full text-primary hover:bg-background/50"
                   onClick={() => navigate('/suggested-users')}
                 >
                   Show more
                 </Button>
               )}
             </div>
-          </Card>
+          </div>
 
           {/* Footer Links */}
-          <div className="text-xs text-muted-foreground space-y-2 px-4">
-            <div className="flex flex-wrap gap-3">
+          <div className="text-xs text-muted-foreground px-4 pb-4">
+            <div className="flex flex-wrap gap-3 mb-2">
               <button onClick={() => navigate('/terms')} className="hover:underline">Terms</button>
               <button onClick={() => navigate('/privacy')} className="hover:underline">Privacy</button>
               <button onClick={() => navigate('/support')} className="hover:underline">Support</button>
             </div>
-            <p>© 2024 AfuChat Super App</p>
+            <p>© 2024 AfuChat</p>
           </div>
         </aside>
       </div>
