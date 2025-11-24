@@ -294,95 +294,171 @@ export default function Shop() {
 
       {/* Purchase Sheet */}
       <Sheet open={!!selectedListing} onOpenChange={() => setSelectedListing(null)}>
-        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
+        <SheetContent side="bottom" className="h-[95vh] overflow-y-auto bg-gradient-to-b from-background to-muted/20">
           {selectedListing && (
             <>
-              <SheetHeader>
-                <SheetTitle>Purchase Gift</SheetTitle>
-                <SheetDescription>
-                  Review the details before purchasing
+              <SheetHeader className="space-y-3 pb-6 border-b border-border/40">
+                <SheetTitle className="font-outfit text-3xl font-bold tracking-tight">
+                  Gift Details
+                </SheetTitle>
+                <SheetDescription className="font-inter text-base text-muted-foreground">
+                  Complete information about this exclusive gift
                 </SheetDescription>
               </SheetHeader>
 
-              <div className="space-y-6 mt-6">
-                {/* Gift Display */}
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <div className="text-8xl p-6 bg-gradient-to-br from-muted/50 to-muted/30 rounded-full">
-                    {selectedListing.gift.emoji}
+              <div className="space-y-8 mt-8 pb-6">
+                {/* Gift Display with Animation */}
+                <motion.div 
+                  className="flex flex-col items-center text-center space-y-4"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="relative">
+                    <motion.div 
+                      className="text-[120px] p-8 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-full shadow-lg"
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      {selectedListing.gift.emoji}
+                    </motion.div>
+                    <div className="absolute -bottom-2 -right-2">
+                      <Badge className={`${getRarityColor(selectedListing.gift.rarity)} px-4 py-2 text-sm font-outfit font-semibold shadow-lg`}>
+                        {selectedListing.gift.rarity}
+                      </Badge>
+                    </div>
                   </div>
-                  <h3 className="text-2xl font-bold">{selectedListing.gift.name}</h3>
-                  <Badge className={getRarityColor(selectedListing.gift.rarity)}>
-                    {selectedListing.gift.rarity}
-                  </Badge>
+                  <h3 className="font-outfit text-4xl font-bold tracking-tight mt-4">
+                    {selectedListing.gift.name}
+                  </h3>
                   {selectedListing.gift.description && (
-                    <p className="text-sm text-muted-foreground max-w-md">
+                    <p className="font-inter text-base text-muted-foreground max-w-md leading-relaxed px-4">
                       {selectedListing.gift.description}
                     </p>
                   )}
-                </div>
+                </motion.div>
 
-                {/* Price */}
-                <div className="text-center py-6 bg-primary/5 rounded-lg border border-primary/20">
-                  <p className="text-sm text-muted-foreground mb-2">Price</p>
-                  <p className="text-4xl font-bold text-primary">
-                    {selectedListing.asking_price.toLocaleString()}
-                    <span className="text-xl text-muted-foreground ml-2">Nexa</span>
-                  </p>
-                </div>
-
-                {/* Seller Info */}
-                <div className="flex items-center justify-center gap-3 py-4 border-y border-border">
-                  <User className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Seller:</span>
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={selectedListing.seller.avatar_url || undefined} />
-                      <AvatarFallback>{selectedListing.seller.display_name[0]}</AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">@{selectedListing.seller.handle}</span>
+                {/* Price Card */}
+                <motion.div 
+                  className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-2 border-primary/20 shadow-xl"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-pulse" />
+                  <div className="relative text-center py-8 px-6">
+                    <p className="font-inter text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wider">
+                      Asking Price
+                    </p>
+                    <div className="flex items-baseline justify-center gap-2">
+                      <p className="font-outfit text-6xl font-bold text-primary tracking-tight">
+                        {selectedListing.asking_price.toLocaleString()}
+                      </p>
+                      <span className="font-outfit text-2xl font-semibold text-muted-foreground">
+                        Nexa
+                      </span>
+                    </div>
                   </div>
-                </div>
+                </motion.div>
+
+                {/* Seller Info Card */}
+                <motion.div 
+                  className="rounded-2xl bg-card/50 border border-border/50 p-6 shadow-md backdrop-blur-sm"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-14 w-14 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+                        <AvatarImage src={selectedListing.seller.avatar_url || undefined} />
+                        <AvatarFallback className="font-outfit text-lg font-bold">
+                          {selectedListing.seller.display_name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-left">
+                        <p className="font-inter text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                          Seller
+                        </p>
+                        <p className="font-outfit text-lg font-semibold">
+                          {selectedListing.seller.display_name}
+                        </p>
+                        <p className="font-inter text-sm text-muted-foreground">
+                          @{selectedListing.seller.handle}
+                        </p>
+                      </div>
+                    </div>
+                    <User className="h-8 w-8 text-muted-foreground/50" />
+                  </div>
+                </motion.div>
 
                 {/* Your Balance */}
                 {user && (
-                  <div className="text-center py-3 bg-muted/50 rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-1">Your Balance</p>
-                    <p className="text-xl font-bold">
-                      {userXP.toLocaleString()} <span className="text-muted-foreground">Nexa</span>
-                    </p>
-                  </div>
+                  <motion.div 
+                    className="rounded-2xl bg-muted/30 border border-border/30 p-6 shadow-sm"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-inter text-sm font-medium text-muted-foreground mb-2">
+                          Your Balance
+                        </p>
+                        <div className="flex items-baseline gap-2">
+                          <p className="font-outfit text-3xl font-bold">
+                            {userXP.toLocaleString()}
+                          </p>
+                          <span className="font-outfit text-lg font-semibold text-muted-foreground">
+                            Nexa
+                          </span>
+                        </div>
+                      </div>
+                      {userXP < selectedListing.asking_price && (
+                        <Badge variant="destructive" className="font-inter text-xs">
+                          Insufficient Balance
+                        </Badge>
+                      )}
+                    </div>
+                  </motion.div>
                 )}
 
                 {/* Purchase Button */}
                 {!isOwnListing && (
-                  <Button
-                    onClick={handlePurchase}
-                    disabled={purchasing || !user || userXP < selectedListing.asking_price}
-                    className="w-full h-12 text-lg"
-                    size="lg"
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
                   >
-                    {purchasing ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="mr-2 h-5 w-5" />
-                        Purchase Gift
-                      </>
-                    )}
-                  </Button>
+                    <Button
+                      onClick={handlePurchase}
+                      disabled={purchasing || !user || userXP < selectedListing.asking_price}
+                      className="w-full h-14 text-lg font-outfit font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                      size="lg"
+                    >
+                      {purchasing ? (
+                        <>
+                          <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                          Processing Purchase...
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="mr-2 h-6 w-6" />
+                          Complete Purchase
+                        </>
+                      )}
+                    </Button>
+                  </motion.div>
                 )}
 
                 {isOwnListing && (
-                  <Badge variant="secondary" className="w-full justify-center py-3 text-base">
+                  <Badge variant="secondary" className="w-full justify-center py-4 text-base font-outfit font-semibold">
                     This is your listing
                   </Badge>
                 )}
 
                 {!user && (
-                  <Button variant="outline" className="w-full h-12" disabled>
+                  <Button variant="outline" className="w-full h-14 font-outfit font-semibold text-base" disabled>
                     Sign in to purchase
                   </Button>
                 )}
