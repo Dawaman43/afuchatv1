@@ -102,14 +102,6 @@ const DesktopFeed = () => {
     try {
       const priorityHandles = ['afuchat', 'amkaweesi', 'afuai'];
       
-      // Fetch following status for priority accounts
-      const { data: followingData } = await supabase
-        .from('follows')
-        .select('following_id')
-        .eq('follower_id', user.id);
-      
-      const followingIdsSet = new Set(followingData?.map(f => f.following_id) || []);
-      
       // Fetch priority accounts
       const { data: priorityAccounts, error: priorityError } = await supabase
         .from('profiles')
@@ -118,29 +110,19 @@ const DesktopFeed = () => {
 
       if (priorityError) throw priorityError;
 
-      // Filter out already followed priority accounts
-      const unfollowedPriority = priorityAccounts?.filter(
-        account => !followingIdsSet.has(account.id)
-      ) || [];
-
-      // Fetch additional suggested users (excluding priority accounts and current user)
+      // Fetch additional suggested users (excluding current user)
       const priorityIds = priorityAccounts?.map(a => a.id) || [];
       const { data: otherUsers, error } = await supabase
         .from('profiles')
         .select('id, display_name, handle, avatar_url, is_verified, is_business_mode')
         .neq('id', user.id)
         .not('id', 'in', `(${priorityIds.join(',')})`)
-        .limit(5);
+        .limit(10);
 
       if (error) throw error;
 
-      // Filter out already followed users from other suggestions
-      const unfollowedOthers = otherUsers?.filter(
-        u => !followingIdsSet.has(u.id)
-      ) || [];
-
-      // Combine: priority accounts first, then others
-      const combined = [...unfollowedPriority, ...unfollowedOthers];
+      // Combine: priority accounts first, then others, limit to 5 total
+      const combined = [...(priorityAccounts || []), ...(otherUsers || [])].slice(0, 5);
       setSuggested(combined);
     } catch (error) {
       console.error('Error fetching suggested users:', error);
