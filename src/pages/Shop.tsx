@@ -269,29 +269,29 @@ export default function Shop() {
 
       {/* Purchase Sheet */}
       <Sheet open={!!selectedListing} onOpenChange={() => setSelectedListing(null)}>
-        <SheetContent side="bottom" className="h-[85vh] overflow-y-auto bg-gradient-to-b from-background to-muted/20">
+        <SheetContent side="bottom" className="max-h-[70vh] overflow-y-auto rounded-t-3xl bg-background/95 backdrop-blur-xl border-t border-border/50">
           {selectedListing && (
             <>
-              <SheetHeader className="space-y-2 pb-4 border-b border-border/40">
-                <SheetTitle className="text-xl font-bold">
+              <SheetHeader className="space-y-1 pb-3 border-b border-border/40">
+                <SheetTitle className="text-lg font-bold">
                   Gift Details
                 </SheetTitle>
-                <SheetDescription className="text-sm text-muted-foreground">
+                <SheetDescription className="text-xs text-muted-foreground">
                   Complete information about this exclusive gift
                 </SheetDescription>
               </SheetHeader>
 
-              <div className="space-y-4 mt-4 pb-6">
+              <div className="space-y-3 mt-3 pb-6">
                 {/* Gift Display with Animation */}
                 <motion.div 
-                  className="flex flex-col items-center text-center space-y-2"
+                  className="flex flex-col items-center text-center space-y-1"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
                 >
                   <div className="relative">
                     <motion.div 
-                      className="text-[80px] p-4 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-full shadow-lg"
+                      className="text-[60px] p-3 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-full shadow-lg"
                       whileHover={{ scale: 1.05 }}
                       transition={{ type: "spring", stiffness: 300 }}
                     >
@@ -303,11 +303,11 @@ export default function Shop() {
                       </Badge>
                     </div>
                   </div>
-                  <h3 className="text-2xl font-bold tracking-tight mt-2">
+                  <h3 className="text-xl font-bold tracking-tight mt-1">
                     {selectedListing.gift.name}
                   </h3>
                   {selectedListing.gift.description && (
-                    <p className="text-sm text-muted-foreground max-w-md leading-relaxed px-4">
+                    <p className="text-xs text-muted-foreground max-w-md leading-relaxed px-4">
                       {selectedListing.gift.description}
                     </p>
                   )}
@@ -321,15 +321,15 @@ export default function Shop() {
                   transition={{ delay: 0.1 }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-pulse" />
-                  <div className="relative text-center py-4 px-4">
-                    <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">
+                  <div className="relative text-center py-3 px-3">
+                    <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">
                       Asking Price
                     </p>
                     <div className="flex items-baseline justify-center gap-2">
-                      <p className="text-4xl font-bold text-primary tracking-tight">
+                      <p className="text-3xl font-bold text-primary tracking-tight">
                         {selectedListing.asking_price.toLocaleString()}
                       </p>
-                      <span className="text-lg font-semibold text-muted-foreground">
+                      <span className="text-base font-semibold text-muted-foreground">
                         Nexa
                       </span>
                     </div>
@@ -338,14 +338,14 @@ export default function Shop() {
 
                 {/* Seller Info Card */}
                 <motion.div 
-                  className="rounded-xl bg-card/50 border border-border/50 p-4 shadow-md backdrop-blur-sm"
+                  className="rounded-xl bg-card/50 border border-border/50 p-3 shadow-md backdrop-blur-sm"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+                      <Avatar className="h-10 w-10 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
                         <AvatarImage src={selectedListing.seller.avatar_url || undefined} />
                         <AvatarFallback className="text-base font-bold">
                           {selectedListing.seller.display_name[0]}
@@ -370,7 +370,7 @@ export default function Shop() {
                 {/* Your Balance */}
                 {user && (
                   <motion.div 
-                    className="rounded-xl bg-muted/30 border border-border/30 p-4 shadow-sm"
+                    className="rounded-xl bg-muted/30 border border-border/30 p-3 shadow-sm"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
@@ -381,10 +381,10 @@ export default function Shop() {
                           Your Balance
                         </p>
                         <div className="flex items-baseline gap-2">
-                          <p className="text-2xl font-bold">
+                          <p className="text-xl font-bold">
                             {userXP.toLocaleString()}
                           </p>
-                          <span className="text-base font-semibold text-muted-foreground">
+                          <span className="text-sm font-semibold text-muted-foreground">
                             Nexa
                           </span>
                         </div>
