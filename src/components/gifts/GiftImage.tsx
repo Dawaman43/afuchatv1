@@ -22,7 +22,7 @@ export const GiftImage = ({
   const { imageUrl, isLoading, error } = useGiftImage(giftId, giftName, emoji, rarity);
 
   const sizeClasses = {
-    xs: 'w-8 h-8',
+    xs: 'w-6 h-6',
     sm: 'w-12 h-12',
     md: 'w-20 h-20',
     lg: 'w-32 h-32',
