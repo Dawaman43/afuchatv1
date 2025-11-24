@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  TrendingUp, Search, Users, Hash, Sparkles, UserPlus, UserCheck,
-  Settings, MessageSquare, Bell, User
+  TrendingUp, Search, MessageSquare, Bell, User, Settings
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -241,24 +240,6 @@ const DesktopFeed = () => {
           </div>
 
           <nav className="space-y-1">
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-base h-auto py-2.5 px-3 rounded-full hover:bg-muted/70"
-              onClick={() => navigate('/')}
-            >
-              <Sparkles className="h-5 w-5 mr-3" />
-              <span className="font-medium">Hub</span>
-            </Button>
-
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-base h-auto py-2.5 px-3 rounded-full hover:bg-muted/70"
-              onClick={() => navigate('/home')}
-            >
-              <Hash className="h-5 w-5 mr-3" />
-              <span className="font-medium">Feed</span>
-            </Button>
-
             <Button
               variant="ghost"
               className="w-full justify-start text-base h-auto py-2.5 px-3 rounded-full hover:bg-muted/70"
