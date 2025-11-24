@@ -272,16 +272,16 @@ export default function Shop() {
         <SheetContent side="bottom" className="max-h-[65vh] flex flex-col rounded-t-3xl bg-background/95 backdrop-blur-xl border-t border-border/50 p-0">
           {selectedListing && (
             <>
-              <SheetHeader className="space-y-1 pb-3 pt-6 px-6 border-b border-border/40 flex-shrink-0">
-                <SheetTitle className="text-lg font-bold">
+              <SheetHeader className="space-y-0.5 pb-2 pt-4 px-6 border-b border-border/40 flex-shrink-0">
+                <SheetTitle className="text-base font-bold">
                   Gift Details
                 </SheetTitle>
-                <SheetDescription className="text-xs text-muted-foreground">
+                <SheetDescription className="text-[10px] text-muted-foreground">
                   Complete information about this exclusive gift
                 </SheetDescription>
               </SheetHeader>
 
-              <div className="space-y-3 mt-3 px-6 pb-3 overflow-y-auto flex-1">
+              <div className="space-y-2 mt-2 px-6 pb-2 overflow-y-auto flex-1">
                 {/* Gift Display with Animation */}
                 <motion.div 
                   className="flex flex-col items-center text-center space-y-1"
@@ -291,23 +291,23 @@ export default function Shop() {
                 >
                   <div className="relative">
                     <motion.div 
-                      className="text-[60px] p-3 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-full shadow-lg"
+                      className="text-[40px] p-2 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-full shadow-lg"
                       whileHover={{ scale: 1.05 }}
                       transition={{ type: "spring", stiffness: 300 }}
                     >
                       {selectedListing.gift.emoji}
                     </motion.div>
                     <div className="absolute -bottom-1 -right-1">
-                      <Badge className={`${getRarityColor(selectedListing.gift.rarity)} px-3 py-1 text-xs font-semibold shadow-lg`}>
+                      <Badge className={`${getRarityColor(selectedListing.gift.rarity)} px-2 py-0.5 text-[10px] font-semibold shadow-lg`}>
                         {selectedListing.gift.rarity}
                       </Badge>
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold tracking-tight mt-1">
+                  <h3 className="text-base font-bold tracking-tight">
                     {selectedListing.gift.name}
                   </h3>
                   {selectedListing.gift.description && (
-                    <p className="text-xs text-muted-foreground max-w-md leading-relaxed px-4">
+                    <p className="text-[10px] text-muted-foreground max-w-md leading-tight px-2">
                       {selectedListing.gift.description}
                     </p>
                   )}
@@ -315,21 +315,20 @@ export default function Shop() {
 
                 {/* Price Card */}
                 <motion.div 
-                  className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-2 border-primary/20 shadow-xl"
+                  className="relative overflow-hidden rounded-lg bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 shadow-lg"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-pulse" />
-                  <div className="relative text-center py-3 px-3">
-                    <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">
+                  <div className="relative text-center py-2 px-2">
+                    <p className="text-[10px] font-medium text-muted-foreground mb-0.5 uppercase tracking-wider">
                       Asking Price
                     </p>
-                    <div className="flex items-baseline justify-center gap-2">
-                      <p className="text-3xl font-bold text-primary tracking-tight">
+                    <div className="flex items-baseline justify-center gap-1.5">
+                      <p className="text-xl font-bold text-primary tracking-tight">
                         {selectedListing.asking_price.toLocaleString()}
                       </p>
-                      <span className="text-base font-semibold text-muted-foreground">
+                      <span className="text-xs font-semibold text-muted-foreground">
                         Nexa
                       </span>
                     </div>
@@ -338,60 +337,60 @@ export default function Shop() {
 
                 {/* Seller Info Card */}
                 <motion.div 
-                  className="rounded-xl bg-card/50 border border-border/50 p-3 shadow-md backdrop-blur-sm"
+                  className="rounded-lg bg-card/50 border border-border/50 p-2 shadow-md backdrop-blur-sm"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-8 w-8 ring-2 ring-primary/20">
                         <AvatarImage src={selectedListing.seller.avatar_url || undefined} />
-                        <AvatarFallback className="text-base font-bold">
+                        <AvatarFallback className="text-xs font-bold">
                           {selectedListing.seller.display_name[0]}
                         </AvatarFallback>
                       </Avatar>
                       <div className="text-left">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                           Seller
                         </p>
-                        <p className="text-base font-semibold">
+                        <p className="text-sm font-semibold">
                           {selectedListing.seller.display_name}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[10px] text-muted-foreground">
                           @{selectedListing.seller.handle}
                         </p>
                       </div>
                     </div>
-                    <User className="h-6 w-6 text-muted-foreground/50" />
+                    <User className="h-5 w-5 text-muted-foreground/50" />
                   </div>
                 </motion.div>
 
                 {/* Your Balance */}
                 {user && (
                   <motion.div 
-                    className="rounded-xl bg-muted/30 border border-border/30 p-3 shadow-sm"
+                    className="rounded-lg bg-muted/30 border border-border/30 p-2 shadow-sm"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">
+                        <p className="text-[10px] font-medium text-muted-foreground mb-0.5">
                           Your Balance
                         </p>
-                        <div className="flex items-baseline gap-2">
-                          <p className="text-xl font-bold">
+                        <div className="flex items-baseline gap-1.5">
+                          <p className="text-base font-bold">
                             {userXP.toLocaleString()}
                           </p>
-                          <span className="text-sm font-semibold text-muted-foreground">
+                          <span className="text-xs font-semibold text-muted-foreground">
                             Nexa
                           </span>
                         </div>
                       </div>
                       {userXP < selectedListing.asking_price && (
-                        <Badge variant="destructive" className="text-xs">
-                          Insufficient Balance
+                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5">
+                          Insufficient
                         </Badge>
                       )}
                     </div>
@@ -400,22 +399,22 @@ export default function Shop() {
               </div>
 
               {/* Fixed Footer with Purchase Button */}
-              <div className="flex-shrink-0 border-t border-border/40 p-6 pt-4 pb-8 bg-background/95 backdrop-blur-xl">
+              <div className="flex-shrink-0 border-t border-border/40 p-4 pb-6 bg-background/95 backdrop-blur-xl">
                 {!isOwnListing && (
                   <Button
                     onClick={handlePurchase}
                     disabled={purchasing || !user || userXP < selectedListing.asking_price}
-                    className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                    size="lg"
+                    className="w-full h-10 text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                    size="sm"
                   >
                     {purchasing ? (
                       <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Processing Purchase...
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
                       </>
                     ) : (
                       <>
-                        <ShoppingCart className="mr-2 h-5 w-5" />
+                        <ShoppingCart className="mr-2 h-4 w-4" />
                         Complete Purchase
                       </>
                     )}
@@ -423,13 +422,13 @@ export default function Shop() {
                 )}
 
                 {isOwnListing && (
-                  <Badge variant="secondary" className="w-full justify-center py-3 text-sm font-semibold">
+                  <Badge variant="secondary" className="w-full justify-center py-2 text-xs font-semibold">
                     This is your listing
                   </Badge>
                 )}
 
                 {!user && (
-                  <Button variant="outline" className="w-full h-12 font-semibold text-base" disabled>
+                  <Button variant="outline" className="w-full h-10 font-semibold text-sm" disabled>
                     Sign in to purchase
                   </Button>
                 )}
