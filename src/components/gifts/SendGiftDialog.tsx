@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Gift, TrendingUp, Sparkles } from 'lucide-react';
@@ -315,30 +315,30 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
         />
       )}
       
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
           {trigger || (
             <Button variant="outline" size="sm" className="gap-2">
               <Gift className="h-4 w-4" />
               {t('gifts.sendGift')}
             </Button>
           )}
-        </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4">
-        <DialogHeader className="pb-3">
+        </SheetTrigger>
+      <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto p-4">
+        <SheetHeader className="pb-3">
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12 ring-2 ring-primary/20">
               <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${receiverId}`} />
               <AvatarFallback>{receiverName[0]?.toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
-              <DialogTitle className="text-lg">{t('gifts.sendGiftTo', { name: receiverName })}</DialogTitle>
-              <DialogDescription className="text-xs">
+              <SheetTitle className="text-lg">{t('gifts.sendGiftTo', { name: receiverName })}</SheetTitle>
+              <SheetDescription className="text-xs">
                 {t('gifts.yourNexa', { nexa: userXP })}
-              </DialogDescription>
+              </SheetDescription>
             </div>
           </div>
-        </DialogHeader>
+        </SheetHeader>
 
         {selectedGift && (
           <div className="mb-4 text-center bg-gradient-to-br from-primary/10 via-accent/10 to-primary/10 rounded-xl p-4 border border-primary/20">
@@ -446,15 +446,15 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
             );
           })}
         </div>
-      </DialogContent>
-      </Dialog>
+      </SheetContent>
+      </Sheet>
 
-      {/* Preview Dialog */}
+      {/* Preview Sheet */}
       {previewGift && (
-        <Dialog open={showPreview} onOpenChange={setShowPreview}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+        <Sheet open={showPreview} onOpenChange={setShowPreview}>
+          <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2">
                 <GiftImage
                   giftId={previewGift.id}
                   giftName={previewGift.name}
@@ -463,10 +463,10 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
                   size="sm"
                 />
                 {previewGift.name}
-              </DialogTitle>
-            </DialogHeader>
+              </SheetTitle>
+            </SheetHeader>
             
-            <div className="space-y-4">
+            <div className="space-y-4 mt-4">
               <div className="flex items-center justify-center">
                 <GiftImage
                   giftId={previewGift.id}
@@ -530,8 +530,8 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
                 Select Gift
               </Button>
             </div>
-          </DialogContent>
-        </Dialog>
+          </SheetContent>
+        </Sheet>
       )}
     </>
   );

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { X, Sparkles, TrendingUp } from 'lucide-react';
@@ -51,8 +51,8 @@ export const GiftPreviewModal = ({ gift, open, onOpenChange, onSendGift }: GiftP
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto p-0">
         <div className="relative bg-gradient-to-br from-background via-background to-primary/5">
           {/* Close button */}
           <Button
@@ -103,21 +103,21 @@ export const GiftPreviewModal = ({ gift, open, onOpenChange, onSendGift }: GiftP
 
           {/* Details Section */}
           <div className="p-6 space-y-4 border-t border-border bg-background/50 backdrop-blur">
-            <DialogHeader>
+            <SheetHeader>
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-2 flex-1">
-                  <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                  <SheetTitle className="text-2xl font-bold flex items-center gap-2">
                     {gift.name}
                     <Badge className={`${getRarityColor(gift.rarity)} text-xs`}>
                       {gift.rarity}
                     </Badge>
-                  </DialogTitle>
+                  </SheetTitle>
                   {gift.description && (
                     <p className="text-sm text-muted-foreground">{gift.description}</p>
                   )}
                 </div>
               </div>
-            </DialogHeader>
+            </SheetHeader>
 
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4">
@@ -174,7 +174,7 @@ export const GiftPreviewModal = ({ gift, open, onOpenChange, onSendGift }: GiftP
             )}
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
