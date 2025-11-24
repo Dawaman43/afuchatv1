@@ -138,7 +138,7 @@ const TermsOfUse = () => {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">6. Virtual Currency and Transactions</h2>
             <p className="text-foreground/90 leading-relaxed mb-4">
-              AfuChat includes virtual currency (XP) and digital items (gifts, shop items). You understand that:
+              AfuChat includes virtual currency (Nexa) and digital items (gifts, shop items). You understand that:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-foreground/90">
               <li>Virtual items have no real-world monetary value</li>
@@ -146,7 +146,7 @@ const TermsOfUse = () => {
               <li>We may adjust pricing, availability, or features at any time</li>
               <li>Virtual items cannot be exchanged for real currency</li>
               <li>Account termination may result in loss of virtual items</li>
-              <li>Transferring XP or items is subject to platform rules and limits</li>
+              <li>Transferring Nexa or items is subject to platform rules and limits</li>
             </ul>
           </section>
 
