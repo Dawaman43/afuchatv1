@@ -36,20 +36,23 @@ export const PinnedGiftsDisplay = ({ userId, className = '' }: PinnedGiftsDispla
       .order('pinned_at', { ascending: false })
       .limit(6);
 
+    console.log('Pinned gifts data:', data, 'error:', error);
+
     if (!error && data) {
       setPinnedGifts(data as PinnedGift[]);
+      console.log('Set pinned gifts:', data);
     }
   };
 
   if (pinnedGifts.length === 0) return null;
 
   const positions = [
-    { top: '0%', left: '50%', transform: 'translate(-50%, -100%)' },
-    { top: '20%', right: '-15%', transform: 'translate(0, -50%)' },
-    { bottom: '20%', right: '-15%', transform: 'translate(0, 50%)' },
-    { bottom: '0%', left: '50%', transform: 'translate(-50%, 100%)' },
-    { bottom: '20%', left: '-15%', transform: 'translate(0, 50%)' },
-    { top: '20%', left: '-15%', transform: 'translate(0, -50%)' },
+    { top: '-8%', left: '50%', transform: 'translate(-50%, -50%)' },
+    { top: '15%', right: '-12%', transform: 'translate(50%, -50%)' },
+    { bottom: '15%', right: '-12%', transform: 'translate(50%, 50%)' },
+    { bottom: '-8%', left: '50%', transform: 'translate(-50%, 50%)' },
+    { bottom: '15%', left: '-12%', transform: 'translate(-50%, 50%)' },
+    { top: '15%', left: '-12%', transform: 'translate(-50%, -50%)' },
   ];
 
   return (
@@ -59,15 +62,17 @@ export const PinnedGiftsDisplay = ({ userId, className = '' }: PinnedGiftsDispla
         return (
           <motion.div
             key={pinnedGift.id}
-            className="absolute pointer-events-auto"
+            className="absolute pointer-events-auto z-10"
             style={position}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: index * 0.1, type: 'spring', stiffness: 200 }}
+            transition={{ delay: index * 0.1, type: 'spring', stiffness: 200, damping: 15 }}
           >
             <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
-              <SimpleGiftIcon emoji={pinnedGift.gift.emoji} size={32} />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30 rounded-full blur-md opacity-70 group-hover:opacity-100 transition-opacity animate-pulse" />
+              <div className="relative bg-background/90 backdrop-blur-sm rounded-full p-1 border-2 border-primary/20 shadow-lg">
+                <SimpleGiftIcon emoji={pinnedGift.gift.emoji} size={28} />
+              </div>
             </div>
           </motion.div>
         );
