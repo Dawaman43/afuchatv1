@@ -28,7 +28,7 @@ export const CircularImageCrop = ({ imageFile, open, onOpenChange, onSave }: Cir
         // Start with image fitting in the canvas
         const canvas = canvasRef.current;
         if (canvas) {
-          const canvasSize = 400;
+          const canvasSize = 1080; // Full HD resolution
           const imgAspect = img.width / img.height;
           const initialScale = Math.min(canvasSize / img.width, canvasSize / img.height);
           setScale(initialScale);
@@ -53,7 +53,8 @@ export const CircularImageCrop = ({ imageFile, open, onOpenChange, onSave }: Cir
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const size = 400;
+    // Full HD resolution for high quality
+    const size = 1080;
     canvas.width = size;
     canvas.height = size;
 
@@ -163,7 +164,7 @@ export const CircularImageCrop = ({ imageFile, open, onOpenChange, onSave }: Cir
               <canvas
                 ref={canvasRef}
                 className="rounded-full cursor-move shadow-2xl border-4 border-primary/20"
-                style={{ width: '300px', height: '300px' }}
+                style={{ width: '350px', height: '350px' }}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
