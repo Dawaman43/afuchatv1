@@ -57,11 +57,11 @@ serve(async (req) => {
       );
     }
     
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    const YOU_API_KEY = Deno.env.get('YOU_API_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
-    if (!GEMINI_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    if (!YOU_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error('Missing required environment variables');
     }
 
@@ -93,46 +93,36 @@ serve(async (req) => {
       }
     }
 
-    // Generate AI response using Gemini
+    // Generate AI response using You.com AI
     const systemPrompt = `You are AfuAI, a helpful and friendly AI assistant for AfuChat social platform. 
-    You provide concise, relevant responses to user mentions. Keep replies under 200 characters.
-    Be encouraging, supportive, and helpful. Use emojis sparingly.
-    Original post: "${originalPostContent}"
-    User's mention: "${replyContent}"`;
+You provide concise, relevant responses to user mentions. Keep replies under 200 characters.
+Be encouraging, supportive, and helpful. Use emojis sparingly.`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: systemPrompt }]
-            },
-            {
-              role: 'model',
-              parts: [{ text: "I understand. I'll provide a helpful, concise response." }]
-            },
-            {
-              role: 'user',
-              parts: [{ text: replyContent }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 200,
-          }
-        }),
-      }
-    );
+    const userPrompt = `Original post: "${originalPostContent}"
+User's mention: "${replyContent}"
+
+Please provide a helpful response.`;
+
+    const response = await fetch('https://api.you.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${YOU_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 200,
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
+      console.error('You.com AI error:', response.status, errorText);
       
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
@@ -140,7 +130,7 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      if (response.status === 400 && errorText.includes('API_KEY')) {
+      if (response.status === 401) {
         return new Response(JSON.stringify({ error: 'Invalid API key' }), {
           status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -151,13 +141,13 @@ serve(async (req) => {
 
     const aiData = await response.json();
     
-    if (!aiData.candidates || !aiData.candidates[0]?.content?.parts?.[0]?.text) {
-      throw new Error('Invalid response from Gemini API');
+    if (!aiData.choices || !aiData.choices[0]?.message?.content) {
+      throw new Error('Invalid response from You.com AI');
     }
     
-    const aiReply = aiData.candidates[0].content.parts[0].text;
+    const aiReply = aiData.choices[0].message.content;
 
-    // Get the user who mentioned AfuAI (from the trigger reply) to award XP
+    // Get the user who mentioned AfuAI to award XP
     let mentioningUserId = null;
     if (triggerReplyId) {
       const { data: replyData } = await supabase
@@ -168,7 +158,7 @@ serve(async (req) => {
       mentioningUserId = replyData?.author_id;
     }
 
-    // Award XP to the user who used AI (mentioned AfuAI)
+    // Award XP to the user who used AI
     if (mentioningUserId) {
       const supabaseServiceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       await supabaseServiceClient.rpc('award_xp', {
