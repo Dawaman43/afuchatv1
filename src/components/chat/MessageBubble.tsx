@@ -72,6 +72,7 @@ interface MessageBubbleProps {
   bubbleStyle?: 'rounded' | 'square' | 'minimal';
   themeColors?: { primary: string; secondary: string; accent: string };
   showReadReceipts?: boolean;
+  fontSize?: number;
 }
 
 export const MessageBubble = ({
@@ -88,6 +89,7 @@ export const MessageBubble = ({
   bubbleStyle = 'rounded',
   themeColors,
   showReadReceipts = true,
+  fontSize = 16,
 }: MessageBubbleProps) => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const time = new Date(message.sent_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -104,10 +106,23 @@ export const MessageBubble = ({
 
   // Dynamic bubble border radius based on style
   const getBubbleRadius = () => {
-    if (bubbleStyle === 'square') return 'rounded-md';
-    if (bubbleStyle === 'minimal') return 'rounded-sm';
+    if (bubbleStyle === 'square') {
+      // Square style - consistent rounded corners
+      if (isLastInGroup) {
+        return isOwn ? 'rounded-lg rounded-br-sm' : 'rounded-lg rounded-bl-sm';
+      }
+      return 'rounded-lg';
+    }
     
-    // Default rounded style
+    if (bubbleStyle === 'minimal') {
+      // Minimal style - subtle corners
+      if (isLastInGroup) {
+        return isOwn ? 'rounded-md rounded-br-none' : 'rounded-md rounded-bl-none';
+      }
+      return 'rounded-md';
+    }
+    
+    // Default rounded style - smooth, WhatsApp-like
     if (isLastInGroup) {
       return isOwn ? 'rounded-2xl rounded-br-md' : 'rounded-2xl rounded-bl-md';
     }
@@ -254,9 +269,9 @@ export const MessageBubble = ({
                   isOwn ? 'border-primary-foreground/40 bg-primary-foreground/10' : 'border-primary bg-muted/50'
                 }`}>
                   <div className="flex flex-col min-w-0">
-                    <span className={`text-xs truncate ${
+                     <span className={`text-xs truncate ${
                       isOwn ? 'text-primary-foreground/80' : 'text-muted-foreground'
-                    }`}>
+                    }`} style={{ fontSize: `${Math.max(fontSize - 4, 10)}px` }}>
                       {repliedMessage.audio_url ? '🎤 Voice message' : repliedMessage.encrypted_content}
                     </span>
                   </div>
@@ -279,7 +294,7 @@ export const MessageBubble = ({
                   />
                   {message.encrypted_content && (
                     <div className="px-2 py-2 mt-1">
-                      <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+                      <p className="leading-relaxed whitespace-pre-wrap break-words" style={{ fontSize: `${fontSize}px` }}>
                         {message.encrypted_content}
                       </p>
                     </div>
@@ -310,7 +325,7 @@ export const MessageBubble = ({
                 </div>
               ) : (
                 <div className="px-3 py-2">
-                  <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+                  <p className="leading-relaxed whitespace-pre-wrap break-words" style={{ fontSize: `${fontSize}px` }}>
                     {message.encrypted_content}
                   </p>
                 </div>
