@@ -70,7 +70,7 @@ interface MessageBubbleProps {
   audioPlayerState: { isPlaying: boolean };
   onEdit?: (messageId: string, newContent: string) => void;
   bubbleStyle?: 'rounded' | 'square' | 'minimal';
-  chatTheme?: string;
+  themeColors?: { primary: string; secondary: string; accent: string };
   showReadReceipts?: boolean;
 }
 
@@ -86,7 +86,7 @@ export const MessageBubble = ({
   audioPlayerState,
   onEdit,
   bubbleStyle = 'rounded',
-  chatTheme = 'teal',
+  themeColors,
   showReadReceipts = true,
 }: MessageBubbleProps) => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -114,17 +114,12 @@ export const MessageBubble = ({
     return 'rounded-2xl';
   };
 
-  // Theme color mapping
+  // Get theme color from database or fallback to default
   const getThemeColor = () => {
-    const themes: Record<string, string> = {
-      teal: 'hsl(174, 72%, 42%)',
-      purple: 'hsl(271, 76%, 53%)',
-      blue: 'hsl(217, 91%, 60%)',
-      pink: 'hsl(340, 82%, 52%)',
-      green: 'hsl(142, 76%, 36%)',
-      orange: 'hsl(24, 95%, 53%)',
-    };
-    return themes[chatTheme] || themes.teal;
+    if (themeColors?.primary) {
+      return themeColors.primary;
+    }
+    return 'hsl(var(--primary))';
   };
 
   // Swipe-to-reply gesture
