@@ -1094,6 +1094,7 @@ const ChatRoom = () => {
                       bubbleStyle={chatPreferences.bubbleStyle as 'rounded' | 'square' | 'minimal'}
                       themeColors={currentTheme?.colors}
                       showReadReceipts={chatPreferences.readReceipts}
+                      fontSize={chatPreferences.fontSize}
                     />
                   );
                 });
