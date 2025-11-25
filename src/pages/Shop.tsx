@@ -230,7 +230,7 @@ export default function Shop() {
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9 gap-4">
                       {rarityListings.map((listing) => (
                         <motion.button
-                          key={listing.id}
+                          key={`${listing.id}-${listing.user_id}`}
                           onClick={() => setSelectedListing(listing)}
                           className="flex flex-col items-center gap-2 transition-all"
                           whileHover={{ scale: 1.1 }}
@@ -246,9 +246,14 @@ export default function Shop() {
                           <p className="text-xs font-medium text-center line-clamp-1 w-full">
                             {listing.gift.name}
                           </p>
-                          <p className="text-sm font-bold text-primary">
-                            {listing.asking_price.toLocaleString()} Nexa
-                          </p>
+                          <div className="flex flex-col items-center gap-0.5">
+                            <p className="text-sm font-bold text-primary">
+                              {listing.asking_price.toLocaleString()} Nexa
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              by @{listing.seller.handle}
+                            </p>
+                          </div>
                         </motion.button>
                       ))}
                     </div>
