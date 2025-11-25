@@ -24,6 +24,22 @@ import { UserAvatar } from '@/components/avatar/UserAvatar';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { useChatPreferences } from '@/hooks/useChatPreferences';
 
+interface ChatTheme {
+  id: string;
+  name: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+  };
+}
+
+interface ChatWallpaper {
+  id: string;
+  name: string;
+  image_url: string;
+}
+
 interface Message {
   id: string;
   encrypted_content: string;
@@ -126,6 +142,59 @@ const ChatRoom = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [currentTheme, setCurrentTheme] = useState<ChatTheme | null>(null);
+  const [currentWallpaper, setCurrentWallpaper] = useState<ChatWallpaper | null>(null);
+
+  // Load theme and wallpaper data
+  useEffect(() => {
+    const loadThemeAndWallpaper = async () => {
+      if (!chatPreferences.chatTheme) return;
+      
+      try {
+        const { data: themeData } = await supabase
+          .from('chat_themes')
+          .select('*')
+          .eq('id', chatPreferences.chatTheme)
+          .single();
+        
+        if (themeData) {
+          setCurrentTheme({
+            id: themeData.id,
+            name: themeData.name,
+            colors: typeof themeData.colors === 'string' 
+              ? JSON.parse(themeData.colors) 
+              : themeData.colors
+          });
+        }
+      } catch (error) {
+        console.error('Error loading theme:', error);
+      }
+
+      if (!chatPreferences.wallpaper) return;
+      
+      try {
+        const { data: wallpaperData } = await supabase
+          .from('chat_wallpapers')
+          .select('*')
+          .eq('id', chatPreferences.wallpaper)
+          .single();
+        
+        if (wallpaperData) {
+          setCurrentWallpaper({
+            id: wallpaperData.id,
+            name: wallpaperData.name,
+            image_url: wallpaperData.image_url
+          });
+        }
+      } catch (error) {
+        console.error('Error loading wallpaper:', error);
+      }
+    };
+
+    if (!prefsLoading) {
+      loadThemeAndWallpaper();
+    }
+  }, [chatPreferences.chatTheme, chatPreferences.wallpaper, prefsLoading]);
 
   // Update user's last_seen on mount and interval
   useEffect(() => {
@@ -918,18 +987,22 @@ const ChatRoom = () => {
           style={{ 
             paddingBottom: '120px',
             fontSize: `${chatPreferences.fontSize}px`,
-            ...(chatPreferences.wallpaper === 'default' ? {
-              background: 'linear-gradient(to bottom, hsl(var(--background)) 0%, hsl(var(--muted)/0.3) 100%)',
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.03'/%3E%3C/svg%3E")`
-            } : chatPreferences.wallpaper === 'waves' ? {
-              background: 'linear-gradient(135deg, hsl(var(--primary)/0.05) 0%, hsl(var(--accent)/0.05) 50%, hsl(var(--background)) 100%)'
-            } : chatPreferences.wallpaper === 'sunset' ? {
-              background: 'linear-gradient(135deg, rgba(251, 146, 60, 0.1) 0%, rgba(236, 72, 153, 0.1) 50%, rgba(168, 85, 247, 0.1) 100%)'
-            } : chatPreferences.wallpaper === 'forest' ? {
-              background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 50%, rgba(20, 184, 166, 0.1) 100%)'
-            } : chatPreferences.wallpaper === 'midnight' ? {
-              background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.15) 0%, rgba(88, 28, 135, 0.15) 50%, rgba(157, 23, 77, 0.15) 100%)'
-            } : {})
+            ...(currentWallpaper?.image_url 
+              ? currentWallpaper.image_url.startsWith('http')
+                ? {
+                    backgroundImage: `url(${currentWallpaper.image_url})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
+                  }
+                : {
+                    background: currentWallpaper.image_url
+                  }
+              : {
+                  background: 'linear-gradient(to bottom, hsl(var(--background)) 0%, hsl(var(--muted)/0.3) 100%)',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.03'/%3E%3C/svg%3E")`
+                }
+            )
           }}
         >
           {messages.length === 0 && redEnvelopes.length === 0 ? (
@@ -1019,7 +1092,7 @@ const ChatRoom = () => {
                       audioPlayerState={audioPlayers[message.id] || { isPlaying: false }}
                       onEdit={handleEditMessage}
                       bubbleStyle={chatPreferences.bubbleStyle as 'rounded' | 'square' | 'minimal'}
-                      chatTheme={chatPreferences.chatTheme}
+                      themeColors={currentTheme?.colors}
                       showReadReceipts={chatPreferences.readReceipts}
                     />
                   );

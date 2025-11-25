@@ -187,12 +187,9 @@ export const ChatSettingsSheet = ({ isOpen, onClose, defaultTab = 'appearance' }
               <TabsContent value="appearance" className="space-y-6 mt-0">
                 {/* Themes */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Palette className="h-5 w-5 text-primary" />
-                      <h3 className="text-lg font-semibold">Chat Theme</h3>
-                    </div>
-                    {isPremium && <PremiumThemeGenerator type="theme" onGenerated={loadThemesAndWallpapers} />}
+                  <div className="flex items-center gap-2">
+                    <Palette className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">Chat Theme</h3>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     {themes.map((theme) => {
@@ -236,12 +233,9 @@ export const ChatSettingsSheet = ({ isOpen, onClose, defaultTab = 'appearance' }
 
                 {/* Wallpapers */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Wallpaper className="h-5 w-5 text-primary" />
-                      <h3 className="text-lg font-semibold">Chat Wallpaper</h3>
-                    </div>
-                    {isPremium && <PremiumThemeGenerator type="wallpaper" onGenerated={loadThemesAndWallpapers} />}
+                  <div className="flex items-center gap-2">
+                    <Wallpaper className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">Chat Wallpaper</h3>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {wallpapers.map((wallpaper) => {
