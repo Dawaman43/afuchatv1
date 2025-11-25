@@ -1,0 +1,225 @@
+import { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { ZoomIn, ZoomOut, Check, X } from 'lucide-react';
+
+interface CircularImageCropProps {
+  imageFile: File | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (blob: Blob) => void;
+}
+
+export const CircularImageCrop = ({ imageFile, open, onOpenChange, onSave }: CircularImageCropProps) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [image, setImage] = useState<HTMLImageElement | null>(null);
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (imageFile && open) {
+      const img = new Image();
+      const url = URL.createObjectURL(imageFile);
+      img.onload = () => {
+        setImage(img);
+        setScale(1);
+        setPosition({ x: 0, y: 0 });
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    }
+  }, [imageFile, open]);
+
+  useEffect(() => {
+    if (image && canvasRef.current) {
+      drawCanvas();
+    }
+  }, [image, scale, position]);
+
+  const drawCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || !image) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const size = 400;
+    canvas.width = size;
+    canvas.height = size;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, size, size);
+
+    // Draw image with transformations
+    ctx.save();
+    ctx.translate(size / 2, size / 2);
+    
+    const scaledWidth = image.width * scale;
+    const scaledHeight = image.height * scale;
+    
+    ctx.drawImage(
+      image,
+      position.x - scaledWidth / 2,
+      position.y - scaledHeight / 2,
+      scaledWidth,
+      scaledHeight
+    );
+    ctx.restore();
+
+    // Draw circular mask overlay
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Draw circular border
+    ctx.save();
+    ctx.strokeStyle = 'hsl(var(--primary))';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2 - 1.5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (isDragging) {
+      setPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    const touch = e.touches[0];
+    setIsDragging(true);
+    setDragStart({ x: touch.clientX - position.x, y: touch.clientY - position.y });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (isDragging && e.touches[0]) {
+      const touch = e.touches[0];
+      setPosition({
+        x: touch.clientX - dragStart.x,
+        y: touch.clientY - dragStart.y,
+      });
+    }
+  };
+
+  const handleSave = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        onSave(blob);
+        onOpenChange(false);
+      }
+    }, 'image/png');
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="max-h-[85vh] flex flex-col rounded-t-3xl bg-background/95 backdrop-blur-xl border-t border-border/50 p-0">
+        <SheetHeader className="space-y-0.5 pb-2 pt-4 px-6 border-b border-border/40 flex-shrink-0">
+          <SheetTitle className="text-2xl font-bold">
+            Edit Profile Picture
+          </SheetTitle>
+          <SheetDescription className="text-sm">
+            Drag to reposition and use the slider to zoom
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+          {/* Canvas */}
+          <div className="flex justify-center">
+            <div className="relative">
+              <canvas
+                ref={canvasRef}
+                className="rounded-full cursor-move shadow-2xl border-4 border-primary/20"
+                style={{ width: '300px', height: '300px' }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleMouseUp}
+              />
+            </div>
+          </div>
+
+          {/* Zoom Controls */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Zoom</span>
+              <span className="text-sm text-muted-foreground">{Math.round(scale * 100)}%</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={() => setScale(Math.max(0.5, scale - 0.1))}
+                className="h-10 w-10"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <Slider
+                value={[scale]}
+                onValueChange={(values) => setScale(values[0])}
+                min={0.5}
+                max={3}
+                step={0.1}
+                className="flex-1"
+              />
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={() => setScale(Math.min(3, scale + 0.1))}
+                className="h-10 w-10"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex-shrink-0 border-t border-border/40 p-6 bg-background/95 backdrop-blur-xl">
+          <div className="flex gap-3">
+            <Button
+              onClick={() => onOpenChange(false)}
+              variant="outline"
+              className="flex-1 h-12 text-sm font-semibold rounded-xl"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              className="flex-1 h-12 text-sm font-semibold rounded-xl"
+            >
+              <Check className="h-4 w-4 mr-2" />
+              Save Picture
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+};

@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { handleSchema, displayNameSchema, bioSchema } from '@/lib/validation';
 import { useNexa } from '@/hooks/useNexa';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CircularImageCrop } from '@/components/profile/CircularImageCrop';
 
 // Import Supabase types
 import type { Database } from '@/integrations/supabase/types';
@@ -55,6 +56,8 @@ const EditProfile: React.FC = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [isBusiness, setIsBusiness] = useState(false);
   const [isAffiliate, setIsAffiliate] = useState(false);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [showCropEditor, setShowCropEditor] = useState(false);
 
   useEffect(() => {
     // 🚨 FIX 2: Check the global Auth loading state first. Exit if still checking session.
@@ -208,7 +211,7 @@ const EditProfile: React.FC = () => {
     navigate(`/${user?.id}`);
   };
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
@@ -224,42 +227,12 @@ const EditProfile: React.FC = () => {
       return;
     }
 
-    setUploadingAvatar(true);
-    try {
-      // Delete old avatar if exists
-      if (profile.avatar_url) {
-        const oldFileName = profile.avatar_url.split('/avatars/').pop();
-        if (oldFileName) {
-          await supabase.storage.from('avatars').remove([oldFileName]);
-        }
-      }
-
-      // Upload with proper folder structure: {user_id}/{timestamp}.ext
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('avatars').getPublicUrl(fileName);
-
-      await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
-
-      setProfile((prev) => ({ ...prev, avatar_url: publicUrl }));
-      toast.success('Avatar updated successfully!');
-    } catch (error: any) {
-      console.error('Error uploading avatar:', error);
-      toast.error(error.message || 'Failed to upload avatar');
-    } finally {
-      setUploadingAvatar(false);
-    }
+    // Open crop editor with selected file
+    setSelectedImageFile(file);
+    setShowCropEditor(true);
+    
+    // Reset file input
+    e.target.value = '';
   };
 
   const handleRemoveAvatar = async () => {
@@ -564,8 +537,16 @@ const EditProfile: React.FC = () => {
               {saving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
-          </CardContent>
-        </Card>
+        </CardContent>
+      </Card>
+
+      {/* Circular Image Crop Editor */}
+      <CircularImageCrop
+        imageFile={selectedImageFile}
+        open={showCropEditor}
+        onOpenChange={setShowCropEditor}
+        onSave={handleSaveAvatar}
+      />
     </div>
   );
 };
