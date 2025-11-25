@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { CustomLoader } from '@/components/ui/CustomLoader';
-import { ArrowLeft, Send, User, Phone, Video, MoreVertical, Check, MessageSquare, HelpCircle, Info, Mic, MicOff, Play, Pause, Volume2, X, Smile, Paperclip, Settings } from 'lucide-react';
+import { ArrowLeft, Send, User, Phone, Video, MoreVertical, Check, MessageSquare, HelpCircle, Info, Mic, MicOff, Play, Pause, Volume2, X, Smile, Paperclip, Settings, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { messageSchema } from '@/lib/validation';
 import { ChatRedEnvelope } from '@/components/chat/ChatRedEnvelope';
@@ -965,6 +966,26 @@ const ChatRoom = () => {
     }
   };
 
+  const handleLeaveGroup = async () => {
+    if (!user || !chatId || !chatInfo?.is_group) return;
+    
+    try {
+      const { error } = await supabase
+        .from('chat_members')
+        .delete()
+        .eq('chat_id', chatId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast.success(t('chat.leftGroup'));
+      navigate('/chats');
+    } catch (error) {
+      console.error('Error leaving group:', error);
+      toast.error(t('chat.leaveGroupError'));
+    }
+  };
+
 
   if (loading) {
     return (
@@ -1042,13 +1063,28 @@ const ChatRoom = () => {
                 <Settings className="h-5 w-5" />
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 rounded-full"
-            >
-              <MoreVertical className="h-5 w-5" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 rounded-full"
+                >
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              {chatInfo?.is_group && isMember && (
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem 
+                    onClick={handleLeaveGroup}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    {t('chat.leaveGroup')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              )}
+            </DropdownMenu>
           </div>
         </div>
 
