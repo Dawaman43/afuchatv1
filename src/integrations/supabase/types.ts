@@ -191,6 +191,168 @@ export type Database = {
           },
         ]
       }
+      chat_folder_assignments: {
+        Row: {
+          assigned_at: string | null
+          chat_id: string
+          folder_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          chat_id: string
+          folder_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          chat_id?: string
+          folder_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_folder_assignments_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_folder_assignments_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "chat_folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_folder_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_folders: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          icon: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_folders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_label_assignments: {
+        Row: {
+          assigned_at: string | null
+          chat_id: string
+          id: string
+          label_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          chat_id: string
+          id?: string
+          label_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          chat_id?: string
+          id?: string
+          label_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_label_assignments_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_label_assignments_label_id_fkey"
+            columns: ["label_id"]
+            isOneToOne: false
+            referencedRelation: "chat_labels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_label_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_labels: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_labels_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_members: {
         Row: {
           chat_id: string | null
@@ -365,30 +527,42 @@ export type Database = {
       }
       chats: {
         Row: {
+          archived_at: string | null
           created_at: string | null
           created_by: string | null
           id: string
+          is_archived: boolean | null
+          is_favorite: boolean | null
           is_group: boolean | null
+          is_pinned: boolean | null
           member_limit: number | null
           name: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string | null
           created_by?: string | null
           id?: string
+          is_archived?: boolean | null
+          is_favorite?: boolean | null
           is_group?: boolean | null
+          is_pinned?: boolean | null
           member_limit?: number | null
           name?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string | null
           created_by?: string | null
           id?: string
+          is_archived?: boolean | null
+          is_favorite?: boolean | null
           is_group?: boolean | null
+          is_pinned?: boolean | null
           member_limit?: number | null
           name?: string | null
           updated_at?: string | null
