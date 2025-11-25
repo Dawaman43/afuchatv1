@@ -113,19 +113,6 @@ const AIChat: React.FC = () => {
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
-
-    const userMessage: Message = {
-      role: 'user',
-      content: input.trim(),
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setLoading(true);
-
-  const handleSend = async () => {
-    if (!input.trim() || loading) return;
     
     if (!user) {
       toast.error('You must be logged in to chat');
@@ -191,7 +178,6 @@ const AIChat: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
   };
   
   const handleAIAvatarClick = () => {
