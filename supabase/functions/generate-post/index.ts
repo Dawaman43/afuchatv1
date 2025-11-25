@@ -16,13 +16,11 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const authHeader = req.headers.get('Authorization');
     
-    // Create Supabase client with auth header for authenticated requests
     const supabaseClient = createClient(supabaseUrl!, supabaseAnonKey!, {
       global: { headers: { Authorization: authHeader! } },
       auth: { persistSession: false }
     });
     
-    // Get user from JWT token (already verified by edge function with verify_jwt = true)
     const jwt = authHeader?.replace('Bearer ', '');
     if (!jwt) {
       return new Response(
@@ -31,7 +29,6 @@ serve(async (req) => {
       );
     }
     
-    // Decode JWT to get user ID (JWT already verified by Supabase)
     const payload = JSON.parse(atob(jwt.split('.')[1]));
     const userId = payload.sub;
     
@@ -46,10 +43,10 @@ serve(async (req) => {
 
     const { topic, tone, length }: { topic: string; tone: string; length: string } = await req.json();
     
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    const YOU_API_KEY = Deno.env.get('YOU_API_KEY');
     
-    if (!GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY not configured');
+    if (!YOU_API_KEY) {
+      throw new Error('YOU_API_KEY not configured');
     }
 
     const tonePrompts: Record<string, string> = {
@@ -69,46 +66,33 @@ serve(async (req) => {
     const selectedLength = lengthLimits[length] || 'medium';
 
     const systemPrompt = `You are a creative social media post writer. Generate engaging posts for AfuChat.
-            Keep posts within 280 characters MAX.
-            Topic: ${topic}
-            Tone: ${selectedTone}
-            Length: ${selectedLength}
-            
-            Write ONLY the post content, no quotes or extra formatting.`;
+Keep posts within 280 characters MAX.
+Topic: ${topic}
+Tone: ${selectedTone}
+Length: ${selectedLength}
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: systemPrompt }]
-            },
-            {
-              role: 'model',
-              parts: [{ text: "I'll write an engaging post within the specified parameters." }]
-            },
-            {
-              role: 'user',
-              parts: [{ text: `Write a ${selectedTone} post about: ${topic}` }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 300,
-          }
-        }),
-      }
-    );
+Write ONLY the post content, no quotes or extra formatting.`;
+
+    const response = await fetch('https://api.you.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${YOU_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Write a ${selectedTone} post about: ${topic}` }
+        ],
+        temperature: 0.8,
+        max_tokens: 300,
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API error:', errorText);
+      console.error('You.com AI error:', errorText);
       
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limit exceeded, try again later' }), {
@@ -116,8 +100,8 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      if (response.status === 400 && errorText.includes('API_KEY')) {
-        return new Response(JSON.stringify({ error: 'Invalid Gemini API key' }), {
+      if (response.status === 401) {
+        return new Response(JSON.stringify({ error: 'Invalid You.com API key' }), {
           status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -127,11 +111,11 @@ serve(async (req) => {
 
     const data = await response.json();
     
-    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-      throw new Error('Invalid response from Gemini API');
+    if (!data.choices || !data.choices[0]?.message?.content) {
+      throw new Error('Invalid response from You.com AI');
     }
     
-    const generatedPost = data.candidates[0].content.parts[0].text.trim();
+    const generatedPost = data.choices[0].message.content.trim();
 
     // Award XP for using AI
     await supabaseClient.rpc('award_xp', {

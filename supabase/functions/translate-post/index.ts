@@ -14,10 +14,10 @@ serve(async (req) => {
   try {
     const { text, targetLanguage } = await req.json();
     
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    const YOU_API_KEY = Deno.env.get('YOU_API_KEY');
     
-    if (!GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY not configured');
+    if (!YOU_API_KEY) {
+      throw new Error('YOU_API_KEY not configured');
     }
 
     const languageNames: Record<string, string> = {
@@ -31,39 +31,26 @@ serve(async (req) => {
     const targetLangName = languageNames[targetLanguage] || targetLanguage;
 
     const systemPrompt = `You are a professional translator. Translate the given text to ${targetLangName}. 
-            Only return the translated text, nothing else. 
-            Preserve @mentions, hashtags, and emojis exactly as they appear.
-            If the text is already in ${targetLangName}, return it unchanged.`;
+Only return the translated text, nothing else. 
+Preserve @mentions, hashtags, and emojis exactly as they appear.
+If the text is already in ${targetLangName}, return it unchanged.`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: systemPrompt }]
-            },
-            {
-              role: 'model',
-              parts: [{ text: "I understand. I'll translate accurately while preserving formatting." }]
-            },
-            {
-              role: 'user',
-              parts: [{ text: text }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 1024,
-          }
-        }),
-      }
-    );
+    const response = await fetch('https://api.you.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${YOU_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: text }
+        ],
+        temperature: 0.3,
+        max_tokens: 1024,
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -84,9 +71,9 @@ serve(async (req) => {
         });
       }
       
-      if (response.status === 400 && errorText.includes('API_KEY')) {
+      if (response.status === 401) {
         return new Response(JSON.stringify({ 
-          error: 'Invalid Gemini API key' 
+          error: 'Invalid You.com API key' 
         }), {
           status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -107,11 +94,11 @@ serve(async (req) => {
 
     const data = await response.json();
     
-    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-      throw new Error('Invalid response from Gemini API');
+    if (!data.choices || !data.choices[0]?.message?.content) {
+      throw new Error('Invalid response from You.com AI');
     }
     
-    const translatedText = data.candidates[0].content.parts[0].text;
+    const translatedText = data.choices[0].message.content;
 
     return new Response(JSON.stringify({ translatedText }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

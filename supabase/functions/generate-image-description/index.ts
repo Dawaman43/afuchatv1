@@ -20,79 +20,64 @@ serve(async (req) => {
       );
     }
 
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) {
-      console.error("GEMINI_API_KEY not configured");
+    const YOU_API_KEY = Deno.env.get("YOU_API_KEY");
+    if (!YOU_API_KEY) {
+      console.error("YOU_API_KEY not configured");
       return new Response(
         JSON.stringify({ error: "AI service not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Prepare the image content for Gemini
-    let imagePart;
+    // Prepare image content
+    let imageContent;
     if (imageBase64) {
-      const base64Data = imageBase64.startsWith('data:') 
-        ? imageBase64.split(',')[1] 
-        : imageBase64;
-      const mimeType = imageBase64.startsWith('data:') 
-        ? imageBase64.split(';')[0].split(':')[1]
-        : 'image/jpeg';
-      
-      imagePart = {
-        inline_data: {
-          mime_type: mimeType,
-          data: base64Data
+      imageContent = {
+        type: "image_url",
+        image_url: {
+          url: imageBase64.startsWith('data:') ? imageBase64 : `data:image/jpeg;base64,${imageBase64}`
         }
       };
     } else {
-      // Gemini requires base64, so we need to fetch and convert the URL
-      const imageResponse = await fetch(imageUrl);
-      const imageBlob = await imageResponse.blob();
-      const arrayBuffer = await imageBlob.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-      
-      imagePart = {
-        inline_data: {
-          mime_type: imageBlob.type || 'image/jpeg',
-          data: base64
+      imageContent = {
+        type: "image_url",
+        image_url: {
+          url: imageUrl
         }
       };
     }
 
-    console.log("Calling Gemini AI for image description...");
+    console.log("Calling You.com AI for image description...");
 
-    // Call Gemini AI with vision capabilities
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: "You are an accessibility expert that generates concise, descriptive alt text for images. Focus on the main subject, actions, and relevant details. Keep descriptions under 125 characters when possible, but be thorough when needed. Do not start with 'An image of' or 'A picture of' - just describe what you see. Generate accessible alt text for this image. Be specific and descriptive."
-                },
-                imagePart
-              ]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 150,
+    // Call You.com AI with vision
+    const response = await fetch('https://api.you.com/v1/chat/completions', {
+      method: "POST",
+      headers: {
+        'Authorization': `Bearer ${YOU_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "You are an accessibility expert that generates concise, descriptive alt text for images. Focus on the main subject, actions, and relevant details. Keep descriptions under 125 characters when possible, but be thorough when needed. Do not start with 'An image of' or 'A picture of' - just describe what you see. Generate accessible alt text for this image. Be specific and descriptive."
+              },
+              imageContent
+            ]
           }
-        }),
-      }
-    );
+        ],
+        temperature: 0.7,
+        max_tokens: 150,
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Gemini AI error:", response.status, errorText);
+      console.error("You.com AI error:", response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
@@ -101,9 +86,9 @@ serve(async (req) => {
         );
       }
       
-      if (response.status === 400 && errorText.includes('API_KEY')) {
+      if (response.status === 401) {
         return new Response(
-          JSON.stringify({ error: "Invalid Gemini API key" }),
+          JSON.stringify({ error: "Invalid You.com API key" }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -116,15 +101,15 @@ serve(async (req) => {
 
     const data = await response.json();
     
-    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-      console.error("Invalid Gemini response:", data);
+    if (!data.choices || !data.choices[0]?.message?.content) {
+      console.error("Invalid You.com AI response:", data);
       return new Response(
         JSON.stringify({ error: "No description generated" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
-    const description = data.candidates[0].content.parts[0].text.trim();
+    const description = data.choices[0].message.content.trim();
 
     if (!description) {
       console.error("No description in response:", data);

@@ -16,13 +16,11 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const authHeader = req.headers.get('Authorization');
     
-    // Create Supabase client with auth header
     const supabaseClient = createClient(supabaseUrl!, supabaseAnonKey!, {
       global: { headers: { Authorization: authHeader! } },
       auth: { persistSession: false }
     });
     
-    // Get user from JWT token (already verified by edge function with verify_jwt = true)
     const jwt = authHeader?.replace('Bearer ', '');
     if (!jwt) {
       return new Response(
@@ -31,7 +29,6 @@ serve(async (req) => {
       );
     }
     
-    // Decode JWT to get user ID (JWT already verified by Supabase)
     const payload = JSON.parse(atob(jwt.split('.')[1]));
     const userId = payload.sub;
     
@@ -80,7 +77,6 @@ serve(async (req) => {
       );
     }
     
-    // Validate history messages
     if (history) {
       for (const msg of history) {
         if (!msg.role || !msg.content) {
@@ -104,76 +100,55 @@ serve(async (req) => {
       }
     }
     
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    const YOU_API_KEY = Deno.env.get('YOU_API_KEY');
     
-    if (!GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY not configured');
+    if (!YOU_API_KEY) {
+      throw new Error('YOU_API_KEY not configured');
     }
 
-    // Build conversation for Gemini format
-    const contents = [];
-    
-    // Add system instruction as first exchange
-    contents.push({
-      role: 'user',
-      parts: [{ text: `You are AfuAI, a helpful AI assistant for AfuChat social platform.
-        You help users:
-        - Create engaging posts (suggest topics, write drafts, improve content)
-        - Answer questions about AfuChat features
-        - Provide general assistance and conversation
-        
-        Be friendly, concise, and helpful. Use emojis occasionally to be more engaging.
-        Keep responses under 300 characters when possible.` }]
-    });
-    
-    contents.push({
-      role: 'model',
-      parts: [{ text: "I understand. I'm AfuAI, ready to help users on AfuChat!" }]
-    });
+    // Build messages for You.com AI
+    const messages = [
+      {
+        role: 'system',
+        content: `You are AfuAI, a helpful AI assistant for AfuChat social platform.
+You help users:
+- Create engaging posts (suggest topics, write drafts, improve content)
+- Answer questions about AfuChat features
+- Provide general assistance and conversation
+
+Be friendly, concise, and helpful. Use emojis occasionally to be more engaging.
+Keep responses under 300 characters when possible.`
+      }
+    ];
 
     // Add conversation history
     if (history && Array.isArray(history)) {
-      for (const msg of history) {
-        if (msg.role === 'user') {
-          contents.push({
-            role: 'user',
-            parts: [{ text: msg.content }]
-          });
-        } else if (msg.role === 'assistant') {
-          contents.push({
-            role: 'model',
-            parts: [{ text: msg.content }]
-          });
-        }
-      }
+      messages.push(...history);
     }
 
     // Add current message
-    contents.push({
+    messages.push({
       role: 'user',
-      parts: [{ text: message }]
+      content: message
     });
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: contents,
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1024,
-          }
-        }),
-      }
-    );
+    const response = await fetch('https://api.you.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${YOU_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 1024,
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API error:', {
+      console.error('You.com AI error:', {
         status: response.status,
         statusText: response.statusText,
         body: errorText
@@ -185,24 +160,24 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      if (response.status === 400 && errorText.includes('API_KEY')) {
+      if (response.status === 401) {
         return new Response(JSON.stringify({ 
-          error: 'Invalid Gemini API key. Please check your API key configuration.' 
+          error: 'Invalid You.com API key. Please check your API key configuration.' 
         }), {
           status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      throw new Error(`Gemini API error: ${response.status} ${errorText}`);
+      throw new Error(`You.com AI error: ${response.status} ${errorText}`);
     }
 
     const data = await response.json();
     
-    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-      throw new Error('Invalid response from Gemini API');
+    if (!data.choices || !data.choices[0]?.message?.content) {
+      throw new Error('Invalid response from You.com AI');
     }
     
-    const reply = data.candidates[0].content.parts[0].text;
+    const reply = data.choices[0].message.content;
 
     // Award XP for using AI
     await supabaseClient.rpc('award_xp', {
