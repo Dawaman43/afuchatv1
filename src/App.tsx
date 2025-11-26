@@ -17,6 +17,7 @@ import { LoadingBar } from '@/components/LoadingBar';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Eager load critical pages
+import Index from "./pages/Index";
 import Home from "./pages/Home";
 import Welcome from "./pages/auth/Welcome";
 import SignIn from "./pages/auth/SignIn";
@@ -116,7 +117,8 @@ const AppRoutes = () => {
         </motion.div>
       }>
         <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Index />} />
+      <Route path="/home" element={<Home />} />
       <Route path="/auth" element={<Welcome />} />
       <Route path="/auth/signin" element={<SignIn />} />
       <Route path="/auth/signup" element={<SignUp />} />
