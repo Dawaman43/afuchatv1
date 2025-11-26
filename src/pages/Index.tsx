@@ -1,401 +1,347 @@
-import { useEffect, useState, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Radio, Send, MessageSquarePlus, Search as SearchIcon, User, Shield, Trophy, ShoppingBag } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useTranslation } from 'react-i18next';
-import Chats from './Chats';
-import Feed from './Feed';
-import Search from './Search';
-import Shop from './Shop';
-import NewPostModal from '@/components/ui/NewPostModal';
+import { MessageSquare, Radio, ShoppingBag, Sparkles, Shield, Zap, Users, Mail, Globe, ExternalLink } from 'lucide-react';
 import Logo from '@/components/Logo';
-import { toast } from 'sonner';
-import { Skeleton } from '@/components/ui/skeleton';
-import NewChatDialog from '@/components/ui/NewChatDialog';
-import NotificationIcon from '@/components/nav/NotificationIcon';
-import AuthSheet from '@/components/ui/AuthSheet';
 import { SEO } from '@/components/SEO';
+import { Card, CardContent } from '@/components/ui/card';
 
-
-// --- FAB Components (Positioned at bottom-20, above the collapsible nav) ---
-// Note: FAB visibility is now controlled by the parent component's translate class
-const NewPostFAB = ({ onClick, visible, isNavVisible }: { onClick: () => void, visible: boolean, isNavVisible: boolean }) => (
-  <Button 
-    size="lg" 
-    onClick={onClick}
-    aria-label="Create new post"
-    className={`fixed bottom-20 lg:bottom-6 right-4 sm:right-6 rounded-full shadow-2xl h-12 w-12 sm:h-14 sm:w-14 transition-all duration-300 ease-in-out z-50 ${
-      (visible && isNavVisible) ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
-    }`}
-  >
-    <Send className="h-5 w-5 sm:h-6 sm:w-6" />
-  </Button>
-);
-
-const NewChatFAB = ({ onClick, visible, isNavVisible }: { onClick: () => void, visible: boolean, isNavVisible: boolean }) => (
-  <Button 
-    size="lg" 
-    onClick={onClick}
-    aria-label="Start new chat"
-    className={`fixed bottom-20 lg:bottom-6 right-4 sm:right-6 rounded-full shadow-2xl h-12 w-12 sm:h-14 sm:w-14 transition-all duration-300 ease-in-out z-50 ${
-      (visible && isNavVisible) ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
-    }`}
-  >
-    <MessageSquarePlus className="h-5 w-5 sm:h-6 sm:w-6" />
-  </Button>
-);
-// --- END FAB Components ---
 
 const Index = () => {
-  const { t } = useTranslation();
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('feed');
-  const [isPostModalOpen, setIsPostModalOpen] = useState(false); 
-  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [forceLoaded, setForceLoaded] = useState(false);
-  // 👇 NEW STATE: Control visibility of the Auth Sheet
-  const [isAuthSheetOpen, setIsAuthSheetOpen] = useState(false); 
-
-  // --- Scroll-Hiding Nav State ---
-  const [isNavVisible, setIsNavVisible] = useState(true);
-  const lastScrollY = useRef(0);
-  const headerRef = useRef<HTMLElement | null>(null); // 👈 Added TS type
-  // -------------------------------
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setForceLoaded(true);
-    }, 3000); 
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
+    // Redirect authenticated users to home feed
     if (user) {
-      checkAdminStatus();
+      navigate('/home');
     }
-  }, [user]);
-
-  useEffect(() => {
-    // Redirect business users to their dashboard by default
-    const redirectBusinessUser = async () => {
-      if (!user) return;
-      
-      const { data } = await supabase
-        .from('profiles')
-        .select('is_business_mode')
-        .eq('id', user.id)
-        .single();
-
-      if (data?.is_business_mode) {
-        navigate('/business/dashboard');
-      }
-    };
-
-    redirectBusinessUser();
   }, [user, navigate]);
 
-  // --- Scroll Logic for Hiding All Elements ---
-  useEffect(() => {
-    const headerHeight = headerRef.current ? headerRef.current.offsetHeight : 56; // Fallback to 56px (h-14)
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      // Hiding condition: Scrolling down AND scrolled past the initial header height
-      if (currentScrollY > lastScrollY.current && currentScrollY > headerHeight) {
-        setIsNavVisible(false);
-      } else if (currentScrollY < lastScrollY.current) {
-        // Showing condition: Scrolling up
-        setIsNavVisible(true);
-      } else if (currentScrollY <= headerHeight) {
-        // Always show at the top of the page
-        setIsNavVisible(true);
-      }
-      lastScrollY.current = currentScrollY;
-    };
-
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-  // ------------------------------------
-
-  const checkAdminStatus = async () => {
-    if (!user) return;
-    
-    try {
-      // Assuming 'supabase.rpc' is the correct method for role check
-      const { data } = await supabase.rpc('has_role', {
-        _user_id: user.id,
-        _role: 'admin'
-      });
-      setIsAdmin(!!data);
-    } catch (error) {
-      console.error('Error checking admin status:', error);
+  const features = [
+    {
+      icon: Radio,
+      title: "Social Feed",
+      description: "Share your thoughts, photos, and moments with your network. Stay updated with trending posts and connect with friends."
+    },
+    {
+      icon: MessageSquare,
+      title: "Private Messaging",
+      description: "Secure end-to-end encrypted messaging with voice notes, file sharing, and group chats. Your conversations, your privacy."
+    },
+    {
+      icon: ShoppingBag,
+      title: "Marketplace",
+      description: "Discover unique gifts and items in our integrated marketplace. Buy and sell with complete trust and security."
+    },
+    {
+      icon: Sparkles,
+      title: "AI Assistant",
+      description: "Meet AfuAI, your intelligent companion. Get instant help, generate content, and enhance your experience with cutting-edge AI."
+    },
+    {
+      icon: Shield,
+      title: "Security First",
+      description: "Bank-level encryption, secure authentication with Google OAuth, and robust data protection for your peace of mind."
+    },
+    {
+      icon: Users,
+      title: "Community Driven",
+      description: "Join a vibrant community of creators, businesses, and users. Build connections that matter."
     }
-  };
-
-  const effectiveLoading = loading && !forceLoaded;
-
-  // --- MODIFIED AUTH HANDLERS ---
-  const handleLoginRequired = () => {
-    // 👇 Instead of navigating, open the sheet
-    setIsAuthSheetOpen(true);
-  };
-  
-  const handleNewPost = () => {
-    if (user) {
-      setIsPostModalOpen(true);
-    } else {
-      handleLoginRequired();
-    }
-  };
-
-  const handleNewChat = () => {
-    if (user) {
-      setIsChatModalOpen(true);
-    } else {
-      handleLoginRequired();
-    }
-  };
-  
-  const handleAIClick = () => {
-    if (user) {
-      navigate('/ai-chat');
-    } else {
-      handleLoginRequired();
-    }
-  };
-  // ------------------------------
-
-  const headerTranslateClass = isNavVisible ? 'translate-y-0' : '-translate-y-full';
-  const navTranslateClass = isNavVisible ? 'translate-y-0' : 'translate-y-full';
-
-
-  if (effectiveLoading) {
-    // Skeleton loading state
-    return (
-      <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto">
-        {/* ... (Skeleton code remains the same) ... */}
-        <div className="h-14 flex items-center justify-between rounded-b-lg">
-          <Skeleton className="h-6 w-24" />
-          <div className="flex gap-2">
-            <Skeleton className="h-8 w-8 rounded-full" />
-            <Skeleton className="h-8 w-8 rounded-full" />
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-4 mb-6 pt-4">
-          <Skeleton className="h-10 w-full rounded-full" /> 
-          <Skeleton className="h-10 w-full rounded-full" /> 
-          <Skeleton className="h-10 w-full rounded-full" /> 
-        </div>
-        <div className="space-y-6 pt-2">
-          <div className="p-4 rounded-xl shadow-xl space-y-3">
-             <div className="flex items-center space-x-3">
-                <Skeleton className="h-8 w-8 rounded-full bg-muted" />
-                <Skeleton className="h-4 w-1/4 bg-muted" />
-             </div>
-             <Skeleton className="h-4 w-full bg-muted" />
-             <Skeleton className="h-4 w-5/6 bg-muted" />
-             <div className="pt-2 flex justify-between">
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-4 w-12" />
-             </div>
-          </div>
-          <div className="p-4 rounded-xl shadow-xl space-y-3">
-             <div className="flex items-center space-x-3">
-                <Skeleton className="h-8 w-8 rounded-full" />
-                <Skeleton className="h-4 w-1/3" />
-             </div>
-             <Skeleton className="h-4 w-4/5 bg-muted" />
-             <Skeleton className="h-4 w-2/3 bg-muted" />
-             <div className="pt-2 flex justify-between">
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-4 w-12" />
-             </div>
-          </div>
-        </div>
-        <Skeleton className="fixed bottom-20 right-6 h-14 w-14 rounded-full" />
-      </div>
-    );
-  }
+  ];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background">
       <SEO 
-        title="AfuChat — Post, Chat, Shop & AI | All-in-One Social Platform"
-        description="AfuChat combines the best features: post updates like Twitter, chat privately like Telegram, shop on AfuMall marketplace, and use AI assistant. Join millions connecting, sharing, chatting, and shopping in one powerful social app. Free messaging, secure chats, trending posts, and smart AI help."
-        keywords="social media app, messaging platform, chat application, online shopping mall, AI chatbot, post updates, share photos, instant messaging, group chat, private chat, buy online, sell online, marketplace, social networking site, connect with friends, online community, trending topics, social commerce"
+        title="AfuChat — All-in-One Social Platform | Connect, Chat, Shop & More"
+        description="AfuChat is a comprehensive social platform combining social networking, secure messaging, marketplace shopping, and AI assistance. Join our community to connect with friends, share moments, chat privately, discover unique gifts, and experience the future of social interaction."
+        keywords="social media, messaging app, chat platform, marketplace, AI assistant, social networking, secure messaging, online community, social commerce, group chat, private messaging, social platform"
       />
       
-      {/* Header (Hides on Scroll Down) */}
-      <header 
-        ref={headerRef}
-        className={`bg-background sticky top-0 z-20 transition-transform duration-300 ease-in-out border-b border-border/30 ${headerTranslateClass}`}
-      >
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 h-14 md:h-16 flex items-center justify-between max-w-7xl">
-          <div className="flex items-center gap-2 md:gap-3">
-            <Logo size="md" />
-            <h1 className="text-base sm:text-lg md:text-xl font-bold text-primary">AfuChat</h1>
-          </div>
-          
-          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2">
-            {/* Conditional Login Button or User Icons */}
-            {user ? (
-              // Logged In: Show icons
-              <>
-                <Button 
-                  size="icon" 
-                  variant="ghost" 
-                  className="rounded-full h-8 w-8 md:h-10 md:w-10" 
-                  title="Shop"
-                  onClick={() => setActiveTab('shop')}
-                >
-                  <ShoppingBag className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-                </Button>
-                <Link to="/leaderboard">
-                  <Button size="icon" variant="ghost" className="rounded-full h-8 w-8 md:h-10 md:w-10" title={t('gamification.leaderboard')}>
-                    <Trophy className="h-4 w-4 md:h-5 md:w-5 text-yellow-500" />
-                  </Button>
-                </Link>
-                <NotificationIcon />
-                {isAdmin && (
-                  <Link to="/admin">
-                    <Button size="icon" variant="ghost" className="rounded-full h-8 w-8 md:h-10 md:w-10">
-                      <Shield className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-                    </Button>
-                  </Link>
-                )}
-                <Link to={`/profile/${user.id}`}>
-                  <Button size="icon" variant="ghost" className="rounded-full h-8 w-8 md:h-10 md:w-10">
-                    <User className="h-4 w-4 md:h-5 md:w-5" />
-                  </Button>
-                </Link>
-              </>
-            ) : (
-              // Logged Out: Show Log In Button
-              <Button size="sm" variant="default" className="text-xs sm:text-sm font-semibold h-8 px-3 sm:px-4" onClick={handleLoginRequired}>
-                {t('common.login')}
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-3">
+              <Logo size="md" />
+              <h1 className="text-xl font-bold text-foreground">AfuChat</h1>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={() => navigate('/auth/signin')}>
+                Sign In
               </Button>
-            )}
+              <Button onClick={() => navigate('/auth/signup')}>
+                Get Started
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 container mx-auto px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-6 max-w-7xl">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          <div className="flex-1 relative">
-            <TabsContent value="feed" className="h-full mt-0">
-              <Feed />
-            </TabsContent>
-            <TabsContent value="search" className="h-full mt-0">
-              <Search />
-            </TabsContent>
-            <TabsContent value="shop" className="h-full mt-0">
-              <Shop />
-            </TabsContent>
-            <TabsContent value="chats" className="h-full mt-0">
-              <Chats />
-            </TabsContent>
-          </div>
-        </Tabs>
-      </main>
-
-      {/* Bottom Navigation (Hides on Scroll Down) - Hidden on Desktop */}
-      <nav 
-        className={`fixed bottom-0 left-0 right-0 bg-background z-30 transition-transform duration-300 ease-in-out border-t border-border/30 lg:hidden ${navTranslateClass}`}
-      >
-        <div className="container mx-auto px-3 sm:px-4 max-w-7xl">
-          <div className="grid grid-cols-5 h-14 sm:h-16">
-            <button
-              onClick={() => setActiveTab('feed')}
-              className={`flex flex-col items-center justify-center gap-0.5 sm:gap-1 transition-colors ${
-                activeTab === 'feed' ? 'text-primary' : 'text-muted-foreground'
-              }`}
-            >
-              <Radio className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-[10px] sm:text-xs font-medium">{t('navigation.feed')}</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('search')}
-              className={`flex flex-col items-center justify-center gap-0.5 sm:gap-1 transition-colors ${
-                activeTab === 'search' ? 'text-primary' : 'text-muted-foreground'
-              }`}
-            >
-              <SearchIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-[10px] sm:text-xs font-medium">{t('navigation.search')}</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('shop')}
-              className={`flex flex-col items-center justify-center gap-0.5 sm:gap-1 transition-colors ${
-                activeTab === 'shop' ? 'text-primary' : 'text-muted-foreground'
-              }`}
-            >
-              <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-[10px] sm:text-xs font-medium">Shop</span>
-            </button>
-            {/* MODIFIED CHATS BUTTON */}
-            <button
-              onClick={() => user ? setActiveTab('chats') : handleLoginRequired()}
-              className={`flex flex-col items-center justify-center gap-0.5 sm:gap-1 transition-colors ${
-                user 
-                  ? (activeTab === 'chats' ? 'text-primary' : 'text-muted-foreground')
-                  : 'text-muted-foreground opacity-50'
-              }`}
-              title={user ? t('navigation.openChats') : t('navigation.loginToViewChats')}
-            >
-              <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-[10px] sm:text-xs font-medium">{t('navigation.chats')}</span>
-            </button>
-            {/* MODIFIED AFUAI BUTTON */}
-            <button
-              onClick={handleAIClick}
-              className={`flex flex-col items-center justify-center gap-0.5 sm:gap-1 transition-colors ${
-                user 
-                  ? 'text-muted-foreground hover:text-primary' 
-                  : 'text-muted-foreground opacity-50'
-              }`}
-              title={user ? t('navigation.talkToAfuAI') : t('navigation.loginToUseAfuAI')}
-            >
-              <svg className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
-              </svg>
-              <span className="text-[10px] sm:text-xs font-medium">{t('navigation.afuai')}</span>
-            </button>
+      {/* Hero Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center space-y-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+              <Zap className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">All-in-One Social Platform</span>
+            </div>
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
+              Connect, Share, Chat,<br />and Shop in One Place
+            </h2>
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
+              AfuChat brings together everything you need for modern social interaction. Post updates, message privately, discover unique items, and get AI-powered assistance — all on one secure platform.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+              <Button size="lg" className="text-base h-12 px-8" onClick={() => navigate('/auth/signup')}>
+                Create Free Account
+              </Button>
+              <Button size="lg" variant="outline" className="text-base h-12 px-8" onClick={() => navigate('/privacy')}>
+                Learn More
+              </Button>
+            </div>
           </div>
         </div>
-      </nav>
-      
-      {/* FABs for new content */}
-      {/* FAB handlers already call handleLoginRequired() if logged out */}
-      {activeTab === 'feed' && <NewPostFAB onClick={handleNewPost} visible={true} isNavVisible={isNavVisible} />}
-      {activeTab === 'chats' && <NewChatFAB onClick={handleNewChat} visible={true} isNavVisible={isNavVisible} />}
-      
-      {/* Modals */}
-      <NewPostModal 
-        isOpen={isPostModalOpen} 
-        onClose={() => setIsPostModalOpen(false)} 
-      />
-      
-      <NewChatDialog
-        isOpen={isChatModalOpen}
-        onClose={() => setIsChatModalOpen(false)}
-      />
+      </section>
 
-      {/* 🌟 AUTHENTICATION SHEET INTEGRATION 🌟 */}
-      <AuthSheet 
-        isOpen={isAuthSheetOpen} 
-        onOpenChange={setIsAuthSheetOpen} 
-      />
+      {/* Features Grid */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center space-y-4 mb-16">
+            <h3 className="text-3xl sm:text-4xl font-bold text-foreground">
+              Everything You Need in One Platform
+            </h3>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Powerful features designed for seamless social interaction, secure communication, and community building.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <Card key={index} className="border-border/50 bg-background/50 backdrop-blur">
+                <CardContent className="p-6 space-y-4">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <feature.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <h4 className="text-xl font-semibold text-foreground">{feature.title}</h4>
+                  <p className="text-muted-foreground">{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <h3 className="text-3xl sm:text-4xl font-bold text-foreground">
+                Built for Modern Connection
+              </h3>
+              <div className="space-y-4 text-muted-foreground">
+                <p>
+                  AfuChat is a next-generation social platform that combines the best features of social media, private messaging, e-commerce, and artificial intelligence into one unified experience.
+                </p>
+                <p>
+                  Founded with the mission to create meaningful digital connections, AfuChat serves millions of users worldwide who want a secure, feature-rich platform for all their social and communication needs.
+                </p>
+                <p>
+                  Whether you're sharing life updates, chatting with friends, discovering unique marketplace items, or getting AI assistance, AfuChat provides the tools you need in a clean, intuitive interface.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <Card className="border-border/50">
+                <CardContent className="p-6">
+                  <h4 className="text-lg font-semibold mb-4 text-foreground">Why Choose AfuChat?</h4>
+                  <ul className="space-y-3">
+                    {[
+                      "100% free to use with premium options",
+                      "Bank-level security and encryption",
+                      "Cross-platform compatibility",
+                      "Regular updates and new features",
+                      "24/7 customer support",
+                      "Active community of millions"
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <div className="h-2 w-2 rounded-full bg-primary" />
+                        </div>
+                        <span className="text-muted-foreground">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact & Developer Information */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center space-y-4 mb-12">
+            <h3 className="text-3xl sm:text-4xl font-bold text-foreground">
+              Get in Touch
+            </h3>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Have questions? Need support? Want to partner with us? Our team is here to help.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="border-border/50">
+              <CardContent className="p-6 space-y-4">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Mail className="h-6 w-6 text-primary" />
+                </div>
+                <h4 className="text-lg font-semibold text-foreground">Email Support</h4>
+                <p className="text-sm text-muted-foreground">Get help from our support team</p>
+                <a 
+                  href="mailto:support@afuchat.com" 
+                  className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
+                >
+                  support@afuchat.com
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/50">
+              <CardContent className="p-6 space-y-4">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <h4 className="text-lg font-semibold text-foreground">Business Inquiries</h4>
+                <p className="text-sm text-muted-foreground">Partnership and business opportunities</p>
+                <a 
+                  href="mailto:business@afuchat.com" 
+                  className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
+                >
+                  business@afuchat.com
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/50">
+              <CardContent className="p-6 space-y-4">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Globe className="h-6 w-6 text-primary" />
+                </div>
+                <h4 className="text-lg font-semibold text-foreground">Developer Team</h4>
+                <p className="text-sm text-muted-foreground">Technical support and API access</p>
+                <a 
+                  href="mailto:developers@afuchat.com" 
+                  className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
+                >
+                  developers@afuchat.com
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Company Information */}
+          <Card className="mt-12 border-border/50 bg-background/50 backdrop-blur">
+            <CardContent className="p-8">
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-xl font-semibold mb-2 text-foreground">AfuChat Platform Team</h4>
+                  <p className="text-muted-foreground">
+                    AfuChat is developed and maintained by a dedicated team of engineers, designers, and community managers committed to creating the best social experience possible.
+                  </p>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-6 pt-4">
+                  <div>
+                    <h5 className="font-semibold mb-2 text-foreground">Platform Information</h5>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li><span className="font-medium">Service:</span> AfuChat Social Platform</li>
+                      <li><span className="font-medium">Type:</span> Social Networking & Communication</li>
+                      <li><span className="font-medium">Headquarters:</span> Global Operations</li>
+                      <li><span className="font-medium">Launched:</span> 2024</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold mb-2 text-foreground">Support Channels</h5>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>• Email: support@afuchat.com</li>
+                      <li>• Business: business@afuchat.com</li>
+                      <li>• Developers: developers@afuchat.com</li>
+                      <li>• Response time: 24-48 hours</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto max-w-4xl">
+          <Card className="border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-background">
+            <CardContent className="p-12 text-center space-y-6">
+              <h3 className="text-3xl sm:text-4xl font-bold text-foreground">
+                Ready to Get Started?
+              </h3>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Join millions of users who trust AfuChat for their social networking, messaging, and shopping needs.
+              </p>
+              <Button size="lg" className="text-base h-12 px-8" onClick={() => navigate('/auth/signup')}>
+                Create Your Free Account
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border/50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Logo size="sm" />
+                <span className="font-bold text-foreground">AfuChat</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Your all-in-one social platform for connecting, chatting, and shopping.
+              </p>
+            </div>
+            <div>
+              <h5 className="font-semibold mb-4 text-foreground">Platform</h5>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="/auth/signup" className="hover:text-primary">Sign Up</a></li>
+                <li><a href="/auth/signin" className="hover:text-primary">Sign In</a></li>
+                <li><a href="/support" className="hover:text-primary">Support</a></li>
+              </ul>
+            </div>
+            <div>
+              <h5 className="font-semibold mb-4 text-foreground">Legal</h5>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="/privacy" className="hover:text-primary">Privacy Policy</a></li>
+                <li><a href="/terms" className="hover:text-primary">Terms of Service</a></li>
+              </ul>
+            </div>
+            <div>
+              <h5 className="font-semibold mb-4 text-foreground">Contact</h5>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="mailto:support@afuchat.com" className="hover:text-primary">support@afuchat.com</a></li>
+                <li><a href="mailto:business@afuchat.com" className="hover:text-primary">business@afuchat.com</a></li>
+                <li><a href="mailto:developers@afuchat.com" className="hover:text-primary">developers@afuchat.com</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="pt-8 border-t border-border/50 text-center text-sm text-muted-foreground">
+            <p>© {new Date().getFullYear()} AfuChat. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
