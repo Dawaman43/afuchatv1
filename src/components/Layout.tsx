@@ -37,11 +37,7 @@ const Layout = ({ children }: LayoutProps) => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [chatScrollHide, setChatScrollHide] = useState(false);
 
-  // Use desktop hybrid layout for tablets and desktops
-  if (!isMobile) {
-    return <DesktopHybridLayout>{children}</DesktopHybridLayout>;
-  }
-
+  // All hooks must be called before any conditional returns
   useEffect(() => {
     if (user) {
       checkAdminStatus();
@@ -49,6 +45,9 @@ const Layout = ({ children }: LayoutProps) => {
   }, [user]);
 
   useEffect(() => {
+    // Only run scroll handlers on mobile
+    if (!isMobile) return;
+    
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
@@ -72,7 +71,12 @@ const Layout = ({ children }: LayoutProps) => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('chat-scroll-state' as any, handleChatScroll as any);
     };
-  }, [lastScrollY]);
+  }, [lastScrollY, isMobile]);
+
+  // Use desktop hybrid layout for tablets and desktops (after all hooks)
+  if (!isMobile) {
+    return <DesktopHybridLayout>{children}</DesktopHybridLayout>;
+  }
 
   const checkAdminStatus = async () => {
     if (!user) return;
