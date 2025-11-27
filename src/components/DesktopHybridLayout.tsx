@@ -5,7 +5,7 @@ import { useAccountMode } from '@/contexts/AccountModeContext';
 import { 
   Home, MessageSquare, Search, Bell, User, Settings, Shield, 
   BarChart3, Grid3x3, Bot, ShoppingBag, Wallet, Send, Gift, 
-  Image as ImageIcon, Hash, TrendingUp, Menu, X
+  Image as ImageIcon, Hash, TrendingUp, Menu, X, Plus
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import NotificationIcon from '@/components/nav/NotificationIcon';
@@ -32,12 +32,47 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const [isAffiliate, setIsAffiliate] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     if (user) {
       checkUserStatus();
+      fetchNotificationCount();
+      
+      // Listen for notification changes
+      const channel = supabase
+        .channel('desktop-notifications')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => fetchNotificationCount()
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
+
+  const fetchNotificationCount = async () => {
+    if (!user) return;
+    
+    const { count, error } = await supabase
+      .from('notifications' as any)
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_read', false);
+
+    if (!error && count !== null) {
+      setUnreadNotifications(count);
+    }
+  };
 
   const checkUserStatus = async () => {
     if (!user) return;
@@ -137,7 +172,27 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
-            <NotificationIcon />
+            {user && (
+              <Button 
+                variant="default" 
+                onClick={() => window.dispatchEvent(new Event('open-new-post'))}
+                className="h-10 px-6 rounded-full font-semibold"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                New Post
+              </Button>
+            )}
+            
+            <Link to="/notifications">
+              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full relative">
+                <Bell className="h-5 w-5" />
+                {unreadNotifications > 0 && (
+                  <span className="absolute top-0 right-0 flex items-center justify-center h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full">
+                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                  </span>
+                )}
+              </Button>
+            </Link>
             
             {user && (
               <Link to={`/${user.id}`}>
