@@ -10,6 +10,7 @@ import {
 import Logo from '@/components/Logo';
 import NotificationIcon from '@/components/nav/NotificationIcon';
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
+import NewPostModal from '@/components/ui/NewPostModal';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -33,6 +34,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -175,7 +177,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
             {user && (
               <Button 
                 variant="default" 
-                onClick={() => window.dispatchEvent(new Event('open-new-post'))}
+                onClick={() => setIsPostModalOpen(true)}
                 className="h-10 px-6 rounded-full font-semibold"
               >
                 <Plus className="h-5 w-5 mr-2" />
@@ -283,6 +285,14 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
           {children}
         </motion.div>
       </main>
+
+      {/* New Post Modal */}
+      {user && (
+        <NewPostModal
+          isOpen={isPostModalOpen}
+          onClose={() => setIsPostModalOpen(false)}
+        />
+      )}
     </div>
   );
 };
