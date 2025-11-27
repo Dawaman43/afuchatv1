@@ -7,7 +7,6 @@ import Logo from '@/components/Logo';
 import { SEO } from '@/components/SEO';
 import { Card, CardContent } from '@/components/ui/card';
 import Feed from './Feed';
-import DesktopFeed from './DesktopFeed';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -69,7 +68,7 @@ const Index = () => {
             description="AfuChat is a comprehensive social platform combining social networking, secure messaging, marketplace shopping, and AI assistance. Join our community to connect with friends, share moments, chat privately, discover unique gifts, and experience the future of social interaction."
             keywords="social media, messaging app, chat platform, marketplace, AI assistant, social networking, secure messaging, online community, social commerce, group chat, private messaging, social platform"
           />
-          {isMobile ? <Feed guestMode={false} /> : <DesktopFeed guestMode={false} />}
+          {<Feed guestMode={false} />}
         </Layout>
       );
     }
@@ -100,7 +99,7 @@ const Index = () => {
             </div>
           </div>
         </header>
-        {isMobile ? <Feed guestMode={true} /> : <DesktopFeed guestMode={true} />}
+        {<Feed guestMode={true} />}
       </div>
     );
   }
