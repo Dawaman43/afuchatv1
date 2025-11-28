@@ -157,7 +157,7 @@ const SignUp = () => {
         password,
         options: {
           data: signupData,
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/home`,
         },
       });
 
@@ -225,7 +225,7 @@ const SignUp = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/home`,
         },
       });
       if (error) throw error;
@@ -241,7 +241,7 @@ const SignUp = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/home`,
         },
       });
       if (error) throw error;

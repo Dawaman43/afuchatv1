@@ -40,7 +40,7 @@ const SignIn = () => {
         }
       } else {
         toast.success('Signed in successfully!');
-        navigate('/');
+        navigate('/home');
       }
     } catch (error: any) {
       toast.error(error.errors?.[0]?.message || error.message || 'An error occurred.');
@@ -55,7 +55,7 @@ const SignIn = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/home`,
         },
       });
       if (error) throw error;
@@ -71,7 +71,7 @@ const SignIn = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/home`,
         },
       });
       if (error) throw error;
