@@ -1,6 +1,7 @@
 import * as React from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -26,6 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
   const [session, setSession] = React.useState<Session | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     let isMounted = true;
@@ -76,6 +78,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
           setTimeout(() => recordUserSession(session), 100);
+          
+          // Only redirect on SIGNED_IN (not on TOKEN_REFRESHED)
+          // And only if currently on landing or auth pages
+          if (event === 'SIGNED_IN') {
+            const currentPath = window.location.pathname;
+            if (currentPath === '/' || currentPath.startsWith('/auth')) {
+              setTimeout(() => navigate('/home', { replace: true }), 100);
+            }
+          }
         }
       }
     );

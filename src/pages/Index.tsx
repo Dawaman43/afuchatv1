@@ -12,17 +12,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '@/components/Layout';
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [showLanding, setShowLanding] = useState(true);
 
   useEffect(() => {
-    // If user is logged in, hide landing and show feed directly
-    if (user) {
-      setShowLanding(false);
+    // If user is logged in, redirect to /home immediately
+    if (user && !loading) {
+      navigate('/home', { replace: true });
     }
-  }, [user]);
+  }, [user, loading, navigate]);
 
   const features = [
     {
@@ -57,23 +57,13 @@ const Index = () => {
     }
   ];
 
-  // Show feed directly for authenticated users or when landing is dismissed
-  if (!showLanding || user) {
-    // If user is logged in, use Layout component to get navigation
-    if (user) {
-      return (
-        <Layout>
-          <SEO 
-            title="AfuChat — All-in-One Social Platform | Connect, Chat, Shop & More"
-            description="AfuChat is a comprehensive social platform combining social networking, secure messaging, marketplace shopping, and AI assistance. Join our community to connect with friends, share moments, chat privately, discover unique gifts, and experience the future of social interaction."
-            keywords="social media, messaging app, chat platform, marketplace, AI assistant, social networking, secure messaging, online community, social commerce, group chat, private messaging, social platform"
-          />
-          {<Feed guestMode={false} />}
-        </Layout>
-      );
-    }
-    
-    // Guest users browsing feed without Layout (no navigation needed)
+  // Show nothing while checking auth or redirecting authenticated users
+  if (loading || user) {
+    return null;
+  }
+
+  // Show feed directly for when landing is dismissed
+  if (!showLanding) {
     return (
       <div className="min-h-screen bg-background">
         <SEO 

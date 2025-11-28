@@ -70,7 +70,7 @@ const AuthSheetContent: React.FC<AuthSheetContentProps> = ({ onClose }) => {
           password,
           options: {
             data: signupData,
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: `${window.location.origin}/home`,
           },
         });
         if (error) throw error;
@@ -87,6 +87,7 @@ const AuthSheetContent: React.FC<AuthSheetContentProps> = ({ onClose }) => {
         }
         toast.success('Signed in successfully!');
         onClose();
+        navigate('/home');
       }
     } catch (error: any) {
       toast.error(error.message || 'An error occurred during authentication.');
