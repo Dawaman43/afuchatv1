@@ -33,9 +33,11 @@ interface EditProfileForm {
   is_private: boolean;
   show_online_status: boolean;
   show_read_receipts: boolean;
+  show_balance: boolean;
   avatar_url: string | null;
   country: string;
   business_category: string;
+  phone_number: string;
 }
 
 const EditProfile: React.FC = () => {
@@ -53,9 +55,11 @@ const EditProfile: React.FC = () => {
     is_private: false,
     show_online_status: true,
     show_read_receipts: true,
+    show_balance: true,
     avatar_url: null,
     country: '',
     business_category: '',
+    phone_number: '',
   });
   const [loadingProfile, setLoadingProfile] = useState<boolean>(true); 
   const [saving, setSaving] = useState<boolean>(false);
@@ -107,9 +111,11 @@ const EditProfile: React.FC = () => {
             is_private: data.is_private || false,
             show_online_status: data.show_online_status || true,
             show_read_receipts: data.show_read_receipts || true,
+            show_balance: data.show_balance ?? true,
             avatar_url: data.avatar_url || null,
             country: data.country || '',
             business_category: data.business_category || '',
+            phone_number: data.phone_number || '',
           });
           setIsBusiness(data.is_business_mode || false);
           setIsAffiliate(data.is_affiliate || false);
@@ -122,9 +128,11 @@ const EditProfile: React.FC = () => {
             is_private: false,
             show_online_status: true,
             show_read_receipts: true,
+            show_balance: true,
             avatar_url: null,
             country: '',
             business_category: '',
+            phone_number: '',
           });
         }
       } catch (error: any) {
@@ -154,7 +162,7 @@ const EditProfile: React.FC = () => {
     setProfile((prev) => ({ ...prev, [name as keyof EditProfileForm]: value }));
   };
 
-  const handleToggleChange = (key: keyof Pick<EditProfileForm, 'is_private' | 'show_online_status' | 'show_read_receipts'>) => {
+  const handleToggleChange = (key: keyof Pick<EditProfileForm, 'is_private' | 'show_online_status' | 'show_read_receipts' | 'show_balance'>) => {
     setProfile((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
@@ -187,7 +195,9 @@ const EditProfile: React.FC = () => {
         is_private: profile.is_private,
         show_online_status: profile.show_online_status,
         show_read_receipts: profile.show_read_receipts,
+        show_balance: profile.show_balance,
         country: profile.country || null,
+        phone_number: profile.phone_number.trim() || null,
         business_category: isBusiness ? (profile.business_category.trim() || null) : null,
         updated_at: new Date().toISOString(),
       };
@@ -329,262 +339,213 @@ const EditProfile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex justify-center p-4 md:p-8">
-      <Card className="w-full max-w-2xl border-none md:border md:shadow-none bg-card/80 backdrop-blur-sm"> 
-        <CardHeader className="pb-4 border-b border-border/50">
-          <CardTitle className="text-3xl font-extrabold text-foreground flex items-center gap-2">
+    <div className="min-h-screen bg-background pb-20 md:pb-8">
+      <div className="max-w-2xl mx-auto px-4 py-6 md:py-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-foreground flex items-center gap-2">
             <User className="h-6 w-6 text-primary" /> Edit Profile
-          </CardTitle>
-          <CardDescription className="text-base text-muted-foreground">
-            Update your basic public-facing information.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-6 space-y-8">
+          </h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
+            Update your profile information and preferences
+          </p>
+        </div>
+
+        <div className="space-y-6">
           {/* Avatar Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2 text-primary">Profile Picture</h3>
-            <div className="flex items-center gap-6">
-              <Avatar className="h-24 w-24 border-2 border-border">
-                <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} />
-                <AvatarFallback className="bg-muted text-2xl">
-                  {profile.display_name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+          <Card className="border border-border/50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold">Profile Picture</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-2 border-border">
+                  <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} />
+                  <AvatarFallback className="bg-muted text-2xl">
+                    {profile.display_name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
 
-              <div className="flex-1 space-y-3">
-                <div className="flex gap-2">
-                  <input
-                    type="file"
-                    id="avatar-upload"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
-                    className="hidden"
-                    disabled={uploadingAvatar}
-                  />
-                  <Label htmlFor="avatar-upload">
-                    <Button
-                      type="button"
-                      variant="outline"
+                <div className="flex-1 w-full space-y-3">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="file"
+                      id="avatar-upload"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="hidden"
                       disabled={uploadingAvatar}
-                      asChild
-                    >
-                      <span className="cursor-pointer">
-                        <Upload className="h-4 w-4 mr-2" />
-                        {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
-                      </span>
-                    </Button>
-                  </Label>
-                  {profile.avatar_url && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleRemoveAvatar}
-                      disabled={uploadingAvatar}
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Remove
-                    </Button>
-                  )}
+                    />
+                    <Label htmlFor="avatar-upload" className="flex-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={uploadingAvatar}
+                        className="w-full"
+                        asChild
+                      >
+                        <span className="cursor-pointer">
+                          <Upload className="h-4 w-4 mr-2" />
+                          {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
+                        </span>
+                      </Button>
+                    </Label>
+                    {profile.avatar_url && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleRemoveAvatar}
+                        disabled={uploadingAvatar}
+                        className="w-full sm:w-auto"
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center sm:text-left">
+                    JPG, PNG, or GIF (max 5MB). Square images work best.
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  JPG, PNG, or GIF (max 5MB). Square images work best.
-                </p>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <Separator className="my-8 bg-border/50" />
-
-          <div className="space-y-6">
-            
-            <h3 className="text-lg font-semibold border-b pb-2 text-primary">Basic Information</h3>
-
-            <div className="space-y-2">
-              <Label htmlFor="display_name" className="text-sm font-medium text-foreground">Display Name</Label>
-              <Input
-                id="display_name"
-                name="display_name"
-                value={profile.display_name}
-                onChange={handleInputChange}
-                placeholder="Your display name"
-                disabled={saving}
-                className="text-base h-11 bg-input/50 border border-border/80 focus:border-primary/50" 
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="handle" className="text-sm font-medium text-foreground">Handle (Username)</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">@</span>
+          {/* Basic Information */}
+          <Card className="border border-border/50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold">Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="display_name" className="text-sm font-medium">Display Name</Label>
                 <Input
-                  id="handle"
-                  name="handle"
-                  value={profile.handle}
+                  id="display_name"
+                  name="display_name"
+                  value={profile.display_name}
                   onChange={handleInputChange}
-                  placeholder="unique_handle"
+                  placeholder="Your display name"
                   disabled={saving}
-                  className="pl-7 text-base h-11 bg-input/50 border border-border/80 focus:border-primary/50" 
+                  className="h-11"
                 />
               </div>
-              <p className="text-xs text-muted-foreground pt-1">
-                Your public, unique identifier. Only lowercase letters, numbers, and underscores.
-              </p>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="country" className="text-sm font-medium text-foreground">Country</Label>
-              <Select value={profile.country} onValueChange={(value) => setProfile((prev) => ({ ...prev, country: value }))}>
-                <SelectTrigger className="h-11 bg-input/50 border border-border/80">
-                  <SelectValue placeholder="Select your country" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px]">
-                  {countries.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground pt-1">
-                Your location helps connect you with local content
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bio" className="text-sm font-medium text-foreground">Bio</Label>
-              <Textarea
-                id="bio"
-                name="bio"
-                value={profile.bio}
-                onChange={handleInputChange}
-                placeholder="Tell us about yourself (max 150 chars)"
-                rows={4}
-                maxLength={150}
-                disabled={saving}
-                className="text-base resize-none bg-input/50 border border-border/80 focus:border-primary/50" 
-              />
-              <p className="text-xs text-muted-foreground flex justify-between">
-                <span>Keep it short and punchy!</span>
-                <span>{profile.bio.length}/150</span>
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="country" className="text-sm font-medium text-foreground">Country</Label>
-              <Select value={profile.country} onValueChange={(value) => setProfile((prev) => ({ ...prev, country: value }))}>
-                <SelectTrigger className="h-11 bg-input/50 border border-border/80">
-                  <SelectValue placeholder="Select your country" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px]">
-                  {countries.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground pt-1">
-                Your location helps connect you with local content
-              </p>
-            </div>
-
-            {/* Business Category - Only for business accounts */}
-            {isBusiness && (
               <div className="space-y-2">
-                <Label htmlFor="business_category" className="text-sm font-medium text-foreground flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-primary" />
-                  Business Category
-                </Label>
-                <Select 
-                  value={profile.business_category} 
-                  onValueChange={(value) => setProfile((prev) => ({ ...prev, business_category: value }))}
-                >
-                  <SelectTrigger className="h-11 bg-input/50 border border-border/80">
-                    <SelectValue placeholder="Select your business category" />
+                <Label htmlFor="handle" className="text-sm font-medium">Handle (Username)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">@</span>
+                  <Input
+                    id="handle"
+                    name="handle"
+                    value={profile.handle}
+                    onChange={handleInputChange}
+                    placeholder="unique_handle"
+                    disabled={saving}
+                    className="pl-7 h-11"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Your unique identifier. Only lowercase letters, numbers, and underscores.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone_number" className="text-sm font-medium">Phone Number</Label>
+                <Input
+                  id="phone_number"
+                  name="phone_number"
+                  type="tel"
+                  value={profile.phone_number}
+                  onChange={handleInputChange}
+                  placeholder="+1234567890"
+                  disabled={saving}
+                  className="h-11"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Include country code for international numbers
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="country" className="text-sm font-medium">Country</Label>
+                <Select value={profile.country} onValueChange={(value) => setProfile((prev) => ({ ...prev, country: value }))}>
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Select your country" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
-                    <SelectItem value="Restaurant">Restaurant</SelectItem>
-                    <SelectItem value="Tech Company">Tech Company</SelectItem>
-                    <SelectItem value="Retail">Retail</SelectItem>
-                    <SelectItem value="Services">Services</SelectItem>
-                    <SelectItem value="Healthcare">Healthcare</SelectItem>
-                    <SelectItem value="Education">Education</SelectItem>
-                    <SelectItem value="Finance">Finance</SelectItem>
-                    <SelectItem value="Real Estate">Real Estate</SelectItem>
-                    <SelectItem value="Entertainment">Entertainment</SelectItem>
-                    <SelectItem value="Manufacturing">Manufacturing</SelectItem>
-                    <SelectItem value="E-commerce">E-commerce</SelectItem>
-                    <SelectItem value="Consulting">Consulting</SelectItem>
-                    <SelectItem value="Marketing">Marketing</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    {countries.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground pt-1">
-                  Choose the category that best describes your business
+                <p className="text-xs text-muted-foreground">
+                  Your location helps connect you with local content
                 </p>
               </div>
-            )}
 
-            <Separator className="my-8 bg-border/50" />
-
-            <h3 className="text-lg font-semibold border-b pb-2 text-primary">Privacy Settings</h3>
-
-            {/* Private Account Toggle */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground flex items-center gap-2">
-                <Lock className="h-4 w-4 text-muted-foreground" />
-                Private Account
-              </Label>
-              <div className="flex items-center justify-between p-3 bg-input/50 rounded-md">
-                <p className="text-xs text-muted-foreground">Only approved followers can see your posts and profile</p>
-                <Switch
-                  checked={profile.is_private}
-                  onCheckedChange={() => handleToggleChange('is_private')}
+              <div className="space-y-2">
+                <Label htmlFor="bio" className="text-sm font-medium">Bio</Label>
+                <Textarea
+                  id="bio"
+                  name="bio"
+                  value={profile.bio}
+                  onChange={handleInputChange}
+                  placeholder="Tell us about yourself (max 150 chars)"
+                  rows={4}
+                  maxLength={150}
                   disabled={saving}
+                  className="resize-none"
                 />
+                <p className="text-xs text-muted-foreground flex justify-between">
+                  <span>Keep it short and engaging!</span>
+                  <span>{profile.bio.length}/150</span>
+                </p>
               </div>
-            </div>
 
-            {/* Show Online Status Toggle */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground flex items-center gap-2">
-                <Eye className="h-4 w-4 text-muted-foreground" />
-                Show Online Status
-              </Label>
-              <div className="flex items-center justify-between p-3 bg-input/50 rounded-md">
-                <p className="text-xs text-muted-foreground">Display when you're active on AfuChat</p>
-                <Switch
-                  checked={profile.show_online_status}
-                  onCheckedChange={() => handleToggleChange('show_online_status')}
-                  disabled={saving}
-                />
-              </div>
-            </div>
-
-            {/* Show Read Receipts Toggle */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                Show Read Receipts
-              </Label>
-              <div className="flex items-center justify-between p-3 bg-input/50 rounded-md">
-                <p className="text-xs text-muted-foreground">Let others see when you've read their messages</p>
-                <Switch
-                  checked={profile.show_read_receipts}
-                  onCheckedChange={() => handleToggleChange('show_read_receipts')}
-                  disabled={saving}
-                />
-              </div>
-            </div>
-
-            {/* Website URL - Only for business/affiliate users */}
-            {(isBusiness || isAffiliate) && (
-              <>
-                <h3 className="text-lg font-semibold border-b pb-2 text-primary">Additional Information</h3>
-
+              {/* Business Category - Only for business accounts */}
+              {isBusiness && (
                 <div className="space-y-2">
-                  <Label htmlFor="website_url" className="text-sm font-medium text-foreground">
-                    Business Website
+                  <Label htmlFor="business_category" className="text-sm font-medium flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-primary" />
+                    Business Category
+                  </Label>
+                  <Select 
+                    value={profile.business_category} 
+                    onValueChange={(value) => setProfile((prev) => ({ ...prev, business_category: value }))}
+                  >
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Select your business category" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      <SelectItem value="Restaurant">Restaurant</SelectItem>
+                      <SelectItem value="Tech Company">Tech Company</SelectItem>
+                      <SelectItem value="Retail">Retail</SelectItem>
+                      <SelectItem value="Services">Services</SelectItem>
+                      <SelectItem value="Healthcare">Healthcare</SelectItem>
+                      <SelectItem value="Education">Education</SelectItem>
+                      <SelectItem value="Finance">Finance</SelectItem>
+                      <SelectItem value="Real Estate">Real Estate</SelectItem>
+                      <SelectItem value="Entertainment">Entertainment</SelectItem>
+                      <SelectItem value="Manufacturing">Manufacturing</SelectItem>
+                      <SelectItem value="E-commerce">E-commerce</SelectItem>
+                      <SelectItem value="Consulting">Consulting</SelectItem>
+                      <SelectItem value="Marketing">Marketing</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Choose the category that best describes your business
+                  </p>
+                </div>
+              )}
+
+              {/* Website URL - Only for business/affiliate users */}
+              {(isBusiness || isAffiliate) && (
+                <div className="space-y-2">
+                  <Label htmlFor="website_url" className="text-sm font-medium">
+                    Website URL
                   </Label>
                   <Input
                     id="website_url"
@@ -593,25 +554,104 @@ const EditProfile: React.FC = () => {
                     onChange={handleInputChange}
                     placeholder="https://yourwebsite.com"
                     disabled={saving}
-                    className="text-base h-11 bg-input/50 border border-border/80 focus:border-primary/50"
+                    className="h-11"
                   />
                   <p className="text-xs text-muted-foreground">
                     Your business website or portfolio
                   </p>
                 </div>
-              </>
-            )}
-          </div>
-          
-          <Separator className="my-8 bg-border/50" />
-          
-          <div className="flex justify-end space-x-3 pt-4">
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Privacy Settings */}
+          <Card className="border border-border/50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold">Privacy & Display</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Private Account Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30">
+                <div className="flex-1 pr-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Lock className="h-4 w-4 text-muted-foreground" />
+                    <Label className="text-sm font-medium cursor-pointer">Private Account</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Only approved followers can see your posts
+                  </p>
+                </div>
+                <Switch
+                  checked={profile.is_private}
+                  onCheckedChange={() => handleToggleChange('is_private')}
+                  disabled={saving}
+                />
+              </div>
+
+              {/* Show Online Status Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30">
+                <div className="flex-1 pr-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    <Label className="text-sm font-medium cursor-pointer">Show Online Status</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Display when you're active
+                  </p>
+                </div>
+                <Switch
+                  checked={profile.show_online_status}
+                  onCheckedChange={() => handleToggleChange('show_online_status')}
+                  disabled={saving}
+                />
+              </div>
+
+              {/* Show Read Receipts Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30">
+                <div className="flex-1 pr-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                    <Label className="text-sm font-medium cursor-pointer">Read Receipts</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Let others see when you've read messages
+                  </p>
+                </div>
+                <Switch
+                  checked={profile.show_read_receipts}
+                  onCheckedChange={() => handleToggleChange('show_read_receipts')}
+                  disabled={saving}
+                />
+              </div>
+
+              {/* Show Balance Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30">
+                <div className="flex-1 pr-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <Label className="text-sm font-medium cursor-pointer">Show Balance</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Display your Nexa balance on profile
+                  </p>
+                </div>
+                <Switch
+                  checked={profile.show_balance}
+                  onCheckedChange={() => handleToggleChange('show_balance')}
+                  disabled={saving}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={handleCancel}
               disabled={saving}
-              className="px-8 h-12 text-base border-border/80 hover:bg-muted/50 focus-visible:ring-1 focus-visible:ring-primary/20 transition-colors"
+              className="w-full sm:flex-1 h-12 text-base"
             >
               Cancel
             </Button>
@@ -619,13 +659,13 @@ const EditProfile: React.FC = () => {
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="px-8 h-12 text-base bg-primary hover:bg-primary/90 focus-visible:ring-1 focus-visible:ring-primary/20 transition-colors"
+              className="w-full sm:flex-1 h-12 text-base"
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Circular Image Crop Editor */}
       <CircularImageCrop
