@@ -36,7 +36,7 @@ export const ProfileCompletionBanner = () => {
   };
 
   const handleComplete = () => {
-    navigate('/settings');
+    navigate('/edit-profile');
   };
 
   if (!show) return null;
