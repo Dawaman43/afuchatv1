@@ -70,26 +70,17 @@ const EditProfile: React.FC = () => {
   const [showCropEditor, setShowCropEditor] = useState(false);
 
   useEffect(() => {
-    // 🚨 FIX 2: Check the global Auth loading state first. Exit if still checking session.
+    // Check the global Auth loading state first. Exit if still checking session.
     if (isLoadingAuth) {
         return; 
     }
 
     // Now that auth check is complete:
     if (!user?.id) {
-        // Only show error/redirect if the session check is complete AND no user was found.
         setLoadingProfile(false); 
         toast.error("You must be logged in to edit your profile.");
-        // Assuming you have a /login route
         navigate('/login'); 
         return;
-    }
-
-    // Verify route matches current user
-    if (userId && userId !== user.id) {
-      toast.error('Access denied: Can only edit your own profile');
-      navigate(`/${user.id}`);
-      return;
     }
     
     const fetchProfile = async () => {
@@ -101,6 +92,13 @@ const EditProfile: React.FC = () => {
           .single() as { data: ProfileRow | null; error: any };
 
         if (error) throw error;
+
+        // Verify route matches current user (check both ID and handle)
+        if (userId && data && userId !== user.id && userId !== data.handle) {
+          toast.error('Access denied: Can only edit your own profile');
+          navigate(`/${data.handle}`);
+          return;
+        }
 
         if (data) {
           setProfile({
