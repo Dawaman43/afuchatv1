@@ -37,14 +37,14 @@ export default defineConfig(({ mode }) => ({
         scope: '/',
         icons: [
           {
-            src: '/logo.jpg',
+            src: '/favicon.png',
             sizes: '192x192',
-            type: 'image/jpeg'
+            type: 'image/png'
           },
           {
-            src: '/logo.jpg',
+            src: '/favicon.png',
             sizes: '512x512',
-            type: 'image/jpeg'
+            type: 'image/png'
           }
         ],
         shortcuts: [
