@@ -31,6 +31,7 @@ import { StoryAvatar } from '@/components/moments/StoryAvatar';
 import { ViewsAnalyticsSheet } from '@/components/ViewsAnalyticsSheet';
 import { SEO } from '@/components/SEO';
 import { NativeAdCard } from '@/components/ads/NativeAdCard';
+import { AdsterraAdCard } from '@/components/ads/AdsterraAdCard';
 
 // --- INTERFACES ---
 
@@ -2145,9 +2146,13 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                     setExpandedPosts={setExpandedPosts}
                     guestMode={guestMode}
                   />
-                  {/* Show native ad after every 5th post */}
-                  {(index + 1) % 5 === 0 && (
-                    <NativeAdCard slot={`feed-${activeTab}-${Math.floor(index / 5)}`} />
+                  {/* Google native ad after every 6th post */}
+                  {(index + 1) % 6 === 0 && (
+                    <NativeAdCard slot={`feed-${activeTab}-${Math.floor(index / 6)}`} />
+                  )}
+                  {/* Adsterra native ad after every 3rd post (but not on 6th positions) */}
+                  {(index + 1) % 3 === 0 && (index + 1) % 6 !== 0 && (
+                    <AdsterraAdCard />
                   )}
                 </div>
               ))}
