@@ -32,7 +32,7 @@ import { ViewsAnalyticsSheet } from '@/components/ViewsAnalyticsSheet';
 import { SEO } from '@/components/SEO';
 import { NativeAdCard } from '@/components/ads/NativeAdCard';
 import { AdsterraAdCard } from '@/components/ads/AdsterraAdCard';
-import { AdsterraBannerAd } from '@/components/ads/AdsterraBannerAd';
+import { AdsterraSocialAd } from '@/components/ads/AdsterraSocialAd';
 
 // --- INTERFACES ---
 
@@ -2248,8 +2248,8 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           </TabsList>
         </div>
 
-        {/* Adsterra Banner Ad */}
-        <AdsterraBannerAd />
+      {/* Adsterra Social Ad */}
+      <AdsterraSocialAd />
 
         <TabsContent value={activeTab} className="flex-1 overflow-y-auto m-0" ref={feedRef}>
           {currentPosts.length === 0 ? (
