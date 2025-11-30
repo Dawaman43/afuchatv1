@@ -41,17 +41,9 @@ export const NativeAdCard = ({ slot }: NativeAdCardProps) => {
   }
 
   return (
-    <div className="border-b border-border p-4">
-      {/* Sponsored Label - subtle and matches feed style */}
-      <div className="flex items-center justify-between mb-2">
-        <Badge variant="secondary" className="text-[10px] font-medium bg-muted/50 text-muted-foreground border-0">
-          Sponsored
-        </Badge>
-        <ExternalLink className="h-3 w-3 text-muted-foreground/50" />
-      </div>
-      
+    <div className="border-b border-border p-4 bg-background/50 backdrop-blur-sm">
       {/* Ad Content - seamlessly integrated */}
-      <div ref={adRef} className="min-h-[120px]">
+      <div ref={adRef} className="min-h-[120px] relative">
         <ins
           className="adsbygoogle"
           style={{ display: 'block' }}
@@ -60,6 +52,13 @@ export const NativeAdCard = ({ slot }: NativeAdCardProps) => {
           data-ad-format="fluid"
           data-full-width-responsive="true"
         />
+        {/* Sponsored Label - right side */}
+        <div className="absolute top-0 right-0 flex items-center gap-1.5">
+          <ExternalLink className="h-3 w-3 text-muted-foreground/40" />
+          <Badge variant="secondary" className="text-[10px] font-medium bg-muted/60 text-muted-foreground border-0 backdrop-blur-sm">
+            Sponsored
+          </Badge>
+        </div>
       </div>
     </div>
   );
