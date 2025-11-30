@@ -2275,10 +2275,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                     setExpandedPosts={setExpandedPosts}
                     guestMode={guestMode}
                   />
-                  {/* Google native ad after every 6th post */}
-                  {(index + 1) % 6 === 0 && (
-                    <NativeAdCard slot={`feed-${activeTab}-${Math.floor(index / 6)}`} />
-                  )}
                 </div>
               ))}
               
