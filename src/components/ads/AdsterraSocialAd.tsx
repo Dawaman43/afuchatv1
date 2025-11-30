@@ -2,12 +2,12 @@ import { Badge } from '@/components/ui/badge';
 import { ExternalLink } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-export const AdsterraBannerAd = () => {
+export const AdsterraSocialAd = () => {
   const adRef = useRef<HTMLDivElement>(null);
   const [adLoaded, setAdLoaded] = useState(false);
 
   useEffect(() => {
-    // Load Adsterra banner script dynamically
+    // Load Adsterra social ad script dynamically
     const script = document.createElement('script');
     script.type = 'text/javascript';
     script.src = '//pl28165504.effectivegatecpm.com/c8/c1/df/c8c1df713e04eeb218462e699ebdd685.js';
@@ -37,9 +37,9 @@ export const AdsterraBannerAd = () => {
   }
 
   return (
-    <div className="border-b border-border bg-accent/5 backdrop-blur-sm mb-4">
-      {/* Adsterra Banner Ad Content */}
-      <div ref={adRef} className="relative min-h-[90px] p-4">
+    <div className="border-b border-border bg-card/50 backdrop-blur-sm">
+      {/* Adsterra Social Ad Content */}
+      <div ref={adRef} className="relative p-4">
         {/* Sponsored Label - right side */}
         <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
           <ExternalLink className="h-3 w-3 text-muted-foreground/40" />
