@@ -23,7 +23,7 @@ export const NativeAdCard = ({ slot }: NativeAdCardProps) => {
   return (
     <div className="border-b border-border p-4 bg-background/50 backdrop-blur-sm">
       {/* Ad Content - seamlessly integrated */}
-      <div ref={adRef} className="min-h-[120px] relative">
+      <div ref={adRef} className="relative">
         <ins
           className="adsbygoogle"
           style={{ display: 'block' }}
