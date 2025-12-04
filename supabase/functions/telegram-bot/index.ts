@@ -1891,9 +1891,68 @@ ${suggestedMenu.text}`, suggestedMenu.reply_markup);
         return;
       }
       
-      // Call conversion function
-      const { data: result, error } = await supabase.rpc('convert_nexa_to_acoin', {
-        p_nexa_amount: amount
+      // Get user's current balances
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('xp, acoin')
+        .eq('id', tgUser.user_id)
+        .single();
+      
+      if (!userProfile || userProfile.xp < amount) {
+        await supabase
+          .from('telegram_users')
+          .update({ current_menu: 'main' })
+          .eq('telegram_id', telegramUser.id);
+        
+        await sendTelegramMessage(chatId, `❌ Insufficient Nexa balance. You have ${userProfile?.xp?.toLocaleString() || 0} Nexa.`, {
+          inline_keyboard: [[{ text: '💰 Wallet', callback_data: 'menu_wallet' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+        });
+        return;
+      }
+      
+      // Get conversion settings
+      const { data: settings } = await supabase
+        .from('currency_settings')
+        .select('nexa_to_acoin_rate, conversion_fee_percent')
+        .limit(1)
+        .single();
+      
+      const conversionRate = settings?.nexa_to_acoin_rate || 100;
+      const feePercent = settings?.conversion_fee_percent || 5.99;
+      
+      const feeAmount = Math.ceil(amount * feePercent / 100);
+      const nexaAfterFee = amount - feeAmount;
+      const acoinReceived = Math.floor(nexaAfterFee / conversionRate);
+      
+      if (acoinReceived < 1) {
+        await supabase
+          .from('telegram_users')
+          .update({ current_menu: 'main' })
+          .eq('telegram_id', telegramUser.id);
+        
+        await sendTelegramMessage(chatId, `❌ Conversion amount too small. Minimum ${Math.ceil(conversionRate + (conversionRate * feePercent / 100))} Nexa required.`, {
+          inline_keyboard: [[{ text: '💱 Try Again', callback_data: 'convert_nexa' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+        });
+        return;
+      }
+      
+      // Deduct Nexa and add ACoin
+      const newNexa = userProfile.xp - amount;
+      const newAcoin = (userProfile.acoin || 0) + acoinReceived;
+      
+      await supabase
+        .from('profiles')
+        .update({ xp: newNexa, acoin: newAcoin })
+        .eq('id', tgUser.user_id);
+      
+      // Log transaction
+      await supabase.from('acoin_transactions').insert({
+        user_id: tgUser.user_id,
+        amount: acoinReceived,
+        transaction_type: 'conversion',
+        nexa_spent: amount,
+        fee_charged: feeAmount,
+        metadata: { conversion_rate: conversionRate }
       });
       
       await supabase
@@ -1901,15 +1960,9 @@ ${suggestedMenu.text}`, suggestedMenu.reply_markup);
         .update({ current_menu: 'main' })
         .eq('telegram_id', telegramUser.id);
       
-      if (error || !result?.success) {
-        await sendTelegramMessage(chatId, `❌ Conversion failed: ${result?.message || error?.message || 'Unknown error'}`, {
-          inline_keyboard: [[{ text: '💱 Try Again', callback_data: 'convert_nexa' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
-        });
-      } else {
-        await sendTelegramMessage(chatId, `✅ <b>Conversion Successful!</b>\n\n${result.message}\n\n<b>New Balances:</b>\n⚡ Nexa: ${result.new_nexa_balance?.toLocaleString()}\n🪙 ACoin: ${result.new_acoin_balance?.toLocaleString()}`, {
-          inline_keyboard: [[{ text: '💰 Wallet', callback_data: 'menu_wallet' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
-        });
-      }
+      await sendTelegramMessage(chatId, `✅ <b>Conversion Successful!</b>\n\nConverted ${amount.toLocaleString()} Nexa to ${acoinReceived.toLocaleString()} ACoin\n(Fee: ${feeAmount.toLocaleString()} Nexa)\n\n<b>New Balances:</b>\n⚡ Nexa: ${newNexa.toLocaleString()}\n🪙 ACoin: ${newAcoin.toLocaleString()}`, {
+        inline_keyboard: [[{ text: '💰 Wallet', callback_data: 'menu_wallet' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+      });
       break;
     }
     
@@ -1967,10 +2020,51 @@ ${suggestedMenu.text}`, suggestedMenu.reply_markup);
         return;
       }
       
-      // Send tip
-      const { data: result, error } = await supabase.rpc('send_tip', {
-        p_receiver_id: recipientId,
-        p_xp_amount: amount
+      // Get sender's current XP
+      const { data: senderProfile } = await supabase
+        .from('profiles')
+        .select('xp')
+        .eq('id', tgUser.user_id)
+        .single();
+      
+      if (!senderProfile || senderProfile.xp < amount) {
+        await supabase
+          .from('telegram_users')
+          .update({ current_menu: 'main', menu_data: {} })
+          .eq('telegram_id', telegramUser.id);
+        
+        await sendTelegramMessage(chatId, `❌ Insufficient Nexa balance. You have ${senderProfile?.xp?.toLocaleString() || 0} Nexa.`, {
+          inline_keyboard: [[{ text: '💰 Wallet', callback_data: 'menu_wallet' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+        });
+        return;
+      }
+      
+      // Get receiver's current XP
+      const { data: receiverProfile } = await supabase
+        .from('profiles')
+        .select('xp')
+        .eq('id', recipientId)
+        .single();
+      
+      // Deduct from sender
+      const newSenderXp = senderProfile.xp - amount;
+      await supabase
+        .from('profiles')
+        .update({ xp: newSenderXp })
+        .eq('id', tgUser.user_id);
+      
+      // Add to receiver
+      const newReceiverXp = (receiverProfile?.xp || 0) + amount;
+      await supabase
+        .from('profiles')
+        .update({ xp: newReceiverXp })
+        .eq('id', recipientId);
+      
+      // Record the tip
+      await supabase.from('tips').insert({
+        sender_id: tgUser.user_id,
+        receiver_id: recipientId,
+        xp_amount: amount
       });
       
       await supabase
@@ -1978,15 +2072,9 @@ ${suggestedMenu.text}`, suggestedMenu.reply_markup);
         .update({ current_menu: 'main', menu_data: {} })
         .eq('telegram_id', telegramUser.id);
       
-      if (error || !result?.success) {
-        await sendTelegramMessage(chatId, `❌ Transfer failed: ${result?.message || error?.message || 'Unknown error'}`, {
-          inline_keyboard: [[{ text: '📤 Try Again', callback_data: 'send_nexa' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
-        });
-      } else {
-        await sendTelegramMessage(chatId, `✅ <b>Transfer Successful!</b>\n\nYou sent ${amount} Nexa to ${recipientName}!\n\n<b>New Balance:</b> ${result.new_sender_xp?.toLocaleString()} Nexa`, {
-          inline_keyboard: [[{ text: '💰 Wallet', callback_data: 'menu_wallet' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
-        });
-      }
+      await sendTelegramMessage(chatId, `✅ <b>Transfer Successful!</b>\n\nYou sent ${amount.toLocaleString()} Nexa to ${recipientName}!\n\n<b>New Balance:</b> ${newSenderXp.toLocaleString()} Nexa`, {
+        inline_keyboard: [[{ text: '💰 Wallet', callback_data: 'menu_wallet' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+      });
       break;
     }
     
@@ -2010,26 +2098,80 @@ ${suggestedMenu.text}`, suggestedMenu.reply_markup);
         return;
       }
       
-      // Send gift
-      const { data: result, error } = await supabase.rpc('send_gift', {
-        p_gift_id: giftId,
-        p_receiver_id: recipient.id
+      if (recipient.id === tgUser.user_id) {
+        await sendTelegramMessage(chatId, '❌ You cannot send a gift to yourself!', {
+          inline_keyboard: [[{ text: '⬅️ Back', callback_data: 'browse_gifts' }]]
+        });
+        return;
+      }
+      
+      // Get gift price
+      const { data: gift } = await supabase
+        .from('gifts')
+        .select('base_xp_cost, name')
+        .eq('id', giftId)
+        .single();
+      
+      const { data: giftStats } = await supabase
+        .from('gift_statistics')
+        .select('price_multiplier')
+        .eq('gift_id', giftId)
+        .single();
+      
+      const giftPrice = Math.ceil((gift?.base_xp_cost || 0) * (giftStats?.price_multiplier || 1));
+      
+      // Get sender's XP
+      const { data: senderProfile } = await supabase
+        .from('profiles')
+        .select('xp')
+        .eq('id', tgUser.user_id)
+        .single();
+      
+      if (!senderProfile || senderProfile.xp < giftPrice) {
+        await supabase
+          .from('telegram_users')
+          .update({ current_menu: 'main', menu_data: {} })
+          .eq('telegram_id', telegramUser.id);
+        
+        await sendTelegramMessage(chatId, `❌ Insufficient Nexa. This gift costs ${giftPrice.toLocaleString()} Nexa, you have ${senderProfile?.xp?.toLocaleString() || 0}.`, {
+          inline_keyboard: [[{ text: '💰 Wallet', callback_data: 'menu_wallet' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+        });
+        return;
+      }
+      
+      // Deduct XP from sender
+      const newXp = senderProfile.xp - giftPrice;
+      await supabase
+        .from('profiles')
+        .update({ xp: newXp })
+        .eq('id', tgUser.user_id);
+      
+      // Record gift transaction
+      await supabase.from('gift_transactions').insert({
+        gift_id: giftId,
+        sender_id: tgUser.user_id,
+        receiver_id: recipient.id,
+        xp_cost: giftPrice
       });
+      
+      // Update gift statistics
+      await supabase
+        .from('gift_statistics')
+        .update({
+          total_sent: (giftStats?.price_multiplier ? 1 : 0) + 1,
+          price_multiplier: Math.min((giftStats?.price_multiplier || 1) + 0.01, 3.00),
+          last_updated: new Date().toISOString()
+        })
+        .eq('gift_id', giftId);
       
       await supabase
         .from('telegram_users')
         .update({ current_menu: 'main', menu_data: {} })
         .eq('telegram_id', telegramUser.id);
       
-      if (error || !result?.success) {
-        await sendTelegramMessage(chatId, `❌ Failed to send gift: ${result?.message || error?.message || 'Unknown error'}`, {
-          inline_keyboard: [[{ text: '🎁 Try Again', callback_data: 'browse_gifts' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
-        });
-      } else {
-        await sendTelegramMessage(chatId, `🎉 <b>Gift Sent!</b>\n\nYou sent a gift to ${recipient.display_name}!\n\n<b>Nexa spent:</b> ${result.xp_cost}\n<b>New balance:</b> ${result.new_xp?.toLocaleString()}`, {
-          inline_keyboard: [[{ text: '🎁 Send More', callback_data: 'browse_gifts' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
-        });
-      }
+      await sendTelegramMessage(chatId, `🎉 <b>Gift Sent!</b>\n\nYou sent "${gift?.name}" to ${recipient.display_name}!\n\n<b>Nexa spent:</b> ${giftPrice.toLocaleString()}\n<b>New balance:</b> ${newXp.toLocaleString()}`, {
+        inline_keyboard: [[{ text: '🎁 Send More', callback_data: 'browse_gifts' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+      });
       break;
     }
     
