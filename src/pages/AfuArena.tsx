@@ -137,12 +137,17 @@ const AfuArena = () => {
   const [keys, setKeys] = useState<Set<string>>(new Set());
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isMouseDown, setIsMouseDown] = useState(false);
+  const [isSinglePlayer, setIsSinglePlayer] = useState(false);
+  const [singlePlayerState, setSinglePlayerState] = useState<GameState | null>(null);
+  const [singlePlayerStatus, setSinglePlayerStatus] = useState<'idle' | 'playing' | 'finished'>('idle');
+  const [singlePlayerWon, setSinglePlayerWon] = useState(false);
   
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const gameLoopRef = useRef<number | null>(null);
   const lastUpdateRef = useRef<number>(0);
   const localGameStateRef = useRef<GameState | null>(null);
+  const aiUpdateRef = useRef<number>(0);
 
   // Initialize audio
   useEffect(() => {
@@ -212,6 +217,132 @@ const AfuArena = () => {
     maxTime: 180, // 3 minutes
     killFeed: []
   });
+
+  const BOT_ID = 'bot-player-1';
+
+  const createSinglePlayerGameState = (playerId: string): GameState => ({
+    players: {
+      [playerId]: createInitialPlayer(playerId, true),
+      [BOT_ID]: { ...createInitialPlayer(BOT_ID, false), ability: 'rage' }
+    },
+    projectiles: [],
+    powerUps: [],
+    gameTime: 0,
+    maxTime: 180,
+    killFeed: []
+  });
+
+  // Start single player game
+  const startSinglePlayer = async () => {
+    if (!user) {
+      toast.error('Please sign in to play');
+      return;
+    }
+
+    setIsSinglePlayer(true);
+    
+    for (let i = 3; i > 0; i--) {
+      setCountdown(i);
+      playSound(440, 0.2);
+      await new Promise(r => setTimeout(r, 1000));
+    }
+    setCountdown(null);
+    playSound(880, 0.3);
+
+    const initialState = createSinglePlayerGameState(user.id);
+    localGameStateRef.current = initialState;
+    setSinglePlayerState(initialState);
+    setSinglePlayerStatus('playing');
+  };
+
+  // AI Bot logic
+  const updateBot = (state: GameState, dt: number) => {
+    const bot = state.players[BOT_ID];
+    const player = Object.values(state.players).find(p => p.id !== BOT_ID);
+    if (!bot || !player || bot.respawnTimer > 0) return;
+
+    // Bot AI: Move towards player with some randomness
+    const dx = player.x - bot.x;
+    const dy = player.y - bot.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    
+    // Keep some distance, not too close
+    const idealDist = 25;
+    let moveX = 0, moveY = 0;
+    
+    if (dist > idealDist + 5) {
+      // Move closer
+      moveX = dx / dist;
+      moveY = dy / dist;
+    } else if (dist < idealDist - 5) {
+      // Move away
+      moveX = -dx / dist;
+      moveY = -dy / dist;
+    } else {
+      // Strafe randomly
+      const strafeAngle = Math.atan2(dy, dx) + (Math.random() > 0.5 ? Math.PI/2 : -Math.PI/2);
+      moveX = Math.cos(strafeAngle) * 0.5;
+      moveY = Math.sin(strafeAngle) * 0.5;
+    }
+
+    // Add some randomness to movement
+    moveX += (Math.random() - 0.5) * 0.3;
+    moveY += (Math.random() - 0.5) * 0.3;
+
+    bot.x = Math.max(5, Math.min(95, bot.x + moveX * bot.speed * dt * 15));
+    bot.y = Math.max(5, Math.min(95, bot.y + moveY * bot.speed * dt * 15));
+    bot.isMoving = true;
+
+    // Aim at player with some inaccuracy
+    const aimError = (Math.random() - 0.5) * 15; // degrees of error
+    bot.direction = Math.atan2(player.y - bot.y, player.x - bot.x) * 180 / Math.PI + aimError;
+
+    // Shoot at player if in range and line of sight
+    const now = Date.now();
+    if (dist < 50 && player.respawnTimer <= 0) {
+      const weapon = WEAPON_STATS[bot.weapon];
+      if (now - bot.lastShot >= weapon.fireRate + Math.random() * 200) {
+        if (bot.ammo > 0) {
+          bot.lastShot = now;
+          bot.ammo -= 1;
+          
+          const pelletCount = weapon.pellets || 1;
+          for (let i = 0; i < pelletCount; i++) {
+            const spreadAngle = (Math.random() - 0.5) * weapon.spread;
+            const angle = (bot.direction * Math.PI / 180) + spreadAngle;
+            state.projectiles.push({
+              id: `${BOT_ID}-${now}-${i}`,
+              x: bot.x,
+              y: bot.y,
+              dx: Math.cos(angle) * weapon.speed,
+              dy: Math.sin(angle) * weapon.speed,
+              ownerId: BOT_ID,
+              damage: weapon.damage,
+              speed: weapon.speed
+            });
+          }
+        } else {
+          // Reload
+          bot.ammo = WEAPON_STATS[bot.weapon].ammo;
+        }
+      }
+    }
+
+    // Use ability occasionally
+    if (bot.abilityCooldown <= 0 && Math.random() < 0.01) {
+      useAbility(bot, state);
+      bot.abilityCooldown = ABILITY_COOLDOWNS[bot.ability];
+    }
+
+    // Collect nearby powerups
+    state.powerUps.forEach((pu, idx) => {
+      const puDist = Math.sqrt((pu.x - bot.x) ** 2 + (pu.y - bot.y) ** 2);
+      if (puDist < 5) {
+        applyPowerUp(bot, pu);
+        state.powerUps.splice(idx, 1);
+      }
+    });
+  };
 
   const createRoom = async () => {
     if (!user) {
@@ -420,14 +551,18 @@ const AfuArena = () => {
 
   // Game loop
   useEffect(() => {
-    if (gameRoom?.status !== 'playing' || !user) return;
+    if ((gameRoom?.status !== 'playing' && singlePlayerStatus !== 'playing') || !user) return;
 
     const gameLoop = (timestamp: number) => {
       const deltaTime = timestamp - lastUpdateRef.current;
       
       if (deltaTime >= 16) { // ~60fps
         lastUpdateRef.current = timestamp;
-        updateGame(deltaTime / 1000);
+        if (isSinglePlayer) {
+          updateSinglePlayerGame(deltaTime / 1000);
+        } else {
+          updateGame(deltaTime / 1000);
+        }
       }
       
       gameLoopRef.current = requestAnimationFrame(gameLoop);
@@ -438,7 +573,221 @@ const AfuArena = () => {
     return () => {
       if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
     };
-  }, [gameRoom?.status, user, keys, mousePos, isMouseDown]);
+  }, [gameRoom?.status, singlePlayerStatus, user, keys, mousePos, isMouseDown, isSinglePlayer]);
+
+  const updateSinglePlayerGame = async (dt: number) => {
+    if (!localGameStateRef.current || !user) return;
+    
+    const state = { ...localGameStateRef.current };
+    const player = state.players[user.id];
+    const bot = state.players[BOT_ID];
+
+    // Handle player respawn
+    if (player && player.respawnTimer > 0) {
+      player.respawnTimer -= dt;
+      if (player.respawnTimer <= 0) {
+        player.health = player.maxHealth;
+        player.x = 15;
+        player.y = 50;
+        player.respawnTimer = 0;
+      }
+    }
+
+    // Handle bot respawn
+    if (bot && bot.respawnTimer > 0) {
+      bot.respawnTimer -= dt;
+      if (bot.respawnTimer <= 0) {
+        bot.health = bot.maxHealth;
+        bot.x = 85;
+        bot.y = 50;
+        bot.respawnTimer = 0;
+      }
+    }
+
+    if (!player || player.respawnTimer > 0) {
+      localGameStateRef.current = state;
+      setSinglePlayerState({ ...state });
+      return;
+    }
+
+    // Player Movement
+    let dx = 0, dy = 0;
+    if (keys.has('w')) dy -= 1;
+    if (keys.has('s')) dy += 1;
+    if (keys.has('a')) dx -= 1;
+    if (keys.has('d')) dx += 1;
+
+    if (dx !== 0 || dy !== 0) {
+      const mag = Math.sqrt(dx * dx + dy * dy);
+      dx /= mag;
+      dy /= mag;
+      player.x = Math.max(2, Math.min(98, player.x + dx * player.speed * dt * 20));
+      player.y = Math.max(2, Math.min(98, player.y + dy * player.speed * dt * 20));
+      player.isMoving = true;
+    } else {
+      player.isMoving = false;
+    }
+
+    // Direction
+    player.direction = Math.atan2(mousePos.y - player.y, mousePos.x - player.x) * 180 / Math.PI;
+
+    // Shooting
+    const now = Date.now();
+    if (isMouseDown && player.ammo > 0) {
+      const weapon = WEAPON_STATS[player.weapon];
+      if (now - player.lastShot >= weapon.fireRate) {
+        player.lastShot = now;
+        player.ammo -= 1;
+        playSound(200 + Math.random() * 100, 0.1, 'square');
+
+        const pelletCount = weapon.pellets || 1;
+        for (let i = 0; i < pelletCount; i++) {
+          const spreadAngle = (Math.random() - 0.5) * weapon.spread;
+          const angle = (player.direction * Math.PI / 180) + spreadAngle;
+          state.projectiles.push({
+            id: `${user.id}-${now}-${i}`,
+            x: player.x,
+            y: player.y,
+            dx: Math.cos(angle) * weapon.speed,
+            dy: Math.sin(angle) * weapon.speed,
+            ownerId: user.id,
+            damage: weapon.damage,
+            speed: weapon.speed
+          });
+        }
+      }
+    }
+
+    // Ability
+    if (keys.has('e') && player.abilityCooldown <= 0) {
+      useAbility(player, state);
+      player.abilityCooldown = ABILITY_COOLDOWNS[player.ability];
+      playSound(600, 0.3, 'triangle');
+    }
+
+    // Reload
+    if (keys.has('r')) {
+      player.ammo = WEAPON_STATS[player.weapon].ammo;
+      playSound(300, 0.2);
+    }
+
+    // Reduce cooldown
+    if (player.abilityCooldown > 0) {
+      player.abilityCooldown -= dt * 1000;
+    }
+
+    // Update bot AI
+    updateBot(state, dt);
+    if (bot && bot.abilityCooldown > 0) {
+      bot.abilityCooldown -= dt * 1000;
+    }
+
+    // Update projectiles
+    state.projectiles = state.projectiles.filter(proj => {
+      proj.x += proj.dx * dt * 10;
+      proj.y += proj.dy * dt * 10;
+
+      if (proj.x < 0 || proj.x > 100 || proj.y < 0 || proj.y > 100) {
+        return false;
+      }
+
+      for (const playerId in state.players) {
+        if (playerId === proj.ownerId) continue;
+        const target = state.players[playerId];
+        if (target.respawnTimer > 0) continue;
+
+        const dist = Math.sqrt((proj.x - target.x) ** 2 + (proj.y - target.y) ** 2);
+        if (dist < 4) {
+          let damage = proj.damage;
+          if (target.shield > 0) {
+            const shieldAbsorb = Math.min(target.shield, damage * 0.5);
+            target.shield -= shieldAbsorb;
+            damage -= shieldAbsorb;
+          }
+          target.health -= damage;
+          playSound(150, 0.1);
+
+          if (target.health <= 0) {
+            target.deaths += 1;
+            target.respawnTimer = 3;
+            const killer = state.players[proj.ownerId];
+            if (killer) {
+              killer.kills += 1;
+              killer.score += 100;
+            }
+            state.killFeed.unshift({
+              killer: proj.ownerId,
+              victim: playerId,
+              weapon: state.players[proj.ownerId]?.weapon || 'pistol',
+              timestamp: now
+            });
+            playSound(800, 0.4, 'sawtooth');
+
+            // Check win condition
+            if (killer && killer.kills >= 10) {
+              endSinglePlayerGame(proj.ownerId === user.id);
+            }
+          }
+          return false;
+        }
+      }
+      return true;
+    });
+
+    // Power-ups for player
+    state.powerUps.forEach((powerUp, index) => {
+      const dist = Math.sqrt((powerUp.x - player.x) ** 2 + (powerUp.y - player.y) ** 2);
+      if (dist < 5) {
+        applyPowerUp(player, powerUp);
+        state.powerUps.splice(index, 1);
+        playSound(500, 0.2);
+      }
+    });
+
+    // Spawn powerups
+    state.gameTime += dt;
+    if (state.powerUps.length < 3 && Math.random() < 0.005) {
+      spawnPowerUp(state);
+    }
+
+    // Time limit
+    if (state.gameTime >= state.maxTime) {
+      const winner = Object.values(state.players).reduce((a, b) => a.kills > b.kills ? a : b);
+      endSinglePlayerGame(winner.id === user.id);
+    }
+
+    state.players[user.id] = player;
+    localGameStateRef.current = state;
+    setSinglePlayerState({ ...state });
+  };
+
+  const endSinglePlayerGame = async (playerWon: boolean) => {
+    setSinglePlayerStatus('finished');
+    setSinglePlayerWon(playerWon);
+    
+    if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
+
+    if (playerWon && user) {
+      try {
+        await supabase.rpc('award_xp', {
+          p_user_id: user.id,
+          p_action_type: 'game_won',
+          p_xp_amount: 100,
+          p_metadata: { game: 'afu_arena', mode: 'single_player' }
+        });
+        toast.success('Victory! +100 Nexa');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  const restartSinglePlayer = () => {
+    setSinglePlayerStatus('idle');
+    setSinglePlayerState(null);
+    setIsSinglePlayer(false);
+    localGameStateRef.current = null;
+  };
 
   const updateGame = async (dt: number) => {
     if (!localGameStateRef.current || !user || !gameRoom) return;
@@ -798,7 +1147,254 @@ const AfuArena = () => {
       </div>
 
       <main className="container max-w-4xl mx-auto px-4 py-6">
-        {!gameRoom ? (
+        {/* Single Player Mode */}
+        {isSinglePlayer && singlePlayerStatus === 'playing' ? (
+          <div className="space-y-4">
+            {/* HUD */}
+            <div className="grid grid-cols-3 gap-4">
+              <Card className="p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                    <Crosshair className="h-4 w-4 text-primary-foreground" />
+                  </div>
+                  <span className="font-semibold">You</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Heart className="h-3 w-3 text-red-500" />
+                    <Progress value={singlePlayerState?.players[user?.id || '']?.health || 0} className="h-2" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-3 w-3 text-blue-500" />
+                    <Progress value={(singlePlayerState?.players[user?.id || '']?.shield || 0) * 2} className="h-2" />
+                  </div>
+                </div>
+                <div className="flex justify-between text-xs mt-2">
+                  <span>Kills: {singlePlayerState?.players[user?.id || '']?.kills || 0}</span>
+                  <span>Ammo: {singlePlayerState?.players[user?.id || '']?.ammo || 0}</span>
+                </div>
+              </Card>
+
+              <Card className="p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center">
+                    <Target className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="font-semibold">Bot</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Heart className="h-3 w-3 text-red-500" />
+                    <Progress value={singlePlayerState?.players[BOT_ID]?.health || 0} className="h-2" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-3 w-3 text-blue-500" />
+                    <Progress value={(singlePlayerState?.players[BOT_ID]?.shield || 0) * 2} className="h-2" />
+                  </div>
+                </div>
+                <div className="text-xs mt-2">
+                  Kills: {singlePlayerState?.players[BOT_ID]?.kills || 0}
+                </div>
+              </Card>
+
+              <Card className="p-3 text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <Timer className="h-4 w-4" />
+                  <span className="text-lg font-mono">
+                    {Math.floor((singlePlayerState?.maxTime || 180) - (singlePlayerState?.gameTime || 0))}s
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  First to 10 kills
+                </div>
+              </Card>
+            </div>
+
+            {/* Countdown */}
+            <AnimatePresence>
+              {countdown !== null && (
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 1.5, opacity: 0 }}
+                  className="fixed inset-0 flex items-center justify-center z-50 bg-background/80 backdrop-blur"
+                >
+                  <span className="text-8xl font-bold text-primary">{countdown}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Game Area */}
+            <div
+              ref={gameAreaRef}
+              className="relative aspect-[16/10] bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl overflow-hidden cursor-crosshair border-2 border-primary/30"
+              onMouseMove={handleMouseMove}
+              onMouseDown={() => setIsMouseDown(true)}
+              onMouseUp={() => setIsMouseDown(false)}
+              onMouseLeave={() => setIsMouseDown(false)}
+            >
+              {/* Grid lines */}
+              <div className="absolute inset-0 opacity-10">
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className="absolute left-0 right-0 border-t border-white" style={{ top: `${(i + 1) * 10}%` }} />
+                ))}
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className="absolute top-0 bottom-0 border-l border-white" style={{ left: `${(i + 1) * 10}%` }} />
+                ))}
+              </div>
+
+              {/* Power-ups */}
+              {singlePlayerState?.powerUps?.map(pu => (
+                <motion.div
+                  key={pu.id}
+                  className={`absolute w-6 h-6 rounded-full flex items-center justify-center ${
+                    pu.type === 'health' ? 'bg-red-500' :
+                    pu.type === 'shield' ? 'bg-blue-500' :
+                    pu.type === 'ammo' ? 'bg-yellow-500' :
+                    pu.type === 'speed' ? 'bg-green-500' :
+                    'bg-purple-500'
+                  }`}
+                  style={{ left: `${pu.x}%`, top: `${pu.y}%`, transform: 'translate(-50%, -50%)' }}
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ repeat: Infinity, duration: 1 }}
+                >
+                  {pu.type === 'health' && <Heart className="h-3 w-3 text-white" />}
+                  {pu.type === 'shield' && <Shield className="h-3 w-3 text-white" />}
+                  {pu.type === 'ammo' && <Target className="h-3 w-3 text-white" />}
+                  {pu.type === 'speed' && <Zap className="h-3 w-3 text-white" />}
+                  {pu.type === 'weapon' && <Crosshair className="h-3 w-3 text-white" />}
+                </motion.div>
+              ))}
+
+              {/* Projectiles */}
+              {singlePlayerState?.projectiles?.map(proj => (
+                <motion.div
+                  key={proj.id}
+                  className="absolute w-2 h-2 rounded-full bg-yellow-400 shadow-lg shadow-yellow-400/50"
+                  style={{ left: `${proj.x}%`, top: `${proj.y}%`, transform: 'translate(-50%, -50%)' }}
+                />
+              ))}
+
+              {/* Players */}
+              {singlePlayerState?.players && Object.values(singlePlayerState.players).map(player => (
+                <motion.div
+                  key={player.id}
+                  className={`absolute w-10 h-10 rounded-full flex items-center justify-center ${
+                    player.id === user?.id ? 'bg-primary' : 'bg-red-500'
+                  } ${player.respawnTimer > 0 ? 'opacity-30' : ''}`}
+                  style={{ 
+                    left: `${player.x}%`, 
+                    top: `${player.y}%`, 
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                  animate={player.isMoving ? { scale: [1, 1.05, 1] } : {}}
+                  transition={{ repeat: Infinity, duration: 0.3 }}
+                >
+                  <div 
+                    className="absolute w-6 h-1 bg-white/50 origin-left rounded"
+                    style={{ transform: `rotate(${player.direction}deg)` }}
+                  />
+                  <Crosshair className="h-5 w-5 text-white" />
+                  
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-black/50 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full ${player.id === user?.id ? 'bg-green-500' : 'bg-red-400'}`}
+                      style={{ width: `${player.health}%` }}
+                    />
+                  </div>
+                  
+                  {player.shield > 0 && (
+                    <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-12 h-1 bg-blue-500/50 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-400" style={{ width: `${player.shield * 2}%` }} />
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+
+              {/* Kill Feed */}
+              <div className="absolute top-2 right-2 space-y-1">
+                {singlePlayerState?.killFeed?.slice(0, 3).map((kill) => (
+                  <motion.div
+                    key={kill.timestamp}
+                    initial={{ x: 50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    className="px-2 py-1 bg-black/50 rounded text-xs text-white"
+                  >
+                    <span className={kill.killer === user?.id ? 'text-primary' : 'text-red-400'}>
+                      {kill.killer === user?.id ? 'You' : 'Bot'}
+                    </span>
+                    {' '}🔫{' '}
+                    <span className={kill.victim === user?.id ? 'text-red-400' : 'text-primary'}>
+                      {kill.victim === user?.id ? 'You' : 'Bot'}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Respawn Timer */}
+              {singlePlayerState?.players[user?.id || '']?.respawnTimer > 0 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                  <div className="text-center">
+                    <p className="text-white text-2xl font-bold">Respawning...</p>
+                    <p className="text-white text-4xl">{Math.ceil(singlePlayerState.players[user?.id || ''].respawnTimer)}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Button variant="outline" onClick={restartSinglePlayer} className="w-full">
+              Exit Game
+            </Button>
+          </div>
+        ) : isSinglePlayer && singlePlayerStatus === 'finished' ? (
+          /* Single Player Game Over */
+          <Card className="border-primary/20">
+            <CardContent className="pt-6 text-center">
+              {singlePlayerWon ? (
+                <>
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="inline-flex p-6 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 mb-4"
+                  >
+                    <Trophy className="h-16 w-16 text-white" />
+                  </motion.div>
+                  <h2 className="text-3xl font-bold text-primary mb-2">Victory!</h2>
+                  <p className="text-lg text-muted-foreground mb-6">+100 Nexa</p>
+                </>
+              ) : (
+                <>
+                  <div className="inline-flex p-6 rounded-full bg-muted mb-4">
+                    <Swords className="h-16 w-16 text-muted-foreground" />
+                  </div>
+                  <h2 className="text-3xl font-bold mb-2">Defeat</h2>
+                  <p className="text-muted-foreground mb-6">The bot won this time!</p>
+                </>
+              )}
+
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="p-4 bg-muted rounded-xl">
+                  <p className="text-sm text-muted-foreground">Your Kills</p>
+                  <p className="text-3xl font-bold">{singlePlayerState?.players[user?.id || '']?.kills || 0}</p>
+                </div>
+                <div className="p-4 bg-muted rounded-xl">
+                  <p className="text-sm text-muted-foreground">Your Deaths</p>
+                  <p className="text-3xl font-bold">{singlePlayerState?.players[user?.id || '']?.deaths || 0}</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button onClick={startSinglePlayer} className="flex-1 h-12">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Play Again
+                </Button>
+                <Button variant="outline" onClick={restartSinglePlayer} className="flex-1 h-12">
+                  Back to Menu
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : !gameRoom ? (
           /* Lobby */
           <div className="space-y-6">
             <Card className="border-primary/20 bg-gradient-to-br from-background to-primary/5">
@@ -809,9 +1405,29 @@ const AfuArena = () => {
                   </div>
                 </div>
                 <CardTitle className="text-2xl">Battle Royale Arena</CardTitle>
-                <p className="text-muted-foreground">Real-time 1v1 combat with weapons & abilities</p>
+                <p className="text-muted-foreground">Real-time combat with weapons & abilities</p>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Single Player Option */}
+                <Button 
+                  onClick={startSinglePlayer} 
+                  variant="outline"
+                  className="w-full h-14 text-lg border-primary/50"
+                  disabled={loading || !user}
+                >
+                  <Target className="h-5 w-5 mr-2" />
+                  Single Player (vs Bot)
+                </Button>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">multiplayer</span>
+                  </div>
+                </div>
+
                 <Button 
                   onClick={createRoom} 
                   className="w-full h-14 text-lg"
@@ -849,7 +1465,7 @@ const AfuArena = () => {
 
                 {!user && (
                   <p className="text-center text-sm text-muted-foreground">
-                    Sign in to play multiplayer
+                    Sign in to play
                   </p>
                 )}
               </CardContent>
@@ -883,7 +1499,7 @@ const AfuArena = () => {
                   <Trophy className="h-5 w-5 text-amber-500" />
                   <span className="font-semibold">Win Reward</span>
                 </div>
-                <p className="text-xs text-muted-foreground">+150 Nexa for victory</p>
+                <p className="text-xs text-muted-foreground">+100-150 Nexa for victory</p>
               </Card>
             </div>
 
