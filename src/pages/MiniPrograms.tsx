@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Video, Book, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Image, Brain, Puzzle, Trophy, Sparkles, TrendingUp, Users, ArrowRight, Grid3x3 } from 'lucide-react';
+import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Video, Book, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Image, Brain, Puzzle, Trophy, Sparkles, TrendingUp, Users, ArrowRight, Grid3x3, Swords } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -47,8 +47,20 @@ const MiniPrograms = () => {
     { id: 'education', name: 'Education', icon: Book },
   ];
 
-  // Built-in games
+  // Built-in games - Afu Arena is the featured multiplayer game
   const builtInGames = [
+    { 
+      id: 'afu-arena',
+      name: 'Afu Arena',
+      description: 'Real-time 1v1 reflex battle with friends',
+      icon: Swords,
+      category: 'games',
+      route: '/afu-arena',
+      color: 'bg-primary',
+      gradient: 'from-primary to-primary/60',
+      isBuiltIn: true,
+      featured: true
+    },
     { 
       id: 'nexa-collector',
       name: 'Nexa Collector',

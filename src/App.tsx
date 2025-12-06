@@ -70,6 +70,7 @@ const MemoryGame = lazy(() => import("./pages/MemoryGame"));
 const PuzzleGame = lazy(() => import("./pages/PuzzleGame"));
 const TriviaGame = lazy(() => import("./pages/TriviaGame"));
 const Games = lazy(() => import("./pages/Games"));
+const AfuArena = lazy(() => import("./pages/AfuArena"));
 const FinancialHub = lazy(() => import("./pages/FinancialHub"));
 const SocialHub = lazy(() => import("./pages/SocialHub"));
 const SecurityDashboard = lazy(() => import("./pages/SecurityDashboard"));
@@ -164,6 +165,7 @@ const AppRoutes = () => {
       <Route path="/developer-sdk" element={<Layout><DeveloperSDK /></Layout>} />
       <Route path="/verification-request" element={<Layout><VerificationRequest /></Layout>} />
       <Route path="/games" element={<Layout><Games /></Layout>} />
+      <Route path="/afu-arena" element={<AfuArena />} />
       <Route path="/game" element={<Layout><SimpleGame /></Layout>} />
       <Route path="/memory-game" element={<Layout><MemoryGame /></Layout>} />
       <Route path="/puzzle-game" element={<Layout><PuzzleGame /></Layout>} />
