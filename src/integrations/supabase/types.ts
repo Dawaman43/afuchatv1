@@ -708,6 +708,88 @@ export type Database = {
           },
         ]
       }
+      game_rooms: {
+        Row: {
+          created_at: string
+          current_target_x: number | null
+          current_target_y: number | null
+          ended_at: string | null
+          game_type: string
+          guest_id: string | null
+          guest_score: number
+          host_id: string
+          host_score: number
+          id: string
+          max_rounds: number
+          room_code: string
+          round: number
+          started_at: string | null
+          status: string
+          target_spawned_at: string | null
+          winner_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_target_x?: number | null
+          current_target_y?: number | null
+          ended_at?: string | null
+          game_type?: string
+          guest_id?: string | null
+          guest_score?: number
+          host_id: string
+          host_score?: number
+          id?: string
+          max_rounds?: number
+          room_code: string
+          round?: number
+          started_at?: string | null
+          status?: string
+          target_spawned_at?: string | null
+          winner_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_target_x?: number | null
+          current_target_y?: number | null
+          ended_at?: string | null
+          game_type?: string
+          guest_id?: string | null
+          guest_score?: number
+          host_id?: string
+          host_score?: number
+          id?: string
+          max_rounds?: number
+          room_code?: string
+          round?: number
+          started_at?: string | null
+          status?: string
+          target_spawned_at?: string | null
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_rooms_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_rooms_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_rooms_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_scores: {
         Row: {
           created_at: string
