@@ -51,9 +51,7 @@
   }
 }
 
-/* AfuChat Design System - Optimized for low-bandwidth, high readability
-All colors MUST be HSL.
-*/
+/* AfuChat Design System - Complete Theme Specification */
 
 @layer base {
   :root {
@@ -65,30 +63,32 @@ All colors MUST be HSL.
     --accent: 183 100% 48%;
     --accent-foreground: 0 0% 100%;
     
-    /* Light gray background #F6F6F6 */
+    /* App Background #F6F6F6 */
     --background: 0 0% 96.5%;
-    --foreground: 0 0% 13%;
     
-    /* Light gray muted (from gray bubbles) */
-    --muted: 0 0% 92%;
-    --muted-foreground: 0 0% 47%;
+    /* Text Colors */
+    --foreground: 0 0% 10%; /* #1A1A1A */
     
-    /* Card with subtle elevation */
+    /* Card/Post Background #FFFFFF */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 13%;
+    --card-foreground: 0 0% 10%;
     
-    /* Popover clean */
+    /* Popover (same as card) */
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 13%;
+    --popover-foreground: 0 0% 10%;
     
-    /* Refined borders */
+    /* Muted - Surface/Navigation #FAFAFA */
+    --muted: 0 0% 98%;
+    --muted-foreground: 0 0% 48%; /* #7A7A7A */
+    
+    /* Secondary text color for descriptions */
+    --secondary: 0 0% 98%;
+    --secondary-foreground: 0 0% 29%; /* #4A4A4A */
+    
+    /* Borders/Dividers #E6E6E6 */
     --border: 0 0% 90%;
     --input: 0 0% 90%;
     --ring: 183 100% 40%;
-    
-    /* Secondary light gray */
-    --secondary: 0 0% 92%;
-    --secondary-foreground: 0 0% 13%;
     
     /* Destructive red */
     --destructive: 0 84% 60%;
@@ -96,9 +96,9 @@ All colors MUST be HSL.
     
     --radius: 0.5rem;
     
-    /* Sidebar */
+    /* Sidebar - Surface/Navigation #FAFAFA */
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 13%;
+    --sidebar-foreground: 0 0% 10%;
     --sidebar-primary: 183 100% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 183 100% 48%;
@@ -116,42 +116,45 @@ All colors MUST be HSL.
     --accent: 183 100% 48%;
     --accent-foreground: 0 0% 100%;
     
-    /* Dark backgrounds - #0F1114 */
+    /* App Background #0F1114 */
     --background: 216 14% 7%;
-    --foreground: 0 0% 95%;
     
-    /* Dark gray message bubbles */
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 70%;
+    /* Text Colors */
+    --foreground: 0 0% 100%; /* #FFFFFF */
     
-    /* Card elevated surface */
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 95%;
+    /* Card/Post Background #181A1D */
+    --card: 216 9% 10%;
+    --card-foreground: 0 0% 100%;
     
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 95%;
+    /* Popover (same as card) */
+    --popover: 216 9% 10%;
+    --popover-foreground: 0 0% 100%;
     
-    /* Subtle borders */
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
+    /* Muted - Surface/Navigation #1E2024 */
+    --muted: 220 9% 13%;
+    --muted-foreground: 220 4% 44%; /* #6C6F75 */
+    
+    /* Secondary text color */
+    --secondary: 220 9% 13%;
+    --secondary-foreground: 216 6% 65%; /* #A1A5AB */
+    
+    /* Borders/Dividers #2A2D31 */
+    --border: 214 8% 18%;
+    --input: 214 8% 18%;
     --ring: 183 100% 40%;
-    
-    /* Secondary surface */
-    --secondary: 0 0% 13%;
-    --secondary-foreground: 0 0% 95%;
     
     /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     
-    /* Sidebar */
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 95%;
+    /* Sidebar - Surface/Navigation #1E2024 */
+    --sidebar-background: 220 9% 13%;
+    --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 183 100% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 183 100% 48%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 18%;
+    --sidebar-border: 214 8% 18%;
     --sidebar-ring: 183 100% 40%;
   }
 }
