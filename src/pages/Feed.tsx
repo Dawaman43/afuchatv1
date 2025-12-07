@@ -1139,6 +1139,9 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   const [editPost, setEditPost] = useState<Post | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   
+  // Scroll-based header visibility state
+  const [isScrollingDown, setIsScrollingDown] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
   // Pull to refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
@@ -2193,9 +2196,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   }, [fetchPosts]);
 
   // Scroll-based header visibility (synced with bottom nav)
-  const [isScrollingDown, setIsScrollingDown] = useState(false);
-  const [lastScrollY, setLastScrollY] = useState(0);
-
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
