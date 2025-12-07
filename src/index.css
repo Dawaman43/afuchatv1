@@ -65,8 +65,8 @@ All colors MUST be HSL.
     --accent: 183 100% 48%;
     --accent-foreground: 0 0% 100%;
     
-    /* Clean white backgrounds */
-    --background: 0 0% 100%;
+    /* Light gray background #F6F6F6 */
+    --background: 0 0% 96.5%;
     --foreground: 0 0% 13%;
     
     /* Light gray muted (from gray bubbles) */
