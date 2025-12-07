@@ -174,18 +174,17 @@ const Layout = ({ children }: LayoutProps) => {
         </motion.div>
       </main>
 
-      {/* Mobile Bottom Navigation - Hidden in chat rooms */}
+      {/* Mobile Bottom Navigation - X-style clean design */}
       {!isChatRoom && (
         <div className={cn(
-          "lg:hidden fixed bottom-4 left-4 right-4 z-50 transition-all duration-300",
-          (isScrollingDown || chatScrollHide) ? "translate-y-[120%] opacity-0" : "translate-y-0 opacity-100"
+          "lg:hidden fixed bottom-0 left-0 right-0 z-50 transition-all duration-300",
+          (isScrollingDown || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
         )}>
-          <nav className="bg-card/90 backdrop-blur-xl rounded-2xl shadow-lg shadow-black/10 dark:shadow-black/30">
-            <div className="flex justify-around items-center px-2 py-3">
+          <nav className="bg-background/95 backdrop-blur-md border-t border-border/40">
+            <div className="flex justify-around items-center h-14 max-w-lg mx-auto">
               <Link
                 to="/home"
                 onClick={(e) => {
-                  // If already on home, prevent navigation and trigger feed refresh with new order
                   if (location.pathname === '/home' || location.pathname === '/') {
                     e.preventDefault();
                     sessionStorage.removeItem('feedShuffleSeed');
@@ -193,62 +192,57 @@ const Layout = ({ children }: LayoutProps) => {
                   }
                 }}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 flex-1 py-1.5 transition-all duration-200",
-                  isActive('/') ? "text-primary scale-110" : "text-muted-foreground hover:text-foreground"
+                  "flex items-center justify-center w-14 h-14 transition-colors",
+                  isActive('/') ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 <Home className={cn(
-                  "h-6 w-6 transition-all",
-                  isActive('/') && "fill-primary"
-                )} />
-                <span className="text-[10px] font-medium">{t('common.home')}</span>
+                  "h-[26px] w-[26px]",
+                  isActive('/') && "fill-current"
+                )} strokeWidth={isActive('/') ? 2.5 : 1.75} />
               </Link>
               
               <Link
                 to="/search"
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 flex-1 py-1.5 transition-all duration-200",
-                  isActive('/search') ? "text-primary scale-110" : "text-muted-foreground hover:text-foreground"
+                  "flex items-center justify-center w-14 h-14 transition-colors",
+                  isActive('/search') ? "text-foreground" : "text-muted-foreground"
                 )}
               >
-                <Search className={cn(
-                  "h-6 w-6 transition-all",
-                  isActive('/search') && "fill-primary"
-                )} />
-                <span className="text-[10px] font-medium">{t('search.title')}</span>
+                <Search className="h-[26px] w-[26px]" strokeWidth={isActive('/search') ? 2.5 : 1.75} />
               </Link>
               
               <MobileMenuSheet />
               
               <Link
-                to="/chats"
+                to="/notifications"
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 flex-1 py-1.5 transition-all duration-200",
-                  isActive('/chats') ? "text-primary scale-110" : "text-muted-foreground hover:text-foreground"
+                  "flex items-center justify-center w-14 h-14 transition-colors relative",
+                  isActive('/notifications') ? "text-foreground" : "text-muted-foreground"
                 )}
               >
-                <MessageSquare className={cn(
-                  "h-6 w-6 transition-all",
-                  isActive('/chats') && "fill-primary"
-                )} />
-                <span className="text-[10px] font-medium">{t('common.messages')}</span>
+                <Bell className={cn(
+                  "h-[26px] w-[26px]",
+                  isActive('/notifications') && "fill-current"
+                )} strokeWidth={isActive('/notifications') ? 2.5 : 1.75} />
               </Link>
               
               <Link
-                to={user ? `/${user.id}` : '/auth'}
+                to="/chats"
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 flex-1 py-1.5 transition-all duration-200",
-                  isActive(user ? `/${user.id}` : '/auth') ? "text-primary scale-110" : "text-muted-foreground hover:text-foreground"
+                  "flex items-center justify-center w-14 h-14 transition-colors",
+                  isActive('/chats') ? "text-foreground" : "text-muted-foreground"
                 )}
               >
-                <User className={cn(
-                  "h-6 w-6 transition-all",
-                  isActive(user ? `/${user.id}` : '/auth') && "fill-primary"
-                )} />
-                <span className="text-[10px] font-medium">{t('common.profile')}</span>
+                <MessageSquare className={cn(
+                  "h-[26px] w-[26px]",
+                  isActive('/chats') && "fill-current"
+                )} strokeWidth={isActive('/chats') ? 2.5 : 1.75} />
               </Link>
             </div>
           </nav>
+          {/* Safe area padding for devices with home indicator */}
+          <div className="bg-background/95 backdrop-blur-md h-[env(safe-area-inset-bottom)]" />
         </div>
       )}
     </div>
