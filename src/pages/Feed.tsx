@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { MessageSquare, Heart, Send, Ellipsis, Gift, Eye, TrendingUp, Crown, RefreshCw } from 'lucide-react';
+import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 import platformLogo from '@/assets/platform-logo.png';
 import aiSparkIcon from '@/assets/ai-spark-icon.png';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
@@ -1139,6 +1140,11 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   const [editPost, setEditPost] = useState<Post | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   
+  // Pull to refresh state
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const pullStartY = useRef(0);
+  const isPullingRef = useRef(false);
   
   // Track which posts have had view attempts to prevent duplicates
   const viewedPostsRef = useRef<Set<string>>(new Set());
@@ -1780,8 +1786,44 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   useEffect(() => {
     const postsChannel = supabase
       .channel('feed-updates')
-      // NOTE: Removed real-time auto-append for new posts - feed now only updates on refresh
-      // This provides a more controlled experience where users refresh to see new content
+      // Real-time auto-append for new posts when online
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'posts' },
+        async (payload) => {
+          // Skip if this is current user's post (already added optimistically)
+          if (payload.new.author_id === user?.id) return;
+          
+          // Fetch the new post with full data
+          const { data: newPost, error } = await supabase
+            .from('posts')
+            .select(`
+              *,
+              profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status),
+              post_images(image_url, display_order, alt_text),
+              post_link_previews(url, title, description, image_url, site_name)
+            `)
+            .eq('id', payload.new.id)
+            .single();
+
+          if (!error && newPost) {
+            // Add new post to the top of the feed
+            const mappedPost: Post = {
+              ...newPost,
+              profiles: newPost.profiles || { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false, is_affiliate: false },
+              replies: [],
+              reply_count: 0,
+              like_count: 0,
+              view_count: newPost.view_count || 0,
+              has_liked: false,
+            };
+            
+            setPosts(prev => [mappedPost, ...prev]);
+            // Show notification for new post
+            toast.info('New post added to feed', { duration: 2000 });
+          }
+        }
+      )
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'posts' },
@@ -2103,8 +2145,69 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
     return () => window.removeEventListener('feed-refresh', handleRefresh);
   }, [fetchPosts]);
 
+  // Pull to refresh touch handlers
+  useEffect(() => {
+    const threshold = 80;
+    const maxPull = 120;
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      if (window.scrollY <= 0 && !isRefreshing) {
+        pullStartY.current = e.touches[0].pageY;
+        isPullingRef.current = true;
+      }
+    };
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isPullingRef.current || isRefreshing) return;
+      
+      const currentY = e.touches[0].pageY;
+      const distance = Math.min(Math.max(0, currentY - pullStartY.current), maxPull);
+      
+      if (distance > 0 && window.scrollY <= 0) {
+        e.preventDefault();
+        setPullDistance(distance);
+      }
+    };
+    
+    const handleTouchEnd = async () => {
+      if (!isPullingRef.current) return;
+      
+      const currentDistance = pullDistance;
+      isPullingRef.current = false;
+      
+      if (currentDistance >= threshold && !isRefreshing) {
+        setIsRefreshing(true);
+        try {
+          sessionStorage.removeItem('feedShuffleSeed');
+          setCurrentPage(0);
+          setHasMore(true);
+          await fetchPosts(0, true);
+          toast.success('Feed refreshed!');
+        } catch (error) {
+          console.error('Pull to refresh error:', error);
+          toast.error('Failed to refresh. Pull again or tap refresh button.');
+        } finally {
+          setIsRefreshing(false);
+        }
+      }
+      
+      setPullDistance(0);
+      pullStartY.current = 0;
+    };
+    
+    const options: AddEventListenerOptions = { passive: false };
+    document.addEventListener('touchstart', handleTouchStart, options);
+    document.addEventListener('touchmove', handleTouchMove, options);
+    document.addEventListener('touchend', handleTouchEnd, options);
+    
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isRefreshing, pullDistance, fetchPosts]);
 
-  // Premium button - memoized to prevent re-renders on scroll
+
   const premiumButton = useMemo(() => {
     // Show stable placeholder during loading to prevent flashing
     if (premiumLoading) {
@@ -2160,6 +2263,13 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
   return (
     <div className="h-full flex flex-col max-w-4xl mx-auto">
+      {/* Pull to refresh indicator */}
+      <PullToRefreshIndicator 
+        pullDistance={pullDistance} 
+        isRefreshing={isRefreshing} 
+        progress={Math.min(pullDistance / 80, 1)} 
+      />
+      
       <SEO
         title="Feed — Latest Posts, Updates & Trending Topics | AfuChat"
         description="Discover the latest posts, trending topics, viral content, and updates from your network on AfuChat's social feed. Share your thoughts, like posts, comment, and connect with friends and creators. Join conversations happening now on social media."
@@ -2178,7 +2288,17 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
             </Avatar>
           </Link>
           <img src={platformLogo} alt="AfuChat" className="h-8 w-8" />
-          {premiumButton}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleLoadNewPosts}
+              disabled={isRefreshing}
+              className="p-2 rounded-full hover:bg-muted transition-colors disabled:opacity-50"
+              aria-label="Refresh feed"
+            >
+              <RefreshCw className={`h-5 w-5 text-muted-foreground ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+            {premiumButton}
+          </div>
         </div>
       </div>
 
