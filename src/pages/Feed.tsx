@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -2231,14 +2231,14 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
   const currentPosts = activeTab === 'foryou' ? posts : followingPosts;
   const adNativeIndex = currentPosts.length > 0 ? Math.min(9, currentPosts.length - 1) : -1;
 
-  // Premium button component
-  const PremiumButton = () => {
-    const { isPremium, loading, expiresAt } = usePremiumStatus();
-    
+  // Premium button - memoized to prevent re-renders on scroll
+  const { isPremium, loading: premiumLoading, expiresAt } = usePremiumStatus();
+  
+  const premiumButton = useMemo(() => {
     // Show stable placeholder during loading to prevent flashing
-    if (loading) {
+    if (premiumLoading) {
       return (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted animate-pulse" />
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted" />
       );
     }
     
@@ -2263,7 +2263,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         <span className="text-xs font-semibold">Get Premium</span>
       </Link>
     );
-  };
+  }, [isPremium, premiumLoading, expiresAt]);
 
   const handleLoadNewPosts = () => {
     setCurrentPage(0);
@@ -2298,7 +2298,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
             </Avatar>
           </Link>
           <img src={platformLogo} alt="AfuChat" className="h-8 w-8" />
-          <PremiumButton />
+          {premiumButton}
         </div>
       </div>
 
@@ -2334,14 +2334,18 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
         {/* Swipeable content area */}
         <motion.div
-          className="flex-1"
+          className="flex-1 touch-pan-y"
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.2}
+          dragElastic={0.1}
+          dragTransition={{ bounceStiffness: 300, bounceDamping: 30 }}
           onDragEnd={(_, info) => {
-            if (info.offset.x > 100 && activeTab === 'following') {
+            const threshold = 50;
+            const velocity = Math.abs(info.velocity.x);
+            
+            if ((info.offset.x > threshold || velocity > 500) && activeTab === 'following') {
               setActiveTab('foryou');
-            } else if (info.offset.x < -100 && activeTab === 'foryou') {
+            } else if ((info.offset.x < -threshold || velocity > 500) && activeTab === 'foryou') {
               setActiveTab('following');
             }
           }}
