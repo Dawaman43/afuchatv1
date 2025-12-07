@@ -2329,30 +2329,9 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           </TabsList>
         </div>
 
-        {/* Swipeable content area with smooth animations */}
+        {/* Content area */}
         <div className="flex-1 overflow-hidden">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={activeTab}
-              initial={{ x: activeTab === 'foryou' ? -20 : 20, opacity: 0.8 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: activeTab === 'foryou' ? 20 : -20, opacity: 0.8 }}
-              transition={{ type: "tween", duration: 0.2, ease: "easeOut" }}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.05}
-              onDragEnd={(_, info) => {
-                const swipeThreshold = 40;
-                const velocityThreshold = 300;
-                
-                if (info.offset.x > swipeThreshold || info.velocity.x > velocityThreshold) {
-                  if (activeTab === 'following') setActiveTab('foryou');
-                } else if (info.offset.x < -swipeThreshold || info.velocity.x < -velocityThreshold) {
-                  if (activeTab === 'foryou') setActiveTab('following');
-                }
-              }}
-              className="touch-pan-y"
-            >
+          <div>
               <TabsContent value={activeTab} className="flex-1 m-0" ref={feedRef} forceMount>
           {/* Adsterra Banner Ad */}
           <AdsterraBannerAd />
@@ -2419,8 +2398,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
             </>
           )}
               </TabsContent>
-            </motion.div>
-          </AnimatePresence>
+          </div>
         </div>
       </Tabs>
       
