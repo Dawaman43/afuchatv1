@@ -192,25 +192,28 @@ const Layout = ({ children }: LayoutProps) => {
                     window.dispatchEvent(new Event('refresh-feed-order'));
                   }
                 }}
-                className={cn(
-                  "flex items-center justify-center w-12 h-12 transition-colors",
-                  isActive('/') || isActive('/home') ? "text-foreground" : "text-foreground/40"
-                )}
+                className="flex items-center justify-center w-12 h-12 transition-colors"
               >
-                <Home className={cn(
-                  "h-6 w-6",
-                  (isActive('/') || isActive('/home')) && "fill-current"
-                )} strokeWidth={(isActive('/') || isActive('/home')) ? 2.5 : 1.5} />
+                <Home 
+                  className={cn(
+                    "h-6 w-6",
+                    (isActive('/') || isActive('/home')) ? "text-primary fill-primary" : "text-foreground"
+                  )} 
+                  strokeWidth={(isActive('/') || isActive('/home')) ? 2.5 : 1.5} 
+                />
               </Link>
               
               <Link
                 to="/search"
-                className={cn(
-                  "flex items-center justify-center w-12 h-12 transition-colors",
-                  isActive('/search') ? "text-foreground" : "text-foreground/40"
-                )}
+                className="flex items-center justify-center w-12 h-12 transition-colors"
               >
-                <Search className="h-6 w-6" strokeWidth={isActive('/search') ? 2.5 : 1.5} />
+                <Search 
+                  className={cn(
+                    "h-6 w-6",
+                    isActive('/search') ? "text-primary" : "text-foreground"
+                  )} 
+                  strokeWidth={isActive('/search') ? 2.5 : 1.5} 
+                />
               </Link>
               
               <MobileMenuSheet 
@@ -227,28 +230,28 @@ const Layout = ({ children }: LayoutProps) => {
               
               <Link
                 to="/notifications"
-                className={cn(
-                  "flex items-center justify-center w-12 h-12 transition-colors relative",
-                  isActive('/notifications') ? "text-foreground" : "text-foreground/40"
-                )}
+                className="flex items-center justify-center w-12 h-12 transition-colors relative"
               >
-                <Bell className={cn(
-                  "h-6 w-6",
-                  isActive('/notifications') && "fill-current"
-                )} strokeWidth={isActive('/notifications') ? 2.5 : 1.5} />
+                <Bell 
+                  className={cn(
+                    "h-6 w-6",
+                    isActive('/notifications') ? "text-primary fill-primary" : "text-foreground"
+                  )} 
+                  strokeWidth={isActive('/notifications') ? 2.5 : 1.5} 
+                />
               </Link>
               
               <Link
                 to="/chats"
-                className={cn(
-                  "flex items-center justify-center w-12 h-12 transition-colors",
-                  isActive('/chats') ? "text-foreground" : "text-foreground/40"
-                )}
+                className="flex items-center justify-center w-12 h-12 transition-colors"
               >
-                <MessageSquare className={cn(
-                  "h-6 w-6",
-                  isActive('/chats') && "fill-current"
-                )} strokeWidth={isActive('/chats') ? 2.5 : 1.5} />
+                <MessageSquare 
+                  className={cn(
+                    "h-6 w-6",
+                    isActive('/chats') ? "text-primary fill-primary" : "text-foreground"
+                  )} 
+                  strokeWidth={isActive('/chats') ? 2.5 : 1.5} 
+                />
               </Link>
             </div>
           </nav>
