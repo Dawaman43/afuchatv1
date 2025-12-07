@@ -8,16 +8,19 @@ import FloatingActionButton from '@/components/ui/FloatingActionButton';
 import Layout from '@/components/Layout';
 import { CustomLoader } from '@/components/ui/CustomLoader';
 import { ProfileCompletionBanner } from '@/components/ProfileCompletionBanner';
+import { GuestAuthBanner } from '@/components/GuestAuthBanner';
 
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const [checkingFollows, setCheckingFollows] = useState(true);
+  const [checkingFollows, setCheckingFollows] = useState(!!user); // Only check for logged in users
 
   useEffect(() => {
-    checkUserFollows();
+    if (user) {
+      checkUserFollows();
+    }
   }, [user]);
 
   useEffect(() => {
@@ -66,9 +69,10 @@ const Home = () => {
     }
   };
 
-  if (checkingFollows) {
+  // Only show loading for authenticated users checking follows
+  if (user && checkingFollows) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <CustomLoader size="lg" />
       </div>
     );
@@ -77,11 +81,11 @@ const Home = () => {
   // All devices: Use unified Layout (handles DesktopHybridLayout for non-mobile)
   return (
     <>
-      <ProfileCompletionBanner />
+      {user ? <ProfileCompletionBanner /> : <GuestAuthBanner />}
       <Layout>
         <div className="relative pt-10">
           <Feed />
-          <FloatingActionButton />
+          {user && <FloatingActionButton />}
           {user && (
             <NewPostModal
               isOpen={isPostModalOpen}
