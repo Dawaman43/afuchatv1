@@ -37,6 +37,7 @@ const Layout = ({ children }: LayoutProps) => {
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [chatScrollHide, setChatScrollHide] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   // Define functions before useEffect hooks
   const checkAdminStatus = async () => {
@@ -73,6 +74,34 @@ const Layout = ({ children }: LayoutProps) => {
   useEffect(() => {
     if (user) {
       checkAdminStatus();
+      
+      // Fetch unread notifications count
+      const fetchUnreadCount = async () => {
+        const { count } = await supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('is_read', false);
+        if (count !== null) setUnreadNotifications(count);
+      };
+      fetchUnreadCount();
+
+      // Real-time subscription for notifications
+      const channel = supabase
+        .channel('nav-notifications')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        }, () => {
+          fetchUnreadCount();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 
@@ -232,7 +261,20 @@ const Layout = ({ children }: LayoutProps) => {
                 to="/notifications"
                 className="flex items-center justify-center w-12 h-12 transition-colors relative"
               >
-                <NotificationIcon />
+                <div className="relative">
+                  <Bell 
+                    className={cn(
+                      "h-6 w-6",
+                      isActive('/notifications') ? "text-primary fill-primary" : "text-foreground"
+                    )} 
+                    strokeWidth={isActive('/notifications') ? 2.5 : 1.5} 
+                  />
+                  {unreadNotifications > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full">
+                      {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                    </span>
+                  )}
+                </div>
               </Link>
               
               <Link
