@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Plus, MessageCircle, Gamepad2, Send } from 'lucide-react';
+import { Feather, X, Send, Gamepad2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Button } from './button';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface FabAction {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
-  color: string;
 }
 
 const FloatingActionButton = () => {
@@ -48,10 +47,8 @@ const FloatingActionButton = () => {
 
   const handleNewPost = () => {
     if (location.pathname === '/' || location.pathname === '/home') {
-      // Already on home, just trigger the event
       window.dispatchEvent(new Event('open-new-post'));
     } else {
-      // Navigate to home first, then trigger after a delay
       navigate('/home');
       setTimeout(() => {
         window.dispatchEvent(new Event('open-new-post'));
@@ -61,72 +58,103 @@ const FloatingActionButton = () => {
 
   const actions: FabAction[] = [
     {
-      icon: <MessageCircle className="h-6 w-6" />,
-      label: 'New Post',
+      icon: <Feather className="h-5 w-5" />,
+      label: 'Post',
       onClick: () => handleActionClick(handleNewPost),
-      color: 'bg-primary'
     },
     {
-      icon: <Send className="h-6 w-6" />,
-      label: 'Transfer Nexa',
+      icon: <Send className="h-5 w-5" />,
+      label: 'Transfer',
       onClick: () => handleActionClick(() => navigate('/transfer')),
-      color: 'bg-accent'
     },
     {
-      icon: <Gamepad2 className="h-6 w-6" />,
-      label: 'Play Games',
+      icon: <Gamepad2 className="h-5 w-5" />,
+      label: 'Games',
       onClick: () => handleActionClick(() => navigate('/games')),
-      color: 'bg-primary'
     }
   ];
 
   return (
     <>
       {/* Backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 z-40 animate-fade-in"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40"
+            onClick={() => setIsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* FAB Container */}
       <div className={cn(
-        "fixed bottom-20 right-6 z-50 transition-transform duration-300",
-        isScrollingDown ? "translate-y-32" : "translate-y-0"
+        "fixed bottom-20 right-4 z-50 transition-all duration-300",
+        isScrollingDown ? "translate-y-32 opacity-0" : "translate-y-0 opacity-100"
       )}>
-        {!isOpen ? (
-          /* Main FAB Button */
-          <Button
-            size="icon"
-            className="h-14 w-14 rounded-full shadow-2xl transition-all bg-primary hover:bg-primary/90 hover:scale-110 text-primary-foreground"
-            onClick={() => setIsOpen(true)}
-          >
-            <Plus className="h-6 w-6" />
-          </Button>
-        ) : (
-          /* Action Buttons */
-          <div className="flex flex-col-reverse items-end gap-4">
-            {actions.map((action, index) => (
-              <button
-                key={action.label}
-                onClick={action.onClick}
-                className="flex items-center gap-4 animate-scale-in group"
-                style={{ animationDelay: `${index * 50}ms` }}
+        <AnimatePresence mode="wait">
+          {!isOpen ? (
+            /* Main FAB Button - X style */
+            <motion.button
+              key="fab-closed"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              whileTap={{ scale: 0.95 }}
+              className="h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 flex items-center justify-center"
+              onClick={() => setIsOpen(true)}
+            >
+              <Feather className="h-6 w-6" />
+            </motion.button>
+          ) : (
+            /* Action Menu */
+            <motion.div
+              key="fab-open"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-end gap-3"
+            >
+              {actions.map((action, index) => (
+                <motion.button
+                  key={action.label}
+                  initial={{ opacity: 0, x: 20, y: 10 }}
+                  animate={{ 
+                    opacity: 1, 
+                    x: 0, 
+                    y: 0,
+                    transition: { delay: index * 0.05 }
+                  }}
+                  exit={{ opacity: 0, x: 20 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={action.onClick}
+                  className="flex items-center gap-3"
+                >
+                  <span className="text-sm font-medium text-foreground bg-card px-3 py-1.5 rounded-full shadow-md border border-border/50">
+                    {action.label}
+                  </span>
+                  <div className="h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
+                    {action.icon}
+                  </div>
+                </motion.button>
+              ))}
+              
+              {/* Close button */}
+              <motion.button
+                initial={{ opacity: 0, rotate: -90 }}
+                animate={{ opacity: 1, rotate: 0 }}
+                exit={{ opacity: 0, rotate: 90 }}
+                whileTap={{ scale: 0.95 }}
+                className="h-14 w-14 rounded-full bg-muted text-muted-foreground shadow-lg flex items-center justify-center mt-2"
+                onClick={() => setIsOpen(false)}
               >
-                <span className="text-foreground text-lg font-semibold whitespace-nowrap bg-card px-3 py-1 rounded-full shadow-lg">
-                  {action.label}
-                </span>
-                <div className={cn(
-                  "h-14 w-14 rounded-full shadow-xl flex items-center justify-center text-primary-foreground transition-transform group-hover:scale-110",
-                  action.color
-                )}>
-                  {action.icon}
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
+                <X className="h-6 w-6" />
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </>
   );
