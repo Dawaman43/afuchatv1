@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { PinnedGiftDetailSheet } from './PinnedGiftDetailSheet';
 import { GiftImage } from './GiftImage';
+import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 
 interface PinnedGift {
   id: string;
@@ -23,10 +24,14 @@ export const PinnedGiftsDisplay = ({ userId, className = '' }: PinnedGiftsDispla
   const [pinnedGifts, setPinnedGifts] = useState<PinnedGift[]>([]);
   const [selectedGiftId, setSelectedGiftId] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const { isPremium } = usePremiumStatus(userId);
+  
+  // Premium users can pin 3 gifts, non-premium only 1
+  const maxPinnedGifts = isPremium ? 3 : 1;
 
   useEffect(() => {
     fetchPinnedGifts();
-  }, [userId]);
+  }, [userId, maxPinnedGifts]);
 
   const fetchPinnedGifts = async () => {
     const { data, error } = await supabase
@@ -37,7 +42,7 @@ export const PinnedGiftsDisplay = ({ userId, className = '' }: PinnedGiftsDispla
       `)
       .eq('user_id', userId)
       .order('pinned_at', { ascending: false })
-      .limit(6);
+      .limit(maxPinnedGifts);
 
     console.log('Pinned gifts data:', data, 'error:', error);
 
@@ -49,12 +54,10 @@ export const PinnedGiftsDisplay = ({ userId, className = '' }: PinnedGiftsDispla
 
   if (pinnedGifts.length === 0) return null;
 
+  // Positions for 1-3 gifts
   const positions = [
     { top: '-15%', left: '50%', transform: 'translate(-50%, -50%)' },
     { top: '12%', right: '-15%', transform: 'translate(50%, -50%)' },
-    { bottom: '12%', right: '-15%', transform: 'translate(50%, 50%)' },
-    { bottom: '-15%', left: '50%', transform: 'translate(-50%, 50%)' },
-    { bottom: '12%', left: '-15%', transform: 'translate(-50%, 50%)' },
     { top: '12%', left: '-15%', transform: 'translate(-50%, -50%)' },
   ];
 
