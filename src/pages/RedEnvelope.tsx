@@ -13,11 +13,12 @@ import { ArrowLeft, Gift, Users, Sparkles, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { RedEnvelopeCard } from '@/components/red-envelope/RedEnvelopeCard';
-import { PremiumGate } from '@/components/PremiumGate';
+import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 
 const RedEnvelope = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isPremium } = usePremiumStatus();
   const [totalAmount, setTotalAmount] = useState('');
   const [recipientCount, setRecipientCount] = useState('');
   const [message, setMessage] = useState('');
@@ -140,7 +141,6 @@ const RedEnvelope = () => {
   };
 
   return (
-    <PremiumGate feature="Red Envelope" showUpgrade={true}>
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <div className="max-w-4xl mx-auto">
         {/* Balance Card */}
@@ -176,88 +176,108 @@ const RedEnvelope = () => {
 
           {/* Create Tab */}
           <TabsContent value="create" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create Red Envelope</CardTitle>
-                <CardDescription>
-                  Share Nexa with multiple friends - they'll get random amounts!
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Total Nexa Amount</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    placeholder="100"
-                    value={totalAmount}
-                    onChange={(e) => setTotalAmount(e.target.value)}
-                    min="1"
-                  />
-                </div>
+            {isPremium ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Create Red Envelope</CardTitle>
+                  <CardDescription>
+                    Share Nexa with multiple friends - they'll get random amounts!
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="amount">Total Nexa Amount</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      placeholder="100"
+                      value={totalAmount}
+                      onChange={(e) => setTotalAmount(e.target.value)}
+                      min="1"
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="count">Number of Recipients</Label>
-                  <Input
-                    id="count"
-                    type="number"
-                    placeholder="5"
-                    value={recipientCount}
-                    onChange={(e) => setRecipientCount(e.target.value)}
-                    min="1"
-                    max="100"
-                  />
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="count">Number of Recipients</Label>
+                    <Input
+                      id="count"
+                      type="number"
+                      placeholder="5"
+                      value={recipientCount}
+                      onChange={(e) => setRecipientCount(e.target.value)}
+                      min="1"
+                      max="100"
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="type">Distribution Type</Label>
-                  <Select value={envelopeType} onValueChange={(v: 'random' | 'equal') => setEnvelopeType(v)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="random">Random Amount (Lucky Draw)</SelectItem>
-                      <SelectItem value="equal">Equal Split</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <Label htmlFor="type">Distribution Type</Label>
+                    <Select value={envelopeType} onValueChange={(v: 'random' | 'equal') => setEnvelopeType(v)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="random">Random Amount (Lucky Draw)</SelectItem>
+                        <SelectItem value="equal">Equal Split</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {envelopeType === 'random' 
+                        ? 'Each person gets a random amount - more exciting!' 
+                        : 'Everyone gets the same amount'}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="message">Message (Optional)</Label>
+                    <Textarea
+                      id="message"
+                      placeholder="Happy holidays! 🎉"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      rows={3}
+                      maxLength={100}
+                    />
+                  </div>
+
+                  <Button 
+                    className="w-full bg-red-500 hover:bg-red-600" 
+                    onClick={handleCreateEnvelope}
+                    disabled={loading || !totalAmount || !recipientCount}
+                  >
+                    {loading ? 'Creating...' : 'Create Red Envelope 🧧'}
+                  </Button>
+
+                  <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+                    <p className="text-xs font-medium">How it works:</p>
+                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                      <li>Your Nexa is immediately deducted when you create the envelope</li>
+                      <li>Others can claim until all portions are taken or 24 hours pass</li>
+                      <li>Random mode: Each claim gets a different random amount</li>
+                      <li>Equal mode: Everyone gets exactly the same amount</li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-primary/20">
+                <CardContent className="py-12 text-center space-y-4">
+                  <Gift className="h-16 w-16 mx-auto text-red-500" />
+                  <div>
+                    <h3 className="text-lg font-semibold">Premium Feature</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Creating red envelopes is a premium feature. Upgrade to share Nexa with friends!
+                    </p>
+                  </div>
+                  <Button onClick={() => navigate('/premium')} className="bg-gradient-to-r from-primary to-primary/80">
+                    Upgrade to Premium
+                  </Button>
                   <p className="text-xs text-muted-foreground">
-                    {envelopeType === 'random' 
-                      ? 'Each person gets a random amount - more exciting!' 
-                      : 'Everyone gets the same amount'}
+                    You can still claim red envelopes from others (1 per day)
                   </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="message">Message (Optional)</Label>
-                  <Textarea
-                    id="message"
-                    placeholder="Happy holidays! 🎉"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    rows={3}
-                    maxLength={100}
-                  />
-                </div>
-
-                <Button 
-                  className="w-full bg-red-500 hover:bg-red-600" 
-                  onClick={handleCreateEnvelope}
-                  disabled={loading || !totalAmount || !recipientCount}
-                >
-                  {loading ? 'Creating...' : 'Create Red Envelope 🧧'}
-                </Button>
-
-                <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-                  <p className="text-xs font-medium">How it works:</p>
-                  <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                    <li>Your Nexa is immediately deducted when you create the envelope</li>
-                    <li>Others can claim until all portions are taken or 24 hours pass</li>
-                    <li>Random mode: Each claim gets a different random amount</li>
-                    <li>Equal mode: Everyone gets exactly the same amount</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Active Tab */}
@@ -330,7 +350,6 @@ const RedEnvelope = () => {
         </Tabs>
       </div>
     </div>
-    </PremiumGate>
   );
 };
 
