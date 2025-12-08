@@ -859,7 +859,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                 title={t('feed.analyzePost')}
                 onClick={handleAiTransfer}
             >
-                <img src={aiSparkIcon} alt="AI" className="h-4 w-4" />
+                <img src={aiSparkIcon} alt="AI" className="h-6 w-6" />
             </button>
             
             <PostActionsSheet
