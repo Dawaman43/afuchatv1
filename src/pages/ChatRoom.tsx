@@ -1014,9 +1014,9 @@ const ChatRoom = () => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="h-dvh flex flex-col bg-background overflow-hidden">
-        {/* WhatsApp-style Header - Sticky */}
-        <div className="sticky top-0 z-50 flex items-center gap-3 px-2 py-2 bg-card/95 backdrop-blur-xl border-b border-border shadow-sm">
+      <div className="fixed inset-0 flex flex-col bg-background overflow-hidden">
+        {/* WhatsApp-style Header - Fixed */}
+        <div className="flex-shrink-0 flex items-center gap-3 px-2 py-2 bg-card/95 backdrop-blur-xl border-b border-border shadow-sm z-10">
           <Button
             variant="ghost"
             size="icon"
@@ -1113,9 +1113,9 @@ const ChatRoom = () => {
           </div>
         </div>
 
-        {/* Messages with customizable background */}
+        {/* Messages container - only this scrolls */}
         <div 
-          className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4" 
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-4" 
           style={{ 
             fontSize: `${chatPreferences.fontSize}px`,
             ...(currentWallpaper?.image_url 
@@ -1237,12 +1237,12 @@ const ChatRoom = () => {
               )}
             </>
           )}
-          <div ref={messagesEndRef} className="h-32" />
+          <div ref={messagesEndRef} className="h-4" />
         </div>
 
         {/* Reply Preview - positioned above input */}
         {isMember && replyToMessage && !selectedFile && (
-          <div className="bg-card/95 backdrop-blur-sm border-t border-border px-4 py-2">
+          <div className="flex-shrink-0 bg-card/95 backdrop-blur-sm border-t border-border px-4 py-2">
             <div className="flex items-center gap-3">
               <div className="w-1 h-10 bg-primary rounded-full flex-shrink-0" />
               <div className="flex-1 min-w-0">
@@ -1275,7 +1275,7 @@ const ChatRoom = () => {
 
         {/* Join Group Button for Non-Members */}
         {chatInfo?.is_group && !isMember && (
-          <div className="bg-card border-t border-border px-4 py-4 pb-[env(safe-area-inset-bottom)]">
+          <div className="flex-shrink-0 bg-card border-t border-border px-4 py-4 pb-[env(safe-area-inset-bottom)]">
             <Button
               onClick={handleJoinGroup}
               disabled={isJoining}
@@ -1286,9 +1286,9 @@ const ChatRoom = () => {
           </div>
         )}
 
-        {/* Input: WhatsApp style */}
+        {/* Input: WhatsApp style - Fixed at bottom */}
         {isMember && (
-          <div className="bg-card border-t border-border px-2 py-2 pb-[env(safe-area-inset-bottom)]">
+          <div className="flex-shrink-0 bg-card border-t border-border px-2 py-2 pb-[env(safe-area-inset-bottom)]">
             <input
             ref={fileInputRef}
             type="file"
