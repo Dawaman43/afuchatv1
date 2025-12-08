@@ -741,51 +741,67 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 			return;
 		}
 
-		const { data: existingChats } = await supabase
-			.from('chat_members')
-			.select('chat_id, chats!inner(is_group)')
-			.eq('user_id', user.id);
+		try {
+			// Check for existing 1-on-1 chat with this user
+			const { data: existingChats, error: fetchError } = await supabase
+				.from('chat_members')
+				.select('chat_id, chats!inner(is_group)')
+				.eq('user_id', user.id);
 
-		if (existingChats) {
-			for (const chat of existingChats) {
-				if (chat.chats?.is_group === false) {
-					const { data: members } = await supabase
-						.from('chat_members')
-						.select('user_id')
-						.eq('chat_id', chat.chat_id);
+			if (fetchError) {
+				console.error('Error fetching chats:', fetchError);
+				toast.error(t('profile.failedToChat'));
+				return;
+			}
 
-					if (members && members.length === 2 && members.some(m => m.user_id === profileId)) {
-						navigate(`/chat/${chat.chat_id}`);
-						return;
+			if (existingChats) {
+				for (const chat of existingChats) {
+					if (chat.chats?.is_group === false) {
+						const { data: members } = await supabase
+							.from('chat_members')
+							.select('user_id')
+							.eq('chat_id', chat.chat_id);
+
+						if (members && members.length === 2 && members.some(m => m.user_id === profileId)) {
+							navigate(`/chat/${chat.chat_id}`);
+							return;
+						}
 					}
 				}
 			}
-		}
 
-		const { data: newChat, error: chatError } = await supabase
-			.from('chats')
-			.insert({ is_group: false, created_by: user.id })
-			.select()
-			.single();
+			// Create new chat
+			const { data: newChat, error: chatError } = await supabase
+				.from('chats')
+				.insert({ is_group: false, created_by: user.id })
+				.select()
+				.single();
 
-		if (chatError) {
+			if (chatError) {
+				console.error('Error creating chat:', chatError);
+				toast.error(t('profile.failedToChat'));
+				return;
+			}
+
+			// Add both users as members
+			const { error: membersError } = await supabase
+				.from('chat_members')
+				.insert([
+					{ chat_id: newChat.id, user_id: user.id },
+					{ chat_id: newChat.id, user_id: profileId },
+				]);
+
+			if (membersError) {
+				console.error('Error adding members:', membersError);
+				toast.error(t('profile.failedToChat'));
+				return;
+			}
+
+			navigate(`/chat/${newChat.id}`);
+		} catch (error) {
+			console.error('Error starting chat:', error);
 			toast.error(t('profile.failedToChat'));
-			return;
 		}
-
-		const { error: membersError } = await supabase
-			.from('chat_members')
-			.insert([
-				{ chat_id: newChat.id, user_id: user.id },
-				{ chat_id: newChat.id, user_id: profileId },
-			]);
-
-		if (membersError) {
-			toast.error(t('profile.failedToChat'));
-			return;
-		}
-
-		navigate(`/chat/${newChat.id}`);
 	};
 
 	const handleLogout = async () => {
