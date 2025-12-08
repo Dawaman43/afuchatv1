@@ -101,13 +101,13 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
 
   const calculateProgress = () => {
     let completed = 0;
-    const total = 5; // 5 fields total
+    const total = 5; // 5 fields total (4 required + 1 optional)
     
     if (formData.display_name) completed++;
     if (formData.handle) completed++;
     if (avatarFile || existingAvatarUrl) completed++;
-    if (formData.phone_number) completed++;
     if (formData.country) completed++;
+    if (formData.phone_number) completed++; // Optional but counts toward progress
     
     setProgress((completed / total) * 100);
   };
@@ -268,7 +268,7 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
             </div>
             <CardTitle className="text-2xl">Complete Your Profile</CardTitle>
             <CardDescription>
-              Required: Profile picture, display name, and username. Phone and country are optional but earn rewards!
+              All fields are required to continue. Phone number is optional but earns rewards!
             </CardDescription>
             
             {/* Progress Indicator */}
@@ -282,11 +282,11 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
               {/* Progress Steps */}
               <div className="grid grid-cols-5 gap-2 mt-4">
                 {[
-                  { name: 'avatar', label: 'Photo', icon: Camera },
-                  { name: 'display_name', label: 'Name', icon: Check },
-                  { name: 'handle', label: 'Username', icon: Check },
-                  { name: 'phone_number', label: 'Phone', icon: Sparkles },
-                  { name: 'country', label: 'Country', icon: Sparkles },
+                  { name: 'avatar', label: 'Photo', icon: Camera, required: true },
+                  { name: 'display_name', label: 'Name', icon: Check, required: true },
+                  { name: 'handle', label: 'Username', icon: Check, required: true },
+                  { name: 'country', label: 'Country', icon: Check, required: true },
+                  { name: 'phone_number', label: 'Phone', icon: Sparkles, required: false },
                 ].map((step) => {
                   const StepIcon = step.icon;
                   const status = getStepStatus(step.name);
@@ -368,18 +368,6 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
               />
             </div>
 
-            {/* Phone Number */}
-            <div className="space-y-2">
-              <Label htmlFor="phone_number">Phone Number (Optional)</Label>
-              <Input
-                id="phone_number"
-                type="tel"
-                value={formData.phone_number}
-                onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                placeholder="+1234567890"
-              />
-            </div>
-
             {/* Country - Required and cannot be changed after signup */}
             <div className="space-y-2">
               <Label htmlFor="country">Country *</Label>
@@ -419,6 +407,21 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
               </p>
             </div>
 
+            {/* Phone Number - Optional */}
+            <div className="space-y-2">
+              <Label htmlFor="phone_number">Phone Number (Optional)</Label>
+              <Input
+                id="phone_number"
+                type="tel"
+                value={formData.phone_number}
+                onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                placeholder="+1234567890"
+              />
+              <p className="text-xs text-muted-foreground">
+                Add phone number to earn bonus Nexa!
+              </p>
+            </div>
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <>
@@ -428,14 +431,14 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
               ) : (
                 <>
                   Complete Profile
-                  {formData.phone_number && formData.country && (
+                  {formData.phone_number && (
                     <Trophy className="h-4 w-4 ml-2 text-yellow-500" />
                   )}
                 </>
               )}
             </Button>
             
-            {formData.phone_number && formData.country && (
+            {formData.phone_number && (
               <p className="text-xs text-center text-muted-foreground mt-2 flex items-center justify-center gap-1">
                 <Sparkles className="h-3 w-3 text-yellow-500" />
                 Complete all fields to earn 100 Nexa reward!
