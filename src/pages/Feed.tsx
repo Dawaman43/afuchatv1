@@ -2337,7 +2337,8 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         {/* Fixed Tabs - always visible at top */}
         <div className={cn(
           "fixed left-0 right-0 z-20 bg-background/95 backdrop-blur-md max-w-4xl mx-auto transition-all duration-300",
-          isScrollingDown ? "top-0" : "top-14"
+          isScrollingDown ? "top-0" : "top-14",
+          lastScrollY > 50 ? "border-b border-border/30" : ""
         )}>
           {newPostsCount > 0 && (
             <button
@@ -2347,7 +2348,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
               <span>Show {newPostsCount} new {newPostsCount === 1 ? 'post' : 'posts'}</span>
             </button>
           )}
-          <TabsList className="grid grid-cols-2 w-full h-12 rounded-none bg-transparent p-0 border-b border-border">
+          <TabsList className="grid grid-cols-2 w-full h-12 rounded-none bg-transparent p-0">
             <TabsTrigger
               value="foryou"
               className="relative data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=active]:shadow-none rounded-none font-bold h-full flex items-center gap-1.5 transition-colors data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-1/2 data-[state=active]:after:-translate-x-1/2 data-[state=active]:after:w-14 data-[state=active]:after:h-1 data-[state=active]:after:bg-primary data-[state=active]:after:rounded-full"
@@ -2369,7 +2370,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         {/* Content area */}
         <div className="flex-1 overflow-hidden">
           <div>
-              <TabsContent value={activeTab} className="flex-1 m-0" ref={feedRef} forceMount>
+              <TabsContent value={activeTab} className="flex-1 m-0 -mt-px" ref={feedRef} forceMount>
           {/* Adsterra Banner Ad */}
           <AdsterraBannerAd />
           
@@ -2382,7 +2383,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           ) : (
             <>
               {currentPosts.map((post, index) => (
-                <div key={post.id} className="border-t border-border">
+                <div key={post.id}>
                   <PostCard
                     post={post}
                     addReply={addReply}
