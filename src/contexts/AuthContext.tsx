@@ -139,10 +139,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             const currentPath = window.location.pathname;
             
-            // Check if essential profile fields are complete
+            // Check if essential profile fields are complete (including country)
             supabase
               .from('profiles')
-              .select('display_name, handle')
+              .select('display_name, handle, country, avatar_url')
               .eq('id', session.user.id)
               .single()
               .then(({ data: profile, error }) => {
@@ -155,7 +155,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   return;
                 }
 
-                const hasEssentialFields = profile?.display_name && profile?.handle;
+                // All essential fields required: display_name, handle, country, and avatar_url
+                const hasEssentialFields = profile?.display_name && profile?.handle && profile?.country && profile?.avatar_url;
 
                 // If on landing/auth pages
                 if (currentPath === '/' || currentPath.startsWith('/auth')) {
