@@ -1,14 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { CustomLoader } from '@/components/ui/CustomLoader';
 import { Link, useNavigate } from 'react-router-dom';
-import { Heart, MessageSquare, UserPlus, Gift, Check, X, Eye, UserCheck, UserX } from 'lucide-react';
+import { Heart, MessageSquare, UserPlus, Gift, Check, X, Eye, UserCheck, UserX, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
 const TwitterVerifiedBadge = ({ size = 'w-4 h-4' }: { size?: string }) => (
   <svg viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg" className={`${size} ml-1`}>
     <path d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z" fill="#00C2CB" />
@@ -65,12 +64,15 @@ interface NotificationRowProps {
   onFollowBack: (actorId: string, handle: string) => void;
   isFollowingBack: string | null;
   followingIds: Set<string>;
+  onDelete: (id: string) => void;
+  isDeleting: string | null;
 }
 
-const NotificationRow = ({ notification, onFollowBack, isFollowingBack, followingIds }: NotificationRowProps) => {
+const NotificationRow = ({ notification, onFollowBack, isFollowingBack, followingIds, onDelete, isDeleting }: NotificationRowProps) => {
   const navigate = useNavigate();
   const { actor, post, type, created_at, post_id, actor_id } = notification;
   const isAlreadyFollowing = actor_id ? followingIds.has(actor_id) : false;
+  const isCurrentlyDeleting = isDeleting === notification.id;
 
   const renderIcon = () => {
     switch (type) {
@@ -192,7 +194,7 @@ const NotificationRow = ({ notification, onFollowBack, isFollowingBack, followin
   
   return (
     <div className={cn(
-      "flex items-start gap-3 sm:gap-4 p-3 sm:p-4 border-b border-border",
+      "flex items-start gap-3 sm:gap-4 p-3 sm:p-4 border-b border-border relative group",
       !notification.is_read && "bg-primary/5"
     )}>
       <Link to={`/profile/${actor.handle}`} onClick={(e) => e.stopPropagation()}>
@@ -222,6 +224,18 @@ const NotificationRow = ({ notification, onFollowBack, isFollowingBack, followin
           {new Date(created_at).toLocaleString('en-UG')}
         </p>
       </div>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(notification.id);
+        }}
+        disabled={isCurrentlyDeleting}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
     </div>
   );
 };
@@ -311,6 +325,8 @@ const Notifications = () => {
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [isFollowingBack, setIsFollowingBack] = useState<string | null>(null);
+  const [isDeletingNotification, setIsDeletingNotification] = useState<string | null>(null);
+  const [isClearingAll, setIsClearingAll] = useState(false);
   const [isProcessingRequest, setIsProcessingRequest] = useState<string | null>(null);
 
   const markAsRead = async () => {
@@ -326,6 +342,68 @@ const Notifications = () => {
       );
     } catch (error) {
       console.error('Error marking as read:', error);
+    }
+  };
+
+  // Deduplicate notifications - keep only the most recent per actor+type+post combination
+  const deduplicatedNotifications = useMemo(() => {
+    const seen = new Map<string, Notification>();
+    
+    for (const notification of notifications) {
+      // Create a unique key based on actor, type, and post (if applicable)
+      const key = `${notification.actor_id}-${notification.type}-${notification.post_id || 'no-post'}`;
+      
+      // Only keep the most recent notification for each key
+      if (!seen.has(key)) {
+        seen.set(key, notification);
+      }
+    }
+    
+    return Array.from(seen.values());
+  }, [notifications]);
+
+  const handleDeleteNotification = async (notificationId: string) => {
+    if (!user) return;
+    
+    setIsDeletingNotification(notificationId);
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+
+      if (error) throw error;
+
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      toast.success('Notification deleted');
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      toast.error('Failed to delete notification');
+    } finally {
+      setIsDeletingNotification(null);
+    }
+  };
+
+  const handleClearAllNotifications = async () => {
+    if (!user || notifications.length === 0) return;
+    
+    setIsClearingAll(true);
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setNotifications([]);
+      sessionStorage.removeItem('cachedNotifications');
+      toast.success('All notifications cleared');
+    } catch (error) {
+      console.error('Error clearing notifications:', error);
+      toast.error('Failed to clear notifications');
+    } finally {
+      setIsClearingAll(false);
     }
   };
 
@@ -551,12 +629,24 @@ const Notifications = () => {
     );
   }
 
-  const hasContent = notifications.length > 0 || followRequests.length > 0;
+  const hasContent = deduplicatedNotifications.length > 0 || followRequests.length > 0;
 
   return (
     <div className="h-full flex flex-col max-w-4xl mx-auto">
-      <div className="p-3 sm:p-4 md:p-5 border-b border-border">
+      <div className="p-3 sm:p-4 md:p-5 border-b border-border flex items-center justify-between">
         <h1 className="text-lg font-semibold">Notifications</h1>
+        {deduplicatedNotifications.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-muted-foreground hover:text-destructive"
+            onClick={handleClearAllNotifications}
+            disabled={isClearingAll}
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            {isClearingAll ? 'Clearing...' : 'Clear All'}
+          </Button>
+        )}
       </div>
       <div className="flex-1 overflow-y-auto">
         {!hasContent ? (
@@ -584,7 +674,7 @@ const Notifications = () => {
             )}
 
             {/* Notifications Section */}
-            {notifications.length > 0 && (
+            {deduplicatedNotifications.length > 0 && (
               <div>
                 {followRequests.length > 0 && (
                   <div className="px-4 py-2 bg-muted/50 border-b border-border">
@@ -593,13 +683,15 @@ const Notifications = () => {
                     </span>
                   </div>
                 )}
-                {notifications.map(n => (
+                {deduplicatedNotifications.map(n => (
                   <NotificationRow 
                     key={n.id} 
                     notification={n}
                     onFollowBack={handleFollowBack}
                     isFollowingBack={isFollowingBack}
                     followingIds={followingIds}
+                    onDelete={handleDeleteNotification}
+                    isDeleting={isDeletingNotification}
                   />
                 ))}
               </div>
