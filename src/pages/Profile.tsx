@@ -1215,22 +1215,10 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 										});
 									}}
 								>
-									{profile.display_name}
+								{profile.display_name}
 								</button>
 								
-								<AffiliatedBadge 
-									onClick={() => {
-										const fallbackDate = profile.affiliation_date || profile.created_at || new Date().toISOString();
-										setSelectedAffiliate({
-											userName: profile.display_name,
-											businessName: profile.affiliated_business?.display_name || 'Business',
-											affiliatedDate: fallbackDate,
-											businessLogo: profile.affiliated_business?.avatar_url || undefined
-										});
-									}}
-								/>
-								
-								<div 
+								<div
 									onClick={() => {
 										const fallbackDate = profile.affiliation_date || profile.created_at || new Date().toISOString();
 										setSelectedAffiliate({
