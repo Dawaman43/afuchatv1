@@ -255,21 +255,30 @@
     min-height: -webkit-fill-available;
   }
 
-  /* Typography refinements */
+  /* Typography refinements - X/Twitter style bold headers */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-outfit tracking-tight;
+    @apply font-outfit tracking-tight font-extrabold;
   }
 
   h1 {
-    @apply text-4xl font-bold;
+    @apply text-4xl font-black;
   }
 
   h2 {
-    @apply text-2xl font-semibold;
+    @apply text-2xl font-extrabold;
   }
 
   h3 {
-    @apply text-xl font-semibold;
+    @apply text-xl font-bold;
+  }
+
+  h4 {
+    @apply text-lg font-bold;
+  }
+
+  /* Bold text utility for headers */
+  .heading {
+    @apply font-extrabold tracking-tight;
   }
   
   /* Remove all click/tap markers and outlines */
