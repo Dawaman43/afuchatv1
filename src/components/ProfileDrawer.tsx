@@ -15,11 +15,6 @@ import {
   User,
   Crown,
   MessageSquare,
-  Users,
-  Bookmark,
-  List,
-  Mic,
-  Banknote,
   ChevronDown,
   Settings,
   HelpCircle,
@@ -29,7 +24,6 @@ import {
   Bot,
   Gift,
   Wallet,
-  Hash,
   Grid3x3,
   Store,
   TrendingUp,
@@ -138,7 +132,7 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
     { icon: MessageSquare, label: 'Chats', path: '/chats', requiresAuth: true },
     { icon: Gift, label: 'Gifts', path: '/gifts' },
     { icon: Wallet, label: 'Wallet', path: '/wallet', requiresAuth: true },
-    { icon: Hash, label: 'Trending', path: '/trending' },
+    { icon: Store, label: 'Shop', path: '/shop' },
     { icon: Grid3x3, label: 'Mini Programs', path: '/mini-programs' },
   ];
 
