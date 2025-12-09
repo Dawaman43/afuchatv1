@@ -64,11 +64,13 @@ interface NotificationRowProps {
   notification: Notification;
   onFollowBack: (actorId: string, handle: string) => void;
   isFollowingBack: string | null;
+  followingIds: Set<string>;
 }
 
-const NotificationRow = ({ notification, onFollowBack, isFollowingBack }: NotificationRowProps) => {
+const NotificationRow = ({ notification, onFollowBack, isFollowingBack, followingIds }: NotificationRowProps) => {
   const navigate = useNavigate();
   const { actor, post, type, created_at, post_id, actor_id } = notification;
+  const isAlreadyFollowing = actor_id ? followingIds.has(actor_id) : false;
 
   const renderIcon = () => {
     switch (type) {
@@ -139,18 +141,20 @@ const NotificationRow = ({ notification, onFollowBack, isFollowingBack }: Notifi
               <Eye className="h-3.5 w-3.5 mr-1" />
               View Profile
             </Button>
-            <Button
-              size="sm"
-              className="h-8 text-xs"
-              disabled={isFollowingBack === actor_id}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (actor_id) onFollowBack(actor_id, actor.handle);
-              }}
-            >
-              <UserPlus className="h-3.5 w-3.5 mr-1" />
-              {isFollowingBack === actor_id ? 'Following...' : 'Follow Back'}
-            </Button>
+            {!isAlreadyFollowing && (
+              <Button
+                size="sm"
+                className="h-8 text-xs"
+                disabled={isFollowingBack === actor_id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (actor_id) onFollowBack(actor_id, actor.handle);
+                }}
+              >
+                <UserPlus className="h-3.5 w-3.5 mr-1" />
+                {isFollowingBack === actor_id ? 'Following...' : 'Follow Back'}
+              </Button>
+            )}
           </div>
         );
       case 'gift':
@@ -304,6 +308,7 @@ const Notifications = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [followRequests, setFollowRequests] = useState<FollowRequest[]>([]);
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [isFollowingBack, setIsFollowingBack] = useState<string | null>(null);
   const [isProcessingRequest, setIsProcessingRequest] = useState<string | null>(null);
@@ -373,6 +378,8 @@ const Notifications = () => {
 
         if (error) throw error;
         toast.success(`You're now following @${handle}`);
+        // Update local state
+        setFollowingIds(prev => new Set([...prev, actorId]));
       }
     } catch (error) {
       console.error('Error following back:', error);
@@ -458,8 +465,8 @@ const Notifications = () => {
       }
 
       try {
-        // Fetch notifications and follow requests in parallel
-        const [notificationsResult, followRequestsResult] = await Promise.all([
+        // Fetch notifications, follow requests, and following list in parallel
+        const [notificationsResult, followRequestsResult, followingResult] = await Promise.all([
           supabase
             .from('notifications')
             .select(`
@@ -477,7 +484,11 @@ const Notifications = () => {
             `)
             .eq('target_id', user.id)
             .eq('status', 'pending')
-            .order('created_at', { ascending: false })
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('follows')
+            .select('following_id')
+            .eq('follower_id', user.id)
         ]);
 
         if (notificationsResult.error) {
@@ -491,6 +502,13 @@ const Notifications = () => {
           console.error('Error fetching follow requests:', followRequestsResult.error);
         } else if (followRequestsResult.data) {
           setFollowRequests(followRequestsResult.data as unknown as FollowRequest[]);
+        }
+
+        if (followingResult.error) {
+          console.error('Error fetching following:', followingResult.error);
+        } else if (followingResult.data) {
+          const ids = new Set(followingResult.data.map(f => f.following_id).filter(Boolean) as string[]);
+          setFollowingIds(ids);
         }
       } catch (err) {
         console.error('Unexpected error:', err);
@@ -581,6 +599,7 @@ const Notifications = () => {
                     notification={n}
                     onFollowBack={handleFollowBack}
                     isFollowingBack={isFollowingBack}
+                    followingIds={followingIds}
                   />
                 ))}
               </div>
