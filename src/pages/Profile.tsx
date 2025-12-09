@@ -792,8 +792,8 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 			return;
 		}
 
-		// For private accounts, use follow request system
-		if (profile?.is_private && !isFollowing) {
+		// For private accounts, use follow request system ONLY if they don't already follow us
+		if (profile?.is_private && !isFollowing && !isFollowedByProfile) {
 			handleFollowRequest();
 			return;
 		}
@@ -833,6 +833,42 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				toast.success(t('profile.follow'));
 			}
 		}
+	};
+
+	// Handle follow back for private accounts that already follow us
+	const handleFollowBack = async () => {
+		if (!user || !profileId) {
+			navigate('/auth');
+			return;
+		}
+
+		setIsRequestingFollow(true);
+		
+		// Optimistically update UI immediately
+		setIsFollowing(true);
+		setFollowCount(prev => ({
+			...prev,
+			followers: prev.followers + 1
+		}));
+
+		const { error } = await supabase
+			.from('follows')
+			.insert({ follower_id: user.id, following_id: profileId });
+
+		if (error) {
+			// Revert on error
+			setIsFollowing(false);
+			setFollowCount(prev => ({ ...prev, followers: prev.followers - 1 }));
+			toast.error(t('profile.failedToFollow'));
+		} else {
+			toast.success('You are now friends!');
+			// Fetch posts now that we're following
+			if (profileId) {
+				fetchUserPosts(profileId);
+			}
+		}
+		
+		setIsRequestingFollow(false);
 	};
 
 	const handleStartChat = async () => {
@@ -1061,7 +1097,17 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 								)}
 								{/* Show appropriate button based on follow state and private status */}
 								{profile?.is_private && !isFollowing ? (
-									followRequestStatus === 'pending' ? (
+									isFollowedByProfile ? (
+										// Private user follows us - show Follow Back
+										<Button
+											onClick={handleFollowBack}
+											className="rounded-full font-bold flex-1 px-8"
+											disabled={isRequestingFollow}
+										>
+											<UserPlus className="h-4 w-4 mr-2" />
+											{isRequestingFollow ? 'Following...' : 'Follow Back'}
+										</Button>
+									) : followRequestStatus === 'pending' ? (
 										<Button
 											variant="outline"
 											className="rounded-full font-bold px-4"
@@ -1344,7 +1390,9 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 							handle={profile.handle} 
 							requestStatus={followRequestStatus}
 							onFollowRequest={handleFollowRequest}
+							onFollowBack={handleFollowBack}
 							isLoading={isRequestingFollow}
+							isFollowedByProfile={isFollowedByProfile}
 						/>
 					</div>
 				) : (
