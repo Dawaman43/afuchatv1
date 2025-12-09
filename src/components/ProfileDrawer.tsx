@@ -174,8 +174,8 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
   }
 
   const settingsItems: MenuItem[] = [
-    { icon: Settings, label: 'Settings', path: '/settings', requiresAuth: true },
-    { icon: HelpCircle, label: 'Support', path: '/support' },
+    { icon: Settings, label: 'Settings and privacy', path: '/settings', requiresAuth: true },
+    { icon: HelpCircle, label: 'Help Center', path: '/support' },
   ];
 
   const renderMenuItem = (item: MenuItem) => {
