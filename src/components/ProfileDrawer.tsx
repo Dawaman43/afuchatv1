@@ -8,9 +8,16 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Button } from '@/components/ui/button';
 import {
   User,
   Crown,
@@ -28,6 +35,11 @@ import {
   Store,
   TrendingUp,
   Briefcase,
+  MoreVertical,
+  Check,
+  Plus,
+  UserPlus,
+  LogOut,
 } from 'lucide-react';
 import { VerifiedBadge } from './VerifiedBadge';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
@@ -54,6 +66,7 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
   const { isPremium } = usePremiumStatus();
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [accountsDrawerOpen, setAccountsDrawerOpen] = useState(false);
   const [profile, setProfile] = useState<{
     display_name: string;
     handle: string;
@@ -202,6 +215,7 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
   };
 
   return (
+    <>
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         {trigger}
@@ -230,10 +244,16 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
                     </AvatarFallback>
                   </Avatar>
                 </button>
-                {/* Account switcher placeholder */}
-                <div className="flex items-center gap-2">
-                  {/* Future: multiple accounts */}
-                </div>
+                {/* Account switcher button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAccountsDrawerOpen(true);
+                  }}
+                  className="p-2 hover:bg-muted/50 rounded-full transition-colors"
+                >
+                  <MoreVertical className="h-5 w-5" />
+                </button>
               </div>
               
               <button 
@@ -325,5 +345,81 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
         </div>
       </SheetContent>
     </Sheet>
+
+    {/* Accounts Bottom Sheet */}
+    <Drawer open={accountsDrawerOpen} onOpenChange={setAccountsDrawerOpen}>
+      <DrawerContent className="max-h-[80vh]">
+        <DrawerHeader className="text-left">
+          <DrawerTitle className="text-xl font-bold">Accounts</DrawerTitle>
+        </DrawerHeader>
+        <div className="px-4 pb-6 space-y-2">
+          {/* Current Account */}
+          {profile && (
+            <button
+              className="flex items-center gap-3 w-full p-3 hover:bg-muted/50 rounded-lg transition-colors"
+              onClick={() => setAccountsDrawerOpen(false)}
+            >
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={profile.avatar_url || undefined} />
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {profile.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 text-left">
+                <p className="font-semibold">{profile.display_name}</p>
+                <p className="text-sm text-muted-foreground">@{profile.handle}</p>
+              </div>
+              <Check className="h-5 w-5 text-primary" />
+            </button>
+          )}
+
+          <Separator className="my-4" />
+
+          {/* Create new account */}
+          <Button
+            variant="outline"
+            className="w-full justify-center py-6 text-base"
+            onClick={() => {
+              setAccountsDrawerOpen(false);
+              setOpen(false);
+              navigate('/auth/signup');
+            }}
+          >
+            Create a new account
+          </Button>
+
+          {/* Add existing account */}
+          <Button
+            variant="outline"
+            className="w-full justify-center py-6 text-base"
+            onClick={() => {
+              setAccountsDrawerOpen(false);
+              setOpen(false);
+              navigate('/auth');
+            }}
+          >
+            Add an existing account
+          </Button>
+
+          {/* Logout */}
+          {user && (
+            <Button
+              variant="ghost"
+              className="w-full justify-center py-6 text-base text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                setAccountsDrawerOpen(false);
+                setOpen(false);
+                navigate('/');
+              }}
+            >
+              <LogOut className="h-5 w-5 mr-2" />
+              Log out @{profile?.handle}
+            </Button>
+          )}
+        </div>
+      </DrawerContent>
+    </Drawer>
+    </>
   );
 }
