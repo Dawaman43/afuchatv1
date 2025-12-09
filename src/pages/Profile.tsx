@@ -38,6 +38,7 @@ import { getCountryFlag } from '@/lib/countryFlags';
 import { PrivateProfileOverlay } from '@/components/PrivateProfileOverlay';
 import { FollowRequestsSheet } from '@/components/FollowRequestsSheet';
 import UserActionsSheet from '@/components/UserActionsSheet';
+import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
 
 interface Profile {
 	id: string;
@@ -74,6 +75,22 @@ interface Post {
 	created_at: string;
 	acknowledgment_count: number;
 	reply_count: number;
+	quoted_post_id?: string | null;
+	quoted_post?: {
+		id: string;
+		content: string;
+		created_at: string;
+		author_id: string;
+		image_url?: string | null;
+		post_images?: Array<{ image_url: string; display_order: number; alt_text?: string }>;
+		profiles: {
+			display_name: string;
+			handle: string;
+			is_verified: boolean;
+			is_organization_verified: boolean;
+			avatar_url?: string | null;
+		};
+	} | null;
 	post_images?: Array<{
 		image_url: string;
 		alt_text: string | null;
@@ -636,6 +653,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 				id, 
 				content, 
 				created_at,
+				quoted_post_id,
 				post_images (
 					image_url,
 					alt_text,
@@ -654,8 +672,28 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 			.limit(20);
 
 		if (!error && data) {
+			// Fetch quoted posts if any
+			const quotedPostIds = data.filter(p => p.quoted_post_id).map(p => p.quoted_post_id);
+			let quotedPostsMap = new Map();
+			
+			if (quotedPostIds.length > 0) {
+				const { data: quotedPostsData } = await supabase
+					.from('posts')
+					.select(`
+						id, content, created_at, author_id, image_url,
+						post_images(image_url, display_order, alt_text),
+						profiles(display_name, handle, is_verified, is_organization_verified, avatar_url)
+					`)
+					.in('id', quotedPostIds);
+				
+				if (quotedPostsData) {
+					quotedPostsData.forEach((qp: any) => quotedPostsMap.set(qp.id, qp));
+				}
+			}
+
 			const processedPosts = data.map(p => ({
 				...p,
+				quoted_post: p.quoted_post_id ? quotedPostsMap.get(p.quoted_post_id) : null,
 				acknowledgment_count: Math.floor(Math.random() * 100),
 				reply_count: Math.floor(Math.random() * 10),
 			} as Post));
@@ -1468,7 +1506,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 												showStoryRing={true}
 											/>
 											<div className="flex-1 min-w-0">
-												<ContentParser content={post.content} />
+											<ContentParser content={post.content} />
 												{post.post_images && post.post_images.length > 0 && (
 													<div className="mt-3">
 														<ImageCarousel
@@ -1477,6 +1515,9 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 																.map((img) => ({ url: img.image_url, alt: img.alt_text || 'Post image' }))}
 														/>
 													</div>
+												)}
+												{post.quoted_post && (
+													<QuotedPostCard quotedPost={post.quoted_post} />
 												)}
 												<div className="flex justify-between items-center text-xs text-muted-foreground mt-2">
 													<span>
