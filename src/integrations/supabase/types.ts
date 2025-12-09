@@ -1214,6 +1214,27 @@ export type Database = {
         }
         Relationships: []
       }
+      linked_accounts: {
+        Row: {
+          id: string
+          linked_at: string
+          linked_user_id: string
+          primary_user_id: string
+        }
+        Insert: {
+          id?: string
+          linked_at?: string
+          linked_user_id: string
+          primary_user_id: string
+        }
+        Update: {
+          id?: string
+          linked_at?: string
+          linked_user_id?: string
+          primary_user_id?: string
+        }
+        Relationships: []
+      }
       login_history: {
         Row: {
           created_at: string | null
