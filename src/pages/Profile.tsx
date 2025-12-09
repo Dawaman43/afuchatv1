@@ -1201,7 +1201,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 									<Lock className="h-4 w-4 text-muted-foreground/50" />
 								</div>
 							</div>
-						) : profile.is_affiliate ? (
+					) : profile.is_affiliate ? (
 							<div className="flex items-center gap-1">
 								<button 
 									className="text-xl font-extrabold leading-tight hover:underline"
@@ -1218,19 +1218,17 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 									{profile.display_name}
 								</button>
 								
-								{profile.is_business_mode && (
-									<AffiliatedBadge 
-										onClick={() => {
-											const fallbackDate = profile.affiliation_date || profile.created_at || new Date().toISOString();
-											setSelectedAffiliate({
-												userName: profile.display_name,
-												businessName: profile.affiliated_business?.display_name || 'Business',
-												affiliatedDate: fallbackDate,
-												businessLogo: profile.affiliated_business?.avatar_url || undefined
-											});
-										}}
-									/>
-								)}
+								<AffiliatedBadge 
+									onClick={() => {
+										const fallbackDate = profile.affiliation_date || profile.created_at || new Date().toISOString();
+										setSelectedAffiliate({
+											userName: profile.display_name,
+											businessName: profile.affiliated_business?.display_name || 'Business',
+											affiliatedDate: fallbackDate,
+											businessLogo: profile.affiliated_business?.avatar_url || undefined
+										});
+									}}
+								/>
 								
 								<div 
 									onClick={() => {
