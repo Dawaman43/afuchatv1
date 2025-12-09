@@ -98,27 +98,33 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
   const fetchLinkedAccounts = useCallback(async () => {
     if (!user) return;
     
-    const { data, error } = await supabase
+    // Query both directions - where user is primary OR where user is linked
+    const { data: asPrimary } = await supabase
       .from('linked_accounts')
       .select('id, linked_user_id')
       .eq('primary_user_id', user.id);
     
-    if (error) {
-      console.error('Error fetching linked accounts:', error);
-      return;
-    }
+    const { data: asLinked } = await supabase
+      .from('linked_accounts')
+      .select('id, primary_user_id')
+      .eq('linked_user_id', user.id);
 
-    if (data && data.length > 0) {
-      // Fetch profiles for linked accounts
-      const linkedUserIds = data.map(d => d.linked_user_id);
+    // Combine both - get the "other" user ID from each link
+    const allLinkedUserIds = new Set<string>();
+    asPrimary?.forEach(d => allLinkedUserIds.add(d.linked_user_id));
+    asLinked?.forEach(d => allLinkedUserIds.add(d.primary_user_id));
+
+    if (allLinkedUserIds.size > 0) {
+      const linkedUserIdsArray = Array.from(allLinkedUserIds);
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, display_name, handle, avatar_url')
-        .in('id', linkedUserIds);
+        .in('id', linkedUserIdsArray);
 
-      const accountsWithProfiles = data.map(account => ({
-        ...account,
-        profile: profiles?.find(p => p.id === account.linked_user_id) || null
+      const accountsWithProfiles = linkedUserIdsArray.map(linkedUserId => ({
+        id: linkedUserId,
+        linked_user_id: linkedUserId,
+        profile: profiles?.find(p => p.id === linkedUserId) || null
       }));
 
       setLinkedAccounts(accountsWithProfiles);
