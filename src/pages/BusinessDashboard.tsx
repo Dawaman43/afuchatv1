@@ -369,9 +369,19 @@ const BusinessDashboard = () => {
                     <Card key={affiliate.id} className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Users className="h-6 w-6 text-primary" />
-                          </div>
+                          {affiliate.avatar_url ? (
+                            <img 
+                              src={affiliate.avatar_url} 
+                              alt={affiliate.display_name}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-lg font-semibold text-primary">
+                                {affiliate.display_name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
                           <div>
                             <div className="flex items-center gap-2 mb-1">
                               <h3 className="font-semibold">{affiliate.display_name}</h3>
@@ -386,7 +396,7 @@ const BusinessDashboard = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => navigate(`/${affiliate.id}`)}
+                          onClick={() => navigate(`/${affiliate.handle}`)}
                         >
                           View Profile
                         </Button>
