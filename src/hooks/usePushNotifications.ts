@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 
 export const usePushNotifications = () => {
   const { user } = useAuth();
@@ -129,54 +128,68 @@ export const usePushNotifications = () => {
           if (notification.actor_id === user.id) return;
           
           // Fetch actor details
-          const { data: actor } = await supabase
-            .from('profiles')
-            .select('display_name, handle, avatar_url')
-            .eq('id', notification.actor_id)
-            .single();
-
-          const actorName = actor?.display_name || actor?.handle || 'Someone';
+          let actorName = 'Someone';
+          let actorAvatar = '/favicon.png';
           
-          let title = 'AfuChat';
-          let body = 'You have a new notification';
+          if (notification.actor_id) {
+            const { data: actor } = await supabase
+              .from('profiles')
+              .select('display_name, handle, avatar_url')
+              .eq('id', notification.actor_id)
+              .single();
+            
+            if (actor) {
+              actorName = actor.display_name || `@${actor.handle}` || 'Someone';
+              actorAvatar = actor.avatar_url || '/favicon.png';
+            }
+          }
+          
+          let title = '';
+          let body = '';
           let url = '/notifications';
 
           switch (notification.type) {
             case 'like':
-              title = 'New Like';
+              title = '❤️ New Like';
               body = `${actorName} liked your post`;
               url = notification.post_id ? `/post/${notification.post_id}` : '/notifications';
               break;
             case 'follow':
-              title = 'New Follower';
+              title = '👤 New Follower';
               body = `${actorName} started following you`;
               url = `/${notification.actor_id}`;
               break;
             case 'reply':
-              title = 'New Reply';
+              title = '💬 New Reply';
               body = `${actorName} replied to your post`;
               url = notification.post_id ? `/post/${notification.post_id}` : '/notifications';
               break;
             case 'mention':
-              title = 'New Mention';
+              title = '📢 You were mentioned';
               body = `${actorName} mentioned you in a post`;
               url = notification.post_id ? `/post/${notification.post_id}` : '/notifications';
               break;
             case 'gift':
-              title = 'New Gift';
+              title = '🎁 New Gift!';
               body = `${actorName} sent you a gift`;
               url = '/gifts';
               break;
             case 'follow_request':
-              title = 'Follow Request';
+              title = '🔔 Follow Request';
               body = `${actorName} wants to follow you`;
               url = '/notifications';
               break;
+            default:
+              title = '🔔 AfuChat';
+              body = `${actorName} interacted with you`;
+              break;
           }
 
+          console.log('Sending notification:', title, body);
+          
           showNotification(title, {
             body,
-            icon: actor?.avatar_url || '/favicon.png',
+            icon: actorAvatar,
             tag: `notification-${notification.id}`,
             data: { url },
           });
@@ -220,11 +233,26 @@ export const usePushNotifications = () => {
             .eq('id', message.sender_id)
             .single();
 
-          const senderName = sender?.display_name || sender?.handle || 'Someone';
+          const senderName = sender?.display_name || `@${sender?.handle}` || 'Someone';
+          const senderAvatar = sender?.avatar_url || '/favicon.png';
           
-          showNotification('New Message', {
-            body: `${senderName}: ${message.encrypted_content.substring(0, 50)}${message.encrypted_content.length > 50 ? '...' : ''}`,
-            icon: sender?.avatar_url || '/favicon.png',
+          // Get message preview
+          const messagePreview = message.encrypted_content?.length > 50 
+            ? `${message.encrypted_content.substring(0, 50)}...` 
+            : message.encrypted_content || 'Sent you a message';
+          
+          const title = `💬 ${senderName}`;
+          const body = message.attachment_url 
+            ? '📎 Sent an attachment' 
+            : message.audio_url 
+              ? '🎤 Sent a voice message'
+              : messagePreview;
+          
+          console.log('Sending message notification:', title, body);
+          
+          showNotification(title, {
+            body,
+            icon: senderAvatar,
             tag: `message-${message.id}`,
             data: { url: `/chat/${message.chat_id}` },
           });
