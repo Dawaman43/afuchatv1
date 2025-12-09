@@ -1,4 +1,4 @@
-import { Lock, UserX, Clock, Check } from 'lucide-react';
+import { Lock, UserX, Clock, Check, UserPlus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,14 +9,18 @@ interface PrivateProfileOverlayProps {
   handle: string;
   requestStatus?: 'none' | 'pending' | 'approved' | 'rejected';
   onFollowRequest?: () => void;
+  onFollowBack?: () => void;
   isLoading?: boolean;
+  isFollowedByProfile?: boolean; // Does the private user follow the current user?
 }
 
 export const PrivateProfileOverlay = ({ 
   handle, 
   requestStatus = 'none',
   onFollowRequest,
-  isLoading = false
+  onFollowBack,
+  isLoading = false,
+  isFollowedByProfile = false
 }: PrivateProfileOverlayProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -30,6 +34,20 @@ export const PrivateProfileOverlay = ({
           className="mt-2 rounded-full px-6"
         >
           Sign in to Follow
+        </Button>
+      );
+    }
+
+    // If the private user follows the current user, show "Follow Back" instead of "Request"
+    if (isFollowedByProfile && requestStatus === 'none') {
+      return (
+        <Button 
+          onClick={onFollowBack}
+          className="mt-2 rounded-full px-6"
+          disabled={isLoading}
+        >
+          <UserPlus className="h-4 w-4 mr-2" />
+          {isLoading ? 'Following...' : 'Follow Back'}
         </Button>
       );
     }
@@ -85,6 +103,14 @@ export const PrivateProfileOverlay = ({
     }
   };
 
+  // Different message based on whether the private user follows current user
+  const getMessage = () => {
+    if (isFollowedByProfile && requestStatus === 'none') {
+      return `@${handle} follows you. Follow back to see their posts, photos, and other content.`;
+    }
+    return `Follow @${handle} to see their posts, photos, and other content.`;
+  };
+
   return (
     <Card className="p-8 text-center bg-muted/30 border-dashed border-2 border-muted-foreground/20">
       <div className="flex flex-col items-center gap-4">
@@ -94,9 +120,10 @@ export const PrivateProfileOverlay = ({
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">This Account is Private</h3>
           <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-            Follow @{handle} to see their posts, photos, and other content.
+            {getMessage()}
           </p>
         </div>
+        {renderActionButton()}
       </div>
     </Card>
   );
