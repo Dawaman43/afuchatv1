@@ -39,8 +39,8 @@ import { SEO } from '@/components/SEO';
 import { NativeAdCard } from '@/components/ads/NativeAdCard';
 import { AdsterraBannerAd } from '@/components/ads/AdsterraBannerAd';
 import { AdsterraNativeAdCard } from '@/components/ads/AdsterraNativeAdCard';
+import { ProfileDrawer } from '@/components/ProfileDrawer';
 import { cn } from '@/lib/utils';
-
 // --- INTERFACES ---
 
 // NEW: Define AuthUser interface for type safety (must match the one in PostActionsSheet.tsx)
@@ -2307,14 +2307,18 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         isScrollingDown ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
       )}>
         <div className="flex items-center justify-between px-4 py-3">
-          <Link to={user ? `/${user.id}` : '/auth'} className="flex-shrink-0">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={userProfile?.avatar_url || undefined} />
-              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-          </Link>
+          <ProfileDrawer
+            trigger={
+              <button className="flex-shrink-0">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={userProfile?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            }
+          />
           <img src={platformLogo} alt="AfuChat" className="h-8 w-8" />
           <div className="flex items-center gap-2">
             <button
