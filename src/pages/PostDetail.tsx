@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { NestedReplyItem } from '@/components/post-detail/NestedReplyItem';
 import { ViewsAnalyticsSheet } from '@/components/ViewsAnalyticsSheet';
+import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
 // Note: Verified Badge components must be imported or defined here
 
 // --- START: Verified Badge Components (Unchanged) ---
@@ -140,6 +141,21 @@ interface Post {
     image_url?: string | null;
     site_name?: string | null;
   }>;
+  quoted_post?: {
+    id: string;
+    content: string;
+    created_at: string;
+    author_id: string;
+    image_url?: string | null;
+    post_images?: Array<{ image_url: string; display_order: number; alt_text?: string }>;
+    profiles: {
+      display_name: string;
+      handle: string;
+      is_verified: boolean;
+      is_organization_verified: boolean;
+      avatar_url?: string | null;
+    };
+  } | null;
   likes_count: number;
   replies_count: number;
   view_count: number;
@@ -215,7 +231,7 @@ const PostDetail = () => {
       const postPromise = supabase
         .from('posts')
         .select(`
-          id, content, created_at, image_url, view_count,
+          id, content, created_at, image_url, view_count, quoted_post_id,
           profiles!inner (id, display_name, handle, is_verified, is_organization_verified),
           post_images(image_url, display_order, alt_text),
           post_link_previews(url, title, description, image_url, site_name)
@@ -249,6 +265,24 @@ const PostDetail = () => {
       const likesCount = likesResult.count || 0;
       const repliesCount = repliesResult.data?.length || 0;
 
+      // Fetch quoted post if exists
+      let quotedPost = null;
+      if (postData.quoted_post_id) {
+        const { data: quotedPostData } = await supabase
+          .from('posts')
+          .select(`
+            id, content, created_at, author_id, image_url,
+            post_images(image_url, display_order, alt_text),
+            profiles(display_name, handle, is_verified, is_organization_verified, avatar_url)
+          `)
+          .eq('id', postData.quoted_post_id)
+          .single();
+        
+        if (quotedPostData) {
+          quotedPost = quotedPostData;
+        }
+      }
+
       setPost({
         id: postData.id,
         content: postData.content,
@@ -256,6 +290,7 @@ const PostDetail = () => {
         image_url: postData.image_url || null,
         post_images: postData.post_images || [],
         post_link_previews: postData.post_link_previews || [],
+        quoted_post: quotedPost,
         likes_count: likesCount,
         replies_count: repliesCount,
         view_count: postData.view_count || 0,
@@ -586,6 +621,11 @@ const PostDetail = () => {
                 }
                 className="mb-4"
               />
+            )}
+
+            {/* Quoted Post */}
+            {post.quoted_post && (
+              <QuotedPostCard quotedPost={post.quoted_post} className="mb-4" />
             )}
             
             {post.post_link_previews && post.post_link_previews.length > 0 && (
