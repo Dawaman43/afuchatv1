@@ -375,31 +375,59 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
 
           <Separator className="my-4" />
 
-          {/* Create new account */}
-          <Button
-            variant="outline"
-            className="w-full justify-center py-6 text-base"
-            onClick={() => {
-              setAccountsDrawerOpen(false);
-              setOpen(false);
-              navigate('/auth/signup');
-            }}
-          >
-            Create a new account
-          </Button>
+          {/* Premium Gate for Multi-Account */}
+          {!isPremium ? (
+            <div className="space-y-4">
+              <div className="text-center p-4 bg-muted/30 rounded-lg border border-border">
+                <Crown className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
+                <h3 className="font-semibold text-lg mb-1">Premium Feature</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Add multiple accounts and switch between them instantly with Premium.
+                </p>
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    setAccountsDrawerOpen(false);
+                    setOpen(false);
+                    navigate('/premium');
+                  }}
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  Upgrade to Premium
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Create new account */}
+              <Button
+                variant="outline"
+                className="w-full justify-center py-6 text-base"
+                onClick={() => {
+                  setAccountsDrawerOpen(false);
+                  setOpen(false);
+                  navigate('/auth/signup');
+                }}
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Create a new account
+              </Button>
 
-          {/* Add existing account */}
-          <Button
-            variant="outline"
-            className="w-full justify-center py-6 text-base"
-            onClick={() => {
-              setAccountsDrawerOpen(false);
-              setOpen(false);
-              navigate('/auth');
-            }}
-          >
-            Add an existing account
-          </Button>
+              {/* Add existing account */}
+              <Button
+                variant="outline"
+                className="w-full justify-center py-6 text-base"
+                onClick={() => {
+                  setAccountsDrawerOpen(false);
+                  setOpen(false);
+                  navigate('/auth');
+                }}
+              >
+                <UserPlus className="h-5 w-5 mr-2" />
+                Add an existing account
+              </Button>
+            </>
+          )}
 
           {/* Logout */}
           {user && (
