@@ -40,6 +40,7 @@ import {
   Plus,
   UserPlus,
   LogOut,
+  Unlink,
 } from 'lucide-react';
 import { VerifiedBadge } from './VerifiedBadge';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
@@ -228,6 +229,27 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
     } catch (error) {
       console.error('Switch account error:', error);
       toast.error('Failed to switch account');
+    }
+  };
+
+  const handleUnlinkAccount = async (linkedUserId: string) => {
+    try {
+      // Delete both directions of the link
+      await supabase
+        .from('linked_accounts')
+        .delete()
+        .or(`and(primary_user_id.eq.${user?.id},linked_user_id.eq.${linkedUserId}),and(primary_user_id.eq.${linkedUserId},linked_user_id.eq.${user?.id})`);
+      
+      // Remove stored session for this account
+      const storedSessions = JSON.parse(localStorage.getItem('afuchat_linked_sessions') || '{}');
+      delete storedSessions[linkedUserId];
+      localStorage.setItem('afuchat_linked_sessions', JSON.stringify(storedSessions));
+      
+      toast.success('Account unlinked successfully');
+      fetchLinkedAccounts();
+    } catch (error) {
+      console.error('Unlink error:', error);
+      toast.error('Failed to unlink account');
     }
   };
 
@@ -527,22 +549,37 @@ export function ProfileDrawer({ trigger }: ProfileDrawerProps) {
             <>
               {/* Linked accounts list */}
               {linkedAccounts.map((account) => (
-                <button
+                <div
                   key={account.id}
                   className="flex items-center gap-3 w-full p-3 hover:bg-muted/50 rounded-lg transition-colors"
-                  onClick={() => handleSwitchAccount(account.linked_user_id)}
                 >
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={account.profile?.avatar_url || undefined} />
-                    <AvatarFallback className="bg-muted text-muted-foreground">
-                      {account.profile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 text-left">
-                    <p className="font-semibold">{account.profile?.display_name || 'Unknown'}</p>
-                    <p className="text-sm text-muted-foreground">@{account.profile?.handle || 'unknown'}</p>
-                  </div>
-                </button>
+                  <button
+                    className="flex items-center gap-3 flex-1"
+                    onClick={() => handleSwitchAccount(account.linked_user_id)}
+                  >
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={account.profile?.avatar_url || undefined} />
+                      <AvatarFallback className="bg-muted text-muted-foreground">
+                        {account.profile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 text-left">
+                      <p className="font-semibold">{account.profile?.display_name || 'Unknown'}</p>
+                      <p className="text-sm text-muted-foreground">@{account.profile?.handle || 'unknown'}</p>
+                    </div>
+                  </button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleUnlinkAccount(account.linked_user_id);
+                    }}
+                  >
+                    <Unlink className="h-4 w-4" />
+                  </Button>
+                </div>
               ))}
 
               {linkedAccounts.length > 0 && <Separator className="my-2" />}
