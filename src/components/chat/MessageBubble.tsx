@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Check, CheckCheck, Play, Pause } from 'lucide-react';
+import { Check, CheckCheck, Play, Pause, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AttachmentPreview } from './AttachmentPreview';
 import { useState, useRef, useCallback } from 'react';
@@ -139,7 +139,7 @@ interface MessageBubbleProps {
   onReply: (message: Message) => void;
   onReaction: (messageId: string, emoji: string) => void;
   onToggleAudio: () => void;
-  audioPlayerState: { isPlaying: boolean };
+  audioPlayerState: { isPlaying: boolean; duration?: number; currentTime?: number };
   onEdit?: (messageId: string, newContent: string) => void;
   onDelete?: (messageId: string) => void;
   bubbleStyle?: 'rounded' | 'square' | 'minimal';
@@ -171,6 +171,29 @@ export const MessageBubble = ({
   const time = new Date(message.sent_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   const isVoice = !!message.audio_url;
   const hasAttachment = !!message.attachment_url;
+
+  const formatAudioTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleVoiceDownload = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `voice-message-${Date.now()}.webm`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(downloadUrl);
+      document.body.removeChild(a);
+    } catch (error) {
+      toast.error('Download failed');
+    }
+  };
   
   // Check read/delivered status for own messages
   const hasStatus = message.message_status && message.message_status.length > 0;
@@ -343,24 +366,48 @@ export const MessageBubble = ({
             </div>
           </>
         ) : isVoice ? (
-          <div className="flex items-center gap-2 pl-1.5 pr-2 py-1">
+          <div className="flex items-center gap-2 pl-1.5 pr-2 py-1.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-8 w-8 rounded-full flex-shrink-0 ${
+                isOwn ? 'hover:bg-primary-foreground/20' : 'hover:bg-primary/10'
+              }`}
+              onClick={onToggleAudio}
+            >
+              {audioPlayerState?.isPlaying ? (
+                <Pause className="h-4 w-4" />
+              ) : (
+                <Play className="h-4 w-4 ml-0.5" />
+              )}
+            </Button>
+            <div className="flex flex-col flex-1 min-w-[80px] gap-0.5">
+              <div className="h-1 flex-1 bg-current opacity-30 rounded-full overflow-hidden">
+                {audioPlayerState?.duration ? (
+                  <div 
+                    className="h-full bg-current opacity-70 rounded-full transition-all"
+                    style={{ width: `${((audioPlayerState.currentTime || 0) / audioPlayerState.duration) * 100}%` }}
+                  />
+                ) : null}
+              </div>
+              <span className="text-[10px] opacity-70">
+                {audioPlayerState?.isPlaying && audioPlayerState?.currentTime != null
+                  ? formatAudioTime(audioPlayerState.currentTime)
+                  : audioPlayerState?.duration 
+                    ? formatAudioTime(audioPlayerState.duration)
+                    : '0:00'}
+              </span>
+            </div>
             <Button
               variant="ghost"
               size="icon"
               className={`h-7 w-7 rounded-full flex-shrink-0 ${
                 isOwn ? 'hover:bg-primary-foreground/20' : 'hover:bg-primary/10'
               }`}
-              onClick={onToggleAudio}
+              onClick={() => handleVoiceDownload(message.audio_url!)}
             >
-              {audioPlayerState?.isPlaying ? (
-                <Pause className="h-3.5 w-3.5" />
-              ) : (
-                <Play className="h-3.5 w-3.5 ml-0.5" />
-              )}
+              <Download className="h-3.5 w-3.5" />
             </Button>
-            <div className="flex items-center gap-2 flex-1 min-w-[80px]">
-              <div className="h-0.5 flex-1 bg-current opacity-30 rounded-full" />
-            </div>
             <div className="flex items-center gap-0.5">
               <span className="text-[10px] opacity-70">{time}</span>
               <ReadStatus />
