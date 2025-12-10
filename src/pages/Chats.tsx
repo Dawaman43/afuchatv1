@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Search, CheckCheck, Settings, Users, Check } from 'lucide-react';
+import { Search, Users, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CustomLoader } from '@/components/ui/CustomLoader';
 import NewChatDialog from '@/components/ui/NewChatDialog';
@@ -12,6 +12,7 @@ import { ChatSettingsSheet } from '@/components/chat/ChatSettingsSheet';
 import { UserAvatar } from '@/components/avatar/UserAvatar';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { Input } from '@/components/ui/input';
+import { ChatStoriesHeader } from '@/components/chat/ChatStoriesHeader';
 
 interface Chat {
   id: string;
@@ -338,62 +339,28 @@ const Chats = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background relative overflow-hidden">
-      {/* X-style Header */}
-      <div className="flex-shrink-0 bg-background border-b border-border">
-        {/* Top row: Avatar + Title + Settings */}
-        <div className="flex items-center justify-between px-4 h-14">
-          <button 
-            onClick={() => navigate(`/@${currentUserProfile?.display_name?.toLowerCase().replace(/\s/g, '') || 'profile'}`)}
-            className="flex-shrink-0"
-          >
-            <UserAvatar
-              userId={user?.id || 'unknown'}
-              avatarUrl={currentUserProfile?.avatar_url}
-              name={currentUserProfile?.display_name || 'User'}
-              size={32}
-            />
-          </button>
-          
-          <h1 className="text-xl font-bold text-foreground">Chat</h1>
-          
-          <button 
-            onClick={() => setIsSettingsOpen(true)}
-            className="p-2 hover:bg-muted/50 rounded-full transition-colors"
-          >
-            <Settings className="h-5 w-5 text-foreground" />
-          </button>
-        </div>
+      {/* Stories Header */}
+      <ChatStoriesHeader 
+        shouldCollapse={!showFab}
+        onToggleCollapse={() => setShowFab(!showFab)}
+        onSearch={(query) => setSearchQuery(query)}
+      />
 
-        {/* Search Bar */}
-        <div className="px-4 pb-3">
-          <div className="flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground h-6 px-0 text-sm"
-            />
-          </div>
-        </div>
-
-        {/* Filter Tabs */}
-        <div className="flex items-center gap-2 px-4 pb-3 overflow-x-auto scrollbar-hide">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
-                activeTab === tab.key
-                  ? 'bg-foreground text-background'
-                  : 'bg-transparent border border-border text-foreground hover:bg-muted/50'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+      {/* Filter Tabs */}
+      <div className="flex-shrink-0 flex items-center gap-2 px-4 py-3 bg-background border-b border-border overflow-x-auto scrollbar-hide">
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+              activeTab === tab.key
+                ? 'bg-foreground text-background'
+                : 'bg-transparent border border-border text-foreground hover:bg-muted/50'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Chat List */}
