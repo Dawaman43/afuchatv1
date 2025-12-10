@@ -154,7 +154,7 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
     <>
       <ChatMenuDrawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
       
-      <div className="sticky top-0 z-50 bg-background border-b border-border">
+      <div className="flex-shrink-0 bg-background border-b border-border">
         {/* Header */}
         <div className="flex items-center justify-between px-4 h-14">
           {isSearchOpen ? (
