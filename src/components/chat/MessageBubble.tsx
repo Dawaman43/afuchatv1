@@ -308,32 +308,15 @@ export const MessageBubble = ({
         isLastInGroup ? 'mb-1' : 'mb-px'
       }`}
     >
-      {/* --- Message Bubble --- */}
       <div
-        className={`relative ${
+        className={`${
           isOwn
             ? 'bg-primary text-primary-foreground'
             : 'bg-muted text-foreground'
         } ${getBubbleRadius()} max-w-[85%]`}
       >
-        {/* --- Reply Preview (minimal) --- */}
-        {repliedMessage && (
-          <div className={`mx-1 mt-1 rounded-md overflow-hidden border-l-2 ${
-            isOwn 
-              ? 'bg-primary-foreground/10 border-primary-foreground/50' 
-              : 'bg-background/40 border-primary/60'
-          }`}>
-            <p className={`px-2 py-1 text-xs truncate ${
-              isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'
-            }`}>
-              {repliedMessage.audio_url ? '🎤 Voice message' : repliedMessage.encrypted_content}
-            </p>
-          </div>
-        )}
-        
-        {/* --- Main Content --- */}
         {hasAttachment ? (
-          <div className="p-0.5">
+          <>
             <AttachmentPreview
               url={message.attachment_url!}
               type={message.attachment_type || ''}
@@ -346,19 +329,15 @@ export const MessageBubble = ({
               }
             />
             {message.encrypted_content && (
-              <div className="px-2 pb-0.5 pt-1">
-                <p className="leading-snug whitespace-pre-wrap break-words" style={{ fontSize: `${fontSize}px` }}>
-                  {parseMessageContent(message.encrypted_content)}
-                </p>
-              </div>
+              <p className="px-2 py-1 leading-snug whitespace-pre-wrap break-words" style={{ fontSize: `${fontSize}px` }}>
+                {parseMessageContent(message.encrypted_content)}
+              </p>
             )}
-            {/* Timestamp inside for attachments */}
-            <div className="flex items-center gap-1 px-2 pb-1 justify-end">
-              {message.edited_at && <span className="text-[10px] opacity-60">edited</span>}
+            <div className="flex items-center gap-0.5 px-2 pb-1 justify-end">
               <span className="text-[10px] opacity-70">{time}</span>
               <ReadStatus />
             </div>
-          </div>
+          </>
         ) : isVoice ? (
           <div className="flex items-center gap-2 pl-1.5 pr-2 py-1">
             <Button
@@ -376,11 +355,9 @@ export const MessageBubble = ({
               )}
             </Button>
             <div className="flex items-center gap-2 flex-1 min-w-[80px]">
-              <div className="h-0.5 flex-1 bg-current opacity-30 rounded-full">
-                <div className="h-full w-1/3 bg-current opacity-70 rounded-full" />
-              </div>
+              <div className="h-0.5 flex-1 bg-current opacity-30 rounded-full" />
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               <span className="text-[10px] opacity-70">{time}</span>
               <ReadStatus />
             </div>
@@ -390,34 +367,24 @@ export const MessageBubble = ({
             <span className="leading-snug whitespace-pre-wrap break-words" style={{ fontSize: `${fontSize}px` }}>
               {parseMessageContent(message.encrypted_content)}
             </span>
-            {/* Inline timestamp and status */}
             <span className="inline-flex items-center gap-0.5 ml-1.5 align-bottom float-right translate-y-0.5">
-              {message.edited_at && <span className="text-[10px] opacity-60 mr-0.5">edited</span>}
               <span className="text-[10px] opacity-70">{time}</span>
               <ReadStatus />
             </span>
           </div>
         )}
-        
-        {/* --- Reactions --- */}
-        {(message.message_reactions?.length ?? 0) > 0 && (
-          <div className={`absolute -bottom-2.5 ${isOwn ? 'right-1' : 'left-1'}`}>
-            <div className="flex gap-0.5">
-              {aggregateReactions(message.message_reactions || []).map(({ emoji, count }) => (
-                <span 
-                  key={emoji} 
-                  className="bg-background/95 backdrop-blur-sm rounded-full px-1 py-0.5 text-[11px] border border-border/30 shadow-sm"
-                >
-                  {emoji}{count > 1 && <span className="ml-0.5 text-[9px] opacity-70">{count}</span>}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
+
+      {lightboxOpen && hasAttachment && message.attachment_type?.startsWith('image/') && createPortal(
+        <ImageLightbox
+          images={[{ url: message.attachment_url!, alt: message.attachment_name || 'Image' }]}
+          initialIndex={0}
+          onClose={() => setLightboxOpen(false)}
+        />,
+        document.body
+      )}
     </motion.div>
 
-    {/* Message Actions Sheet */}
     <MessageActionsSheet
       open={actionsSheetOpen}
       onOpenChange={setActionsSheetOpen}
