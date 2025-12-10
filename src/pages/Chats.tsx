@@ -438,19 +438,25 @@ const Chats = () => {
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground truncate mt-0.5">
+                  <p className={`text-sm truncate mt-0.5 ${chat.unread_count && chat.unread_count > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
                     {chat.last_message_content || 'No messages yet'}
                   </p>
                 </div>
 
-                {/* Right side - Date & Read receipt */}
+                {/* Right side - Date & Unread count */}
                 <div className="flex flex-col items-end gap-1 flex-shrink-0">
                   <span className="text-xs text-muted-foreground">
                     {formatTime(chat.updated_at)}
                   </span>
-                  {chat.is_read && (
-                    <Check className="h-4 w-4 text-muted-foreground" />
-                  )}
+                  {chat.unread_count && chat.unread_count > 0 ? (
+                    <div className="min-w-5 h-5 px-1.5 rounded-full bg-primary flex items-center justify-center">
+                      <span className="text-[11px] font-bold text-primary-foreground">
+                        {chat.unread_count > 99 ? '99+' : chat.unread_count}
+                      </span>
+                    </div>
+                  ) : chat.is_read ? (
+                    <Check className="h-4 w-4 text-primary" />
+                  ) : null}
                 </div>
               </div>
             );
