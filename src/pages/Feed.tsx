@@ -43,6 +43,7 @@ import { AdsterraNativeAdCard } from '@/components/ads/AdsterraNativeAdCard';
 import { ProfileDrawer } from '@/components/ProfileDrawer';
 import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
 import { cn } from '@/lib/utils';
+import { AIPostSummary } from '@/components/feed/AIPostSummary';
 // --- INTERFACES ---
 
 // NEW: Define AuthUser interface for type safety (must match the one in PostActionsSheet.tsx)
@@ -986,6 +987,11 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             </Button>
           )}
         </Link>
+        
+        {/* AI Post Summary for longer posts */}
+        {post.content.length >= 150 && (
+          <AIPostSummary postContent={post.content} postId={post.id} />
+        )}
 
 
         <div className="flex justify-between items-center text-xs text-muted-foreground mt-1 -ml-1.5 sm:-ml-2 max-w-full sm:max-w-[450px]">
