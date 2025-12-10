@@ -265,8 +265,8 @@ const AIChat: React.FC = () => {
           )}
         </div>
 
-        {/* Input Area - Fixed near bottom nav */}
-        <div className="flex-shrink-0 px-3 pb-2 pt-2 bg-background border-t border-border">
+        {/* Input Area - Fixed at bottom */}
+        <div className="flex-shrink-0 px-3 py-2 bg-background">
           <div className="flex items-end gap-2 bg-card border border-border rounded-full px-4 py-2">
             <Textarea
               ref={textareaRef}
