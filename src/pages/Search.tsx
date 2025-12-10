@@ -212,8 +212,8 @@ const CategoryPostItem = ({
       </Avatar>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1 flex-wrap">
-          <span className="font-bold text-[15px] text-foreground">
-            {post.author.display_name}
+          <span className="font-bold text-[15px] text-foreground max-w-[120px] truncate" title={post.author.display_name}>
+            {post.author.display_name.length > 12 ? `${post.author.display_name.slice(0, 10)}...` : post.author.display_name}
           </span>
           <VerifiedBadge
             isVerified={post.author.is_verified}

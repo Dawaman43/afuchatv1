@@ -421,9 +421,9 @@ const Chats = () => {
 
                 {/* Chat info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1">
-                    <span className="font-bold text-foreground truncate">
-                      {chatName}
+                <div className="flex items-center gap-1">
+                    <span className="font-bold text-foreground truncate max-w-[120px]" title={chatName}>
+                      {chatName.length > 12 ? `${chatName.slice(0, 10)}...` : chatName}
                     </span>
                     {!chat.is_group && (chat.other_user?.is_organization_verified || chat.other_user?.is_verified) && (
                       <VerifiedBadge 

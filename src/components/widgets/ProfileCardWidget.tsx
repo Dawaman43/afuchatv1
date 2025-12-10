@@ -80,7 +80,7 @@ export const ProfileCardWidget = ({ className }: ProfileCardWidgetProps) => {
         </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="font-semibold truncate">{profile?.display_name}</span>
+            <span className="font-semibold truncate max-w-[100px]" title={profile?.display_name}>{(profile?.display_name?.length || 0) > 12 ? `${profile?.display_name?.slice(0, 10)}...` : profile?.display_name}</span>
             {profile?.is_verified && <VerifiedBadge size="sm" />}
             {isPremium && (
               <span className="inline-flex items-center gap-0.5 text-amber-500">

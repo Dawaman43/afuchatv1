@@ -114,18 +114,20 @@ const NotificationRow = ({
     }
   };
 
+  const truncateName = (name: string) => name.length > 12 ? `${name.slice(0, 10)}...` : name;
+
   const renderMessage = () => {
     switch (type) {
       case 'new_like':
-        return <span><span className="font-semibold">{actor.display_name}</span> liked your post</span>;
+        return <span><span className="font-semibold" title={actor.display_name}>{truncateName(actor.display_name)}</span> liked your post</span>;
       case 'new_reply':
-        return <span><span className="font-semibold">{actor.display_name}</span> replied to your post</span>;
+        return <span><span className="font-semibold" title={actor.display_name}>{truncateName(actor.display_name)}</span> replied to your post</span>;
       case 'new_mention':
-        return <span><span className="font-semibold">{actor.display_name}</span> mentioned you</span>;
+        return <span><span className="font-semibold" title={actor.display_name}>{truncateName(actor.display_name)}</span> mentioned you</span>;
       case 'new_follower':
-        return <span><span className="font-semibold">{actor.display_name}</span> started following you</span>;
+        return <span><span className="font-semibold" title={actor.display_name}>{truncateName(actor.display_name)}</span> started following you</span>;
       case 'gift':
-        return <span><span className="font-semibold">{actor.display_name}</span> sent you a gift</span>;
+        return <span><span className="font-semibold" title={actor.display_name}>{truncateName(actor.display_name)}</span> sent you a gift</span>;
       default:
         return 'New notification';
     }
@@ -322,7 +324,7 @@ const FollowRequestRow = ({ request, onApprove, onReject, isProcessing }: Follow
             <UserPlus className="h-5 w-5 text-primary" />
           </div>
           <div className="text-xs sm:text-sm text-foreground flex items-center flex-wrap gap-1">
-            <span><span className="font-semibold">{requester.display_name}</span> wants to follow you</span>
+            <span><span className="font-semibold" title={requester.display_name}>{requester.display_name.length > 12 ? `${requester.display_name.slice(0, 10)}...` : requester.display_name}</span> wants to follow you</span>
             <VerifiedBadge isVerified={requester.is_verified} isOrgVerified={requester.is_organization_verified} />
           </div>
         </div>
