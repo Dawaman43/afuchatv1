@@ -861,6 +861,14 @@ const ChatRoom = () => {
       return;
     }
     
+    // Stop any other playing audio first
+    Object.entries(audioPlayers).forEach(([id, player]) => {
+      if (player.isPlaying && player.audio) {
+        player.audio.pause();
+        setAudioPlayers((prev) => ({ ...prev, [id]: { ...prev[id], isPlaying: false } }));
+      }
+    });
+    
     try {
       // Check if URL is a storage path (not a full URL)
       let finalUrl = audioUrl;
@@ -869,12 +877,26 @@ const ChatRoom = () => {
         finalUrl = data.publicUrl;
       }
       
-      const audio = new Audio(finalUrl);
-      audio.onerror = () => {
-        console.error('Audio playback error for URL:', finalUrl);
-        toast.error('Could not play audio');
-        setAudioPlayers((prev) => ({ ...prev, [messageId]: { audio: null, isPlaying: false } }));
-      };
+      const audio = new Audio();
+      audio.crossOrigin = 'anonymous';
+      audio.preload = 'auto';
+      
+      // Create a promise to wait for the audio to be ready
+      const loadPromise = new Promise<void>((resolve, reject) => {
+        audio.oncanplaythrough = () => resolve();
+        audio.onerror = (e) => {
+          console.error('Audio load error:', e, 'URL:', finalUrl);
+          reject(new Error('Failed to load audio'));
+        };
+        // Timeout after 10 seconds
+        setTimeout(() => reject(new Error('Audio load timeout')), 10000);
+      });
+      
+      audio.src = finalUrl;
+      audio.load();
+      
+      await loadPromise;
+      
       audio.onended = () => {
         setAudioPlayers((prev) => ({ ...prev, [messageId]: { ...prev[messageId], isPlaying: false } }));
       };
@@ -884,6 +906,7 @@ const ChatRoom = () => {
     } catch (error) {
       console.error('Audio play error:', error);
       toast.error('Could not play audio');
+      setAudioPlayers((prev) => ({ ...prev, [messageId]: { audio: null, isPlaying: false } }));
     }
   };
 
