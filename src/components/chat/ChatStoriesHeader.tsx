@@ -29,6 +29,7 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
     avatar_url: string | null;
     display_name: string;
   } | null>(null);
+  const [currentUserHasStory, setCurrentUserHasStory] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -96,11 +97,18 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
       if (error) throw error;
 
       const userMap = new Map<string, StoryUser>();
+      let hasCurrentUserStory = false;
 
       stories?.forEach((story: any) => {
         if (!story.profiles) return;
 
         const userId = story.user_id;
+        
+        // Check if current user has a story
+        if (userId === user?.id) {
+          hasCurrentUserStory = true;
+        }
+
         if (userMap.has(userId)) {
           const existing = userMap.get(userId)!;
           userMap.set(userId, { ...existing, story_count: existing.story_count + 1 });
@@ -115,7 +123,11 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
         }
       });
 
-      setStoryUsers(Array.from(userMap.values()));
+      // Filter out current user from the list (they'll be shown separately as "My Story")
+      const otherUsers = Array.from(userMap.values()).filter(u => u.user_id !== user?.id);
+      
+      setCurrentUserHasStory(hasCurrentUserStory);
+      setStoryUsers(otherUsers);
     } catch (error) {
       console.error('Error fetching stories:', error);
     } finally {
@@ -147,8 +159,9 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
     onSearch?.(query);
   };
 
-  const totalStories = storyUsers.length + 1; // +1 for "My Story"
-  const displayUsers = storyUsers.slice(0, 3); // Show max 3 overlapping avatars
+  // Only count current user if they have a story
+  const totalStories = storyUsers.length + (currentUserHasStory ? 1 : 0);
+  const displayUsers = storyUsers.slice(0, currentUserHasStory ? 2 : 3); // Show max 3 total avatars
 
   return (
     <div className="flex-shrink-0 bg-background border-b border-border z-50">
@@ -195,30 +208,34 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                 <Menu className="h-6 w-6 text-foreground" />
               </button>
 
-              {/* Collapsed stories preview - only show when NOT expanded */}
-              {!isExpanded ? (
+              {/* Collapsed stories preview - only show when NOT expanded and has stories */}
+              {!isExpanded && totalStories > 0 ? (
                 <div 
                   onClick={onToggleExpand}
                   className="flex items-center gap-2 cursor-pointer hover:bg-muted/20 px-3 py-1.5 rounded-full transition-colors"
                 >
                   {/* Overlapping avatars */}
                   <div className="flex items-center -space-x-2">
-                    {/* My Story avatar */}
-                    <div className="relative z-30">
-                      {currentUserProfile?.avatar_url ? (
-                        <img
-                          src={currentUserProfile.avatar_url}
-                          alt="My Story"
-                          className="h-8 w-8 rounded-full object-cover border-2 border-background"
-                        />
-                      ) : (
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center border-2 border-background">
-                          <span className="text-xs font-semibold text-muted-foreground">
-                            {currentUserProfile?.display_name?.charAt(0).toUpperCase() || 'M'}
-                          </span>
+                    {/* My Story avatar - only show if user has posted a story */}
+                    {currentUserHasStory && (
+                      <div className="relative z-30">
+                        <div className="p-[1.5px] rounded-full bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500">
+                          {currentUserProfile?.avatar_url ? (
+                            <img
+                              src={currentUserProfile.avatar_url}
+                              alt="My Story"
+                              className="h-7 w-7 rounded-full object-cover border-[1.5px] border-background"
+                            />
+                          ) : (
+                            <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center border-[1.5px] border-background">
+                              <span className="text-[10px] font-semibold text-muted-foreground">
+                                {currentUserProfile?.display_name?.charAt(0).toUpperCase() || 'M'}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                     
                     {/* Other story avatars */}
                     {displayUsers.map((storyUser, index) => (
@@ -252,6 +269,8 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                   
                   <ChevronDown className="h-5 w-5 text-muted-foreground" />
                 </div>
+              ) : !isExpanded ? (
+                <h1 className="text-xl font-bold text-foreground">AfuChat</h1>
               ) : (
                 <h1 className="text-xl font-bold text-foreground">AfuChat</h1>
               )}
