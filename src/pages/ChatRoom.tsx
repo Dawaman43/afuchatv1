@@ -445,7 +445,7 @@ const ChatRoom = () => {
 
 
 
-    // Subscribe to message status changes (read receipts)
+    // Subscribe to message status changes (read receipts) - real-time updates
     const statusChannel = supabase
       .channel(`message-status-${chatId}`)
       .on(
@@ -455,8 +455,28 @@ const ChatRoom = () => {
           schema: 'public',
           table: 'message_status',
         },
-        () => {
-          fetchMessages();
+        (payload) => {
+          // Update message status in state directly for real-time feedback
+          const statusUpdate = payload.new as { message_id: string; user_id: string; delivered_at: string | null; read_at: string | null };
+          if (statusUpdate && statusUpdate.message_id) {
+            setMessages((prev) => 
+              prev.map((msg) => {
+                if (msg.id === statusUpdate.message_id) {
+                  const existingStatus = msg.message_status || [];
+                  const statusIndex = existingStatus.findIndex(s => s.user_id === statusUpdate.user_id);
+                  let newStatus;
+                  if (statusIndex >= 0) {
+                    newStatus = [...existingStatus];
+                    newStatus[statusIndex] = { ...newStatus[statusIndex], delivered_at: statusUpdate.delivered_at, read_at: statusUpdate.read_at };
+                  } else {
+                    newStatus = [...existingStatus, { user_id: statusUpdate.user_id, delivered_at: statusUpdate.delivered_at, read_at: statusUpdate.read_at }];
+                  }
+                  return { ...msg, message_status: newStatus };
+                }
+                return msg;
+              })
+            );
+          }
         }
       )
       .subscribe();

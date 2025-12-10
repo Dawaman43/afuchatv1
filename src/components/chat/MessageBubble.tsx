@@ -324,23 +324,28 @@ export const MessageBubble = ({
     if (!isOwn || !showReadReceipts) return null;
     
     if (allRead) {
-      return <CheckCheck className="h-3.5 w-3.5 text-accent" />;
+      // Read - double check, colored (primary/accent)
+      return <CheckCheck className="h-3.5 w-3.5 text-primary" />;
     } else if (anyDelivered) {
-      return <CheckCheck className="h-3.5 w-3.5 opacity-60" />;
+      // Delivered - double check, muted
+      return <CheckCheck className="h-3.5 w-3.5 text-muted-foreground" />;
     }
-    return <Check className="h-3.5 w-3.5 opacity-60" />;
+    // Sent - single check
+    return <Check className="h-3.5 w-3.5 text-muted-foreground" />;
   };
 
   return (
     <>
     <motion.div
       drag="x"
-      dragConstraints={{ left: isOwn ? -100 : 0, right: isOwn ? 0 : 100 }}
-      dragElastic={0.2}
+      dragConstraints={{ left: isOwn ? -80 : 0, right: isOwn ? 0 : 80 }}
+      dragElastic={0.15}
+      dragSnapToOrigin
       onDragEnd={handleDragEnd}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onContextMenu={handleContextMenu}
+      style={{ touchAction: 'pan-y' }}
       className={`flex w-full group ${isOwn ? 'justify-end' : 'justify-start'} relative ${
         isLastInGroup ? 'mb-2' : 'mb-0.5'
       }`}
