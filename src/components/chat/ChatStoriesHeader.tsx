@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Menu, Search, X, ChevronDown } from 'lucide-react';
+import { Plus, Menu, Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ChatMenuDrawer } from './ChatMenuDrawer';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface StoryUser {
   user_id: string;
@@ -21,7 +20,7 @@ interface ChatStoriesHeaderProps {
   onSearch?: (query: string) => void;
 }
 
-export const ChatStoriesHeader = ({ shouldCollapse = false, onToggleCollapse, onSearch }: ChatStoriesHeaderProps) => {
+export const ChatStoriesHeader = ({ onSearch }: ChatStoriesHeaderProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [storyUsers, setStoryUsers] = useState<StoryUser[]>([]);
@@ -30,7 +29,6 @@ export const ChatStoriesHeader = ({ shouldCollapse = false, onToggleCollapse, on
     display_name: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isExpanded, setIsExpanded] = useState(false); // Start collapsed
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -124,18 +122,12 @@ export const ChatStoriesHeader = ({ shouldCollapse = false, onToggleCollapse, on
     }
   };
 
-  const handleStoryClick = (e: React.MouseEvent, userId: string) => {
-    e.stopPropagation();
+  const handleStoryClick = (userId: string) => {
     navigate(`/moments?user=${userId}`);
   };
 
-  const handleCreateStory = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleCreateStory = () => {
     navigate('/moments');
-  };
-
-  const handleStoriesToggle = () => {
-    setIsExpanded(!isExpanded);
   };
 
   const handleSearchToggle = () => {
@@ -199,48 +191,7 @@ export const ChatStoriesHeader = ({ shouldCollapse = false, onToggleCollapse, on
                 <Menu className="h-6 w-6 text-foreground" />
               </button>
 
-              {/* Stories toggle button */}
-              <button
-                type="button"
-                onClick={handleStoriesToggle}
-                className="flex items-center gap-2 focus:outline-none active:opacity-70 transition-opacity"
-              >
-                {storyUsers.length > 0 && (
-                  <div className="flex items-center -space-x-2">
-                    {storyUsers.slice(0, 3).map((storyUser, index) => (
-                      <div
-                        key={storyUser.user_id}
-                        className="h-8 w-8 rounded-full border-2 border-background bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500 flex items-center justify-center overflow-hidden"
-                        style={{ zIndex: 3 - index }}
-                      >
-                        {storyUser.avatar_url ? (
-                          <img
-                            src={storyUser.avatar_url}
-                            alt={storyUser.display_name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-xs font-semibold text-primary-foreground">
-                            {storyUser.display_name?.charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <span className="text-base font-semibold text-foreground">
-                  {storyUsers.length > 0 
-                    ? `${storyUsers.length} ${storyUsers.length === 1 ? 'Story' : 'Stories'}`
-                    : 'AfuChat'
-                  }
-                </span>
-                <motion.div
-                  animate={{ rotate: isExpanded ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                </motion.div>
-              </button>
+              <h1 className="text-xl font-bold text-foreground">AfuChat</h1>
 
               <button 
                 onClick={handleSearchToggle}
@@ -252,78 +203,66 @@ export const ChatStoriesHeader = ({ shouldCollapse = false, onToggleCollapse, on
           )}
         </div>
 
-        {/* Stories panel - animated with framer-motion */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.25, ease: 'easeInOut' }}
-              className="overflow-hidden"
+        {/* Stories - always visible horizontal scroll like Telegram */}
+        <div className="overflow-x-auto scrollbar-hide px-4 pb-3">
+          <div className="flex gap-4">
+            {/* My Story */}
+            <div
+              onClick={handleCreateStory}
+              className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-1"
             >
-              <div className="overflow-x-auto scrollbar-hide px-4 pb-4 pt-2">
-                <div className="flex gap-4">
-                  {/* My Story */}
-                  <div
-                    onClick={handleCreateStory}
-                    className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-1.5"
-                  >
-                    <div className="relative">
-                      {currentUserProfile?.avatar_url ? (
-                        <img
-                          src={currentUserProfile.avatar_url}
-                          alt="My Story"
-                          className="h-16 w-16 rounded-full object-cover border-2 border-border"
-                        />
-                      ) : (
-                        <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center border-2 border-border">
-                          <span className="text-lg font-semibold text-muted-foreground">
-                            {currentUserProfile?.display_name?.charAt(0).toUpperCase() || 'M'}
-                          </span>
-                        </div>
-                      )}
-                      <div className="absolute bottom-0 right-0 h-5 w-5 rounded-full bg-primary flex items-center justify-center border-2 border-background">
-                        <Plus className="h-3 w-3 text-primary-foreground" />
-                      </div>
-                    </div>
-                    <p className="text-xs text-center font-medium text-foreground w-16 truncate">
-                      My Story
-                    </p>
+              <div className="relative">
+                {currentUserProfile?.avatar_url ? (
+                  <img
+                    src={currentUserProfile.avatar_url}
+                    alt="My Story"
+                    className="h-14 w-14 rounded-full object-cover border-2 border-border"
+                  />
+                ) : (
+                  <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center border-2 border-border">
+                    <span className="text-base font-semibold text-muted-foreground">
+                      {currentUserProfile?.display_name?.charAt(0).toUpperCase() || 'M'}
+                    </span>
                   </div>
-
-                  {/* Other stories */}
-                  {storyUsers.map((storyUser) => (
-                    <div
-                      key={storyUser.user_id}
-                      onClick={(e) => handleStoryClick(e, storyUser.user_id)}
-                      className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-1.5"
-                    >
-                      <div className="p-[2px] rounded-full bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500">
-                        {storyUser.avatar_url ? (
-                          <img
-                            src={storyUser.avatar_url}
-                            alt={storyUser.display_name}
-                            className="h-16 w-16 rounded-full object-cover border-2 border-background"
-                          />
-                        ) : (
-                          <div className="h-16 w-16 rounded-full bg-primary flex items-center justify-center border-2 border-background">
-                            <span className="text-lg font-semibold text-primary-foreground">
-                              {storyUser.display_name?.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-center font-medium text-foreground w-16 truncate">
-                        {storyUser.display_name}
-                      </p>
-                    </div>
-                  ))}
+                )}
+                <div className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full bg-primary flex items-center justify-center border-2 border-background">
+                  <Plus className="h-3 w-3 text-primary-foreground" />
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <p className="text-[11px] text-center font-medium text-foreground w-14 truncate">
+                My Story
+              </p>
+            </div>
+
+            {/* Other stories */}
+            {storyUsers.map((storyUser) => (
+              <div
+                key={storyUser.user_id}
+                onClick={() => handleStoryClick(storyUser.user_id)}
+                className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-1"
+              >
+                <div className="p-[2px] rounded-full bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500">
+                  {storyUser.avatar_url ? (
+                    <img
+                      src={storyUser.avatar_url}
+                      alt={storyUser.display_name}
+                      className="h-14 w-14 rounded-full object-cover border-2 border-background"
+                    />
+                  ) : (
+                    <div className="h-14 w-14 rounded-full bg-primary flex items-center justify-center border-2 border-background">
+                      <span className="text-base font-semibold text-primary-foreground">
+                        {storyUser.display_name?.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-[11px] text-center font-medium text-foreground w-14 truncate">
+                  {storyUser.display_name}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </>
   );
