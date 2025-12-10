@@ -56,6 +56,30 @@
     @apply bg-card/80 backdrop-blur-xl border border-border/50;
   }
 
+  /* Money icon animation for tip button */
+  .money-pulse {
+    animation: money-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes money-pulse {
+    0%, 100% {
+      transform: scale(1) rotate(0deg);
+      filter: drop-shadow(0 0 0 transparent);
+    }
+    25% {
+      transform: scale(1.15) rotate(-5deg);
+      filter: drop-shadow(0 0 8px rgb(34 197 94 / 0.6));
+    }
+    50% {
+      transform: scale(1) rotate(0deg);
+      filter: drop-shadow(0 0 4px rgb(34 197 94 / 0.4));
+    }
+    75% {
+      transform: scale(1.15) rotate(5deg);
+      filter: drop-shadow(0 0 8px rgb(34 197 94 / 0.6));
+    }
+  }
+
   /* Premium gradient text */
   .gradient-text {
     @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
