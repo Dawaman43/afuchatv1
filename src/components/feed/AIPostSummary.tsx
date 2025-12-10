@@ -16,28 +16,23 @@ const SUMMARY_WORTHY_CATEGORIES: ContentCategory[] = ['news', 'technology', 'pol
 const MIN_CONFIDENCE_THRESHOLD = 40;
 const MIN_CONTENT_LENGTH = 200;
 
-// Global queue to throttle AI requests
-const requestQueue: Array<() => Promise<void>> = [];
-let isProcessingQueue = false;
+// Global throttling - limit summaries per session to save API credits
+const MAX_SUMMARIES_PER_SESSION = 3;
+const DELAY_BETWEEN_REQUESTS = 5000; // 5 seconds
+let summariesGeneratedThisSession = 0;
+let lastRequestTime = 0;
 
-const processQueue = async () => {
-  if (isProcessingQueue || requestQueue.length === 0) return;
-  isProcessingQueue = true;
-  
-  while (requestQueue.length > 0) {
-    const task = requestQueue.shift();
-    if (task) {
-      try {
-        await task();
-      } catch (e) {
-        console.error('Queue task error:', e);
-      }
-      // Wait 2 seconds between requests to avoid rate limits
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
+const canGenerateSummary = (): boolean => {
+  return summariesGeneratedThisSession < MAX_SUMMARIES_PER_SESSION;
+};
+
+const waitForNextSlot = async (): Promise<void> => {
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastRequestTime;
+  if (timeSinceLastRequest < DELAY_BETWEEN_REQUESTS) {
+    await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_REQUESTS - timeSinceLastRequest));
   }
-  
-  isProcessingQueue = false;
+  lastRequestTime = Date.now();
 };
 
 const isWorthSummarizing = (content: string): boolean => {
@@ -103,16 +98,24 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
       return;
     }
     
-    // Queue the AI generation request (throttled)
+    // Check if we can generate more summaries this session
+    if (!canGenerateSummary()) {
+      if (mountedRef.current) setShouldShow(false);
+      return;
+    }
+    
+    // Generate with throttling
     setLoading(true);
-    requestQueue.push(() => generateSummary());
-    processQueue();
+    await waitForNextSlot();
+    await generateSummary();
   };
 
   const generateSummary = async () => {
     if (!mountedRef.current) return;
     
     try {
+      summariesGeneratedThisSession++;
+      
       const { data, error } = await supabase.functions.invoke('chat-with-afuai', {
         body: {
           message: `Summarize this social media post in 1-2 concise sentences. Focus on the main point or message:\n\n"${postContent}"`,
@@ -121,7 +124,6 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
       });
 
       if (error) {
-        // Check if it's a rate limit error
         if (error.message?.includes('429') || error.message?.includes('rate')) {
           console.warn('Rate limited, will retry later');
           if (mountedRef.current) {
@@ -138,7 +140,6 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
       if (generatedSummary && mountedRef.current) {
         setSummary(generatedSummary);
         
-        // Cache in database
         await supabase
           .from('post_ai_summaries')
           .upsert({ post_id: postId, summary: generatedSummary }, { onConflict: 'post_id' });
