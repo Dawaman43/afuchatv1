@@ -1,5 +1,8 @@
 import { FileText, Download } from 'lucide-react';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAttachmentUrl } from '@/hooks/useAttachmentUrl';
+import { ImageLightbox } from '@/components/ui/ImageLightbox';
 
 interface AttachmentPreviewProps {
   url: string;
@@ -19,6 +22,7 @@ export const AttachmentPreview = ({
   onDownload 
 }: AttachmentPreviewProps) => {
   const { url: signedUrl, loading } = useAttachmentUrl(url);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const isImage = type.startsWith('image/');
   
   const formatSize = (bytes?: number) => {
@@ -28,24 +32,39 @@ export const AttachmentPreview = ({
     return (bytes / 1048576).toFixed(1) + ' MB';
   };
 
+  const handleImageClick = () => {
+    if (isImage && signedUrl) {
+      setLightboxOpen(true);
+    }
+  };
+
   if (loading) {
     return <div className="w-[220px] h-[160px] bg-muted/50 rounded-lg animate-pulse" />;
   }
 
   if (isImage && signedUrl) {
     return (
-      <div 
-        className="relative w-[220px] h-[160px] rounded-lg overflow-hidden cursor-pointer group"
-        onClick={onDownload}
-      >
-        <img 
-          src={signedUrl} 
-          alt={name}
-          className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-        />
-        {/* Subtle overlay on hover */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-      </div>
+      <>
+        <div 
+          className="relative w-[220px] h-[160px] rounded-lg overflow-hidden cursor-pointer group"
+          onClick={handleImageClick}
+        >
+          <img 
+            src={signedUrl} 
+            alt={name}
+            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+        </div>
+        {lightboxOpen && createPortal(
+          <ImageLightbox
+            images={[{ url: signedUrl, alt: name }]}
+            initialIndex={0}
+            onClose={() => setLightboxOpen(false)}
+          />,
+          document.body
+        )}
+      </>
     );
   }
 
