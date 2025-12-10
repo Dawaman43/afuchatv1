@@ -1,10 +1,8 @@
 import { motion } from 'framer-motion';
-import { Check, CheckCheck, Play, Pause, MoreVertical } from 'lucide-react';
+import { Check, CheckCheck, Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AttachmentPreview } from './AttachmentPreview';
 import { useState, useRef, useCallback } from 'react';
-import { createPortal } from 'react-dom';
-import { ImageLightbox } from '@/components/ui/ImageLightbox';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { MessageActionsSheet } from './MessageActionsSheet';
@@ -167,7 +165,6 @@ export const MessageBubble = ({
   showReadReceipts = true,
   fontSize = 16,
 }: MessageBubbleProps) => {
-  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [actionsSheetOpen, setActionsSheetOpen] = useState(false);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressRef = useRef(false);
@@ -330,10 +327,7 @@ export const MessageBubble = ({
               name={message.attachment_name || 'Attachment'}
               size={message.attachment_size}
               isOwn={isOwn}
-              onDownload={message.attachment_type?.startsWith('image/') 
-                ? () => setLightboxOpen(true)
-                : handleDownload
-              }
+              onDownload={handleDownload}
             />
             {message.encrypted_content && (
               <p className="px-2 py-1 leading-snug whitespace-pre-wrap break-words" style={{ fontSize: `${fontSize}px` }}>
@@ -381,15 +375,6 @@ export const MessageBubble = ({
           </div>
         )}
       </div>
-
-      {lightboxOpen && hasAttachment && message.attachment_type?.startsWith('image/') && createPortal(
-        <ImageLightbox
-          images={[{ url: message.attachment_url!, alt: message.attachment_name || 'Image' }]}
-          initialIndex={0}
-          onClose={() => setLightboxOpen(false)}
-        />,
-        document.body
-      )}
     </motion.div>
 
     <MessageActionsSheet
