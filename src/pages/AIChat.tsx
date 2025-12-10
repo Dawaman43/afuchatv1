@@ -220,9 +220,9 @@ const AIChat: React.FC = () => {
 
   return (
     <PremiumGate feature="AI Chat Assistant" showUpgrade={true}>
-      <div className="flex flex-col h-screen bg-background">
+      <div className="flex flex-col min-h-screen bg-background pb-20">
         {/* Header */}
-        <header className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <header className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-background z-10">
           <Avatar className="h-10 w-10">
             <AvatarImage src={profile?.avatar_url || ''} />
             <AvatarFallback>{profile?.display_name?.[0] || 'U'}</AvatarFallback>
@@ -348,8 +348,8 @@ const AIChat: React.FC = () => {
           )}
         </div>
 
-        {/* Input Area */}
-        <div className="p-4 pb-6">
+        {/* Input Area - Fixed at bottom above nav */}
+        <div className="sticky bottom-20 left-0 right-0 p-4 bg-background border-t border-border">
           <div className="bg-card border border-border rounded-2xl px-4 py-3">
             <Input
               value={input}
