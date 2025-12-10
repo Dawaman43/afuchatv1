@@ -303,25 +303,30 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                     className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-1"
                   >
                     <div className="relative">
-                      {currentUserProfile?.avatar_url ? (
-                        <img
-                          src={currentUserProfile.avatar_url}
-                          alt="My Story"
-                          className="h-14 w-14 rounded-full object-cover border-2 border-border"
-                        />
-                      ) : (
-                        <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center border-2 border-border">
-                          <span className="text-base font-semibold text-muted-foreground">
-                            {currentUserProfile?.display_name?.charAt(0).toUpperCase() || 'M'}
-                          </span>
+                      <div className={currentUserHasStory ? "p-[2px] rounded-full bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500" : ""}>
+                        {currentUserProfile?.avatar_url ? (
+                          <img
+                            src={currentUserProfile.avatar_url}
+                            alt="My Story"
+                            className={`h-14 w-14 rounded-full object-cover ${currentUserHasStory ? 'border-2 border-background' : 'border-2 border-border'}`}
+                          />
+                        ) : (
+                          <div className={`h-14 w-14 rounded-full bg-muted flex items-center justify-center ${currentUserHasStory ? 'border-2 border-background' : 'border-2 border-border'}`}>
+                            <span className="text-base font-semibold text-muted-foreground">
+                              {currentUserProfile?.display_name?.charAt(0).toUpperCase() || 'M'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      {/* Only show + icon if user doesn't have a story */}
+                      {!currentUserHasStory && (
+                        <div className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full bg-primary flex items-center justify-center border-2 border-background">
+                          <Plus className="h-3 w-3 text-primary-foreground" />
                         </div>
                       )}
-                      <div className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full bg-primary flex items-center justify-center border-2 border-background">
-                        <Plus className="h-3 w-3 text-primary-foreground" />
-                      </div>
                     </div>
                     <p className="text-[11px] text-center font-medium text-foreground w-14 truncate">
-                      My Story
+                      {currentUserHasStory ? 'My Story' : 'Add Story'}
                     </p>
                   </div>
 
