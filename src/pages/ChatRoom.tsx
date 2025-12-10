@@ -382,7 +382,11 @@ const ChatRoom = () => {
                   profiles: profile,
                 } as Message;
                 
-                setMessages((prev) => [...prev, newMsg]);
+                setMessages((prev) => {
+                  // Prevent duplicates (message may already exist from optimistic update)
+                  if (prev.some(m => m.id === newMsg.id)) return prev;
+                  return [...prev, newMsg];
+                });
                 
                 // Mark as delivered and read if we're the recipient
                 if (user && payload.new.sender_id !== user.id) {
