@@ -154,7 +154,7 @@ const ChatRoom = () => {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [recordedMimeType, setRecordedMimeType] = useState<string>('audio/webm');
   const [uploading, setUploading] = useState(false);
-  const [audioPlayers, setAudioPlayers] = useState<{ [key: string]: { isPlaying: boolean; audio: HTMLAudioElement | null } }>({});
+  const [audioPlayers, setAudioPlayers] = useState<{ [key: string]: { isPlaying: boolean; audio: HTMLAudioElement | null; duration?: number; currentTime?: number } }>({});
   const [recordingTime, setRecordingTime] = useState(0);
   const [previewAudio, setPreviewAudio] = useState<HTMLAudioElement | null>(null);
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
@@ -894,6 +894,20 @@ const ChatRoom = () => {
       
       const audio = new Audio(finalUrl);
       
+      audio.onloadedmetadata = () => {
+        setAudioPlayers((prev) => ({ 
+          ...prev, 
+          [messageId]: { ...prev[messageId], duration: audio.duration } 
+        }));
+      };
+      
+      audio.ontimeupdate = () => {
+        setAudioPlayers((prev) => ({ 
+          ...prev, 
+          [messageId]: { ...prev[messageId], currentTime: audio.currentTime } 
+        }));
+      };
+      
       audio.onerror = () => {
         console.error('Audio playback error for URL:', finalUrl);
         toast.error('Could not play audio');
@@ -901,10 +915,13 @@ const ChatRoom = () => {
       };
       
       audio.onended = () => {
-        setAudioPlayers((prev) => ({ ...prev, [messageId]: { ...prev[messageId], isPlaying: false } }));
+        setAudioPlayers((prev) => ({ 
+          ...prev, 
+          [messageId]: { ...prev[messageId], isPlaying: false, currentTime: 0 } 
+        }));
       };
       
-      setAudioPlayers((prev) => ({ ...prev, [messageId]: { audio, isPlaying: true } }));
+      setAudioPlayers((prev) => ({ ...prev, [messageId]: { audio, isPlaying: true, duration: prev[messageId]?.duration, currentTime: 0 } }));
       await audio.play();
     } catch (error) {
       console.error('Audio play error:', error);
