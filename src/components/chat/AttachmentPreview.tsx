@@ -1,5 +1,4 @@
-import { FileText, Image as ImageIcon, Download, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { FileText, Download } from 'lucide-react';
 import { useAttachmentUrl } from '@/hooks/useAttachmentUrl';
 
 interface AttachmentPreviewProps {
@@ -30,18 +29,22 @@ export const AttachmentPreview = ({
   };
 
   if (loading) {
-    return <div className="w-[280px] h-[180px] bg-muted/50 rounded-lg animate-pulse" />;
+    return <div className="w-[220px] h-[160px] bg-muted/50 rounded-lg animate-pulse" />;
   }
 
   if (isImage && signedUrl) {
     return (
-      <div className="relative max-w-[280px] rounded-lg overflow-hidden">
+      <div 
+        className="relative w-[220px] h-[160px] rounded-lg overflow-hidden cursor-pointer group"
+        onClick={onDownload}
+      >
         <img 
           src={signedUrl} 
           alt={name}
-          className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-          onClick={onDownload}
+          className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
         />
+        {/* Subtle overlay on hover */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
       </div>
     );
   }
@@ -50,11 +53,11 @@ export const AttachmentPreview = ({
     <div 
       className={`flex items-center gap-3 p-3 rounded-lg ${
         isOwn ? 'bg-primary-foreground/10' : 'bg-muted'
-      } max-w-[280px] cursor-pointer hover:opacity-90 transition-opacity`}
+      } max-w-[220px] cursor-pointer hover:opacity-90 transition-opacity`}
       onClick={onDownload}
     >
       <div className={`p-2 rounded-lg ${isOwn ? 'bg-primary-foreground/20' : 'bg-background'}`}>
-        <FileText className="h-6 w-6" />
+        <FileText className="h-5 w-5" />
       </div>
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-medium truncate ${isOwn ? 'text-primary-foreground' : 'text-foreground'}`}>
