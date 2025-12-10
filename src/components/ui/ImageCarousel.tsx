@@ -40,7 +40,7 @@ export const ImageCarousel = memo(({ images, className }: ImageCarouselProps) =>
               alt={imageAlts[0]}
               loading="lazy"
               decoding="async"
-              className="w-full max-h-[510px] object-cover hover:brightness-95 transition-all"
+              className="w-full max-h-[288px] object-cover hover:brightness-95 transition-all"
             />
           </div>
         )}
