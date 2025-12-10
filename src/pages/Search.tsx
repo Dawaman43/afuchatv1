@@ -102,7 +102,16 @@ const VerifiedBadge = ({ isVerified, isOrgVerified }: { isVerified?: boolean; is
   return null;
 };
 
-const TABS = ['For You', 'Trending', 'News', 'Sports', 'Entertainment'];
+const TABS = ['For You', 'Trending', 'News', 'Sports', 'Entertainment'] as const;
+type TabType = typeof TABS[number];
+
+const TAB_KEYWORDS: Record<TabType, string[]> = {
+  'For You': [],
+  'Trending': [],
+  'News': ['news', 'breaking', 'headline', 'report', 'update', 'announce', 'official', 'latest'],
+  'Sports': ['sport', 'game', 'match', 'team', 'player', 'score', 'win', 'championship', 'league', 'football', 'basketball', 'soccer', 'tennis', 'cricket'],
+  'Entertainment': ['movie', 'music', 'celebrity', 'film', 'song', 'concert', 'album', 'star', 'show', 'tv', 'series', 'actor', 'singer', 'award'],
+};
 
 const formatPostCount = (count: number): string => {
   if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M posts`;
@@ -142,42 +151,177 @@ const TrendingItem = ({
   </div>
 );
 
-const TrendingSection = ({ onTrendClick }: { onTrendClick: (topic: string) => void }) => {
+interface CategoryPost {
+  id: string;
+  content: string;
+  created_at: string;
+  author: {
+    display_name: string;
+    handle: string;
+    avatar_url?: string;
+    is_verified?: boolean;
+    is_organization_verified?: boolean;
+  };
+  image_url?: string;
+  post_images?: PostImage[];
+  like_count: number;
+}
+
+const CategoryPostItem = ({ 
+  post, 
+  onClick 
+}: { 
+  post: CategoryPost;
+  onClick: () => void;
+}) => (
+  <div 
+    className="px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer"
+    onClick={onClick}
+  >
+    <div className="flex items-start gap-3">
+      <Avatar className="h-10 w-10 flex-shrink-0">
+        <AvatarImage src={post.author.avatar_url || ''} alt={post.author.display_name} />
+        <AvatarFallback className="bg-muted text-muted-foreground">
+          {post.author.display_name?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1 flex-wrap">
+          <span className="font-bold text-[15px] text-foreground">
+            {post.author.display_name}
+          </span>
+          <VerifiedBadge
+            isVerified={post.author.is_verified}
+            isOrgVerified={post.author.is_organization_verified}
+          />
+          <span className="text-[15px] text-muted-foreground">
+            @{post.author.handle}
+          </span>
+          <span className="text-muted-foreground">·</span>
+          <span className="text-[15px] text-muted-foreground">
+            {new Date(post.created_at).toLocaleDateString()}
+          </span>
+        </div>
+        <p className="text-[15px] text-foreground mt-1 leading-normal line-clamp-3 whitespace-pre-wrap">
+          {post.content}
+        </p>
+        {(post.post_images && post.post_images.length > 0) && (
+          <div className={`mt-3 grid gap-0.5 rounded-2xl overflow-hidden border border-border ${post.post_images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+            {post.post_images.slice(0, 4).map((img, idx) => (
+              <div key={img.id} className="relative aspect-video">
+                <img 
+                  src={img.image_url} 
+                  alt={`Post image ${idx + 1}`} 
+                  className="w-full h-full object-cover"
+                />
+                {post.post_images && post.post_images.length > 4 && idx === 3 && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <span className="text-white font-bold text-lg">+{post.post_images.length - 4}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+);
+
+const TrendingSection = ({ 
+  activeTab,
+  onTrendClick,
+  onPostClick
+}: { 
+  activeTab: TabType;
+  onTrendClick: (topic: string) => void;
+  onPostClick: (postId: string) => void;
+}) => {
   const { t } = useTranslation();
   const [trends, setTrends] = useState<Trend[]>([]);
+  const [categoryPosts, setCategoryPosts] = useState<CategoryPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTrends = async () => {
+    const fetchContent = async () => {
       setLoading(true);
-      try {
-        const { data, error } = await supabase.rpc('get_trending_topics', {
-          hours_ago: 24,
-          num_topics: 10,
-        });
+      
+      if (activeTab === 'For You' || activeTab === 'Trending') {
+        // Fetch trending topics
+        try {
+          const { data, error } = await supabase.rpc('get_trending_topics', {
+            hours_ago: 24,
+            num_topics: 10,
+          });
 
-        if (error) {
-          console.error('Error fetching trends:', error);
-          setTrends([]);
-        } else if (Array.isArray(data)) {
-          const formattedData = data.map((d: Trend) => ({
-            ...d,
-            topic: d.topic.charAt(0).toUpperCase() + d.topic.slice(1),
-          }));
-          setTrends(formattedData);
-        } else {
+          if (error) {
+            console.error('Error fetching trends:', error);
+            setTrends([]);
+          } else if (Array.isArray(data)) {
+            const formattedData = data.map((d: Trend) => ({
+              ...d,
+              topic: d.topic.charAt(0).toUpperCase() + d.topic.slice(1),
+            }));
+            setTrends(formattedData);
+          } else {
+            setTrends([]);
+          }
+        } catch (error) {
+          console.error('RPC call failed:', error);
           setTrends([]);
         }
-      } catch (error) {
-        console.error('RPC call failed:', error);
+        setCategoryPosts([]);
+      } else {
+        // Fetch category-specific posts
+        const keywords = TAB_KEYWORDS[activeTab];
+        const searchConditions = keywords.map(k => `content.ilike.%${k}%`).join(',');
+        
+        try {
+          const { data, error } = await supabase
+            .from('posts')
+            .select(`
+              id, content, created_at, image_url,
+              profiles!author_id(display_name, handle, avatar_url, is_verified, is_organization_verified),
+              post_images(id, image_url, display_order),
+              post_acknowledgments(id)
+            `)
+            .or(searchConditions)
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+          if (error) {
+            console.error('Error fetching category posts:', error);
+            setCategoryPosts([]);
+          } else if (data) {
+            const formattedPosts: CategoryPost[] = data.map((p: any) => ({
+              id: p.id,
+              content: p.content,
+              created_at: p.created_at,
+              image_url: p.image_url,
+              post_images: p.post_images?.sort((a: any, b: any) => a.display_order - b.display_order) || [],
+              like_count: p.post_acknowledgments?.length || 0,
+              author: {
+                display_name: p.profiles?.display_name || 'Unknown',
+                handle: p.profiles?.handle || 'unknown',
+                avatar_url: p.profiles?.avatar_url,
+                is_verified: p.profiles?.is_verified,
+                is_organization_verified: p.profiles?.is_organization_verified,
+              },
+            }));
+            setCategoryPosts(formattedPosts);
+          }
+        } catch (error) {
+          console.error('Category fetch failed:', error);
+          setCategoryPosts([]);
+        }
         setTrends([]);
-      } finally {
-        setLoading(false);
       }
+      
+      setLoading(false);
     };
 
-    fetchTrends();
-  }, []);
+    fetchContent();
+  }, [activeTab]);
 
   if (loading) {
     return (
@@ -187,25 +331,57 @@ const TrendingSection = ({ onTrendClick }: { onTrendClick: (topic: string) => vo
     );
   }
 
-  if (trends.length === 0) {
+  // Show trending topics for For You and Trending tabs
+  if (activeTab === 'For You' || activeTab === 'Trending') {
+    if (trends.length === 0) {
+      return (
+        <div className="text-center text-muted-foreground py-12 text-sm">
+          {t('search.noTrends')}
+        </div>
+      );
+    }
+
+    const categories = activeTab === 'Trending' 
+      ? ['Trending', 'Trending', 'Trending', 'Trending', 'Trending']
+      : ['Trending', 'Politics · Trending', 'Entertainment · Trending', 'Sports · Trending', 'Technology · Trending'];
+
     return (
-      <div className="text-center text-muted-foreground py-12 text-sm">
-        {t('search.noTrends')}
+      <div className="divide-y divide-border">
+        <h2 className="px-4 py-3 text-[20px] font-extrabold text-foreground">
+          {activeTab === 'For You' ? 'Trends for you' : 'What\'s happening'}
+        </h2>
+        {trends.map((trend, index) => (
+          <TrendingItem
+            key={index}
+            trend={trend}
+            index={index}
+            category={categories[index % categories.length]}
+            onClick={() => onTrendClick(trend.topic)}
+          />
+        ))}
       </div>
     );
   }
 
-  const categories = ['Trending', 'Politics · Trending', 'Entertainment · Trending', 'Sports · Trending', 'Technology · Trending'];
+  // Show category posts for News, Sports, Entertainment
+  if (categoryPosts.length === 0) {
+    return (
+      <div className="text-center text-muted-foreground py-12 text-sm">
+        No {activeTab.toLowerCase()} posts found
+      </div>
+    );
+  }
 
   return (
     <div className="divide-y divide-border">
-      {trends.map((trend, index) => (
-        <TrendingItem
-          key={index}
-          trend={trend}
-          index={index}
-          category={categories[index % categories.length]}
-          onClick={() => onTrendClick(trend.topic)}
+      <h2 className="px-4 py-3 text-[20px] font-extrabold text-foreground">
+        {activeTab}
+      </h2>
+      {categoryPosts.map((post) => (
+        <CategoryPostItem
+          key={post.id}
+          post={post}
+          onClick={() => onPostClick(post.id)}
         />
       ))}
     </div>
@@ -293,7 +469,7 @@ const Search = () => {
   const [loading, setLoading] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [historyKey, setHistoryKey] = useState(0);
-  const [activeTab, setActiveTab] = useState('For You');
+  const [activeTab, setActiveTab] = useState<TabType>('For You');
   const [userProfile, setUserProfile] = useState<{ avatar_url?: string | null; display_name?: string } | null>(null);
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -592,7 +768,11 @@ const Search = () => {
               onRemove={() => {}}
               onClearAll={() => toast.success(t('search.historyCleared', 'Search history cleared'))}
             />
-            <TrendingSection onTrendClick={handleTrendClick} />
+            <TrendingSection 
+              activeTab={activeTab} 
+              onTrendClick={handleTrendClick} 
+              onPostClick={handleViewPost}
+            />
           </>
         ) : !hasAnyResults ? (
           <div className="text-center text-muted-foreground py-12 text-[15px]">
