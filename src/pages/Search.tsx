@@ -780,10 +780,11 @@ const Search = () => {
   };
 
   const isSearchActive = !!query.trim();
-  const userResults = results.filter(r => r.type === 'user');
-  const groupResults = results.filter(r => r.type === 'group');
-  const postResults = results.filter(r => r.type === 'post');
-  const hasAnyResults = results.length > 0;
+  const safeResults = results || [];
+  const userResults = safeResults.filter(r => r.type === 'user');
+  const groupResults = safeResults.filter(r => r.type === 'group');
+  const postResults = safeResults.filter(r => r.type === 'post');
+  const hasAnyResults = safeResults.length > 0;
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -878,7 +879,7 @@ const Search = () => {
         ) : (
           <div>
             {/* AI Search Summary for Premium Users */}
-            <AISearchSummary query={query} resultsCount={results.length} />
+            <AISearchSummary query={query} resultsCount={safeResults.length} />
             
             <div className="divide-y divide-border">
             {/* People Results */}
