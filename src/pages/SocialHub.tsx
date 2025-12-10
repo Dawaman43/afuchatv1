@@ -181,8 +181,8 @@ const SocialHub = () => {
                             <AvatarImage src={story.user.avatar_url} />
                             <AvatarFallback>{story.user.display_name[0]}</AvatarFallback>
                           </Avatar>
-                          <span className="text-white text-sm font-semibold truncate">
-                            {story.user.display_name}
+                          <span className="text-white text-sm font-semibold truncate max-w-[100px]" title={story.user.display_name}>
+                            {story.user.display_name.length > 10 ? `${story.user.display_name.slice(0, 8)}...` : story.user.display_name}
                           </span>
                         </div>
                         {story.caption && (
@@ -274,7 +274,7 @@ const SocialHub = () => {
                             className="flex items-center gap-2 cursor-pointer"
                             onClick={() => navigate(`/${suggestedUser.id}`)}
                           >
-                            <span className="font-semibold truncate">{suggestedUser.display_name}</span>
+                            <span className="font-semibold truncate max-w-[120px]" title={suggestedUser.display_name}>{suggestedUser.display_name.length > 12 ? `${suggestedUser.display_name.slice(0, 10)}...` : suggestedUser.display_name}</span>
                             {suggestedUser.is_verified && (
                               <Badge variant="secondary" className="text-xs">✓</Badge>
                             )}

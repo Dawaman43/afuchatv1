@@ -282,8 +282,8 @@ export default function Followers() {
                   onClick={() => handleUserClick(profile.handle)}
                 >
                   <div className="flex items-center gap-1">
-                    <span className="font-semibold text-sm">
-                      {profile.display_name}
+                    <span className="font-semibold text-sm max-w-[120px] truncate" title={profile.display_name}>
+                      {profile.display_name.length > 12 ? `${profile.display_name.slice(0, 10)}...` : profile.display_name}
                     </span>
                     {profile.is_verified && <VerifiedBadge size="sm" />}
                     {profile.is_organization_verified && (
