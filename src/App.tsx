@@ -154,7 +154,7 @@ const AppRoutes = () => {
       <Route path="/notifications" element={<Layout><Notifications /></Layout>} />
       <Route path="/post/:postId" element={<Layout><PostDetail /></Layout>} />
       <Route path="/admin" element={<Layout><AdminDashboard /></Layout>} />
-      <Route path="/ai-chat" element={<AIChat />} />
+      <Route path="/ai-chat" element={<Layout><AIChat /></Layout>} />
       <Route path="/install" element={<Install />} />
       <Route path="/support" element={<Support />} />
       <Route path="/leaderboard" element={<Layout><UnifiedLeaderboard /></Layout>} />
