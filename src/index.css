@@ -269,20 +269,20 @@
 
   /* X/Twitter Style Typography System */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-sans tracking-tight;
-    letter-spacing: -0.02em;
+    @apply font-sans;
+    letter-spacing: -0.01em;
   }
 
   h1 {
-    @apply text-[23px] font-extrabold leading-7;
-  }
-
-  h2 {
     @apply text-[20px] font-bold leading-6;
   }
 
+  h2 {
+    @apply text-[17px] font-bold leading-5;
+  }
+
   h3 {
-    @apply text-[17px] font-bold leading-6;
+    @apply text-[15px] font-bold leading-5;
   }
 
   h4 {
@@ -291,28 +291,28 @@
 
   /* Body text - X style */
   p {
-    @apply text-[15px] leading-5;
+    @apply text-[15px] font-normal leading-[22px];
   }
 
-  /* Display name style */
+  /* Display name style - bold like X */
   .display-name {
     @apply text-[15px] font-bold leading-5;
   }
 
-  /* Username/handle style */
+  /* Username/handle style - regular weight, muted */
   .username {
-    @apply text-[15px] text-muted-foreground leading-5;
+    @apply text-[15px] font-normal text-muted-foreground leading-5;
   }
 
-  /* Post content style */
+  /* Post content style - regular weight like X */
   .post-content {
-    @apply text-[15px] leading-[20px];
+    @apply text-[15px] font-normal leading-[22px];
     word-wrap: break-word;
   }
 
-  /* Small metadata text */
+  /* Small metadata/engagement text */
   .meta-text {
-    @apply text-[13px] text-muted-foreground leading-4;
+    @apply text-[13px] font-normal text-muted-foreground leading-4;
   }
 
   /* Tab/Navigation text */
@@ -322,7 +322,7 @@
 
   /* Button text */
   .btn-text {
-    @apply text-[15px] font-bold leading-5;
+    @apply text-[14px] font-bold leading-5;
   }
 
   /* Bold text utility for headers */
