@@ -892,25 +892,15 @@ const ChatRoom = () => {
         finalUrl = data.publicUrl;
       }
       
-      // Fetch audio as blob for better compatibility
-      const response = await fetch(finalUrl);
-      if (!response.ok) {
-        throw new Error('Failed to fetch audio');
-      }
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
+      const audio = new Audio(finalUrl);
       
-      const audio = new Audio(blobUrl);
-      
-      audio.onerror = (e) => {
-        console.error('Audio playback error:', e);
-        URL.revokeObjectURL(blobUrl);
+      audio.onerror = () => {
+        console.error('Audio playback error for URL:', finalUrl);
         toast.error('Could not play audio');
         setAudioPlayers((prev) => ({ ...prev, [messageId]: { audio: null, isPlaying: false } }));
       };
       
       audio.onended = () => {
-        URL.revokeObjectURL(blobUrl);
         setAudioPlayers((prev) => ({ ...prev, [messageId]: { ...prev[messageId], isPlaying: false } }));
       };
       
