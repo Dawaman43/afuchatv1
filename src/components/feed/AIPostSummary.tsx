@@ -1,37 +1,91 @@
-import { useState } from 'react';
-import { Sparkles, Crown, ChevronDown, ChevronUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { CustomLoader } from '@/components/ui/CustomLoader';
 import { supabase } from '@/integrations/supabase/client';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { categorizeContent, ContentCategory } from '@/lib/contentCategorization';
 
 interface AIPostSummaryProps {
   postContent: string;
   postId: string;
 }
 
+// Categories that are worth summarizing
+const SUMMARY_WORTHY_CATEGORIES: ContentCategory[] = ['news', 'technology', 'politics', 'business', 'sports'];
+
+// Minimum confidence score to trigger auto-summary
+const MIN_CONFIDENCE_THRESHOLD = 40;
+
+// Minimum content length for summary consideration
+const MIN_CONTENT_LENGTH = 200;
+
+// Check if post content is worth summarizing based on AI analysis
+const isWorthSummarizing = (content: string): boolean => {
+  // Must be long enough
+  if (content.length < MIN_CONTENT_LENGTH) return false;
+  
+  // Analyze content category
+  const categories = categorizeContent(content);
+  
+  // Check if top category is summary-worthy with sufficient confidence
+  if (categories.length > 0) {
+    const topCategory = categories[0];
+    if (SUMMARY_WORTHY_CATEGORIES.includes(topCategory.category) && 
+        topCategory.confidence >= MIN_CONFIDENCE_THRESHOLD) {
+      return true;
+    }
+  }
+  
+  // Additional heuristics for informative content
+  const informativePatterns = [
+    /breaking:/i,
+    /announced/i,
+    /according to/i,
+    /research shows/i,
+    /study finds/i,
+    /experts say/i,
+    /official/i,
+    /report/i,
+    /update:/i,
+    /important:/i,
+    /\d+%/,
+    /million|billion/i,
+    /government/i,
+    /launched/i,
+    /released/i,
+  ];
+  
+  const matchCount = informativePatterns.filter(pattern => pattern.test(content)).length;
+  
+  // If multiple informative patterns match, it's worth summarizing
+  return matchCount >= 2;
+};
+
 export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
   const { isPremium } = usePremiumStatus();
-  const navigate = useNavigate();
   const [summary, setSummary] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
+  const [shouldShow, setShouldShow] = useState(false);
 
-  // Only show for longer posts
-  if (postContent.length < 150) return null;
-
-  const generateSummary = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  useEffect(() => {
+    // Only process for premium users
+    if (!isPremium) return;
     
-    if (!isPremium) {
-      toast.error('AI Summary is a premium feature');
-      navigate('/premium');
-      return;
+    // Check if this post is worth summarizing
+    const worthSummarizing = isWorthSummarizing(postContent);
+    setShouldShow(worthSummarizing);
+    
+    // Auto-generate summary if worthy
+    if (worthSummarizing && !summary && !loading) {
+      generateSummary();
     }
+  }, [isPremium, postContent, postId]);
 
+  const generateSummary = async () => {
+    if (loading || summary) return;
+    
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('chat-with-afuai', {
@@ -42,15 +96,17 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
       });
 
       if (error) throw error;
-      setSummary(data?.reply || 'Unable to generate summary');
-      setExpanded(true);
+      setSummary(data?.reply || null);
     } catch (error) {
       console.error('AI Summary error:', error);
-      toast.error('Failed to generate summary');
+      setShouldShow(false);
     } finally {
       setLoading(false);
     }
   };
+
+  // Don't render anything if not premium or not worth summarizing
+  if (!isPremium || !shouldShow) return null;
 
   return (
     <div 
@@ -68,12 +124,6 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
           <div className="flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
             <span className="text-xs font-medium text-foreground">AfuAI Summary</span>
-            {!isPremium && (
-              <span className="flex items-center gap-0.5 text-[10px] text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
-                <Crown className="h-2.5 w-2.5" />
-                Premium
-              </span>
-            )}
           </div>
           
           {summary && (
@@ -84,7 +134,7 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
         </div>
 
         <AnimatePresence>
-          {(expanded || !summary) && (
+          {expanded && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
@@ -101,18 +151,7 @@ export const AIPostSummary = ({ postContent, postId }: AIPostSummaryProps) => {
                   <p className="text-xs text-foreground/90 leading-relaxed bg-background/50 rounded p-2">
                     {summary}
                   </p>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={generateSummary}
-                    className="w-full h-7 justify-center gap-1.5 text-xs text-primary hover:text-primary hover:bg-primary/10"
-                  >
-                    <Sparkles className="h-3 w-3" />
-                    Get Summary
-                    {!isPremium && <Crown className="h-2.5 w-2.5 text-amber-500" />}
-                  </Button>
-                )}
+                ) : null}
               </div>
             </motion.div>
           )}
