@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Bot, Send, Copy, Check, PenSquare, ArrowUp } from 'lucide-react';
+import { Bot, Copy, Check, PenSquare, ArrowUp, History } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -89,7 +89,6 @@ const AIChat: React.FC = () => {
     setInput('');
     setLoading(true);
 
-    // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
@@ -151,7 +150,6 @@ const AIChat: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
-    // Auto-resize textarea
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 150) + 'px';
@@ -177,7 +175,7 @@ const AIChat: React.FC = () => {
     <PremiumGate feature="AI Chat Assistant" showUpgrade={true}>
       <div className="flex flex-col h-full bg-background">
         {/* Header */}
-        <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
+        <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-background flex-shrink-0">
           <ProfileDrawer
             trigger={
               <button className="flex-shrink-0">
@@ -194,13 +192,18 @@ const AIChat: React.FC = () => {
             <span className="text-lg font-bold">AfuAI</span>
           </div>
           
-          <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleNewChat}>
-            <PenSquare className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-10 w-10">
+              <History className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleNewChat}>
+              <PenSquare className="h-5 w-5" />
+            </Button>
+          </div>
         </header>
 
-        {/* Chat Messages Area */}
-        <div className="flex-1 overflow-y-auto">
+        {/* Chat Messages Area - Takes remaining space */}
+        <div className="flex-1 overflow-y-auto min-h-0">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full p-6 text-center">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -262,29 +265,27 @@ const AIChat: React.FC = () => {
           )}
         </div>
 
-        {/* Input Area - Professional Design */}
-        <div className="p-4 bg-background">
-          <div className="bg-card border border-border rounded-2xl overflow-hidden">
+        {/* Input Area - Fixed near bottom nav */}
+        <div className="flex-shrink-0 px-3 pb-2 pt-2 bg-background border-t border-border">
+          <div className="flex items-end gap-2 bg-card border border-border rounded-full px-4 py-2">
             <Textarea
               ref={textareaRef}
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Message AfuAI..."
-              className="border-0 bg-transparent px-4 pt-4 pb-2 text-[16px] placeholder:text-muted-foreground focus-visible:ring-0 resize-none min-h-[52px] max-h-[150px]"
+              className="border-0 bg-transparent p-0 text-[15px] placeholder:text-muted-foreground focus-visible:ring-0 resize-none min-h-[24px] max-h-[100px] flex-1"
               disabled={loading}
               rows={1}
             />
-            <div className="flex items-center justify-end px-3 pb-3">
-              <Button
-                onClick={handleSend}
-                disabled={!input.trim() || loading}
-                size="icon"
-                className="h-9 w-9 rounded-full bg-primary hover:bg-primary/90 disabled:opacity-30"
-              >
-                <ArrowUp className="h-5 w-5 text-primary-foreground" />
-              </Button>
-            </div>
+            <Button
+              onClick={handleSend}
+              disabled={!input.trim() || loading}
+              size="icon"
+              className="h-8 w-8 rounded-full bg-primary hover:bg-primary/90 disabled:opacity-30 flex-shrink-0"
+            >
+              <ArrowUp className="h-4 w-4 text-primary-foreground" />
+            </Button>
           </div>
         </div>
       </div>
