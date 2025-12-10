@@ -1,14 +1,10 @@
 import { motion } from 'framer-motion';
-import { Check, CheckCheck, Play, Pause, Volume2, Smile, Reply, Pencil, FileText, Download, Image as ImageIcon, MoreVertical } from 'lucide-react';
-import { Avatar } from './Avatar';
-import { Badge } from '@/components/ui/badge';
+import { Check, CheckCheck, Play, Pause, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AttachmentPreview } from './AttachmentPreview';
 import { useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ImageLightbox } from '@/components/ui/ImageLightbox';
-import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { MessageActionsSheet } from './MessageActionsSheet';
@@ -274,53 +270,6 @@ export const MessageBubble = ({
   const repliedMessage = message.reply_to_message;
 
 
-  const ReactionButton = () => (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-muted"
-        >
-          <Smile className="h-4 w-4" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-2 border-border/50 shadow-lg">
-        <div className="flex gap-1">
-          {['👍', '❤️', '😂', '😮', '😢', '🔥'].map(emoji => (
-            <Button
-              key={emoji}
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 text-xl p-0 hover:bg-muted rounded-lg transition-colors"
-              onClick={() => onReaction(message.id, emoji)}
-            >
-              {emoji}
-            </Button>
-          ))}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-
-  const ReactionDisplay = () => {
-    const aggregated = aggregateReactions(message.message_reactions || []);
-    if (aggregated.length === 0) return null;
-    return (
-      <div className={`flex gap-1 mt-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
-        {aggregated.map(({ emoji, count }) => (
-          <Badge 
-            key={emoji} 
-            variant="secondary" 
-            className="rounded-full px-2 py-0.5 text-xs border border-border/50 shadow-sm"
-          >
-            {emoji} {typeof count === 'number' && count > 1 && <span className="ml-1 opacity-70">{count}</span>}
-          </Badge>
-        ))}
-      </div>
-    );
-  };
-  
   const ReadStatus = () => {
     if (!isOwn || !showReadReceipts) return null;
     
@@ -355,154 +304,138 @@ export const MessageBubble = ({
       onTouchEnd={handleTouchEnd}
       onContextMenu={handleContextMenu}
       style={{ touchAction: 'pan-y' }}
-      className={`flex w-full group ${isOwn ? 'justify-end' : 'justify-start'} relative ${
-        isLastInGroup ? 'mb-2' : 'mb-0.5'
+      className={`flex w-full group ${isOwn ? 'justify-end pl-12' : 'justify-start pr-12'} ${
+        isLastInGroup ? 'mb-1' : 'mb-0.5'
       }`}
     >
-      <div className={`flex items-end gap-1.5 max-w-[75%] sm:max-w-[65%] ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
-        
-        {/* --- Avatar --- */}
-        {!isOwn && (
-          isLastInGroup ? (
-            <div className="mb-0.5">
-              <Avatar name={message.profiles?.display_name || 'User'} userId={message.sender_id} />
-            </div>
-          ) : (
-            <div className="w-8 flex-shrink-0" />
-          )
+      {/* --- Message Bubble --- */}
+      <div
+        className={`relative ${
+          isOwn
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-muted text-foreground'
+        } ${getBubbleRadius()} min-w-[48px] max-w-full`}
+      >
+        {/* --- Reply Preview --- */}
+        {repliedMessage && (
+          <div className={`px-2.5 py-1.5 border-l-2 ${
+            isOwn 
+              ? 'border-primary-foreground/50 bg-primary-foreground/10' 
+              : 'border-primary/70 bg-primary/5'
+          }`}>
+            <p className={`text-[11px] font-medium truncate ${
+              isOwn ? 'text-primary-foreground/80' : 'text-primary'
+            }`}>
+              {repliedMessage.profiles?.display_name || 'User'}
+            </p>
+            <p className={`text-[11px] truncate ${
+              isOwn ? 'text-primary-foreground/60' : 'text-muted-foreground'
+            }`}>
+              {repliedMessage.audio_url ? '🎤 Voice message' : repliedMessage.encrypted_content}
+            </p>
+          </div>
         )}
         
-        {/* --- Message Container --- */}
-        <div className="flex flex-col min-w-0">
-          <div className={`flex items-end gap-2 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
-            {/* --- Message Bubble --- */}
-            <div
-              className={`${
-                isOwn
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-foreground'
-              } ${getBubbleRadius()} min-w-[60px] max-w-full`}
-            >
-              {/* --- Reply Preview --- */}
-              {repliedMessage && (
-                <div className={`px-3 py-2 border-l-2 rounded-t-lg ${
-                  isOwn 
-                    ? 'border-primary-foreground/50 bg-primary-foreground/15' 
-                    : 'border-primary/70 bg-primary/10'
-                }`}>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    {repliedMessage.profiles?.avatar_url ? (
-                      <img 
-                        src={repliedMessage.profiles.avatar_url} 
-                        alt={repliedMessage.profiles?.display_name || 'User'}
-                        className="w-4 h-4 rounded-full object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="w-4 h-4 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                        <span className="text-[8px] font-medium text-muted-foreground">
-                          {(repliedMessage.profiles?.display_name || 'U').charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    <p className={`text-xs font-medium ${
-                      isOwn ? 'text-primary-foreground/90' : 'text-primary'
-                    }`}>
-                      {repliedMessage.profiles?.display_name || 'User'}
-                    </p>
-                  </div>
-                  <p className={`text-xs truncate ${
-                    isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                  }`} style={{ fontSize: `${Math.max(fontSize - 4, 10)}px` }}>
-                    {repliedMessage.audio_url ? '🎤 Voice message' : repliedMessage.encrypted_content}
-                  </p>
-                </div>
-              )}
-              
-              {/* --- Main Content (Text or Voice or Attachment) --- */}
-              {hasAttachment ? (
-                <div className="p-2">
-                  <AttachmentPreview
-                    url={message.attachment_url!}
-                    type={message.attachment_type || ''}
-                    name={message.attachment_name || 'Attachment'}
-                    size={message.attachment_size}
-                    isOwn={isOwn}
-                    onDownload={message.attachment_type?.startsWith('image/') 
-                      ? () => setLightboxOpen(true)
-                      : handleDownload
-                    }
-                  />
-                  {message.encrypted_content && (
-                    <div className="px-2 py-2 mt-1">
-                      <p className="leading-relaxed whitespace-pre-wrap break-words" style={{ fontSize: `${fontSize}px` }}>
-                        {parseMessageContent(message.encrypted_content)}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ) : isVoice ? (
-                <div className="flex items-center gap-3 px-3 py-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`h-9 w-9 rounded-full flex-shrink-0 ${
-                      isOwn ? 'hover:bg-primary-foreground/20' : 'hover:bg-primary/10'
-                    }`}
-                    onClick={onToggleAudio}
-                  >
-                    {audioPlayerState?.isPlaying ? (
-                      <Pause className="h-4 w-4" />
-                    ) : (
-                      <Play className="h-4 w-4 ml-0.5" />
-                    )}
-                  </Button>
-                  <div className="flex items-center gap-2 flex-1">
-                    <div className="h-1 flex-1 bg-current opacity-20 rounded-full">
-                      <div className="h-full w-1/3 bg-current opacity-60 rounded-full" />
-                    </div>
-                    <span className="text-xs opacity-60">0:42</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="px-3 py-2">
-                  <p className="leading-relaxed whitespace-pre-wrap break-words" style={{ fontSize: `${fontSize}px` }}>
-                    {parseMessageContent(message.encrypted_content)}
-                  </p>
-                </div>
-              )}
-            </div>
-            
-            {/* --- Action Buttons --- */}
-            <div className={`flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${
-              isOwn ? 'flex-row-reverse' : 'flex-row'
-            }`}>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 p-0 rounded-full hover:bg-muted"
-                onClick={() => setActionsSheetOpen(true)}
-              >
-                <MoreVertical className="h-3.5 w-3.5" />
-              </Button>
-              <ReactionButton />
-            </div>
-          </div>
-
-          {/* --- Timestamp & Status - X-style below the bubble --- */}
-          <div className={`flex items-center gap-1.5 mt-1 px-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
-            {message.edited_at && (
-              <span className="text-[11px] text-muted-foreground">edited</span>
+        {/* --- Main Content --- */}
+        {hasAttachment ? (
+          <div className="p-1">
+            <AttachmentPreview
+              url={message.attachment_url!}
+              type={message.attachment_type || ''}
+              name={message.attachment_name || 'Attachment'}
+              size={message.attachment_size}
+              isOwn={isOwn}
+              onDownload={message.attachment_type?.startsWith('image/') 
+                ? () => setLightboxOpen(true)
+                : handleDownload
+              }
+            />
+            {message.encrypted_content && (
+              <div className="px-2 pb-1 pt-1">
+                <p className="leading-snug whitespace-pre-wrap break-words" style={{ fontSize: `${fontSize}px` }}>
+                  {parseMessageContent(message.encrypted_content)}
+                </p>
+              </div>
             )}
-            <span className="text-[11px] text-muted-foreground">{time}</span>
-            <ReadStatus />
+            {/* Timestamp inside for attachments */}
+            <div className={`flex items-center gap-1 px-2 pb-1 ${isOwn ? 'justify-end' : 'justify-end'}`}>
+              {message.edited_at && <span className="text-[10px] opacity-60">edited</span>}
+              <span className="text-[10px] opacity-60">{time}</span>
+              <ReadStatus />
+            </div>
           </div>
-
-          {/* --- Reactions --- */}
-          <ReactionDisplay />
-        </div>
+        ) : isVoice ? (
+          <div className="flex items-center gap-2 pl-2 pr-3 py-1.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-8 w-8 rounded-full flex-shrink-0 ${
+                isOwn ? 'hover:bg-primary-foreground/20' : 'hover:bg-primary/10'
+              }`}
+              onClick={onToggleAudio}
+            >
+              {audioPlayerState?.isPlaying ? (
+                <Pause className="h-4 w-4" />
+              ) : (
+                <Play className="h-4 w-4 ml-0.5" />
+              )}
+            </Button>
+            <div className="flex items-center gap-2 flex-1 min-w-[100px]">
+              <div className="h-1 flex-1 bg-current opacity-20 rounded-full">
+                <div className="h-full w-1/3 bg-current opacity-60 rounded-full" />
+              </div>
+            </div>
+            <div className="flex items-center gap-1 ml-1">
+              <span className="text-[10px] opacity-60">{time}</span>
+              <ReadStatus />
+            </div>
+          </div>
+        ) : (
+          <div className="px-2.5 py-1.5">
+            <p className="leading-snug whitespace-pre-wrap break-words inline" style={{ fontSize: `${fontSize}px` }}>
+              {parseMessageContent(message.encrypted_content)}
+            </p>
+            {/* Inline timestamp and status */}
+            <span className="inline-flex items-center gap-1 ml-2 align-bottom float-right mt-1">
+              {message.edited_at && <span className="text-[10px] opacity-60">edited</span>}
+              <span className="text-[10px] opacity-60">{time}</span>
+              <ReadStatus />
+            </span>
+          </div>
+        )}
+        
+        {/* --- Reactions --- */}
+        {(message.message_reactions?.length ?? 0) > 0 && (
+          <div className={`absolute -bottom-3 ${isOwn ? 'right-2' : 'left-2'}`}>
+            <div className="flex gap-0.5">
+              {aggregateReactions(message.message_reactions || []).map(({ emoji, count }) => (
+                <span 
+                  key={emoji} 
+                  className="bg-background/90 backdrop-blur-sm rounded-full px-1.5 py-0.5 text-xs border border-border/50 shadow-sm"
+                >
+                  {emoji}{count > 1 && <span className="ml-0.5 text-[10px] opacity-70">{count}</span>}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       
-      {/* Image Lightbox - rendered via portal for proper isolation */}
+      {/* --- Hover Action Button --- */}
+      <div className={`flex items-center opacity-0 group-hover:opacity-100 transition-opacity ${
+        isOwn ? 'order-first mr-1' : 'order-last ml-1'
+      }`}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 p-0 rounded-full hover:bg-muted/80"
+          onClick={() => setActionsSheetOpen(true)}
+        >
+          <MoreVertical className="h-3 w-3 text-muted-foreground" />
+        </Button>
+      </div>
+      
+      {/* Image Lightbox */}
       {lightboxOpen && hasAttachment && message.attachment_type?.startsWith('image/') && createPortal(
         <ImageLightbox
           images={[{ url: message.attachment_url!, alt: message.attachment_name || 'Image' }]}
