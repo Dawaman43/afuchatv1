@@ -39,6 +39,7 @@ const Layout = ({ children }: LayoutProps) => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [chatScrollHide, setChatScrollHide] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [unreadChats, setUnreadChats] = useState(0);
   
   // Initialize push notifications listener
   usePushNotifications();
@@ -117,8 +118,37 @@ const Layout = ({ children }: LayoutProps) => {
       };
       fetchUnreadCount();
 
+      // Fetch unread chats count
+      const fetchUnreadChatsCount = async () => {
+        // Get all chats user is a member of
+        const { data: memberChats } = await supabase
+          .from('chat_members')
+          .select('chat_id')
+          .eq('user_id', user.id);
+        
+        if (!memberChats || memberChats.length === 0) {
+          setUnreadChats(0);
+          return;
+        }
+
+        const chatIds = memberChats.map(c => c.chat_id);
+        
+        // Get messages that are unread (read_at is null) and not sent by current user
+        const { data: unreadMessages } = await supabase
+          .from('messages')
+          .select('chat_id')
+          .in('chat_id', chatIds)
+          .neq('sender_id', user.id)
+          .is('read_at', null);
+        
+        // Count unique chats with unread messages
+        const uniqueChats = new Set(unreadMessages?.map(m => m.chat_id) || []);
+        setUnreadChats(uniqueChats.size);
+      };
+      fetchUnreadChatsCount();
+
       // Real-time subscription for notifications
-      const channel = supabase
+      const notifChannel = supabase
         .channel('nav-notifications')
         .on('postgres_changes', {
           event: '*',
@@ -130,8 +160,21 @@ const Layout = ({ children }: LayoutProps) => {
         })
         .subscribe();
 
+      // Real-time subscription for messages (unread chats)
+      const msgChannel = supabase
+        .channel('nav-messages')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+        }, () => {
+          fetchUnreadChatsCount();
+        })
+        .subscribe();
+
       return () => {
-        supabase.removeChannel(channel);
+        supabase.removeChannel(notifChannel);
+        supabase.removeChannel(msgChannel);
       };
     }
   }, [user]);
@@ -310,15 +353,22 @@ const Layout = ({ children }: LayoutProps) => {
               
               <Link
                 to="/chats"
-                className="flex items-center justify-center w-12 h-12 transition-colors"
+                className="flex items-center justify-center w-12 h-12 transition-colors relative"
               >
-                <MessageCircle 
-                  className={cn(
-                    "h-6 w-6",
-                    isActive('/chats') ? "text-primary fill-primary" : "text-foreground"
-                  )} 
-                  strokeWidth={isActive('/chats') ? 2.5 : 1.5} 
-                />
+                <div className="relative">
+                  <MessageCircle 
+                    className={cn(
+                      "h-6 w-6",
+                      isActive('/chats') ? "text-primary fill-primary" : "text-foreground"
+                    )} 
+                    strokeWidth={isActive('/chats') ? 2.5 : 1.5} 
+                  />
+                  {unreadChats > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full">
+                      {unreadChats > 99 ? '99+' : unreadChats}
+                    </span>
+                  )}
+                </div>
               </Link>
             </div>
           </nav>
