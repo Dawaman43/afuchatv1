@@ -153,6 +153,10 @@ const ChatRoom = () => {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [uploading, setUploading] = useState(false);
   const [audioPlayers, setAudioPlayers] = useState<{ [key: string]: { isPlaying: boolean; audio: HTMLAudioElement | null } }>({});
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [previewAudio, setPreviewAudio] = useState<HTMLAudioElement | null>(null);
+  const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
@@ -647,35 +651,134 @@ const ChatRoom = () => {
     }
   };
 
+  const getSupportedMimeType = () => {
+    const mimeTypes = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/ogg;codecs=opus',
+      'audio/mp4',
+      'audio/mpeg',
+    ];
+    for (const mimeType of mimeTypes) {
+      if (MediaRecorder.isTypeSupported(mimeType)) {
+        return mimeType;
+      }
+    }
+    return 'audio/webm';
+  };
+
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 44100,
+        }
+      });
       streamRef.current = stream;
-      const mediaRecorder = new MediaRecorder(stream);
+      
+      const mimeType = getSupportedMimeType();
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
 
       const chunks: BlobPart[] = [];
-      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+      
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const blob = new Blob(chunks, { type: mimeType.split(';')[0] });
         setAudioBlob(blob);
         stream.getTracks().forEach(track => track.stop());
+        
+        // Clear recording timer
+        if (recordingTimerRef.current) {
+          clearInterval(recordingTimerRef.current);
+          recordingTimerRef.current = null;
+        }
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(100); // Collect data every 100ms
       setRecording(true);
-      toast.success(t('chat.recording'));
+      setRecordingTime(0);
+      
+      // Start recording timer
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      
     } catch (err) {
-      toast.error(t('chat.stopRecording'));
+      console.error('Recording error:', err);
+      toast.error('Could not access microphone');
     }
   };
 
-  const stopRecording = async () => {
+  const stopRecording = () => {
     if (mediaRecorderRef.current && recording) {
       mediaRecorderRef.current.stop();
       setRecording(false);
-      toast.success(t('chatRoom.messageSent'));
+      
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
     }
+  };
+
+  const cancelRecording = () => {
+    // Stop ongoing recording
+    if (mediaRecorderRef.current && recording) {
+      mediaRecorderRef.current.stop();
+      setRecording(false);
+    }
+    
+    // Stop the stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+    
+    // Clear timer
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    
+    // Stop preview audio
+    if (previewAudio) {
+      previewAudio.pause();
+      setPreviewAudio(null);
+      setIsPreviewPlaying(false);
+    }
+    
+    setAudioBlob(null);
+    setRecordingTime(0);
+  };
+
+  const togglePreviewAudio = () => {
+    if (!audioBlob) return;
+    
+    if (previewAudio && isPreviewPlaying) {
+      previewAudio.pause();
+      setIsPreviewPlaying(false);
+    } else {
+      const audio = new Audio(URL.createObjectURL(audioBlob));
+      audio.onended = () => {
+        setIsPreviewPlaying(false);
+      };
+      audio.play();
+      setPreviewAudio(audio);
+      setIsPreviewPlaying(true);
+    }
+  };
+
+  const formatRecordingTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const sendVoiceMessage = async () => {
@@ -1342,35 +1445,64 @@ const ChatRoom = () => {
             />
             <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-center gap-2">
               {recording ? (
-                <div className="flex-1 flex items-center gap-3 px-4 py-2.5 bg-muted/50 rounded-full">
-                  <div className="flex items-center gap-2 flex-1">
-                    <div className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
-                    <span className="text-sm text-destructive font-medium">Recording...</span>
+                <div className="flex-1 flex items-center gap-2 px-4 py-2.5 bg-destructive/10 rounded-full border border-destructive/20">
+                  <div className="w-2.5 h-2.5 bg-destructive rounded-full animate-pulse" />
+                  <span className="text-sm text-destructive font-semibold tabular-nums">
+                    {formatRecordingTime(recordingTime)}
+                  </span>
+                  <span className="text-sm text-destructive/80 flex-1">Recording...</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full hover:bg-destructive/10 text-destructive"
+                    onClick={cancelRecording}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon"
+                    className="h-9 w-9 rounded-full bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                    onClick={stopRecording}
+                  >
+                    <MicOff className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : audioBlob ? (
+                <div className="flex-1 flex items-center gap-2 px-4 py-2.5 bg-primary/10 rounded-full border border-primary/20">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full hover:bg-primary/10 text-primary"
+                    onClick={togglePreviewAudio}
+                  >
+                    {isPreviewPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                  </Button>
+                  <span className="text-sm text-primary font-medium tabular-nums">
+                    {formatRecordingTime(recordingTime)}
+                  </span>
+                  <div className="flex-1 h-1 bg-primary/20 rounded-full overflow-hidden">
+                    <div className="h-full w-full bg-primary rounded-full" />
                   </div>
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 rounded-full"
-                    onClick={stopRecording}
-                    disabled={uploading}
+                    className="h-8 w-8 rounded-full hover:bg-destructive/10 text-destructive"
+                    onClick={cancelRecording}
                   >
-                    {uploading ? <MicOff className="h-5 w-5 opacity-50" /> : <MicOff className="h-5 w-5" />}
+                    <X className="h-4 w-4" />
                   </Button>
-                </div>
-              ) : audioBlob ? (
-                <div className="flex-1 flex items-center gap-3 px-4 py-2.5 bg-muted/50 rounded-full">
-                  <Volume2 className="h-5 w-5 text-primary" />
-                  <span className="text-sm text-primary font-medium flex-1">Voice message ready</span>
                   <Button
                     type="button"
-                    variant="ghost"
                     size="icon"
-                    className="h-9 w-9 rounded-full text-primary"
+                    className="h-9 w-9 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
                     onClick={sendVoiceMessage}
                     disabled={uploading}
                   >
-                    {uploading ? <Send className="h-5 w-5 opacity-50" /> : <Send className="h-5 w-5" />}
+                    {uploading ? <Send className="h-4 w-4 opacity-50" /> : <Send className="h-4 w-4" />}
                   </Button>
                 </div>
               ) : (
