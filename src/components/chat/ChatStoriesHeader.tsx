@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Menu, Search, X } from 'lucide-react';
+import { Plus, Menu, Search, X, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ChatMenuDrawer } from './ChatMenuDrawer';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface StoryUser {
   user_id: string;
@@ -15,12 +16,12 @@ interface StoryUser {
 }
 
 interface ChatStoriesHeaderProps {
-  shouldCollapse?: boolean;
-  onToggleCollapse?: (collapsed: boolean) => void;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
   onSearch?: (query: string) => void;
 }
 
-export const ChatStoriesHeader = ({ onSearch }: ChatStoriesHeaderProps) => {
+export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: ChatStoriesHeaderProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [storyUsers, setStoryUsers] = useState<StoryUser[]>([]);
@@ -122,11 +123,13 @@ export const ChatStoriesHeader = ({ onSearch }: ChatStoriesHeaderProps) => {
     }
   };
 
-  const handleStoryClick = (userId: string) => {
+  const handleStoryClick = (userId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     navigate(`/moments?user=${userId}`);
   };
 
-  const handleCreateStory = () => {
+  const handleCreateStory = (e: React.MouseEvent) => {
+    e.stopPropagation();
     navigate('/moments');
   };
 
@@ -143,6 +146,9 @@ export const ChatStoriesHeader = ({ onSearch }: ChatStoriesHeaderProps) => {
     setSearchQuery(query);
     onSearch?.(query);
   };
+
+  const totalStories = storyUsers.length + 1; // +1 for "My Story"
+  const displayUsers = storyUsers.slice(0, 3); // Show max 3 overlapping avatars
 
   return (
     <>
@@ -191,7 +197,67 @@ export const ChatStoriesHeader = ({ onSearch }: ChatStoriesHeaderProps) => {
                 <Menu className="h-6 w-6 text-foreground" />
               </button>
 
-              <h1 className="text-xl font-bold text-foreground">AfuChat</h1>
+              {/* Collapsed stories preview - clickable to expand */}
+              <div 
+                onClick={onToggleExpand}
+                className="flex items-center gap-2 cursor-pointer hover:bg-muted/20 px-3 py-1.5 rounded-full transition-colors"
+              >
+                {/* Overlapping avatars */}
+                <div className="flex items-center -space-x-2">
+                  {/* My Story avatar */}
+                  <div className="relative z-30">
+                    {currentUserProfile?.avatar_url ? (
+                      <img
+                        src={currentUserProfile.avatar_url}
+                        alt="My Story"
+                        className="h-8 w-8 rounded-full object-cover border-2 border-background"
+                      />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center border-2 border-background">
+                        <span className="text-xs font-semibold text-muted-foreground">
+                          {currentUserProfile?.display_name?.charAt(0).toUpperCase() || 'M'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Other story avatars */}
+                  {displayUsers.map((storyUser, index) => (
+                    <div 
+                      key={storyUser.user_id} 
+                      className="relative"
+                      style={{ zIndex: 20 - index }}
+                    >
+                      <div className="p-[1.5px] rounded-full bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500">
+                        {storyUser.avatar_url ? (
+                          <img
+                            src={storyUser.avatar_url}
+                            alt={storyUser.display_name}
+                            className="h-7 w-7 rounded-full object-cover border-[1.5px] border-background"
+                          />
+                        ) : (
+                          <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center border-[1.5px] border-background">
+                            <span className="text-[10px] font-semibold text-primary-foreground">
+                              {storyUser.display_name?.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <span className="text-lg font-bold text-foreground">
+                  {totalStories} {totalStories === 1 ? 'Story' : 'Stories'}
+                </span>
+                
+                <motion.div
+                  animate={{ rotate: isExpanded ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                </motion.div>
+              </div>
 
               <button 
                 onClick={handleSearchToggle}
@@ -203,66 +269,78 @@ export const ChatStoriesHeader = ({ onSearch }: ChatStoriesHeaderProps) => {
           )}
         </div>
 
-        {/* Stories - always visible horizontal scroll like Telegram */}
-        <div className="overflow-x-auto scrollbar-hide px-4 pb-3">
-          <div className="flex gap-4">
-            {/* My Story */}
-            <div
-              onClick={handleCreateStory}
-              className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-1"
+        {/* Expanded stories section */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              className="overflow-hidden"
             >
-              <div className="relative">
-                {currentUserProfile?.avatar_url ? (
-                  <img
-                    src={currentUserProfile.avatar_url}
-                    alt="My Story"
-                    className="h-14 w-14 rounded-full object-cover border-2 border-border"
-                  />
-                ) : (
-                  <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center border-2 border-border">
-                    <span className="text-base font-semibold text-muted-foreground">
-                      {currentUserProfile?.display_name?.charAt(0).toUpperCase() || 'M'}
-                    </span>
-                  </div>
-                )}
-                <div className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full bg-primary flex items-center justify-center border-2 border-background">
-                  <Plus className="h-3 w-3 text-primary-foreground" />
-                </div>
-              </div>
-              <p className="text-[11px] text-center font-medium text-foreground w-14 truncate">
-                My Story
-              </p>
-            </div>
-
-            {/* Other stories */}
-            {storyUsers.map((storyUser) => (
-              <div
-                key={storyUser.user_id}
-                onClick={() => handleStoryClick(storyUser.user_id)}
-                className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-1"
-              >
-                <div className="p-[2px] rounded-full bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500">
-                  {storyUser.avatar_url ? (
-                    <img
-                      src={storyUser.avatar_url}
-                      alt={storyUser.display_name}
-                      className="h-14 w-14 rounded-full object-cover border-2 border-background"
-                    />
-                  ) : (
-                    <div className="h-14 w-14 rounded-full bg-primary flex items-center justify-center border-2 border-background">
-                      <span className="text-base font-semibold text-primary-foreground">
-                        {storyUser.display_name?.charAt(0).toUpperCase()}
-                      </span>
+              <div className="overflow-x-auto scrollbar-hide px-4 pb-3">
+                <div className="flex gap-4">
+                  {/* My Story */}
+                  <div
+                    onClick={handleCreateStory}
+                    className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-1"
+                  >
+                    <div className="relative">
+                      {currentUserProfile?.avatar_url ? (
+                        <img
+                          src={currentUserProfile.avatar_url}
+                          alt="My Story"
+                          className="h-14 w-14 rounded-full object-cover border-2 border-border"
+                        />
+                      ) : (
+                        <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center border-2 border-border">
+                          <span className="text-base font-semibold text-muted-foreground">
+                            {currentUserProfile?.display_name?.charAt(0).toUpperCase() || 'M'}
+                          </span>
+                        </div>
+                      )}
+                      <div className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full bg-primary flex items-center justify-center border-2 border-background">
+                        <Plus className="h-3 w-3 text-primary-foreground" />
+                      </div>
                     </div>
-                  )}
+                    <p className="text-[11px] text-center font-medium text-foreground w-14 truncate">
+                      My Story
+                    </p>
+                  </div>
+
+                  {/* Other stories */}
+                  {storyUsers.map((storyUser) => (
+                    <div
+                      key={storyUser.user_id}
+                      onClick={(e) => handleStoryClick(storyUser.user_id, e)}
+                      className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-1"
+                    >
+                      <div className="p-[2px] rounded-full bg-gradient-to-br from-cyan-400 via-teal-400 to-green-500">
+                        {storyUser.avatar_url ? (
+                          <img
+                            src={storyUser.avatar_url}
+                            alt={storyUser.display_name}
+                            className="h-14 w-14 rounded-full object-cover border-2 border-background"
+                          />
+                        ) : (
+                          <div className="h-14 w-14 rounded-full bg-primary flex items-center justify-center border-2 border-background">
+                            <span className="text-base font-semibold text-primary-foreground">
+                              {storyUser.display_name?.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-center font-medium text-foreground w-14 truncate">
+                        {storyUser.display_name}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-                <p className="text-[11px] text-center font-medium text-foreground w-14 truncate">
-                  {storyUser.display_name}
-                </p>
               </div>
-            ))}
-          </div>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </>
   );

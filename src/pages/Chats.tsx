@@ -67,6 +67,7 @@ const Chats = () => {
   const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showFab, setShowFab] = useState(true);
+  const [isStoriesExpanded, setIsStoriesExpanded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -295,6 +296,8 @@ const Chats = () => {
         setShowFab(true);
       } else if (scrollingDown && currentScrollY > 50) {
         setShowFab(false);
+        // Collapse stories when scrolling down
+        setIsStoriesExpanded(false);
       } else if (!scrollingDown) {
         setShowFab(true);
       }
@@ -341,8 +344,8 @@ const Chats = () => {
     <div className="h-screen flex flex-col bg-background relative overflow-hidden">
       {/* Stories Header */}
       <ChatStoriesHeader 
-        shouldCollapse={!showFab}
-        onToggleCollapse={() => setShowFab(!showFab)}
+        isExpanded={isStoriesExpanded}
+        onToggleExpand={() => setIsStoriesExpanded(!isStoriesExpanded)}
         onSearch={(query) => setSearchQuery(query)}
       />
 
