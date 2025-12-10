@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -269,7 +269,7 @@
 
   /* X/Twitter Style Typography System */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-outfit tracking-tight;
+    @apply font-sans tracking-tight;
     letter-spacing: -0.02em;
   }
 
