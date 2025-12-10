@@ -26,7 +26,7 @@ export default {
         '4xl': ['34px', { lineHeight: '40px' }],
       },
       fontFamily: {
-        'sans': ['DM Sans', 'system-ui', 'sans-serif'],
+        'sans': ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
