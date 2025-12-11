@@ -563,18 +563,23 @@ export default function CreatorEarnings() {
         </Card>
 
         {/* Pool Status & Timer */}
-        <Card className={`border-2 ${isPoolActive ? 'border-green-500/50 bg-green-500/5' : 'border-muted'}`}>
+        <Card className={`border-2 ${isPoolActive ? 'border-green-500/50 bg-green-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Timer className={`h-5 w-5 ${isPoolActive ? 'text-green-500' : 'text-muted-foreground'}`} />
+                <Timer className={`h-5 w-5 ${isPoolActive ? 'text-green-500' : 'text-red-500'}`} />
                 <div>
-                  <p className="text-sm font-medium">
-                    {isPoolActive ? 'Pool Active' : 'Pool Closed'}
+                  <p className={`text-sm font-medium ${isPoolActive ? 'text-green-600' : 'text-red-600'}`}>
+                    {isPoolActive ? 'Pool Active' : 'Pool Ended'}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Daily 8am - 8pm (Uganda Time)
                   </p>
+                  {!isPoolActive && (
+                    <p className="text-xs text-red-500/80 mt-1">
+                      Earnings credited at 8pm • Next pool opens 8am
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="text-right">
@@ -672,12 +677,14 @@ export default function CreatorEarnings() {
         )}
 
         {/* Daily Leaderboard - Live Rankings */}
-        <Card>
+        <Card className={!isPoolActive ? 'opacity-75' : ''}>
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-yellow-500" />
+              <Trophy className={`h-4 w-4 ${isPoolActive ? 'text-yellow-500' : 'text-muted-foreground'}`} />
               Today's Leaderboard
-              <span className="text-xs font-normal text-muted-foreground ml-auto">Live Rankings</span>
+              <span className={`text-xs font-normal ml-auto ${isPoolActive ? 'text-green-600' : 'text-red-500'}`}>
+                {isPoolActive ? 'Live Rankings' : 'Ended • Credited'}
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>

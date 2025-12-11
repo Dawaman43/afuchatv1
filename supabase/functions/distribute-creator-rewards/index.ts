@@ -16,20 +16,20 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log("Starting daily creator rewards distribution...");
+    console.log("Starting daily creator rewards credit...");
 
-    // Call the distribution function
-    const { data, error } = await supabase.rpc("distribute_daily_creator_rewards");
+    // Call the credit function to transfer earnings to eligible users
+    const { data, error } = await supabase.rpc("credit_daily_creator_earnings");
 
     if (error) {
-      console.error("Error distributing rewards:", error);
+      console.error("Error crediting rewards:", error);
       return new Response(
         JSON.stringify({ success: false, error: error.message }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
     }
 
-    console.log("Distribution result:", data);
+    console.log("Credit result:", data);
 
     return new Response(
       JSON.stringify({ success: true, result: data }),
