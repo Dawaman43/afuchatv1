@@ -87,13 +87,13 @@ export default function CreatorEarnings() {
   const { isPremium } = usePremiumStatus();
   const navigate = useNavigate();
 
-  // Check user's country, missed earnings, and privacy setting
+  // Check user's country, missed earnings, privacy setting, and admin status
   const { data: userProfile, refetch: refetchProfile } = useQuery({
     queryKey: ['user-profile-earnings', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('country, missed_earnings_total, hide_on_leaderboard')
+        .select('country, missed_earnings_total, hide_on_leaderboard, is_admin')
         .eq('id', user?.id)
         .single();
       if (error) throw error;
@@ -105,6 +105,7 @@ export default function CreatorEarnings() {
   const isUgandan = userProfile?.country?.toLowerCase() === 'uganda' || userProfile?.country === 'UG';
   const missedEarningsTotal = userProfile?.missed_earnings_total || 0;
   const hideOnLeaderboard = userProfile?.hide_on_leaderboard || false;
+  const isAdmin = userProfile?.is_admin || false;
 
   // Toggle privacy setting
   const handlePrivacyToggle = async (enabled: boolean) => {
@@ -827,39 +828,41 @@ export default function CreatorEarnings() {
           </Card>
         )}
 
-        {/* Balance Card with Withdraw Button - Only for Eligible Users */}
-        <Card className={eligibility?.eligible ? "bg-gradient-to-br from-primary/10 to-primary/5" : "bg-muted/30"}>
+        {/* Balance Card with Withdraw Button - For Eligible Users and Admins */}
+        <Card className={(eligibility?.eligible || isAdmin) ? "bg-gradient-to-br from-primary/10 to-primary/5" : "bg-muted/30"}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">
-                  {eligibility?.eligible ? 'Available Balance' : 'Potential Balance (Not Credited)'}
+                  {(eligibility?.eligible || isAdmin) ? 'Available Balance' : 'Potential Balance (Not Credited)'}
                 </p>
-                <p className={`text-3xl font-bold ${eligibility?.eligible ? '' : 'text-muted-foreground'}`}>
-                  {eligibility?.eligible ? (balance || 0).toLocaleString() : '---'} UGX
+                <p className={`text-3xl font-bold ${(eligibility?.eligible || isAdmin) ? '' : 'text-muted-foreground'}`}>
+                  {(eligibility?.eligible || isAdmin) ? (balance || 0).toLocaleString() : '---'} UGX
                 </p>
               </div>
-              <Wallet className={`h-10 w-10 ${eligibility?.eligible ? 'text-primary' : 'text-muted-foreground'} opacity-50`} />
+              <Wallet className={`h-10 w-10 ${(eligibility?.eligible || isAdmin) ? 'text-primary' : 'text-muted-foreground'} opacity-50`} />
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              {eligibility?.eligible 
-                ? 'Minimum withdrawal: 5,000 UGX • Weekends only • 10% fee'
-                : 'Earnings will be credited once you become eligible'}
+              {isAdmin 
+                ? 'Admin: No limits • No fee • Anytime withdrawal'
+                : eligibility?.eligible 
+                  ? 'Minimum withdrawal: 5,000 UGX • Weekends only • 10% fee'
+                  : 'Earnings will be credited once you become eligible'}
             </p>
 
-            {/* Withdraw Button with Countdown - Only for Eligible Users */}
-            {eligibility?.eligible && (
+            {/* Withdraw Button - Admins can withdraw anytime, others only on weekends */}
+            {(eligibility?.eligible || isAdmin) && (
               <div className="mt-4">
-                {isWeekendNow ? (
+                {(isWeekendNow || isAdmin) ? (
                   <Sheet open={withdrawSheetOpen} onOpenChange={setWithdrawSheetOpen}>
                     <SheetTrigger asChild>
                       <Button 
                         className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-600/50" 
                         size="lg"
-                        disabled={(balance || 0) < 5000}
+                        disabled={isAdmin ? (balance || 0) <= 0 : (balance || 0) < 5000}
                       >
                         <Wallet className="h-5 w-5 mr-2" />
-                        Withdraw Now
+                        Withdraw Now {isAdmin && !isWeekendNow && '(Admin)'}
                       </Button>
                     </SheetTrigger>
                     <SheetContent side="bottom" className="h-auto max-h-[70vh]">
@@ -870,14 +873,21 @@ export default function CreatorEarnings() {
                         </SheetTitle>
                       </SheetHeader>
                       <div className="space-y-4 py-4">
-                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
-                          <div className="flex items-center gap-2 text-green-600 font-medium">
+                        <div className={`${isAdmin ? 'bg-primary/10 border-primary/20' : 'bg-green-500/10 border-green-500/20'} border rounded-lg p-3`}>
+                          <div className={`flex items-center gap-2 ${isAdmin ? 'text-primary' : 'text-green-600'} font-medium`}>
                             <CheckCircle className="h-4 w-4" />
-                            <span>Withdrawals are open!</span>
+                            <span>{isAdmin ? 'Admin Withdrawal (No Limits)' : 'Withdrawals are open!'}</span>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Window closes in: {formatCountdownUnit(countdown.hours)}:{formatCountdownUnit(countdown.minutes)}:{formatCountdownUnit(countdown.seconds)}
-                          </p>
+                          {!isAdmin && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Window closes in: {formatCountdownUnit(countdown.hours)}:{formatCountdownUnit(countdown.minutes)}:{formatCountdownUnit(countdown.seconds)}
+                            </p>
+                          )}
+                          {isAdmin && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              No minimum • No maximum • No fee • Auto-approved
+                            </p>
+                          )}
                         </div>
 
                         <div className="space-y-2">
@@ -905,13 +915,13 @@ export default function CreatorEarnings() {
                         <Button 
                           className="w-full" 
                           onClick={handleWithdraw}
-                          disabled={(balance || 0) < 5000 || withdrawing}
+                          disabled={isAdmin ? ((balance || 0) <= 0 || withdrawing) : ((balance || 0) < 5000 || withdrawing)}
                         >
                           {withdrawing ? 'Processing...' : `Withdraw ${(balance || 0).toLocaleString()} UGX`}
                         </Button>
 
                         <p className="text-xs text-muted-foreground text-center">
-                          10% platform fee will be deducted
+                          {isAdmin ? 'No platform fee for admins' : '10% platform fee will be deducted'}
                         </p>
                       </div>
                     </SheetContent>
