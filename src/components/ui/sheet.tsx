@@ -14,13 +14,17 @@ const SheetClose = SheetPrimitive.Close;
 
 const SheetPortal = SheetPrimitive.Portal;
 
+interface SheetOverlayProps extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay> {
+  zIndex?: string;
+}
+
 const SheetOverlay = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
->(({ className, ...props }, ref) => (
+  SheetOverlayProps
+>(({ className, zIndex = "z-40", ...props }, ref) => (
   <SheetPrimitive.Overlay
     className={cn(
-      "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 transition-all duration-300",
+      `fixed inset-0 ${zIndex} bg-black/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 transition-all duration-300`,
       className,
     )}
     {...props}
@@ -53,10 +57,11 @@ interface SheetContentProps
     VariantProps<typeof sheetVariants> {
   onOpenChange?: (open: boolean) => void;
   hideCloseButton?: boolean;
+  overlayClassName?: string;
 }
 
 const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Content>, SheetContentProps>(
-  ({ side = "right", className, children, onOpenChange, hideCloseButton = false, ...props }, ref) => {
+  ({ side = "right", className, children, onOpenChange, hideCloseButton = false, overlayClassName, ...props }, ref) => {
     const [isDragging, setIsDragging] = React.useState(false);
     const isBottom = side === "bottom";
 
@@ -107,7 +112,7 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
 
     return (
       <SheetPortal>
-        <SheetOverlay />
+        <SheetOverlay className={overlayClassName} />
         <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
           {content}
           {!isBottom && !hideCloseButton && (

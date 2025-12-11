@@ -24,6 +24,7 @@ const ProfileActionsSheet = ({ isOpen, onClose, onLogout, onEditProfile }: Profi
       <SheetContent 
         side="bottom" 
         className="h-auto max-h-[40vh] rounded-t-3xl bg-background/95 backdrop-blur-xl border-t border-border/50 p-6 z-[200]"
+        overlayClassName="z-[200]"
       >
         <div className="space-y-3">
           <SheetClose asChild>
