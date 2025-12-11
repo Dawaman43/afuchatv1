@@ -81,6 +81,7 @@ const Gifts = lazy(() => import("./pages/Gifts"));
 const GiftDetail = lazy(() => import("./pages/GiftDetail"));
 const Premium = lazy(() => import("./pages/Premium"));
 const CreatorEarnings = lazy(() => import("./pages/CreatorEarnings"));
+const AdminCreatorWithdrawals = lazy(() => import("./pages/AdminCreatorWithdrawals"));
 
 const FoodDelivery = lazy(() => import("./pages/FoodDelivery"));
 const Bookings = lazy(() => import("./pages/Bookings"));
@@ -174,6 +175,7 @@ const AppRoutes = () => {
       <Route path="/suggested-users" element={<SuggestedUsers />} />
       <Route path="/trending" element={<Layout><TrendingHashtags /></Layout>} />
       <Route path="/admin/affiliate-requests" element={<Layout><AdminAffiliateRequests /></Layout>} />
+      <Route path="/admin/creator-withdrawals" element={<Layout><AdminCreatorWithdrawals /></Layout>} />
       <Route path="/admin/verification-requests" element={<Layout><AdminVerificationRequests /></Layout>} />
       <Route path="/affiliate-request" element={<Layout><AffiliateRequest /></Layout>} />
       <Route path="/affiliate-dashboard" element={<Layout><AffiliateDashboard /></Layout>} />
