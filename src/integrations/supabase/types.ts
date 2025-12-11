@@ -678,6 +678,105 @@ export type Database = {
           },
         ]
       }
+      creator_earnings: {
+        Row: {
+          amount_ugx: number
+          created_at: string
+          earned_date: string
+          engagement_score: number
+          id: string
+          likes_count: number
+          user_id: string
+          views_count: number
+        }
+        Insert: {
+          amount_ugx?: number
+          created_at?: string
+          earned_date?: string
+          engagement_score?: number
+          id?: string
+          likes_count?: number
+          user_id: string
+          views_count?: number
+        }
+        Update: {
+          amount_ugx?: number
+          created_at?: string
+          earned_date?: string
+          engagement_score?: number
+          id?: string
+          likes_count?: number
+          user_id?: string
+          views_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_earnings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_earnings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_withdrawals: {
+        Row: {
+          amount_ugx: number
+          id: string
+          mobile_network: string
+          notes: string | null
+          phone_number: string
+          processed_at: string | null
+          requested_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount_ugx: number
+          id?: string
+          mobile_network: string
+          notes?: string | null
+          phone_number: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount_ugx?: number
+          id?: string
+          mobile_network?: string
+          notes?: string | null
+          phone_number?: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_withdrawals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_withdrawals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       currency_settings: {
         Row: {
           conversion_fee_percent: number | null
@@ -2116,6 +2215,7 @@ export type Database = {
           affiliate_earnings: number | null
           affiliated_business_id: string | null
           ai_chat_id: string | null
+          available_balance_ugx: number
           avatar_url: string | null
           banner_url: string | null
           bio: string | null
@@ -2152,6 +2252,7 @@ export type Database = {
           affiliate_earnings?: number | null
           affiliated_business_id?: string | null
           ai_chat_id?: string | null
+          available_balance_ugx?: number
           avatar_url?: string | null
           banner_url?: string | null
           bio?: string | null
@@ -2188,6 +2289,7 @@ export type Database = {
           affiliate_earnings?: number | null
           affiliated_business_id?: string | null
           ai_chat_id?: string | null
+          available_balance_ugx?: number
           avatar_url?: string | null
           banner_url?: string | null
           bio?: string | null
@@ -3209,6 +3311,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      check_creator_eligibility: { Args: { p_user_id: string }; Returns: Json }
       check_daily_login_streak: { Args: { p_user_id: string }; Returns: Json }
       check_profile_completion: { Args: { p_user_id: string }; Returns: Json }
       claim_red_envelope: { Args: { p_envelope_id: string }; Returns: Json }
@@ -3236,7 +3339,12 @@ export type Database = {
         }
         Returns: Json
       }
+      distribute_daily_creator_rewards: { Args: never; Returns: Json }
       expire_subscriptions: { Args: never; Returns: number }
+      get_daily_engagement: {
+        Args: { p_date?: string; p_user_id: string }
+        Returns: Json
+      }
       get_gift_price: { Args: { p_gift_id: string }; Returns: number }
       get_or_create_chat: { Args: { other_user_id: string }; Returns: string }
       get_protected_profile_fields: {
@@ -3359,6 +3467,10 @@ export type Database = {
       }
       reject_affiliate_by_business: {
         Args: { p_notes?: string; p_request_id: string }
+        Returns: Json
+      }
+      request_creator_withdrawal: {
+        Args: { p_network: string; p_phone_number: string }
         Returns: Json
       }
       rotate_featured_items: { Args: never; Returns: undefined }
