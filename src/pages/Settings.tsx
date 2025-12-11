@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Bell, Shield, Palette, Database, LogOut, UserX, Key, Activity } from 'lucide-react';
+import { User, Bell, Shield, Palette, Database, LogOut, UserX, Key, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageHeader } from '@/components/PageHeader';
 
 // Settings components
 import { AccountSettings } from '@/components/settings/AccountSettings';
@@ -66,30 +67,15 @@ const Settings = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-card border-b border-border">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate(-1)}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <h1 className="text-2xl font-bold">Settings</h1>
-            </div>
-            <Button
-              variant="ghost"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Log Out
-            </Button>
-          </div>
-        </div>
-      </div>
+      <PageHeader 
+        title="Settings"
+        rightContent={
+          <Button variant="ghost" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Log Out
+          </Button>
+        }
+      />
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-4 py-8">
