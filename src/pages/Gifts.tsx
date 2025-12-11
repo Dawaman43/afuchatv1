@@ -11,6 +11,7 @@ import { GiftImage } from '@/components/gifts/GiftImage';
 import { GiftDetailSheet } from '@/components/gifts/GiftDetailSheet';
 import { GiftPreviewModal } from '@/components/gifts/GiftPreviewModal';
 import { SelectRecipientDialog } from '@/components/gifts/SelectRecipientDialog';
+import { PageHeader } from '@/components/PageHeader';
 
 interface Gift {
   id: string;
@@ -169,19 +170,7 @@ const Gifts = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-4">
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border p-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Gift className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Gifts</h1>
-              <p className="text-sm text-muted-foreground">Send special gifts to friends</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PageHeader title="Gifts" subtitle="Send special gifts to friends" />
 
       <div className="max-w-6xl mx-auto p-3 sm:p-4">
         <Tabs defaultValue="all" className="w-full">

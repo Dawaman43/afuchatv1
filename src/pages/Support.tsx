@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Mail, MessageCircle, HelpCircle, Send } from 'lucide-react';
+import { Mail, MessageCircle, HelpCircle, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import Logo from '@/components/Logo';
+import { PageHeader } from '@/components/PageHeader';
 import {
   Accordion,
   AccordionContent,
@@ -36,7 +35,6 @@ const contactSchema = z.object({
 type ContactFormData = z.infer<typeof contactSchema>;
 
 const Support = () => {
-  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ContactFormData>({
@@ -230,25 +228,7 @@ const Support = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="flex h-14 sm:h-16 items-center justify-between">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="shrink-0"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="absolute left-1/2 -translate-x-1/2">
-              <Logo size="sm" />
-            </div>
-            <div className="w-10" />
-          </div>
-        </div>
-      </header>
+      <PageHeader title="Support Center" />
 
       {/* Main Content */}
       <main className="container max-w-6xl mx-auto px-4 sm:px-6 py-8 pb-24">

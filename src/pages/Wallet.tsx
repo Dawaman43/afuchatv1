@@ -2,10 +2,9 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Wallet as WalletIcon, TrendingUp, Gift, Heart, Mail, Send, Sparkles, ArrowUpRight, ArrowDownRight, Coins, Eye, EyeOff, RefreshCw, Download, Filter } from 'lucide-react';
+import { Wallet as WalletIcon, TrendingUp, Gift, Heart, Mail, Send, Sparkles, ArrowUpRight, ArrowDownRight, Coins, Eye, EyeOff, RefreshCw, Download, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import Logo from '@/components/Logo';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ACoinConverter } from '@/components/currency/ACoinConverter';
@@ -13,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { PageHeader } from '@/components/PageHeader';
 
 const Wallet = () => {
   const navigate = useNavigate();
@@ -195,33 +195,20 @@ const Wallet = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="flex h-14 sm:h-16 items-center justify-between">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="shrink-0 rounded-full h-9 w-9"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="absolute left-1/2 -translate-x-1/2">
-              <Logo size="sm" />
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="shrink-0 rounded-full h-9 w-9"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
-        </div>
-      </header>
+      <PageHeader 
+        title="Wallet" 
+        rightContent={
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="shrink-0 rounded-full h-9 w-9"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+        }
+      />
 
       {/* Main Content */}
       <main className="container max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-24 space-y-6">
