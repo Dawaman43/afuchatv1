@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Wallet, TrendingUp, Eye, Heart, Phone, AlertCircle, CheckCircle, Clock, Ban, Timer, BarChart3, Trophy, MessageCircle, Gift, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -176,6 +176,27 @@ export default function CreatorEarnings() {
     enabled: !!user?.id
   });
 
+  const queryClient = useQueryClient();
+
+  // Refetch leaderboard function
+  const refetchLeaderboard = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['daily-engagement-leaderboard'] });
+  }, [queryClient]);
+
+  // Real-time subscription for leaderboard updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('leaderboard-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_views' }, refetchLeaderboard)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_acknowledgments' }, refetchLeaderboard)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_replies' }, refetchLeaderboard)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetchLeaderboard]);
+
   // Get today's leaderboard - REAL-TIME from all users' actual post engagement
   const { data: dailyLeaderboard } = useQuery({
     queryKey: ['daily-engagement-leaderboard', new Date().toDateString()],
@@ -194,7 +215,7 @@ export default function CreatorEarnings() {
         potential_earnings: number;
       }>;
     },
-    refetchInterval: 30000 // Live updates every 30 seconds
+    staleTime: 5000 // Consider fresh for 5 seconds to prevent excessive refetches
   });
 
   // Get current user's real-time earnings from the leaderboard
