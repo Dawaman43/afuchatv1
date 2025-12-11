@@ -176,14 +176,34 @@ export default function CreatorEarnings() {
     enabled: !!user?.id
   });
 
-  // Get earnings history
-  const { data: earnings, isLoading: earningsLoading } = useQuery({
-    queryKey: ['creator-earnings', user?.id],
+  // Get today's potential earnings (uncredited - live)
+  const { data: todaysPotentialEarning, refetch: refetchTodaysEarning } = useQuery({
+    queryKey: ['creator-today-potential', user?.id, new Date().toDateString()],
     queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0];
       const { data, error } = await supabase
         .from('creator_earnings')
         .select('*')
         .eq('user_id', user?.id)
+        .eq('earned_date', today)
+        .single();
+      if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+      return data as Earning | null;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 30000 // Refresh every 30 seconds for live updates
+  });
+
+  // Get earnings history (past days - credited)
+  const { data: earnings, isLoading: earningsLoading } = useQuery({
+    queryKey: ['creator-earnings', user?.id],
+    queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('creator_earnings')
+        .select('*')
+        .eq('user_id', user?.id)
+        .lt('earned_date', today) // Only past days (credited earnings)
         .order('earned_date', { ascending: false })
         .limit(30);
       if (error) throw error;
@@ -447,6 +467,60 @@ export default function CreatorEarnings() {
                 )}
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Today's Live Potential Earnings - Shows uncredited earnings */}
+        <Card className="border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              Today's Potential Earnings
+              <span className="text-xs font-normal text-muted-foreground ml-auto">Live</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-end gap-2">
+                <p className="text-4xl font-bold text-primary">
+                  {todaysPotentialEarning?.amount_ugx?.toLocaleString() || '0'}
+                </p>
+                <span className="text-lg text-muted-foreground mb-1">UGX</span>
+              </div>
+              
+              {todaysPotentialEarning && (
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-background/50 rounded-lg p-2">
+                    <Eye className="h-4 w-4 mx-auto text-blue-500" />
+                    <p className="text-sm font-medium">{todaysPotentialEarning.views_count}</p>
+                    <p className="text-xs text-muted-foreground">Views</p>
+                  </div>
+                  <div className="bg-background/50 rounded-lg p-2">
+                    <Heart className="h-4 w-4 mx-auto text-red-500" />
+                    <p className="text-sm font-medium">{todaysPotentialEarning.likes_count}</p>
+                    <p className="text-xs text-muted-foreground">Likes</p>
+                  </div>
+                  <div className="bg-background/50 rounded-lg p-2">
+                    <BarChart3 className="h-4 w-4 mx-auto text-green-500" />
+                    <p className="text-sm font-medium">{todaysPotentialEarning.engagement_score}</p>
+                    <p className="text-xs text-muted-foreground">Score</p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="p-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                <p className="text-xs text-yellow-700 dark:text-yellow-400 flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {eligibility?.eligible 
+                    ? 'This amount will be credited to your balance at midnight if you remain eligible'
+                    : 'Not credited - become eligible to receive this at midnight'}
+                </p>
+              </div>
+              
+              <p className="text-xs text-muted-foreground">
+                💡 Rates: 1 UGX per view, 2 UGX per like. Amount may change as others earn.
+              </p>
+            </div>
           </CardContent>
         </Card>
 
