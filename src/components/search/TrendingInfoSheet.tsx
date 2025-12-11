@@ -82,7 +82,11 @@ export const TrendingInfoSheet = ({
           </SheetTitle>
         </SheetHeader>
 
-        <div className="space-y-6 overflow-y-auto overscroll-contain flex-1 px-6 pb-6">
+        <div 
+          className="space-y-6 overflow-y-auto overscroll-contain flex-1 px-6 pb-6"
+          onTouchMove={(e) => e.stopPropagation()}
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           {/* Stats */}
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
