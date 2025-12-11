@@ -72,6 +72,22 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
       }
     };
 
+    // Lock body scroll when bottom sheet is open
+    React.useEffect(() => {
+      if (isBottom) {
+        document.body.style.overflow = 'hidden';
+        document.body.style.touchAction = 'none';
+        return () => {
+          document.body.style.overflow = '';
+          document.body.style.touchAction = '';
+        };
+      }
+    }, [isBottom]);
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+      e.stopPropagation();
+    };
+
     const content = isBottom ? (
       <motion.div
         drag="y"
@@ -79,7 +95,7 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
         dragElastic={{ top: 0, bottom: 0.15 }}
         onDragStart={() => setIsDragging(true)}
         onDragEnd={handleDragEnd}
-        className="w-full h-full flex flex-col"
+        className="w-full h-full flex flex-col overflow-hidden"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 30 }}
@@ -94,9 +110,9 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
           />
         </div>
         <div 
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 pb-6 overscroll-contain" 
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 pb-6 overscroll-contain touch-pan-y" 
           style={{ WebkitOverflowScrolling: 'touch' }}
-          onTouchMove={(e) => e.stopPropagation()}
+          onTouchMove={handleTouchMove}
         >
           {children}
         </div>
