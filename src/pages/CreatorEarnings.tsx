@@ -694,17 +694,18 @@ export default function CreatorEarnings() {
         )}
 
         {/* Daily Leaderboard - Live Rankings */}
-        <Card className={!isPoolActive ? 'opacity-75' : ''}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Trophy className={`h-4 w-4 ${isPoolActive ? 'text-yellow-500' : 'text-muted-foreground'}`} />
-              Today's Leaderboard
-              <span className={`text-xs font-normal ml-auto ${isPoolActive ? 'text-green-600' : 'text-red-500'}`}>
-                {isPoolActive ? 'Live Rankings' : 'Ended • Credited'}
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Accordion type="single" collapsible defaultValue="leaderboard">
+          <AccordionItem value="leaderboard" className="border rounded-lg bg-card">
+            <AccordionTrigger className={`px-4 py-3 hover:no-underline ${!isPoolActive ? 'opacity-75' : ''}`}>
+              <div className="flex items-center gap-2 flex-1">
+                <Trophy className={`h-4 w-4 ${isPoolActive ? 'text-yellow-500' : 'text-muted-foreground'}`} />
+                <span className="text-base font-semibold">Today's Leaderboard</span>
+                <span className={`text-xs font-normal ml-auto mr-2 ${isPoolActive ? 'text-green-600' : 'text-red-500'}`}>
+                  {isPoolActive ? 'Live Rankings' : 'Ended • Credited'}
+                </span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
             {/* Privacy Toggle for current user */}
             <div className="mb-4 p-3 bg-muted/30 rounded-lg">
               <div className="flex items-center justify-between">
@@ -823,8 +824,9 @@ export default function CreatorEarnings() {
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
         {/* Potential Earnings Banner for Non-Eligible Users */}
         {!eligibility?.eligible && topPosts && topPosts.length > 0 && (
@@ -990,14 +992,18 @@ export default function CreatorEarnings() {
         </Card>
 
         {/* Post Performance & Total Earnings */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Post Earnings Analysis
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Accordion type="single" collapsible>
+          <AccordionItem value="posts" className="border rounded-lg bg-card">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                <span className="text-base font-semibold">Post Earnings Analysis</span>
+                {topPosts && topPosts.length > 0 && (
+                  <span className="text-xs text-muted-foreground ml-2">{topPosts.length} posts</span>
+                )}
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
             {topPostsLoading ? (
               <div className="space-y-3">
                 <Skeleton className="h-20 w-full" />
@@ -1186,18 +1192,23 @@ export default function CreatorEarnings() {
                 No posts with engagement yet. Create content to see earnings analysis!
               </p>
             )}
-          </CardContent>
-        </Card>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
         {/* Recent Earnings */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Recent Earnings
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Accordion type="single" collapsible>
+          <AccordionItem value="earnings" className="border rounded-lg bg-card">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                <span className="text-base font-semibold">Recent Earnings</span>
+                {earnings && earnings.length > 0 && (
+                  <span className="text-xs text-muted-foreground ml-2">{earnings.length} days</span>
+                )}
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
             {earningsLoading ? (
               <div className="space-y-2">
                 <Skeleton className="h-12 w-full" />
@@ -1229,15 +1240,23 @@ export default function CreatorEarnings() {
                 No earnings yet. Keep creating great content!
               </p>
             )}
-          </CardContent>
-        </Card>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
         {/* Withdrawal History */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Withdrawal History</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Accordion type="single" collapsible>
+          <AccordionItem value="withdrawals" className="border rounded-lg bg-card">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex items-center gap-2">
+                <Wallet className="h-4 w-4" />
+                <span className="text-base font-semibold">Withdrawal History</span>
+                {withdrawals && withdrawals.length > 0 && (
+                  <span className="text-xs text-muted-foreground ml-2">{withdrawals.length} requests</span>
+                )}
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
             {withdrawalsLoading ? (
               <Skeleton className="h-20 w-full" />
             ) : withdrawals && withdrawals.length > 0 ? (
@@ -1265,60 +1284,52 @@ export default function CreatorEarnings() {
                 No withdrawals yet
               </p>
             )}
-          </CardContent>
-        </Card>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
-        {/* Program Info */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">How It Works</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>🇺🇬 Available for <strong>Uganda creators</strong></p>
-            <p>💰 <strong>5,000 UGX</strong> distributed daily to active creators</p>
-            <p>📊 Earnings based on <strong>today's engagement only</strong> (views + likes + replies)</p>
-            <p>🔄 Engagement resets daily at midnight — no cheating with old posts!</p>
-            <p>💵 Withdraw to <strong>MTN or Airtel Money</strong></p>
-            <p className="text-xs pt-2">
-              Questions? Ask <strong>AfuAI</strong> for full program details
-            </p>
-          </CardContent>
-        </Card>
+        {/* Program Info & Terms Combined */}
+        <Accordion type="single" collapsible>
+          <AccordionItem value="info" className="border rounded-lg bg-card">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                <span className="text-base font-semibold">How It Works & Terms</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4 space-y-4">
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>🇺🇬 Available for <strong>Uganda creators</strong></p>
+                <p>💰 <strong>5,000 UGX</strong> distributed daily to active creators</p>
+                <p>📊 Earnings based on <strong>today's engagement only</strong> (views + likes + replies)</p>
+                <p>🔄 Engagement resets daily at midnight — no cheating with old posts!</p>
+                <p>💵 Withdraw to <strong>MTN or Airtel Money</strong></p>
+                <p className="text-xs pt-2">
+                  Questions? Ask <strong>AfuAI</strong> for full program details
+                </p>
+              </div>
 
-        {/* Creator Earnings Terms */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
-              Terms & Conditions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="terms" className="border-none">
-                <AccordionTrigger className="text-xs text-muted-foreground py-2 hover:no-underline">
-                  <div className="flex items-center gap-1">
-                    Read Creator Earnings Terms
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="text-xs text-muted-foreground space-y-2 p-3 bg-muted/30 rounded-lg">
-                    <p><strong>1. Eligibility:</strong> You must have at least 10 followers and 500+ weekly views across your posts to qualify for earnings. Eligibility is checked daily.</p>
-                    <p><strong>2. Daily Earnings Only:</strong> Earnings are calculated based on TODAY's engagement only. Past engagement from previous days cannot be retroactively credited.</p>
-                    <p><strong>3. No Cheating:</strong> We do not reward fake engagement, bot interactions, self-likes, engagement farming, or any fraudulent activity. Violators will be permanently banned.</p>
-                    <p><strong>4. Verification:</strong> All engagement is verified before earnings are credited. Suspicious activity will result in earnings being withheld or reversed.</p>
-                    <p><strong>5. Withdrawal:</strong> Minimum withdrawal is 5,000 UGX. Withdrawals are only available on weekends (Saturday & Sunday) via MTN or Airtel Mobile Money. A 10% platform fee is applied.</p>
-                    <p><strong>6. Approval:</strong> All withdrawal requests are reviewed by our team. We reserve the right to reject or delay withdrawals for suspicious accounts.</p>
-                    <p><strong>7. Changes:</strong> AfuChat reserves the right to modify, suspend, or terminate the Creator Earnings program, its eligibility criteria, and payout amounts at any time without prior notice.</p>
-                    <p><strong>8. No Guarantees:</strong> Earnings depend on your share of the daily pool relative to other creators. There is no guaranteed minimum earning amount.</p>
-                    <p><strong>9. Tax Responsibility:</strong> You are solely responsible for any taxes applicable to your earnings. AfuChat does not provide tax advice.</p>
-                    <p><strong>10. Geographic Restriction:</strong> This program is currently available only to creators in Uganda with valid Ugandan mobile money numbers.</p>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardContent>
-        </Card>
+              <div className="border-t pt-4">
+                <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Terms & Conditions
+                </p>
+                <div className="text-xs text-muted-foreground space-y-2 p-3 bg-muted/30 rounded-lg">
+                  <p><strong>1. Eligibility:</strong> You must have at least 10 followers and 500+ weekly views across your posts to qualify for earnings. Eligibility is checked daily.</p>
+                  <p><strong>2. Daily Earnings Only:</strong> Earnings are calculated based on TODAY's engagement only. Past engagement from previous days cannot be retroactively credited.</p>
+                  <p><strong>3. No Cheating:</strong> We do not reward fake engagement, bot interactions, self-likes, engagement farming, or any fraudulent activity. Violators will be permanently banned.</p>
+                  <p><strong>4. Verification:</strong> All engagement is verified before earnings are credited. Suspicious activity will result in earnings being withheld or reversed.</p>
+                  <p><strong>5. Withdrawal:</strong> Minimum withdrawal is 5,000 UGX. Withdrawals are only available on weekends (Saturday & Sunday) via MTN or Airtel Mobile Money. A 10% platform fee is applied.</p>
+                  <p><strong>6. Approval:</strong> All withdrawal requests are reviewed by our team. We reserve the right to reject or delay withdrawals for suspicious accounts.</p>
+                  <p><strong>7. Changes:</strong> AfuChat reserves the right to modify, suspend, or terminate the Creator Earnings program, its eligibility criteria, and payout amounts at any time without prior notice.</p>
+                  <p><strong>8. No Guarantees:</strong> Earnings depend on your share of the daily pool relative to other creators. There is no guaranteed minimum earning amount.</p>
+                  <p><strong>9. Tax Responsibility:</strong> You are solely responsible for any taxes applicable to your earnings. AfuChat does not provide tax advice.</p>
+                  <p><strong>10. Geographic Restriction:</strong> This program is currently available only to creators in Uganda with valid Ugandan mobile money numbers.</p>
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
 
       {/* Engagement Details Sheet */}
