@@ -3286,6 +3286,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_process_withdrawal: {
+        Args: { p_action: string; p_notes?: string; p_withdrawal_id: string }
+        Returns: Json
+      }
       approve_affiliate_by_business:
         | { Args: { p_request_id: string }; Returns: Json }
         | {
@@ -3347,6 +3351,21 @@ export type Database = {
       }
       get_gift_price: { Args: { p_gift_id: string }; Returns: number }
       get_or_create_chat: { Args: { other_user_id: string }; Returns: string }
+      get_pending_withdrawals: {
+        Args: never
+        Returns: {
+          amount_ugx: number
+          avatar_url: string
+          display_name: string
+          handle: string
+          id: string
+          mobile_network: string
+          notes: string
+          phone_number: string
+          requested_at: string
+          user_id: string
+        }[]
+      }
       get_protected_profile_fields: {
         Args: { p_user_id: string }
         Returns: {
@@ -3470,7 +3489,7 @@ export type Database = {
         Returns: Json
       }
       request_creator_withdrawal: {
-        Args: { p_network: string; p_phone_number: string }
+        Args: { p_mobile_network: string; p_phone_number: string }
         Returns: Json
       }
       rotate_featured_items: { Args: never; Returns: undefined }

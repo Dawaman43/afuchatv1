@@ -118,20 +118,20 @@ export default function CreatorEarnings() {
     try {
       const { data, error } = await supabase.rpc('request_creator_withdrawal', {
         p_phone_number: phoneNumber,
-        p_network: network
+        p_mobile_network: network
       });
 
       if (error) throw error;
 
-      const result = data as unknown as { success: boolean; message: string };
+      const result = data as unknown as { success: boolean; message?: string; error?: string; net_amount?: number; fee?: number };
       if (result.success) {
-        toast.success(result.message);
+        toast.success(`Withdrawal request submitted! Net: ${result.net_amount?.toLocaleString()} UGX (Fee: ${result.fee?.toLocaleString()} UGX)`);
         setPhoneNumber('');
         setNetwork('');
         refetchBalance();
         refetchWithdrawals();
       } else {
-        toast.error(result.message);
+        toast.error(result.error || 'Failed to request withdrawal');
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to request withdrawal');
@@ -142,13 +142,11 @@ export default function CreatorEarnings() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'approved':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'pending':
         return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'processing':
-        return <Clock className="h-4 w-4 text-blue-500" />;
-      case 'failed':
+      case 'rejected':
         return <Ban className="h-4 w-4 text-red-500" />;
       default:
         return null;
@@ -239,7 +237,7 @@ export default function CreatorEarnings() {
               <Wallet className="h-10 w-10 text-primary opacity-50" />
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Minimum withdrawal: 5,000 UGX • Weekends only
+              Minimum withdrawal: 5,000 UGX • Weekends only • 10% fee
             </p>
           </CardContent>
         </Card>
@@ -383,10 +381,12 @@ export default function CreatorEarnings() {
             <p>🇺🇬 <strong>Uganda creators only</strong></p>
             <p>👥 <strong>10+ followers</strong> required</p>
             <p>👀 <strong>500+ views</strong> in the past week</p>
-            <p>💰 <strong>5,000 UGX</strong> distributed daily</p>
+            <p>💰 <strong>5,000 UGX</strong> distributed daily automatically</p>
             <p>📊 Share is weighted by your daily engagement (views + likes)</p>
             <p>📅 Withdrawals available <strong>weekends only</strong></p>
             <p>💵 Minimum withdrawal: <strong>5,000 UGX</strong></p>
+            <p>💸 <strong>10% fee</strong> on all withdrawals</p>
+            <p>✅ Admin approval required for withdrawals</p>
           </CardContent>
         </Card>
       </div>
