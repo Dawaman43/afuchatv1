@@ -145,7 +145,7 @@ export function AddAccountSheet({ open, onOpenChange, onSuccess }: AddAccountShe
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh] z-[70]" overlayClassName="z-[70]">
+      <DrawerContent className="max-h-[85vh] z-[200]" overlayClassName="z-[200]">
         <DrawerHeader className="text-left">
           <DrawerTitle className="text-xl font-bold flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
