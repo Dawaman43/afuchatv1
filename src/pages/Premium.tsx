@@ -7,11 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { 
   Crown, Check, Coins, Calendar, Sparkles, Gift, Users, Radio, 
-  MessageSquare, Image, Ban, Eye, Palette, Shield, Star, Zap
+  MessageSquare, Image, Ban, Eye, Palette, Shield, Star, Zap, ArrowRight, CheckCircle2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Separator } from '@/components/ui/separator';
 import { PageHeader } from '@/components/PageHeader';
+import { motion } from 'framer-motion';
 
 interface SubscriptionPlan {
   id: string;
@@ -38,35 +38,42 @@ interface UserSubscription {
   };
 }
 
-// Tier-specific styling and icons
 const tierConfig = {
   silver: {
-    gradient: 'from-slate-400 to-slate-500',
-    bgGradient: 'from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900',
-    borderColor: 'border-slate-400',
-    textColor: 'text-slate-600 dark:text-slate-300',
+    gradient: 'from-slate-400 via-slate-300 to-slate-500',
+    bgGradient: 'from-slate-500/10 to-slate-600/5',
+    glowColor: 'shadow-slate-400/20',
+    borderColor: 'border-slate-400/50',
+    textColor: 'text-slate-500 dark:text-slate-400',
+    accentBg: 'bg-slate-500',
     icon: Shield,
-    label: 'Essentials'
+    label: 'Starter',
+    ring: 'ring-slate-400/30'
   },
   gold: {
-    gradient: 'from-yellow-400 to-amber-500',
-    bgGradient: 'from-yellow-50 to-amber-100 dark:from-yellow-900/20 dark:to-amber-900/30',
-    borderColor: 'border-yellow-500',
-    textColor: 'text-yellow-600 dark:text-yellow-400',
+    gradient: 'from-amber-400 via-yellow-300 to-orange-500',
+    bgGradient: 'from-amber-500/10 to-yellow-600/5',
+    glowColor: 'shadow-amber-400/30',
+    borderColor: 'border-amber-400/50',
+    textColor: 'text-amber-500 dark:text-amber-400',
+    accentBg: 'bg-amber-500',
     icon: Star,
-    label: 'Popular'
+    label: 'Most Popular',
+    ring: 'ring-amber-400/30'
   },
   platinum: {
-    gradient: 'from-violet-500 to-purple-600',
-    bgGradient: 'from-violet-50 to-purple-100 dark:from-violet-900/20 dark:to-purple-900/30',
-    borderColor: 'border-violet-500',
-    textColor: 'text-violet-600 dark:text-violet-400',
+    gradient: 'from-violet-500 via-purple-400 to-fuchsia-500',
+    bgGradient: 'from-violet-500/10 to-purple-600/5',
+    glowColor: 'shadow-violet-400/30',
+    borderColor: 'border-violet-400/50',
+    textColor: 'text-violet-500 dark:text-violet-400',
+    accentBg: 'bg-violet-500',
     icon: Crown,
-    label: 'Ultimate'
+    label: 'Ultimate',
+    ring: 'ring-violet-400/30'
   }
 };
 
-// Feature icons mapping
 const featureIcons: Record<string, typeof Shield> = {
   'Verified badge': Shield,
   'Ad-free experience': Ban,
@@ -125,7 +132,6 @@ export default function Premium() {
   const fetchUserData = async () => {
     if (!user) return;
 
-    // Fetch ACoin balance
     const { data: profileData } = await supabase
       .from('profiles')
       .select('acoin')
@@ -136,7 +142,6 @@ export default function Premium() {
       setAcoinBalance(profileData.acoin || 0);
     }
 
-    // Fetch active subscription with plan details
     const { data: subData } = await supabase
       .from('user_subscriptions')
       .select(`
@@ -206,200 +211,281 @@ export default function Premium() {
     });
   };
 
+  const getDaysRemaining = (expiresAt: string) => {
+    const now = new Date();
+    const expires = new Date(expiresAt);
+    const diff = Math.ceil((expires.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return diff;
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+            <Crown className="absolute inset-0 m-auto h-6 w-6 text-primary" />
+          </div>
+          <p className="text-muted-foreground text-sm">Loading premium plans...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-24">
       <PageHeader 
         title="Premium" 
         icon={<Crown className="h-5 w-5 text-primary" />}
       />
 
-      <div className="container max-w-6xl mx-auto px-4 py-8">
-        {/* ACoin Balance Card */}
-        <Card className="p-6 mb-8 bg-gradient-to-br from-primary/10 via-background to-background">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-primary/20 rounded-full">
-                <Coins className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Your ACoin Balance</p>
-                <p className="text-3xl font-bold">{acoinBalance.toLocaleString()}</p>
-              </div>
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-violet-500/10 rounded-full blur-3xl" />
+        
+        <div className="relative container max-w-6xl mx-auto px-4 py-8">
+          {/* Header */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-8"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-primary">Upgrade Your Experience</span>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/wallet')}
-              className="gap-2"
-            >
-              <Sparkles className="h-4 w-4" />
-              Get More ACoin
-            </Button>
-          </div>
-        </Card>
+            <h1 className="text-3xl md:text-4xl font-bold mb-3">
+              Choose Your <span className="bg-gradient-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent">Premium</span> Plan
+            </h1>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Unlock exclusive features, get verified, and elevate your experience
+            </p>
+          </motion.div>
 
-        {/* Current Subscription Status */}
-        {currentSubscription && (
-          <Card className="p-6 mb-8 border-primary bg-gradient-to-br from-primary/5 to-transparent">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-primary/20 rounded-full">
-                  <Crown className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge className="bg-primary">Active Premium</Badge>
-                    <Badge variant="outline" className="text-xs">Verified</Badge>
+          {/* Balance Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="p-4 mb-8 bg-gradient-to-r from-card via-card to-card border border-border/50 backdrop-blur-sm">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl" />
+                    <div className="relative p-3 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl border border-primary/20">
+                      <Coins className="h-6 w-6 text-primary" />
+                    </div>
                   </div>
-                  <p className="text-sm font-semibold">
-                    {currentSubscription.subscription_plans?.name || 'Premium Plan'}
-                  </p>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="grid gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>Started:</span>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Your Balance</p>
+                    <p className="text-2xl font-bold">{acoinBalance.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">ACoin</span></p>
                   </div>
-                  <span className="text-sm font-semibold text-foreground">
-                    {formatDate(currentSubscription.started_at)}
-                  </span>
                 </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>Expires:</span>
-                  </div>
-                  <span className="text-sm font-semibold text-foreground">
-                    {formatDate(currentSubscription.expires_at)}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Sparkles className="h-4 w-4" />
-                    <span>Duration:</span>
-                  </div>
-                  <span className="text-sm font-semibold text-foreground">
-                    {currentSubscription.subscription_plans?.duration_days || 0} days
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-2 p-3 bg-muted/30 rounded-lg">
-                <p className="text-xs text-muted-foreground text-center">
-                  Your verified badge and premium features will expire on {formatDate(currentSubscription.expires_at)}
-                </p>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {/* Plans Grid */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-2">Choose Your Plan</h2>
-          <p className="text-muted-foreground">
-            Unlock premium features and get verified with ACoin
-          </p>
-        </div>
-
-        <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible md:flex-wrap md:justify-center">
-          {plans.map((plan) => {
-            const tier = (plan.tier || 'silver') as keyof typeof tierConfig;
-            const config = tierConfig[tier] || tierConfig.silver;
-            const TierIcon = config.icon;
-            const canAfford = acoinBalance >= plan.acoin_price;
-            const hasActiveSubscription = !!currentSubscription;
-
-            return (
-              <Card
-                key={plan.id}
-                className={`p-5 relative overflow-hidden border-2 ${config.borderColor} ${hasActiveSubscription ? 'opacity-60' : ''} flex-shrink-0 w-[280px] md:w-[300px] snap-center`}
-              >
-                {/* Tier Badge */}
-                <Badge className={`absolute right-3 top-3 bg-gradient-to-r ${config.gradient} text-white border-0 text-xs`}>
-                  {config.label}
-                </Badge>
-
-                {/* Header with Icon */}
-                <div className="text-center mb-4 pt-2">
-                  <div className={`inline-flex p-3 rounded-full bg-gradient-to-br ${config.bgGradient} mb-3`}>
-                    <TierIcon className={`h-6 w-6 ${config.textColor}`} />
-                  </div>
-                  <h3 className={`text-xl font-bold mb-1 bg-gradient-to-r ${config.gradient} bg-clip-text text-transparent`}>
-                    {plan.name}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                    {plan.description}
-                  </p>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <Coins className="h-4 w-4 text-primary" />
-                    <span className="text-3xl font-bold">{plan.acoin_price}</span>
-                    <span className="text-sm text-muted-foreground">ACoin</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {plan.duration_days} days
-                  </p>
-                </div>
-
-                <Separator className="my-4" />
-
-                <ul className="space-y-2 mb-4 max-h-[180px] overflow-y-auto">
-                  {plan.features.map((feature, i) => {
-                    const FeatureIcon = featureIcons[feature] || Check;
-                    return (
-                      <li key={i} className="flex items-start gap-2">
-                        <FeatureIcon className={`h-4 w-4 flex-shrink-0 mt-0.5 ${config.textColor}`} />
-                        <span className="text-xs">{feature}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-
                 <Button
-                  onClick={() => handlePurchase(plan.id, plan.acoin_price)}
-                  disabled={!canAfford || purchasing === plan.id || hasActiveSubscription}
-                  className={`w-full bg-gradient-to-r ${config.gradient} hover:opacity-90 text-white border-0 text-sm`}
-                  size="sm"
+                  onClick={() => navigate('/wallet')}
+                  className="gap-2 bg-gradient-to-r from-primary to-violet-500 hover:opacity-90 text-white border-0"
                 >
-                  {purchasing === plan.id ? (
-                    'Processing...'
-                  ) : hasActiveSubscription ? (
-                    'Already Subscribed'
-                  ) : !canAfford ? (
-                    'Insufficient ACoin'
-                  ) : (
-                    `Get ${plan.name}`
-                  )}
+                  <Sparkles className="h-4 w-4" />
+                  Get ACoin
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
+              </div>
+            </Card>
+          </motion.div>
 
-                {!canAfford && !hasActiveSubscription && (
-                  <p className="text-xs text-center text-muted-foreground mt-2">
-                    Need {plan.acoin_price - acoinBalance} more ACoin
-                  </p>
-                )}
-                {hasActiveSubscription && (
-                  <p className="text-xs text-center text-muted-foreground mt-2">
-                    Wait until current subscription expires
-                  </p>
-                )}
+          {/* Active Subscription */}
+          {currentSubscription && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.15 }}
+            >
+              <Card className="p-5 mb-8 border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-card to-violet-500/5 overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
+                
+                <div className="relative flex flex-col md:flex-row md:items-center gap-4">
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="p-3 bg-gradient-to-br from-primary to-violet-500 rounded-2xl shadow-lg shadow-primary/20">
+                      <Crown className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge className="bg-gradient-to-r from-primary to-violet-500 text-white border-0">Active</Badge>
+                        <Badge variant="outline" className="border-primary/30 text-primary">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Verified
+                        </Badge>
+                      </div>
+                      <p className="font-semibold text-lg">
+                        {currentSubscription.subscription_plans?.name || 'Premium Plan'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-6 text-sm">
+                    <div className="text-center">
+                      <p className="text-muted-foreground text-xs">Days Left</p>
+                      <p className="text-2xl font-bold text-primary">{getDaysRemaining(currentSubscription.expires_at)}</p>
+                    </div>
+                    <div className="h-10 w-px bg-border" />
+                    <div>
+                      <p className="text-muted-foreground text-xs flex items-center gap-1">
+                        <Calendar className="h-3 w-3" /> Expires
+                      </p>
+                      <p className="font-medium">{formatDate(currentSubscription.expires_at)}</p>
+                    </div>
+                  </div>
+                </div>
               </Card>
-            );
-          })}
-        </div>
+            </motion.div>
+          )}
 
+          {/* Plans */}
+          <div className="flex gap-5 overflow-x-auto pb-6 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible md:grid md:grid-cols-3">
+            {plans.map((plan, index) => {
+              const tier = (plan.tier || 'silver') as keyof typeof tierConfig;
+              const config = tierConfig[tier] || tierConfig.silver;
+              const TierIcon = config.icon;
+              const canAfford = acoinBalance >= plan.acoin_price;
+              const hasActiveSubscription = !!currentSubscription;
+              const isPopular = tier === 'gold';
+
+              return (
+                <motion.div
+                  key={plan.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 + index * 0.1 }}
+                  className="snap-center flex-shrink-0 w-[300px] md:w-auto"
+                >
+                  <Card
+                    className={`relative overflow-hidden transition-all duration-300 hover:scale-[1.02] ${
+                      hasActiveSubscription ? 'opacity-60' : ''
+                    } ${isPopular ? `ring-2 ${config.ring} shadow-xl ${config.glowColor}` : 'hover:shadow-lg'}`}
+                  >
+                    {/* Gradient top border */}
+                    <div className={`h-1.5 bg-gradient-to-r ${config.gradient}`} />
+                    
+                    {/* Popular badge */}
+                    {isPopular && (
+                      <div className={`absolute -right-8 top-6 rotate-45 px-10 py-1 bg-gradient-to-r ${config.gradient} text-white text-xs font-semibold shadow-lg`}>
+                        Popular
+                      </div>
+                    )}
+
+                    <div className="p-6">
+                      {/* Header */}
+                      <div className="text-center mb-6">
+                        <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${config.bgGradient} mb-4 relative`}>
+                          <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${config.bgGradient} blur-xl opacity-50`} />
+                          <TierIcon className={`h-8 w-8 ${config.textColor} relative`} />
+                        </div>
+                        
+                        <Badge variant="outline" className={`mb-3 ${config.borderColor} ${config.textColor}`}>
+                          {config.label}
+                        </Badge>
+                        
+                        <h3 className={`text-2xl font-bold mb-2 bg-gradient-to-r ${config.gradient} bg-clip-text text-transparent`}>
+                          {plan.name}
+                        </h3>
+                        
+                        <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
+                          {plan.description}
+                        </p>
+                      </div>
+
+                      {/* Price */}
+                      <div className="text-center py-4 mb-4 rounded-xl bg-muted/30">
+                        <div className="flex items-baseline justify-center gap-1">
+                          <Coins className={`h-5 w-5 ${config.textColor}`} />
+                          <span className="text-4xl font-bold">{plan.acoin_price.toLocaleString()}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          for {plan.duration_days} days
+                        </p>
+                      </div>
+
+                      {/* Features */}
+                      <ul className="space-y-3 mb-6">
+                        {plan.features.slice(0, 6).map((feature, i) => {
+                          const FeatureIcon = featureIcons[feature] || Check;
+                          return (
+                            <li key={i} className="flex items-start gap-3">
+                              <div className={`p-1 rounded-full ${config.bgGradient}`}>
+                                <FeatureIcon className={`h-3.5 w-3.5 ${config.textColor}`} />
+                              </div>
+                              <span className="text-sm text-foreground/80">{feature}</span>
+                            </li>
+                          );
+                        })}
+                        {plan.features.length > 6 && (
+                          <li className="text-xs text-muted-foreground pl-8">
+                            +{plan.features.length - 6} more features
+                          </li>
+                        )}
+                      </ul>
+
+                      {/* CTA Button */}
+                      <Button
+                        onClick={() => handlePurchase(plan.id, plan.acoin_price)}
+                        disabled={!canAfford || purchasing === plan.id || hasActiveSubscription}
+                        className={`w-full h-12 text-base font-semibold bg-gradient-to-r ${config.gradient} hover:opacity-90 text-white border-0 shadow-lg transition-all duration-300 ${
+                          !hasActiveSubscription && canAfford ? `hover:shadow-xl ${config.glowColor}` : ''
+                        }`}
+                      >
+                        {purchasing === plan.id ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Processing...
+                          </div>
+                        ) : hasActiveSubscription ? (
+                          'Already Subscribed'
+                        ) : !canAfford ? (
+                          'Insufficient ACoin'
+                        ) : (
+                          <span className="flex items-center gap-2">
+                            Get {plan.name}
+                            <ArrowRight className="h-4 w-4" />
+                          </span>
+                        )}
+                      </Button>
+
+                      {!canAfford && !hasActiveSubscription && (
+                        <p className="text-xs text-center text-muted-foreground mt-3">
+                          Need <span className="font-semibold text-foreground">{(plan.acoin_price - acoinBalance).toLocaleString()}</span> more ACoin
+                        </p>
+                      )}
+                    </div>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Trust badges */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="flex flex-wrap items-center justify-center gap-6 mt-8 text-muted-foreground"
+          >
+            <div className="flex items-center gap-2 text-sm">
+              <Shield className="h-4 w-4 text-primary" />
+              <span>Secure Payment</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Zap className="h-4 w-4 text-primary" />
+              <span>Instant Activation</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+              <span>Verified Badge</span>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </div>
   );
