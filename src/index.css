@@ -276,19 +276,16 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    overscroll-behavior: none;
     letter-spacing: 0;
   }
   
-  /* App-like fixed viewport */
   html {
-    height: 100%;
-    height: -webkit-fill-available;
+    height: auto;
   }
   
   body {
-    min-height: 100%;
-    min-height: -webkit-fill-available;
+    min-height: 100vh;
+    overflow-y: auto;
   }
 
   /* X/Twitter Style Typography System */
