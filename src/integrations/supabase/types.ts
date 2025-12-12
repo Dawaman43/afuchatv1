@@ -2272,6 +2272,7 @@ export type Database = {
           country: string | null
           created_at: string | null
           current_grade: string | null
+          date_of_birth: string | null
           display_name: string
           handle: string
           hide_followers_list: boolean | null
@@ -2313,6 +2314,7 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           current_grade?: string | null
+          date_of_birth?: string | null
           display_name: string
           handle: string
           hide_followers_list?: boolean | null
@@ -2354,6 +2356,7 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           current_grade?: string | null
+          date_of_birth?: string | null
           display_name?: string
           handle?: string
           hide_followers_list?: boolean | null

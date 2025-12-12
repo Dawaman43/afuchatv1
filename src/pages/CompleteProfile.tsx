@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Camera, Loader2, Check, Trophy, Sparkles } from 'lucide-react';
+import { Camera, Loader2, Check, Trophy, Sparkles, Calendar, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
 import { countries } from '@/lib/countries';
@@ -55,6 +55,7 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
     handle: '',
     phone_number: '',
     country: '',
+    date_of_birth: '',
   });
   
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -147,7 +148,7 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('display_name, handle, phone_number, country, avatar_url')
+          .select('display_name, handle, phone_number, country, avatar_url, date_of_birth')
           .eq('id', user.id)
           .single();
 
@@ -157,6 +158,7 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
             handle: profile.handle || '',
             phone_number: profile.phone_number || '',
             country: profile.country || '',
+            date_of_birth: profile.date_of_birth || '',
           });
           
           if (profile.avatar_url) {
@@ -262,12 +264,13 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
 
   const calculateProgress = () => {
     let completed = 0;
-    const total = 5; // 5 fields total (4 required + 1 optional)
+    const total = 6; // 6 fields total (5 required + 1 optional)
     
     if (formData.display_name) completed++;
     if (formData.handle) completed++;
     if (avatarFile || existingAvatarUrl) completed++;
     if (formData.country) completed++;
+    if (formData.date_of_birth) completed++;
     if (formData.phone_number) completed++; // Optional but counts toward progress
     
     setProgress((completed / total) * 100);
@@ -285,6 +288,8 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
         return formData.phone_number ? 'complete' : 'pending';
       case 'country':
         return formData.country ? 'complete' : 'pending';
+      case 'date_of_birth':
+        return formData.date_of_birth ? 'complete' : 'pending';
       default:
         return 'pending';
     }
@@ -358,6 +363,25 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
       return;
     }
     
+    if (!formData.date_of_birth) {
+      toast.error('Date of birth is required');
+      return;
+    }
+    
+    // Validate age (must be at least 13 years old)
+    const dob = new Date(formData.date_of_birth);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    
+    if (age < 13) {
+      toast.error('You must be at least 13 years old to use this platform');
+      return;
+    }
+    
     // Check if we have an avatar (either new file or existing)
     const hasAvatar = avatarFile || existingAvatarUrl;
     if (!hasAvatar) {
@@ -400,7 +424,7 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
         .eq('id', user.id)
         .single();
 
-      const isFullyCompleted = formData.phone_number && formData.country;
+      const isFullyCompleted = formData.phone_number && formData.country && formData.date_of_birth;
       const shouldReward = isFullyCompleted && !profile?.profile_completion_rewarded;
 
       // Update profile with normalized handle
@@ -412,6 +436,7 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
 
       if (formData.phone_number) updateData.phone_number = formData.phone_number;
       if (formData.country) updateData.country = formData.country;
+      if (formData.date_of_birth) updateData.date_of_birth = formData.date_of_birth;
 
       // Award XP if fully completed and not rewarded before
       if (shouldReward) {
@@ -514,12 +539,13 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
               <Progress value={progress} className="h-2" />
               
               {/* Progress Steps */}
-              <div className="grid grid-cols-5 gap-2 mt-4">
+              <div className="grid grid-cols-6 gap-1.5 mt-4">
                 {[
                   { name: 'avatar', label: 'Photo', icon: Camera, required: true },
                   { name: 'display_name', label: 'Name', icon: Check, required: true },
-                  { name: 'handle', label: 'Username', icon: Check, required: true },
+                  { name: 'handle', label: 'User', icon: Check, required: true },
                   { name: 'country', label: 'Country', icon: Check, required: true },
+                  { name: 'date_of_birth', label: 'Birthday', icon: Calendar, required: true },
                   { name: 'phone_number', label: 'Phone', icon: Sparkles, required: false },
                 ].map((step) => {
                   const StepIcon = step.icon;
@@ -639,6 +665,26 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
               <p className="text-xs text-muted-foreground">
                 ⚠️ Country cannot be changed after signup
               </p>
+            </div>
+
+            {/* Date of Birth - Required */}
+            <div className="space-y-2">
+              <Label htmlFor="date_of_birth">Date of Birth *</Label>
+              <Input
+                id="date_of_birth"
+                type="date"
+                value={formData.date_of_birth}
+                onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
+                max={new Date(new Date().setFullYear(new Date().getFullYear() - 13)).toISOString().split('T')[0]}
+                required
+                className="h-12"
+              />
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/50 border border-border/50">
+                <Shield className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  <span className="font-medium text-foreground">Why we collect this:</span> We use your date of birth to verify you meet our minimum age requirement (13+), personalize your experience, and comply with legal requirements. Your birthday is kept private and never shared publicly.
+                </p>
+              </div>
             </div>
 
             {/* Phone Number - Optional */}
