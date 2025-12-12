@@ -313,6 +313,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 	const [isFollowedByProfile, setIsFollowedByProfile] = useState(false); // Does profile user follow current user?
 	const [isUserActionsSheetOpen, setIsUserActionsSheetOpen] = useState(false);
 	const [isBlocked, setIsBlocked] = useState(false);
+	const [isChatLoading, setIsChatLoading] = useState(false);
 
 
 	const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -936,6 +937,10 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 			return;
 		}
 
+		// Prevent duplicate clicks
+		if (isChatLoading) return;
+		setIsChatLoading(true);
+
 		try {
 			// Use RPC to get or create chat - prevents duplicates
 			const { data: chatId, error } = await supabase
@@ -958,6 +963,8 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 		} catch (error) {
 			console.error('Error starting chat:', error);
 			toast.error(t('profile.failedToChat'));
+		} finally {
+			setIsChatLoading(false);
 		}
 	};
 
@@ -1103,7 +1110,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						) : (
 							<div className="flex gap-2 flex-1 justify-end">
 								{isFollowing && (
-									<Button onClick={handleStartChat} variant="outline" size="icon" className="rounded-full">
+									<Button onClick={handleStartChat} variant="outline" size="icon" className="rounded-full" disabled={isChatLoading}>
 										<MessageSquare className="h-5 w-5" />
 									</Button>
 								)}
