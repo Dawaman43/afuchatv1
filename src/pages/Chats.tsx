@@ -19,6 +19,8 @@ interface Chat {
   id: string;
   name: string | null;
   is_group: boolean;
+  is_channel?: boolean;
+  is_verified?: boolean;
   updated_at: string;
   last_message_content?: string;
   unread_count?: number;
@@ -148,6 +150,8 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
               id, 
               name, 
               is_group,
+              is_channel,
+              is_verified,
               avatar_url,
               description,
               updated_at,
@@ -464,6 +468,14 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
                     <span className="font-bold text-foreground truncate max-w-[120px]" title={chatName}>
                       {chatName.length > 12 ? `${chatName.slice(0, 10)}...` : chatName}
                     </span>
+                    {/* Show verified badge for groups/channels */}
+                    {chat.is_group && chat.is_verified && (
+                      <VerifiedBadge 
+                        isVerified={true}
+                        size="sm"
+                      />
+                    )}
+                    {/* Show verified badge for 1-on-1 chats */}
                     {!chat.is_group && (chat.other_user?.is_organization_verified || chat.other_user?.is_verified) && (
                       <VerifiedBadge 
                         isOrgVerified={chat.other_user?.is_organization_verified || false}
