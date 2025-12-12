@@ -18,38 +18,55 @@ export const RequireCountry = ({ children }: RequireCountryProps) => {
     const checkCountry = async () => {
       if (!user) {
         setChecking(false);
+        setHasCountry(true); // No user = allow access (public pages)
         return;
       }
 
-      // Check cache first
+      // Check cache first - but only trust cache if country was set
       const cacheKey = `profile_country_${user.id}`;
       const cached = sessionStorage.getItem(cacheKey);
       
       if (cached) {
-        const { hasCountry: cachedHasCountry, timestamp } = JSON.parse(cached);
-        // Cache valid for 5 minutes
-        if (Date.now() - timestamp < 5 * 60 * 1000) {
-          setHasCountry(cachedHasCountry);
-          setChecking(false);
-          return;
+        try {
+          const { hasCountry: cachedHasCountry, timestamp } = JSON.parse(cached);
+          // Only use cache if country IS set and cache is fresh (5 minutes)
+          if (cachedHasCountry && Date.now() - timestamp < 5 * 60 * 1000) {
+            setHasCountry(true);
+            setChecking(false);
+            return;
+          }
+        } catch {
+          // Invalid cache, continue to check
         }
       }
 
       try {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('country')
           .eq('id', user.id)
           .single();
 
+        if (error) {
+          console.error('Error checking country:', error);
+          setHasCountry(true); // Don't block on error
+          setChecking(false);
+          return;
+        }
+
         const countrySet = !!(profile?.country && profile.country.trim() !== '');
         setHasCountry(countrySet);
         
-        // Cache the result
-        sessionStorage.setItem(cacheKey, JSON.stringify({
-          hasCountry: countrySet,
-          timestamp: Date.now()
-        }));
+        // Only cache if country is set
+        if (countrySet) {
+          sessionStorage.setItem(cacheKey, JSON.stringify({
+            hasCountry: true,
+            timestamp: Date.now()
+          }));
+        } else {
+          // Clear cache if country not set
+          sessionStorage.removeItem(cacheKey);
+        }
       } catch (error) {
         console.error('Error checking country:', error);
         setHasCountry(true); // Don't block on error
