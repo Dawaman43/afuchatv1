@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Store, Package, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatPriceForCountry } from '@/lib/currencyUtils';
-import shopshachLogo from '@/assets/shopshach-logo.png';
 
 interface FeaturedProduct {
   id: string;
@@ -99,11 +98,17 @@ export default function FeaturedProducts() {
       {/* Section Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <img 
-            src={shopshachLogo} 
-            alt={merchant?.name || 'ShopShach'}
-            className="h-8 w-8 rounded-full object-cover"
-          />
+          {merchant?.logo_url ? (
+            <img 
+              src={merchant.logo_url} 
+              alt={merchant.name}
+              className="h-8 w-8 rounded-full object-cover"
+            />
+          ) : (
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <Store className="h-4 w-4 text-primary" />
+            </div>
+          )}
           <div>
             <h2 className="font-semibold text-base">{merchant?.name || 'Shop'}</h2>
             <p className="text-xs text-muted-foreground">Featured Products</p>
