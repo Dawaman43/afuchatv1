@@ -38,8 +38,6 @@ import { OnlineStatus } from '@/components/OnlineStatus';
 import { StoryAvatar } from '@/components/moments/StoryAvatar';
 import { ViewsAnalyticsSheet } from '@/components/ViewsAnalyticsSheet';
 import { SEO } from '@/components/SEO';
-import { NativeAdCard } from '@/components/ads/NativeAdCard';
-import { AdsterraBannerAd } from '@/components/ads/AdsterraBannerAd';
 import { AdsterraNativeAdCard } from '@/components/ads/AdsterraNativeAdCard';
 import { ProfileDrawer } from '@/components/ProfileDrawer';
 import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
@@ -2382,14 +2380,14 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                 Following
               </TabsTrigger>
             </TabsList>
+            
+            {/* Featured Products in Header */}
+            <FeaturedProducts />
           </div>
         </div>
 
-        {/* Spacer for fixed header */}
-        <div className="h-[108px]" />
-
-        {/* Featured Products */}
-        <FeaturedProducts />
+        {/* Spacer for fixed header with products */}
+        <div className="h-[180px]" />
 
         {/* Content area */}
         <TabsContent value={activeTab} className="m-0" ref={feedRef} forceMount>
@@ -2410,9 +2408,6 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
             </div>
           ) : (
             <>
-              {/* Adsterra Banner Ad */}
-              <AdsterraBannerAd />
-              
               {currentPosts.length === 0 ? (
                 <div className="text-center text-muted-foreground py-6 sm:py-8 text-xs sm:text-sm px-4">
                   {activeTab === 'following' && user
