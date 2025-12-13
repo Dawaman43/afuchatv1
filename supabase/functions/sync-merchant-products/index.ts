@@ -35,40 +35,50 @@ serve(async (req) => {
       );
     }
 
-    console.log('Fetching products from:', merchant.api_endpoint);
+    // Build the products endpoint URL
+    const baseUrl = merchant.api_endpoint.replace(/\/$/, '');
+    const productsUrl = `${baseUrl}/functions/v1/products`;
+    
+    console.log('Fetching products from:', productsUrl);
 
-    // Fetch products from merchant API
+    // Use stored API key from secrets
+    const apiKey = Deno.env.get('SHOPSHACH_API_KEY') || merchant.api_key;
+    
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
     
-    if (merchant.api_key) {
-      headers['Authorization'] = `Bearer ${merchant.api_key}`;
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`;
     }
 
-    const apiResponse = await fetch(merchant.api_endpoint, { headers });
+    const apiResponse = await fetch(productsUrl, { headers });
     
     if (!apiResponse.ok) {
       console.error('API fetch failed:', apiResponse.status, apiResponse.statusText);
+      const errorText = await apiResponse.text();
+      console.error('Error response:', errorText);
       return new Response(
-        JSON.stringify({ success: false, error: 'Failed to fetch products from merchant API' }),
+        JSON.stringify({ success: false, error: `Failed to fetch products: ${apiResponse.status}` }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 502 }
       );
     }
 
     const productsData = await apiResponse.json();
-    console.log('Received products:', productsData.length || 'unknown count');
+    console.log('Received products data:', JSON.stringify(productsData).slice(0, 500));
 
     // Handle different response formats
-    const products = Array.isArray(productsData) ? productsData : productsData.products || [];
+    const products = Array.isArray(productsData) ? productsData : productsData.products || productsData.data || [];
 
     if (!Array.isArray(products)) {
-      console.error('Invalid products format');
+      console.error('Invalid products format:', typeof productsData);
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid products format from API' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
+
+    console.log('Processing', products.length, 'products');
 
     let synced = 0;
     let errors = 0;
@@ -77,16 +87,18 @@ serve(async (req) => {
       try {
         const productData = {
           merchant_id: merchant.id,
-          external_id: String(product.id),
-          name: product.name,
+          external_id: String(product.id || product.external_id),
+          name: product.name || product.title,
           description: product.description || null,
           price: parseFloat(product.price) || 0,
-          stock: parseInt(product.stock) || 0,
+          stock: parseInt(product.stock || product.quantity) || 0,
           category: product.category || null,
           image_url: product.image_url || product.imageUrl || product.image || null,
-          is_available: (parseInt(product.stock) || 0) > 0,
+          is_available: product.is_available !== false && ((parseInt(product.stock || product.quantity) || 0) > 0),
           updated_at: new Date().toISOString(),
         };
+
+        console.log('Upserting product:', productData.name);
 
         const { error: upsertError } = await supabase
           .from('merchant_products')
