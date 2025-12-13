@@ -94,7 +94,7 @@ serve(async (req) => {
           stock: parseInt(product.stock || product.quantity) || 0,
           category: product.category || null,
           image_url: product.image_url || product.imageUrl || product.image || null,
-          is_available: product.is_available !== false && ((parseInt(product.stock || product.quantity) || 0) > 0),
+          is_available: product.is_available !== false,
           updated_at: new Date().toISOString(),
         };
 
