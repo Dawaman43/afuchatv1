@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Store, Package, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { formatPriceForCountry } from '@/lib/currencyUtils';
 
 interface FeaturedProduct {
   id: string;
@@ -25,10 +25,31 @@ export default function FeaturedProducts() {
   const [products, setProducts] = useState<FeaturedProduct[]>([]);
   const [merchant, setMerchant] = useState<{ id: string; name: string; logo_url: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userCountry, setUserCountry] = useState<string | null>(null);
 
   useEffect(() => {
+    fetchUserCountry();
     fetchFeaturedProducts();
   }, []);
+
+  const fetchUserCountry = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('country')
+          .eq('id', user.id)
+          .single();
+        if (profile?.country) {
+          setUserCountry(profile.country);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user country:', error);
+    }
+  };
+
 
   const fetchFeaturedProducts = async () => {
     try {
@@ -132,7 +153,7 @@ export default function FeaturedProducts() {
               <CardContent className="p-2">
                 <h3 className="font-medium text-xs line-clamp-2 mb-1">{product.name}</h3>
                 <p className="text-primary font-semibold text-sm">
-                  UGX {product.price.toLocaleString()}
+                  {formatPriceForCountry(product.price, userCountry)}
                 </p>
               </CardContent>
             </Card>

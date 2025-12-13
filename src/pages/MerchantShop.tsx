@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { CustomLoader } from '@/components/ui/CustomLoader';
+import { formatPriceForCountry } from '@/lib/currencyUtils';
 
 interface Product {
   id: string;
@@ -43,6 +44,29 @@ export default function MerchantShop() {
   const [cart, setCart] = useState<Map<string, number>>(new Map());
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [userCountry, setUserCountry] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchUserCountry();
+  }, []);
+
+  const fetchUserCountry = async () => {
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('country')
+          .eq('id', authUser.id)
+          .single();
+        if (profile?.country) {
+          setUserCountry(profile.country);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user country:', error);
+    }
+  };
 
   useEffect(() => {
     if (merchantId) {
@@ -242,7 +266,7 @@ export default function MerchantShop() {
                 <CardContent className="p-3">
                   <h3 className="font-medium text-sm line-clamp-2 mb-1">{product.name}</h3>
                   <p className="text-primary font-semibold">
-                    UGX {product.price.toLocaleString()}
+                    {formatPriceForCountry(product.price, userCountry)}
                   </p>
                   
                   {cart.get(product.id) ? (
@@ -299,7 +323,7 @@ export default function MerchantShop() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm opacity-90">{cartItemCount} items</p>
-                <p className="font-bold">UGX {cartTotal.toLocaleString()}</p>
+                <p className="font-bold">{formatPriceForCountry(cartTotal, userCountry)}</p>
               </div>
               <Button 
                 variant="secondary" 
