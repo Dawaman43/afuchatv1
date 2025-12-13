@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Eye, MessageCircle, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { Eye, MessageCircle, CheckCircle, XCircle, RefreshCw, Truck, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomLoader } from '@/components/ui/CustomLoader';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface OrderContext {
   order_number?: string;
@@ -12,6 +13,7 @@ interface OrderContext {
   customer_id?: string;
   customer_name?: string;
   total?: number;
+  status?: string;
   type?: 'new_order' | 'cancellation' | 'refund_request' | 'status_update';
 }
 
@@ -21,14 +23,16 @@ interface OrderNotificationActionsProps {
 }
 
 const SHOPSHACK_ADMIN_NOTIFICATIONS_CHAT_ID = 'a0000000-0000-0000-0000-000000000001';
+const SHOPSHACK_USER_ID = '629333cf-087e-4283-8a09-a44282dda98b';
 
 export function OrderNotificationActions({ orderContext, isAdmin }: OrderNotificationActionsProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
 
   const handleViewOrder = () => {
     if (orderContext.order_number) {
-      navigate(`/order/${orderContext.order_number}`);
+      navigate(`/orders/${orderContext.order_number}`);
     }
   };
 
@@ -41,7 +45,7 @@ export function OrderNotificationActions({ orderContext, isAdmin }: OrderNotific
       const { data: merchant } = await supabase
         .from('merchants')
         .select('id')
-        .eq('user_id', '629333cf-087e-4283-8a09-a44282dda98b')
+        .eq('user_id', SHOPSHACK_USER_ID)
         .single();
 
       if (!merchant) {
@@ -64,7 +68,7 @@ export function OrderNotificationActions({ orderContext, isAdmin }: OrderNotific
         const { data: newChat, error } = await supabase
           .from('chats')
           .insert({
-            created_by: '629333cf-087e-4283-8a09-a44282dda98b',
+            created_by: SHOPSHACK_USER_ID,
             is_group: false
           })
           .select('id')
@@ -74,7 +78,7 @@ export function OrderNotificationActions({ orderContext, isAdmin }: OrderNotific
 
         // Add members
         await supabase.from('chat_members').insert([
-          { chat_id: newChat.id, user_id: '629333cf-087e-4283-8a09-a44282dda98b' },
+          { chat_id: newChat.id, user_id: SHOPSHACK_USER_ID },
           { chat_id: newChat.id, user_id: orderContext.customer_id }
         ]);
 
@@ -110,7 +114,7 @@ export function OrderNotificationActions({ orderContext, isAdmin }: OrderNotific
       // Send status update notification
       await supabase.from('messages').insert({
         chat_id: SHOPSHACK_ADMIN_NOTIFICATIONS_CHAT_ID,
-        sender_id: '629333cf-087e-4283-8a09-a44282dda98b',
+        sender_id: SHOPSHACK_USER_ID,
         encrypted_content: `✅ Order ${orderContext.order_number} status updated to: ${newStatus}`,
         order_context: {
           ...orderContext,
@@ -128,14 +132,20 @@ export function OrderNotificationActions({ orderContext, isAdmin }: OrderNotific
     }
   };
 
+  // Customer view - show tracking buttons only
   if (!isAdmin) {
-    // Customer view - just show view order button
     return (
-      <div className="flex gap-2 mt-3">
+      <div className="flex flex-wrap gap-2 mt-3">
         <Button size="sm" variant="outline" onClick={handleViewOrder}>
-          <Eye className="h-3 w-3 mr-1" />
+          <Package className="h-3 w-3 mr-1" />
           View Order
         </Button>
+        {orderContext.status && ['fulfilled', 'payment_recorded'].includes(orderContext.status) && (
+          <Button size="sm" variant="outline" onClick={handleViewOrder}>
+            <Truck className="h-3 w-3 mr-1" />
+            Track
+          </Button>
+        )}
       </div>
     );
   }
