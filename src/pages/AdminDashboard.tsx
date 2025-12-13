@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Users, MessageSquare, Package, Activity, Shield, Gift, Coins, 
   TrendingUp, Globe, Briefcase, Wallet, AlertTriangle, Eye, 
-  Heart, UserPlus, FileText, Image, Gamepad2, RefreshCw
+  Heart, UserPlus, FileText, Image, Gamepad2, RefreshCw, Store
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -45,6 +45,14 @@ interface DashboardStats {
   totalGameScores: number;
 }
 
+interface Merchant {
+  id: string;
+  name: string;
+  api_endpoint: string;
+  is_active: boolean;
+  last_sync_at: string | null;
+}
+
 const AdminDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -75,6 +83,8 @@ const AdminDashboard = () => {
   const [replies, setReplies] = useState<any[]>([]);
   const [userReports, setUserReports] = useState<any[]>([]);
   const [messageReports, setMessageReports] = useState<any[]>([]);
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -131,6 +141,7 @@ const AdminDashboard = () => {
       fetchReplies(),
       fetchUserReports(),
       fetchMessageReports(),
+      fetchMerchants(),
     ]);
   };
 
@@ -458,6 +469,41 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchMerchants = async () => {
+    try {
+      const { data } = await supabase
+        .from('merchants')
+        .select('id, name, api_endpoint, is_active, last_sync_at')
+        .order('created_at', { ascending: false });
+      setMerchants(data || []);
+    } catch (error) {
+      console.error('Error fetching merchants:', error);
+    }
+  };
+
+  const syncMerchantProducts = async (merchantId: string) => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-merchant-products', {
+        body: { merchant_id: merchantId }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast.success(`Synced ${data.synced} products`);
+        await fetchMerchants();
+      } else {
+        toast.error(data?.error || 'Sync failed');
+      }
+    } catch (error: any) {
+      console.error('Sync error:', error);
+      toast.error(error.message || 'Failed to sync products');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const formatDate = (date: string) => new Date(date).toLocaleString();
 
   if (loading) {
@@ -673,6 +719,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="withdrawals" className="text-xs">Withdrawals</TabsTrigger>
             <TabsTrigger value="reports" className="text-xs">Reports</TabsTrigger>
             <TabsTrigger value="groups" className="text-xs">Groups/Channels</TabsTrigger>
+            <TabsTrigger value="shop" className="text-xs">Shop</TabsTrigger>
             <TabsTrigger value="posts" className="text-xs">Posts</TabsTrigger>
             <TabsTrigger value="messages" className="text-xs">Messages</TabsTrigger>
             <TabsTrigger value="gifts" className="text-xs">Gifts</TabsTrigger>
@@ -749,6 +796,70 @@ const AdminDashboard = () => {
 
           <TabsContent value="groups" className="mt-6">
             <AdminGroupChannelVerification />
+          </TabsContent>
+
+          <TabsContent value="shop" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Store className="h-5 w-5" />
+                  Merchant Shop Management
+                </CardTitle>
+                <CardDescription>Manage connected merchants and sync products</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Merchant</TableHead>
+                        <TableHead>API Endpoint</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Last Synced</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {merchants.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                            No merchants configured
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        merchants.map((merchant) => (
+                          <TableRow key={merchant.id}>
+                            <TableCell className="font-medium">{merchant.name}</TableCell>
+                            <TableCell className="text-xs max-w-[200px] truncate">{merchant.api_endpoint}</TableCell>
+                            <TableCell>
+                              {merchant.is_active ? (
+                                <Badge className="bg-green-500">Active</Badge>
+                              ) : (
+                                <Badge variant="secondary">Inactive</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {merchant.last_sync_at ? formatDate(merchant.last_sync_at) : 'Never'}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => syncMerchantProducts(merchant.id)}
+                                disabled={syncing}
+                              >
+                                <RefreshCw className={`h-4 w-4 mr-1 ${syncing ? 'animate-spin' : ''}`} />
+                                Sync Products
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="posts" className="mt-6">
