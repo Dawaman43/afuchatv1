@@ -219,6 +219,7 @@ const AppRoutes = () => {
       <Route path="/product/:productId" element={<ProductDetail />} />
       <Route path="/orders" element={<MyOrders />} />
       <Route path="/orders/:orderNumber" element={<OrderDetail />} />
+      <Route path="/order/:orderNumber" element={<OrderDetail />} />
 
       <Route path="/profile/:userId" element={<ProfileRedirect />} />
 
