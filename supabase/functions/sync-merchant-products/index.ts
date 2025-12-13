@@ -91,9 +91,9 @@ serve(async (req) => {
           name: product.name || product.title,
           description: product.description || null,
           price: parseFloat(product.price) || 0,
-          stock: parseInt(product.stock || product.quantity) || 0,
+          stock: parseInt(product.stock || product.quantity || product.stock_quantity) || 0,
           category: product.category || null,
-          image_url: product.image_url || product.imageUrl || product.image || null,
+          image_url: product.image_url || product.imageUrl || product.image || (Array.isArray(product.image_urls) ? product.image_urls[0] : null),
           is_available: product.is_available !== false,
           updated_at: new Date().toISOString(),
         };
