@@ -7,12 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { 
   Crown, Check, Coins, Calendar, Sparkles, Gift, Users, Radio, 
-  MessageSquare, Image, Ban, Eye, Palette, Shield, Star, Zap, ArrowRight, CheckCircle2, ChevronDown, ChevronUp
+  MessageSquare, Image, Ban, Eye, Palette, Shield, Star, Zap, ArrowRight, CheckCircle2, ChevronDown, ChevronUp, XCircle, RefreshCw
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { CancelSubscriptionDialog } from '@/components/premium/CancelSubscriptionDialog';
 
 interface SubscriptionPlan {
   id: string;
@@ -163,6 +164,8 @@ export default function Premium() {
   const [acoinBalance, setAcoinBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [switchToPlan, setSwitchToPlan] = useState<SubscriptionPlan | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -276,6 +279,48 @@ export default function Premium() {
     return diff;
   };
 
+  const handleCancelSubscription = async () => {
+    if (!currentSubscription || !user) return;
+
+    try {
+      // Deactivate current subscription (no refund)
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update({ is_active: false })
+        .eq('id', currentSubscription.id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // If switching to a new plan, purchase it
+      if (switchToPlan) {
+        await handlePurchase(switchToPlan.id, switchToPlan.acoin_price);
+        toast.success(`Switched to ${switchToPlan.name} successfully!`);
+      } else {
+        toast.success('Subscription cancelled successfully');
+      }
+
+      // Refresh data
+      await fetchUserData();
+    } catch (error) {
+      console.error('Cancel subscription error:', error);
+      toast.error('Failed to cancel subscription');
+    } finally {
+      setCancelDialogOpen(false);
+      setSwitchToPlan(null);
+    }
+  };
+
+  const handleSwitchPlan = (plan: SubscriptionPlan) => {
+    if (acoinBalance < plan.acoin_price) {
+      toast.error(`Insufficient ACoin! You need ${plan.acoin_price} ACoin but have ${acoinBalance}`);
+      navigate('/wallet');
+      return;
+    }
+    setSwitchToPlan(plan);
+    setCancelDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -364,37 +409,56 @@ export default function Premium() {
               <Card className="p-5 mb-8 border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-card to-violet-500/5 overflow-hidden relative">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
                 
-                <div className="relative flex flex-col md:flex-row md:items-center gap-4">
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="p-3 bg-gradient-to-br from-primary to-violet-500 rounded-2xl shadow-lg shadow-primary/20">
-                      <Crown className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge className="bg-gradient-to-r from-primary to-violet-500 text-white border-0">Active</Badge>
-                        <Badge variant="outline" className="border-primary/30 text-primary">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Verified
-                        </Badge>
+                <div className="relative flex flex-col gap-4">
+                  <div className="flex flex-col md:flex-row md:items-center gap-4">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="p-3 bg-gradient-to-br from-primary to-violet-500 rounded-2xl shadow-lg shadow-primary/20">
+                        <Crown className="h-6 w-6 text-white" />
                       </div>
-                      <p className="font-semibold text-lg">
-                        {currentSubscription.subscription_plans?.name || 'Premium Plan'}
-                      </p>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge className="bg-gradient-to-r from-primary to-violet-500 text-white border-0">Active</Badge>
+                          <Badge variant="outline" className="border-primary/30 text-primary">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            Verified
+                          </Badge>
+                        </div>
+                        <p className="font-semibold text-lg">
+                          {currentSubscription.subscription_plans?.name || 'Premium Plan'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-6 text-sm">
+                      <div className="text-center">
+                        <p className="text-muted-foreground text-xs">Days Left</p>
+                        <p className="text-2xl font-bold text-primary">{getDaysRemaining(currentSubscription.expires_at)}</p>
+                      </div>
+                      <div className="h-10 w-px bg-border" />
+                      <div>
+                        <p className="text-muted-foreground text-xs flex items-center gap-1">
+                          <Calendar className="h-3 w-3" /> Expires
+                        </p>
+                        <p className="font-medium">{formatDate(currentSubscription.expires_at)}</p>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-6 text-sm">
-                    <div className="text-center">
-                      <p className="text-muted-foreground text-xs">Days Left</p>
-                      <p className="text-2xl font-bold text-primary">{getDaysRemaining(currentSubscription.expires_at)}</p>
-                    </div>
-                    <div className="h-10 w-px bg-border" />
-                    <div>
-                      <p className="text-muted-foreground text-xs flex items-center gap-1">
-                        <Calendar className="h-3 w-3" /> Expires
-                      </p>
-                      <p className="font-medium">{formatDate(currentSubscription.expires_at)}</p>
-                    </div>
+
+                  {/* Subscription management buttons */}
+                  <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border/50">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCancelDialogOpen(true)}
+                      className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+                    >
+                      <XCircle className="h-4 w-4" />
+                      Cancel Subscription
+                    </Button>
+                    <p className="text-xs text-muted-foreground flex items-center">
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Or switch to a different plan below
+                    </p>
                   </div>
                 </div>
               </Card>
@@ -497,29 +561,59 @@ export default function Premium() {
                           featureIcons={featureIcons} 
                         />
 
-                        <Button
-                          onClick={() => handlePurchase(plan.id, plan.acoin_price)}
-                          disabled={!canAfford || purchasing === plan.id || hasActiveSubscription}
-                          className={`w-full h-12 text-base font-bold bg-gradient-to-r ${config.gradient} hover:opacity-90 text-white border-0 shadow-lg transition-all duration-300 rounded-xl ${
-                            !hasActiveSubscription && canAfford ? 'hover:shadow-xl hover:scale-[1.02]' : ''
-                          }`}
-                        >
-                          {purchasing === plan.id ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                              Processing...
-                            </div>
-                          ) : hasActiveSubscription ? (
-                            'Already Subscribed'
-                          ) : !canAfford ? (
-                            'Insufficient ACoin'
-                          ) : (
-                            <span className="flex items-center justify-center gap-2">
-                              Get {plan.name}
-                              <ArrowRight className="h-4 w-4" />
-                            </span>
-                          )}
-                        </Button>
+                        {hasActiveSubscription && currentSubscription?.plan_id !== plan.id ? (
+                          <Button
+                            onClick={() => handleSwitchPlan(plan)}
+                            disabled={!canAfford || purchasing === plan.id}
+                            className={`w-full h-12 text-base font-bold bg-gradient-to-r ${config.gradient} hover:opacity-90 text-white border-0 shadow-lg transition-all duration-300 rounded-xl ${
+                              canAfford ? 'hover:shadow-xl hover:scale-[1.02]' : ''
+                            }`}
+                          >
+                            {purchasing === plan.id ? (
+                              <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Processing...
+                              </div>
+                            ) : !canAfford ? (
+                              'Insufficient ACoin'
+                            ) : (
+                              <span className="flex items-center justify-center gap-2">
+                                <RefreshCw className="h-4 w-4" />
+                                Switch to {plan.name}
+                              </span>
+                            )}
+                          </Button>
+                        ) : hasActiveSubscription && currentSubscription?.plan_id === plan.id ? (
+                          <Button
+                            disabled
+                            className={`w-full h-12 text-base font-bold bg-gradient-to-r ${config.gradient} text-white border-0 shadow-lg rounded-xl opacity-60`}
+                          >
+                            <CheckCircle2 className="h-4 w-4 mr-2" />
+                            Your Current Plan
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => handlePurchase(plan.id, plan.acoin_price)}
+                            disabled={!canAfford || purchasing === plan.id}
+                            className={`w-full h-12 text-base font-bold bg-gradient-to-r ${config.gradient} hover:opacity-90 text-white border-0 shadow-lg transition-all duration-300 rounded-xl ${
+                              canAfford ? 'hover:shadow-xl hover:scale-[1.02]' : ''
+                            }`}
+                          >
+                            {purchasing === plan.id ? (
+                              <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Processing...
+                              </div>
+                            ) : !canAfford ? (
+                              'Insufficient ACoin'
+                            ) : (
+                              <span className="flex items-center justify-center gap-2">
+                                Get {plan.name}
+                                <ArrowRight className="h-4 w-4" />
+                              </span>
+                            )}
+                          </Button>
+                        )}
 
                         {!canAfford && !hasActiveSubscription && (
                           <p className="text-xs text-center text-muted-foreground mt-3">
@@ -556,6 +650,22 @@ export default function Premium() {
           </motion.div>
         </div>
       </div>
+
+      {/* Cancel/Switch Subscription Dialog */}
+      {currentSubscription && (
+        <CancelSubscriptionDialog
+          open={cancelDialogOpen}
+          onOpenChange={(open) => {
+            setCancelDialogOpen(open);
+            if (!open) setSwitchToPlan(null);
+          }}
+          onConfirm={handleCancelSubscription}
+          planName={currentSubscription.subscription_plans?.name || 'Premium'}
+          expiresAt={currentSubscription.expires_at}
+          isChangingPlan={!!switchToPlan}
+          newPlanName={switchToPlan?.name}
+        />
+      )}
     </div>
   );
 }
