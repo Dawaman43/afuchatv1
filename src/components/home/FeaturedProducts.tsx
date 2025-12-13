@@ -73,7 +73,7 @@ export default function FeaturedProducts() {
   }
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-4 pt-3 pb-1">
       {/* Section Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -103,7 +103,7 @@ export default function FeaturedProducts() {
       </div>
 
       {/* Products Horizontal Scroll */}
-      <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+      <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide touch-pan-x">
         {products.map((product, index) => (
           <motion.div
             key={product.id}
