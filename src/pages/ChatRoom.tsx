@@ -23,6 +23,7 @@ import { UserAvatar } from '@/components/avatar/UserAvatar';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { useChatPreferences } from '@/hooks/useChatPreferences';
 import { SendGiftDialog } from '@/components/gifts/SendGiftDialog';
+import { ClearHistoryDialog } from '@/components/chat/ClearHistoryDialog';
 
 interface ChatTheme {
   id: string;
@@ -198,6 +199,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Message[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [isClearHistoryOpen, setIsClearHistoryOpen] = useState(false);
 
   // Improved scroll behavior - scroll to bottom on new messages
   const scrollToBottom = (smooth = true) => {
@@ -1464,27 +1466,45 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
     setSearchResults([]);
   };
 
-  const handleClearHistory = async () => {
+  const handleClearHistory = async (deleteForBoth: boolean) => {
     if (!user || !chatId) return;
     
-    if (!window.confirm('Clear all messages in this chat? This action cannot be undone.')) {
-      return;
-    }
-    
     try {
-      const { error } = await supabase
-        .from('messages')
-        .delete()
-        .eq('chat_id', chatId);
+      if (deleteForBoth) {
+        // Delete all messages for both sides
+        const { error } = await supabase
+          .from('messages')
+          .delete()
+          .eq('chat_id', chatId);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Only delete messages sent by current user
+        const { error } = await supabase
+          .from('messages')
+          .delete()
+          .eq('chat_id', chatId)
+          .eq('sender_id', user.id);
 
-      setMessages([]);
+        if (error) throw error;
+      }
+
+      if (deleteForBoth) {
+        setMessages([]);
+      } else {
+        setMessages(prev => prev.filter(m => m.sender_id !== user.id));
+      }
       toast.success('Chat history cleared');
     } catch (error) {
       toast.error('Failed to clear history');
     }
   };
+
+  // Check if user can clear history (only for 1-1 chats or groups they own)
+  const canClearHistory = chatInfo && (
+    !chatInfo.is_group || 
+    chatInfo.created_by === user?.id
+  );
 
   if (loading) {
     return (
@@ -1676,16 +1696,18 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                   <span>Change Wallpaper</span>
                 </DropdownMenuItem>
                 
-                <DropdownMenuItem 
-                  className="gap-3 py-3 cursor-pointer"
-                  onClick={handleClearHistory}
-                >
-                  <svg className="h-5 w-5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/>
-                    <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                  </svg>
-                  <span>Clear History</span>
-                </DropdownMenuItem>
+                {canClearHistory && (
+                  <DropdownMenuItem 
+                    className="gap-3 py-3 cursor-pointer"
+                    onClick={() => setIsClearHistoryOpen(true)}
+                  >
+                    <svg className="h-5 w-5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/>
+                      <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                    </svg>
+                    <span>Clear History</span>
+                  </DropdownMenuItem>
+                )}
                 
                 {chatInfo?.is_group ? (
                   <DropdownMenuItem 
@@ -2044,6 +2066,14 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
           </div>
         )}
       </div>
+
+      {/* Clear History Dialog */}
+      <ClearHistoryDialog
+        open={isClearHistoryOpen}
+        onOpenChange={setIsClearHistoryOpen}
+        onConfirm={handleClearHistory}
+        isOneOnOne={!chatInfo?.is_group}
+      />
 
       {/* Group Settings Sheet */}
       {chatInfo?.is_group && (
