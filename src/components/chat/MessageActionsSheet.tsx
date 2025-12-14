@@ -244,7 +244,7 @@ export const MessageActionsSheet = ({
       </Sheet>
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent className="rounded-2xl">
+        <AlertDialogContent className="rounded-2xl z-[200]">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Message</AlertDialogTitle>
             <AlertDialogDescription>
