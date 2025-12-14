@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { MessageSquare, UserPlus, Calendar, Lock, Camera, Building2, UserX, Clock, Users, MoreVertical } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { ProfileSkeleton } from '@/components/skeletons';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { useTranslation } from 'react-i18next';
 import { GradeBadge, type Grade } from '@/components/gamification/GradeBadge';
@@ -990,11 +990,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 	};
 
 	if (loading) {
-		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<CustomLoader size="lg" text={t('common.loading')} />
-			</div>
-		);
+		return <ProfileSkeleton />;
 	}
 
 	if (!profile) {

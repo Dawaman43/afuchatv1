@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { NotificationsSkeleton } from '@/components/skeletons';
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, MessageSquare, UserPlus, Gift, Check, X, Eye, UserCheck, UserX, Trash2, CheckSquare, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -856,11 +856,7 @@ const Notifications = () => {
   }, [user]);
   
   if (loading && notifications.length === 0 && followRequests.length === 0) {
-    return (
-      <div className="h-full flex items-center justify-center max-w-4xl mx-auto">
-        <CustomLoader size="lg" text="Loading notifications..." />
-      </div>
-    );
+    return <NotificationsSkeleton />;
   }
 
   const hasContent = deduplicatedNotifications.length > 0 || followRequests.length > 0;

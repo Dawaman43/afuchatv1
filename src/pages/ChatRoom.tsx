@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { ChatRoomSkeleton } from '@/components/chat/ChatRoomSkeleton';
 import { ArrowLeft, Send, MoreVertical, MessageSquare, Mic, MicOff, Play, Pause, Volume2, X, Paperclip, Settings, LogOut, Trash2, Gift } from 'lucide-react';
 import { toast } from 'sonner';
 import { messageSchema } from '@/lib/validation';
@@ -365,9 +365,12 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
   useEffect(() => {
     if (!chatId || !user) return;
 
-    fetchChatInfo();
-    fetchMessages();
-    fetchRedEnvelopes();
+    // Fetch all data in parallel for faster loading
+    Promise.all([
+      fetchChatInfo(),
+      fetchMessages(),
+      fetchRedEnvelopes()
+    ]);
 
     const channel = supabase
       .channel(`chat-${chatId}`)
@@ -554,6 +557,21 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
   }, [chatId, user]);
 
   const fetchChatInfo = async () => {
+    // Check for cached chat info first
+    const cacheKey = `chat_info_${chatId}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const parsedCache = JSON.parse(cached);
+        setChatInfo(parsedCache.chatInfo);
+        if (parsedCache.otherUser) setOtherUser(parsedCache.otherUser);
+        if (parsedCache.isMember !== undefined) setIsMember(parsedCache.isMember);
+        if (parsedCache.isGroupAdmin !== undefined) setIsGroupAdmin(parsedCache.isGroupAdmin);
+      } catch (e) {
+        console.error('Failed to parse cached chat info:', e);
+      }
+    }
+
     const { data } = await supabase
       .from('chats')
       .select('name, is_group, is_channel, description, avatar_url, created_by')
@@ -562,6 +580,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
     
     if (data) {
       setChatInfo(data);
+      let cachedData: any = { chatInfo: data };
       
       // Check if current user is member and admin for groups
       if (data.is_group && user) {
@@ -575,9 +594,13 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         if (memberData) {
           setIsMember(true);
           setIsGroupAdmin(memberData.is_admin || false);
+          cachedData.isMember = true;
+          cachedData.isGroupAdmin = memberData.is_admin || false;
         } else {
           setIsMember(false);
           setIsGroupAdmin(false);
+          cachedData.isMember = false;
+          cachedData.isGroupAdmin = false;
         }
       }
       
@@ -599,6 +622,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
           
           if (profile) {
             setOtherUser(profile);
+            cachedData.otherUser = profile;
             // Check if user is online (last seen within 5 minutes)
             if (profile.last_seen && profile.show_online_status) {
               const lastSeenTime = new Date(profile.last_seen).getTime();
@@ -608,11 +632,26 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
           }
         }
       }
+
+      // Cache the data for faster subsequent loads
+      sessionStorage.setItem(cacheKey, JSON.stringify(cachedData));
     }
   };
 
   const fetchMessages = async () => {
-    console.log('Fetching messages for chatId:', chatId);
+    // Load cached messages for instant display
+    const msgCacheKey = `chat_messages_${chatId}`;
+    const cachedMessages = sessionStorage.getItem(msgCacheKey);
+    if (cachedMessages) {
+      try {
+        const parsed = JSON.parse(cachedMessages);
+        setMessages(parsed);
+        setLoading(false); // Show cached data immediately
+      } catch (e) {
+        console.error('Failed to parse cached messages:', e);
+      }
+    }
+
     const { data, error } = await supabase
       .from('messages')
       .select(`
@@ -630,14 +669,17 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
       .eq('chat_id', chatId)
       .order('sent_at', { ascending: true });
 
-    console.log('Fetched messages:', data, 'Error:', error);
-
     if (error) {
       toast.error('Failed to load messages');
+      setLoading(false);
       return;
     }
     if (data) {
       setMessages(data as unknown as Message[]);
+      // Cache messages for faster subsequent loads (limit to last 50 for storage)
+      const messagesToCache = data.slice(-50);
+      sessionStorage.setItem(msgCacheKey, JSON.stringify(messagesToCache));
+      
       // Mark messages as delivered and read (only for non-channels)
       if (user && !chatInfo?.is_channel) {
         const messageIds = data
@@ -645,14 +687,14 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
           .map((msg) => msg.id);
         
         if (messageIds.length > 0) {
-          await markMessagesAsRead(messageIds);
+          markMessagesAsRead(messageIds); // Don't await for faster load
         }
       }
       
       // For channels, record message views
       if (user && chatInfo?.is_channel) {
         const messageIds = data.map((msg) => msg.id);
-        await recordMessageViews(messageIds);
+        recordMessageViews(messageIds); // Don't await for faster load
       }
     }
     setLoading(false);
@@ -1307,9 +1349,10 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
 
   if (loading) {
     return (
-      <div className={`flex-1 flex items-center justify-center bg-background ${isEmbedded ? 'h-full' : 'min-h-screen'}`}>
-        <CustomLoader size="lg" text="Loading chat..." />
-      </div>
+      <ChatRoomSkeleton 
+        isEmbedded={isEmbedded} 
+        onBack={() => navigate('/chats')} 
+      />
     );
   }
 
