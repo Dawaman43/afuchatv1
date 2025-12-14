@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Store, Package, ArrowRight } from 'lucide-react';
-
-const shopshackLogo = '/shopshack-logo.png';
+import { Package, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatPriceForCountry } from '@/lib/currencyUtils';
+import { usePremiumStatus } from '@/hooks/usePremiumStatus';
+import { AdsterraBannerAd } from '@/components/ads/AdsterraBannerAd';
+
+const shopshackLogo = '/shopshack-logo.png';
 
 interface FeaturedProduct {
   id: string;
@@ -28,6 +30,7 @@ export default function FeaturedProducts() {
   const [merchant, setMerchant] = useState<{ id: string; name: string; logo_url: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [userCountry, setUserCountry] = useState<string | null>(null);
+  const { isPremium } = usePremiumStatus();
 
   useEffect(() => {
     fetchUserCountry();
@@ -52,10 +55,9 @@ export default function FeaturedProducts() {
     }
   };
 
-
   const fetchFeaturedProducts = async () => {
     try {
-      // Get first active merchant (ShopShach for now)
+      // Get first active merchant (ShopShack for now)
       const { data: merchantData } = await supabase
         .from('merchants')
         .select('id, name, logo_url')
@@ -91,7 +93,20 @@ export default function FeaturedProducts() {
     }
   };
 
-  if (loading || products.length === 0) {
+  const isUgandan = userCountry === 'Uganda';
+
+  // Show loading state
+  if (loading) {
+    return null;
+  }
+
+  // Non-Ugandan non-premium users see banner ad instead
+  if (!isUgandan && !isPremium) {
+    return <AdsterraBannerAd />;
+  }
+
+  // Ugandan users or premium users: show featured products (if available)
+  if (products.length === 0) {
     return null;
   }
 
