@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { CustomLoader } from '@/components/ui/CustomLoader';
 import { formatPriceForCountry } from '@/lib/currencyUtils';
-import shopshachLogo from '@/assets/shopshach-logo.png';
+const shopshackLogo = '/shopshack-logo.png';
 
 interface Product {
   id: string;
@@ -275,12 +275,12 @@ export default function ProductDetail() {
             onClick={() => navigate(`/shop/${product.merchant_id}`)}
           >
             <img 
-              src={shopshachLogo} 
-              alt={merchant?.name || 'ShopShach'}
+              src={shopshackLogo} 
+              alt={merchant?.name || 'ShopShack'}
               className="h-8 w-8 rounded-full object-cover"
             />
             <div>
-              <p className="text-sm font-medium">{merchant?.name || 'ShopShach'}</p>
+              <p className="text-sm font-medium">{merchant?.name || 'ShopShack'}</p>
               <p className="text-xs text-muted-foreground">View all products</p>
             </div>
           </div>
