@@ -83,6 +83,7 @@ const GiftDetail = lazy(() => import("./pages/GiftDetail"));
 const Premium = lazy(() => import("./pages/Premium"));
 const CreatorEarnings = lazy(() => import("./pages/CreatorEarnings"));
 const AdminCreatorWithdrawals = lazy(() => import("./pages/AdminCreatorWithdrawals"));
+const AdManager = lazy(() => import("./pages/AdManager"));
 
 const FoodDelivery = lazy(() => import("./pages/FoodDelivery"));
 const Bookings = lazy(() => import("./pages/Bookings"));
@@ -189,6 +190,7 @@ const AppRoutes = () => {
       <Route path="/affiliate-request" element={<RequireCountry><RequireDateOfBirth><Layout><AffiliateRequest /></Layout></RequireDateOfBirth></RequireCountry>} />
       <Route path="/affiliate-dashboard" element={<RequireCountry><RequireDateOfBirth><Layout><AffiliateDashboard /></Layout></RequireDateOfBirth></RequireCountry>} />
       <Route path="/business/dashboard" element={<RequireCountry><RequireDateOfBirth><Layout><BusinessDashboard /></Layout></RequireDateOfBirth></RequireCountry>} />
+      <Route path="/ads" element={<RequireCountry><RequireDateOfBirth><Layout><AdManager /></Layout></RequireDateOfBirth></RequireCountry>} />
       <Route path="/moments" element={<RequireCountry><RequireDateOfBirth><Layout><Moments /></Layout></RequireDateOfBirth></RequireCountry>} />
       <Route path="/mini-programs" element={<Layout><MiniPrograms /></Layout>} />
       <Route path="/transfer" element={<RequireCountry><RequireDateOfBirth><Layout><Transfer /></Layout></RequireDateOfBirth></RequireCountry>} />

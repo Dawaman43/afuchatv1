@@ -98,6 +98,193 @@ export type Database = {
         }
         Relationships: []
       }
+      ad_campaigns: {
+        Row: {
+          ad_type: string
+          clicks: number
+          content: string | null
+          created_at: string
+          daily_budget: number
+          end_date: string | null
+          id: string
+          image_url: string | null
+          impressions: number
+          placement: string
+          post_id: string | null
+          product_id: string | null
+          start_date: string
+          status: string
+          target_url: string | null
+          title: string | null
+          total_spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ad_type: string
+          clicks?: number
+          content?: string | null
+          created_at?: string
+          daily_budget?: number
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          impressions?: number
+          placement?: string
+          post_id?: string | null
+          product_id?: string | null
+          start_date?: string
+          status?: string
+          target_url?: string | null
+          title?: string | null
+          total_spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ad_type?: string
+          clicks?: number
+          content?: string | null
+          created_at?: string
+          daily_budget?: number
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          impressions?: number
+          placement?: string
+          post_id?: string | null
+          product_id?: string | null
+          start_date?: string
+          status?: string
+          target_url?: string | null
+          title?: string | null
+          total_spent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_campaigns_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_campaigns_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_campaigns_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_campaigns_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_clicks: {
+        Row: {
+          ad_id: string
+          clicker_id: string | null
+          created_at: string
+          id: string
+          placement: string
+        }
+        Insert: {
+          ad_id: string
+          clicker_id?: string | null
+          created_at?: string
+          id?: string
+          placement: string
+        }
+        Update: {
+          ad_id?: string
+          clicker_id?: string | null
+          created_at?: string
+          id?: string
+          placement?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_clicks_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ad_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_clicks_clicker_id_fkey"
+            columns: ["clicker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_clicks_clicker_id_fkey"
+            columns: ["clicker_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_impressions: {
+        Row: {
+          ad_id: string
+          created_at: string
+          id: string
+          placement: string
+          viewer_id: string | null
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string
+          id?: string
+          placement: string
+          viewer_id?: string | null
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string
+          id?: string
+          placement?: string
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_impressions_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ad_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_impressions_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_impressions_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_requests: {
         Row: {
           business_profile_id: string
@@ -3736,6 +3923,7 @@ export type Database = {
       calculate_grade: { Args: { xp_amount: number }; Returns: string }
       can_claim_red_envelope: { Args: { p_user_id: string }; Returns: boolean }
       cancel_active_subscription: { Args: never; Returns: Json }
+      charge_ad_daily_budgets: { Args: never; Returns: number }
       check_and_unlock_accessories: {
         Args: { p_user_id: string }
         Returns: Json
@@ -3746,6 +3934,21 @@ export type Database = {
       claim_red_envelope: { Args: { p_envelope_id: string }; Returns: Json }
       cleanup_expired_sessions: { Args: never; Returns: number }
       convert_nexa_to_acoin: { Args: { p_nexa_amount: number }; Returns: Json }
+      create_ad_campaign: {
+        Args: {
+          p_ad_type: string
+          p_content?: string
+          p_daily_budget: number
+          p_end_date?: string
+          p_image_url?: string
+          p_placement: string
+          p_post_id?: string
+          p_product_id?: string
+          p_target_url?: string
+          p_title?: string
+        }
+        Returns: Json
+      }
       create_marketplace_listing: {
         Args: {
           p_asking_price: number
@@ -3774,6 +3977,20 @@ export type Database = {
       distribute_daily_creator_rewards: { Args: never; Returns: Json }
       expire_subscriptions: { Args: never; Returns: number }
       generate_order_number: { Args: never; Returns: string }
+      get_ads_for_placement: {
+        Args: { p_limit?: number; p_placement: string }
+        Returns: {
+          ad_type: string
+          content: string
+          id: string
+          image_url: string
+          post_id: string
+          product_id: string
+          target_url: string
+          title: string
+          user_id: string
+        }[]
+      }
       get_daily_engagement: {
         Args: { p_date?: string; p_user_id: string }
         Returns: Json
@@ -3924,6 +4141,14 @@ export type Database = {
         Returns: Json
       }
       purchase_subscription: { Args: { p_plan_id: string }; Returns: Json }
+      record_ad_click: {
+        Args: { p_ad_id: string; p_placement: string }
+        Returns: undefined
+      }
+      record_ad_impression: {
+        Args: { p_ad_id: string; p_placement: string }
+        Returns: undefined
+      }
       record_login_attempt: {
         Args: {
           p_ip_address?: string
