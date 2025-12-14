@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Search, Users, Check, CheckCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { ChatListSkeleton } from '@/components/chat/ChatListSkeleton';
 import NewChatDialog from '@/components/ui/NewChatDialog';
 import { CreateGroupDialog } from '@/components/chat/CreateGroupDialog';
 import { CreateChannelDialog } from '@/components/chat/CreateChannelDialog';
@@ -370,8 +370,8 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
 
   if (loading && chats.length === 0) {
     return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <CustomLoader size="lg" text="Loading chats..." />
+      <div className={`flex flex-col bg-background relative overflow-hidden ${isEmbedded ? 'h-full' : 'h-screen'}`}>
+        <ChatListSkeleton />
       </div>
     );
   }
@@ -519,8 +519,8 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
         )}
         
         {loadingMore && (
-          <div className="py-8 flex justify-center">
-            <CustomLoader size="sm" text="Loading more..." />
+          <div className="py-4">
+            <ChatListSkeleton />
           </div>
         )}
       </div>

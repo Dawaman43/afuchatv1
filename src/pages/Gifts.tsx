@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { GiftsSkeleton } from '@/components/skeletons';
 import { Gift, TrendingUp, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { GiftImage } from '@/components/gifts/GiftImage';
@@ -161,11 +161,7 @@ const Gifts = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <CustomLoader size="lg" text="Loading gifts..." />
-      </div>
-    );
+    return <GiftsSkeleton />;
   }
 
   return (
