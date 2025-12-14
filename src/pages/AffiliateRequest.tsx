@@ -72,10 +72,12 @@ const AffiliateRequest = () => {
 
   const fetchBusinessProfiles = async () => {
     try {
+      // Only fetch verified organization businesses
       const { data, error } = await supabase
         .from('profiles')
         .select('id, display_name, handle, website_url')
         .eq('is_business_mode', true)
+        .eq('is_organization_verified', true)
         .order('display_name');
 
       if (error) throw error;
