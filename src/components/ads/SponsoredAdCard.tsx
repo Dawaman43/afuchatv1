@@ -4,6 +4,8 @@ import { ExternalLink, Megaphone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { PostInteractionButtons } from '@/components/feed/PostInteractionButtons';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SponsoredAdCardProps {
   ad: {
@@ -21,6 +23,7 @@ interface SponsoredAdCardProps {
 }
 
 interface PostData {
+  id: string;
   content: string;
   image_url: string | null;
   profiles: {
@@ -29,24 +32,32 @@ interface PostData {
     handle: string;
   };
   post_images: { image_url: string }[];
+  post_acknowledgments: { id: string; user_id: string }[];
+  post_replies: { id: string }[];
+  post_views: { id: string }[];
 }
 
 export const SponsoredAdCard = ({ ad, placement, variant = 'feed' }: SponsoredAdCardProps) => {
+  const { user } = useAuth();
   const [clicked, setClicked] = useState(false);
   const [advertiser, setAdvertiser] = useState<{ display_name: string; avatar_url: string | null } | null>(null);
   const [postData, setPostData] = useState<PostData | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      // For promoted posts, fetch the actual post content
+      // For promoted posts, fetch the actual post content with engagement
       if (ad.ad_type === 'promoted_post' && ad.post_id) {
         const { data: post } = await supabase
           .from('posts')
           .select(`
+            id,
             content,
             image_url,
             profiles!posts_author_id_fkey(display_name, avatar_url, handle),
-            post_images(image_url)
+            post_images(image_url),
+            post_acknowledgments(id, user_id),
+            post_replies(id),
+            post_views(id)
           `)
           .eq('id', ad.post_id)
           .single();
@@ -104,6 +115,12 @@ export const SponsoredAdCard = ({ ad, placement, variant = 'feed' }: SponsoredAd
   const displayTitle = ad.title;
   const displayImage = ad.image_url || postData?.image_url || postData?.post_images?.[0]?.image_url;
 
+  // Engagement counts for promoted posts
+  const likeCount = postData?.post_acknowledgments?.length || 0;
+  const replyCount = postData?.post_replies?.length || 0;
+  const viewCount = postData?.post_views?.length || 0;
+  const isLiked = user ? postData?.post_acknowledgments?.some(ack => ack.user_id === user.id) : false;
+
   const PostContent = (
     <div className="px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border">
       {/* Header with advertiser info and sponsored badge */}
@@ -149,6 +166,18 @@ export const SponsoredAdCard = ({ ad, placement, variant = 'feed' }: SponsoredAd
               />
             </div>
           )}
+
+          {/* Interaction buttons for promoted posts */}
+          {ad.ad_type === 'promoted_post' && ad.post_id && (
+            <PostInteractionButtons
+              postId={ad.post_id}
+              initialLikeCount={likeCount}
+              initialReplyCount={replyCount}
+              initialViewCount={viewCount}
+              initialIsLiked={isLiked}
+              className="mt-3"
+            />
+          )}
         </div>
       </div>
     </div>
@@ -156,9 +185,9 @@ export const SponsoredAdCard = ({ ad, placement, variant = 'feed' }: SponsoredAd
 
   if (ad.ad_type === 'promoted_post' && ad.post_id) {
     return (
-      <Link to={`/post/${ad.post_id}`} onClick={handleClick}>
+      <div onClick={handleClick}>
         {PostContent}
-      </Link>
+      </div>
     );
   }
 
