@@ -81,6 +81,7 @@ const parseMessageContent = (content: string): React.ReactNode => {
 
 export interface Reaction {
   reaction: string;
+  user_id: string;
 }
 
 export interface Message {
@@ -138,6 +139,48 @@ const aggregateReactions = (reactions: Reaction[]) => {
     return acc;
   }, {} as { [key: string]: number });
   return Object.entries(counts).map(([emoji, count]) => ({ emoji, count }));
+};
+
+// --- Component to display reactions on a message ---
+const ReactionsDisplay = ({ 
+  reactions, 
+  isOwn, 
+  onReaction,
+  messageId,
+  currentUserId 
+}: { 
+  reactions: Reaction[]; 
+  isOwn: boolean;
+  onReaction: (messageId: string, emoji: string) => void;
+  messageId: string;
+  currentUserId?: string;
+}) => {
+  const aggregated = aggregateReactions(reactions);
+  if (aggregated.length === 0) return null;
+
+  return (
+    <div className={`flex flex-wrap gap-1 mt-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+      {aggregated.map(({ emoji, count }) => {
+        const hasUserReacted = currentUserId && reactions.some(
+          r => r.reaction === emoji && r.user_id === currentUserId
+        );
+        return (
+          <button
+            key={emoji}
+            onClick={() => onReaction(messageId, emoji)}
+            className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs transition-all ${
+              hasUserReacted 
+                ? 'bg-primary/20 border border-primary/40' 
+                : 'bg-muted/80 border border-border/50 hover:bg-muted'
+            }`}
+          >
+            <span>{emoji}</span>
+            {count > 1 && <span className="text-muted-foreground">{count}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
 };
 
 interface MessageBubbleProps {
@@ -488,6 +531,17 @@ export const MessageBubble = ({
           </div>
         )}
       </div>
+      
+      {/* Reactions Display */}
+      {message.message_reactions && message.message_reactions.length > 0 && (
+        <ReactionsDisplay
+          reactions={message.message_reactions}
+          isOwn={isChannel ? false : isOwn}
+          onReaction={onReaction}
+          messageId={message.id}
+          currentUserId={user?.id}
+        />
+      )}
     </motion.div>
 
     <MessageActionsSheet

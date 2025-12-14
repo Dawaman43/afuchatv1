@@ -1253,16 +1253,58 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
   const handleReaction = async (messageId: string, emoji: string) => {
     if (!user) return;
 
-    const { error } = await supabase
-      .from('message_reactions')
-      .insert({
-        message_id: messageId,
-        user_id: user.id,
-        reaction: emoji,
-      });
+    // Check if user already has this reaction
+    const existingReaction = messages.find(m => m.id === messageId)
+      ?.message_reactions?.find(r => r.user_id === user.id && r.reaction === emoji);
 
-    if (error) {
-      // Silent fail - reaction errors are not critical
+    if (existingReaction) {
+      // Remove the reaction
+      const { error } = await supabase
+        .from('message_reactions')
+        .delete()
+        .eq('message_id', messageId)
+        .eq('user_id', user.id)
+        .eq('reaction', emoji);
+
+      if (!error) {
+        // Optimistically update UI
+        setMessages(prev => prev.map(msg => {
+          if (msg.id === messageId) {
+            return {
+              ...msg,
+              message_reactions: msg.message_reactions?.filter(
+                r => !(r.user_id === user.id && r.reaction === emoji)
+              )
+            };
+          }
+          return msg;
+        }));
+      }
+    } else {
+      // Add the reaction
+      const { error } = await supabase
+        .from('message_reactions')
+        .insert({
+          message_id: messageId,
+          user_id: user.id,
+          reaction: emoji,
+        });
+
+      if (!error) {
+        // Optimistically update UI
+        setMessages(prev => prev.map(msg => {
+          if (msg.id === messageId) {
+            return {
+              ...msg,
+              message_reactions: [
+                ...(msg.message_reactions || []),
+                { reaction: emoji, user_id: user.id }
+              ]
+            };
+          }
+          return msg;
+        }));
+      }
     }
   };
 
