@@ -114,6 +114,7 @@ const BusinessDashboard = () => {
   const { user } = useAuth();
   const { mode, canUseBusiness } = useAccountMode();
   const [loading, setLoading] = useState(true);
+  const [isOrganizationVerified, setIsOrganizationVerified] = useState<boolean | null>(null);
   const [stats, setStats] = useState<BusinessStats>({ 
     totalAffiliates: 0, 
     pendingRequests: 0, 
@@ -143,8 +144,28 @@ const BusinessDashboard = () => {
 
   useEffect(() => {
     if (!user) return;
+    checkOrganizationVerification();
     fetchDashboardData();
   }, [user]);
+
+  const checkOrganizationVerification = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_organization_verified')
+        .eq('id', user.id)
+        .single();
+
+      if (!error && data) {
+        setIsOrganizationVerified(data.is_organization_verified || false);
+      }
+    } catch (error) {
+      console.error('Error checking organization verification:', error);
+      setIsOrganizationVerified(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -322,6 +343,51 @@ const BusinessDashboard = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground">Business features are not enabled for your account.</p>
+      </div>
+    );
+  }
+
+  // Show verification pending state
+  if (isOrganizationVerified === false) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <PageHeader 
+          title="Business Hub" 
+          subtitle="Verification Required"
+          icon={<Briefcase className="h-5 w-5 text-primary" />}
+        />
+        <div className="max-w-2xl mx-auto px-4 py-12">
+          <Card className="p-8 text-center">
+            <div className="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Clock className="h-8 w-8 text-orange-500" />
+            </div>
+            <h2 className="text-2xl font-bold mb-3">Verification Pending</h2>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Your business account is pending verification. Once verified as an organization, you'll be able to access your Business Hub to manage orders, products, and receive affiliate requests.
+            </p>
+            <div className="bg-muted/50 rounded-lg p-4 mb-6">
+              <h3 className="font-semibold mb-2 text-sm">What happens after verification?</h3>
+              <ul className="text-sm text-muted-foreground space-y-1 text-left">
+                <li>• Manage your product catalog and orders</li>
+                <li>• Receive and approve affiliate requests</li>
+                <li>• Build your affiliate team</li>
+                <li>• Track revenue and performance</li>
+              </ul>
+            </div>
+            <Button onClick={() => navigate('/home')} variant="outline">
+              Back to Home
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Still checking verification status
+  if (isOrganizationVerified === null) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Skeleton className="h-12 w-48" />
       </div>
     );
   }
