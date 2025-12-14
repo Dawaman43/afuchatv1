@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChatRoomSkeleton } from '@/components/chat/ChatRoomSkeleton';
-import { ArrowLeft, Send, MoreVertical, MessageSquare, Mic, MicOff, Play, Pause, Volume2, X, Paperclip, Settings, LogOut, Trash2, Gift, BellOff, Bell, Video, Search } from 'lucide-react';
+import { ArrowLeft, Send, MoreVertical, MessageSquare, Mic, MicOff, Play, Pause, Volume2, X, Paperclip, Settings, LogOut, Trash2, Gift, BellOff, Bell, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { messageSchema } from '@/lib/validation';
 import { ChatRedEnvelope } from '@/components/chat/ChatRedEnvelope';
@@ -1440,9 +1440,6 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
     toast.success(isMuted ? 'Chat unmuted' : 'Chat muted');
   };
 
-  const handleVideoCall = () => {
-    toast.info('Video calls coming soon!');
-  };
 
   const handleSearchMessages = () => {
     setIsSearchOpen(true);
@@ -1659,15 +1656,6 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                   <span>{isMuted ? 'Unmute' : 'Mute'}</span>
                 </DropdownMenuItem>
                 
-                {!chatInfo?.is_group && (
-                  <DropdownMenuItem 
-                    className="gap-3 py-3 cursor-pointer"
-                    onClick={handleVideoCall}
-                  >
-                    <Video className="h-5 w-5 text-muted-foreground" />
-                    <span>Video Call</span>
-                  </DropdownMenuItem>
-                )}
                 
                 <DropdownMenuItem 
                   className="gap-3 py-3 cursor-pointer"
