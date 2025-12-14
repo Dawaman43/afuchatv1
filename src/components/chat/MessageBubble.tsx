@@ -4,7 +4,7 @@ import { AttachmentPreview } from './AttachmentPreview';
 import { useState, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
-import { MessageActionsSheet } from './MessageActionsSheet';
+import { MessageActionsMenu } from './MessageActionsMenu';
 import { OrderNotificationActions } from '@/components/shop/OrderNotificationActions';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -327,13 +327,13 @@ export const MessageBubble = ({
     }
   };
 
-  // Long press handlers for mobile
+  // Long press handlers for mobile - increased to 700ms to prevent accidental triggers
   const handleTouchStart = useCallback(() => {
     isLongPressRef.current = false;
     longPressTimerRef.current = setTimeout(() => {
       isLongPressRef.current = true;
       setActionsSheetOpen(true);
-    }, 500);
+    }, 700);
   }, []);
 
   const handleTouchEnd = useCallback(() => {
@@ -544,7 +544,7 @@ export const MessageBubble = ({
       )}
     </motion.div>
 
-    <MessageActionsSheet
+    <MessageActionsMenu
       open={actionsSheetOpen}
       onOpenChange={setActionsSheetOpen}
       message={message}
