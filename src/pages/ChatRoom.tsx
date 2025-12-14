@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChatRoomSkeleton } from '@/components/chat/ChatRoomSkeleton';
-import { ArrowLeft, Send, MoreVertical, MessageSquare, Mic, MicOff, Play, Pause, Volume2, X, Paperclip, Settings, LogOut, Trash2, Gift } from 'lucide-react';
+import { ArrowLeft, Send, MoreVertical, MessageSquare, Mic, MicOff, Play, Pause, Volume2, X, Paperclip, Settings, LogOut, Trash2, Gift, BellOff, Bell, Video, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { messageSchema } from '@/lib/validation';
 import { ChatRedEnvelope } from '@/components/chat/ChatRedEnvelope';
@@ -193,6 +193,11 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
   const [isMember, setIsMember] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
   const [prevMessageCount, setPrevMessageCount] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Message[]>([]);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Improved scroll behavior - scroll to bottom on new messages
   const scrollToBottom = (smooth = true) => {
@@ -1430,6 +1435,59 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
     }
   };
 
+  const handleMuteChat = async () => {
+    setIsMuted(!isMuted);
+    toast.success(isMuted ? 'Chat unmuted' : 'Chat muted');
+  };
+
+  const handleVideoCall = () => {
+    toast.info('Video calls coming soon!');
+  };
+
+  const handleSearchMessages = () => {
+    setIsSearchOpen(true);
+    setTimeout(() => searchInputRef.current?.focus(), 100);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    if (query.trim()) {
+      const results = messages.filter(msg => 
+        msg.encrypted_content.toLowerCase().includes(query.toLowerCase())
+      );
+      setSearchResults(results);
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  const handleCloseSearch = () => {
+    setIsSearchOpen(false);
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+
+  const handleClearHistory = async () => {
+    if (!user || !chatId) return;
+    
+    if (!window.confirm('Clear all messages in this chat? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .eq('chat_id', chatId);
+
+      if (error) throw error;
+
+      setMessages([]);
+      toast.success('Chat history cleared');
+    } catch (error) {
+      toast.error('Failed to clear history');
+    }
+  };
 
   if (loading) {
     return (
@@ -1443,6 +1501,59 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
   return (
     <TooltipProvider delayDuration={200}>
       <div className={`flex flex-col bg-background ${isEmbedded ? 'h-full relative' : 'fixed inset-0'}`} style={{ overflow: 'hidden' }}>
+        {/* Search Overlay */}
+        {isSearchOpen && (
+          <div className="absolute inset-x-0 top-0 z-20 bg-background border-b border-border px-3 py-3 pt-[env(safe-area-inset-top)]">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full hover:bg-muted/50"
+                onClick={handleCloseSearch}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex-1 relative">
+                <Input
+                  ref={searchInputRef}
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder="Search messages..."
+                  className="h-10 pl-10 pr-4 rounded-full bg-muted border-0"
+                />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              </div>
+            </div>
+            {searchQuery && (
+              <div className="mt-3 max-h-64 overflow-y-auto">
+                {searchResults.length > 0 ? (
+                  <div className="space-y-2">
+                    {searchResults.map(msg => (
+                      <div 
+                        key={msg.id} 
+                        className="p-3 bg-muted rounded-lg cursor-pointer hover:bg-muted/80"
+                        onClick={() => {
+                          handleCloseSearch();
+                          // Scroll to message (would need message refs for exact scroll)
+                          const msgElement = document.querySelector(`[data-message-id="${msg.id}"]`);
+                          msgElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }}
+                      >
+                        <p className="text-xs text-muted-foreground mb-1">
+                          {msg.profiles?.display_name} • {new Date(msg.sent_at).toLocaleDateString()}
+                        </p>
+                        <p className="text-sm line-clamp-2">{msg.encrypted_content}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">No messages found</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* X-style Header - Clean and minimal */}
         <header className="flex-shrink-0 flex items-center gap-3 px-3 py-3 bg-background border-b border-border z-10 pt-[env(safe-area-inset-top)]">
           {!isEmbedded && (
@@ -1536,29 +1647,33 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 p-1">
-                <DropdownMenuItem className="gap-3 py-3 cursor-pointer">
-                  <svg className="h-5 w-5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 6v6m0 0v6m0-6h6m-6 0H6" strokeLinecap="round"/>
-                    <path d="M4 4l3 3m13-3l-3 3M4 20l3-3m13 3l-3-3" strokeLinecap="round"/>
-                  </svg>
-                  <span>Mute</span>
+                <DropdownMenuItem 
+                  className="gap-3 py-3 cursor-pointer"
+                  onClick={handleMuteChat}
+                >
+                  {isMuted ? (
+                    <Bell className="h-5 w-5 text-muted-foreground" />
+                  ) : (
+                    <BellOff className="h-5 w-5 text-muted-foreground" />
+                  )}
+                  <span>{isMuted ? 'Unmute' : 'Mute'}</span>
                 </DropdownMenuItem>
                 
                 {!chatInfo?.is_group && (
-                  <DropdownMenuItem className="gap-3 py-3 cursor-pointer">
-                    <svg className="h-5 w-5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="2" y="3" width="20" height="14" rx="2"/>
-                      <path d="M8 21h8M12 17v4"/>
-                    </svg>
+                  <DropdownMenuItem 
+                    className="gap-3 py-3 cursor-pointer"
+                    onClick={handleVideoCall}
+                  >
+                    <Video className="h-5 w-5 text-muted-foreground" />
                     <span>Video Call</span>
                   </DropdownMenuItem>
                 )}
                 
-                <DropdownMenuItem className="gap-3 py-3 cursor-pointer">
-                  <svg className="h-5 w-5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="M21 21l-4.35-4.35"/>
-                  </svg>
+                <DropdownMenuItem 
+                  className="gap-3 py-3 cursor-pointer"
+                  onClick={handleSearchMessages}
+                >
+                  <Search className="h-5 w-5 text-muted-foreground" />
                   <span>Search</span>
                 </DropdownMenuItem>
                 
@@ -1573,7 +1688,10 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                   <span>Change Wallpaper</span>
                 </DropdownMenuItem>
                 
-                <DropdownMenuItem className="gap-3 py-3 cursor-pointer">
+                <DropdownMenuItem 
+                  className="gap-3 py-3 cursor-pointer"
+                  onClick={handleClearHistory}
+                >
                   <svg className="h-5 w-5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/>
                     <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
@@ -1700,26 +1818,27 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                   const isLastInGroup = nextMessage?.sender_id !== message.sender_id;
 
                   return (
-                    <MessageBubble
-                      key={message.id}
-                      message={message}
-                      isOwn={isOwn}
-                      isGrouped={isGrouped}
-                      isLastInGroup={isLastInGroup}
-                      isOnline={online}
-                      onReply={handleReply}
-                      onReaction={handleReaction}
-                      onToggleAudio={() => message.audio_url && toggleAudio(message.id, message.audio_url)}
-                      audioPlayerState={audioPlayers[message.id] || { isPlaying: false }}
-                      onEdit={handleEditMessage}
-                      onDelete={handleDeleteMessage}
-                      bubbleStyle={chatPreferences.bubbleStyle as 'rounded' | 'square' | 'minimal'}
-                      themeColors={currentTheme?.colors}
-                      showReadReceipts={chatPreferences.readReceipts}
-                      fontSize={chatPreferences.fontSize}
-                      isChannel={chatInfo?.is_channel || false}
-                      viewCount={message.view_count || 0}
-                    />
+                    <div key={message.id} data-message-id={message.id}>
+                      <MessageBubble
+                        message={message}
+                        isOwn={isOwn}
+                        isGrouped={isGrouped}
+                        isLastInGroup={isLastInGroup}
+                        isOnline={online}
+                        onReply={handleReply}
+                        onReaction={handleReaction}
+                        onToggleAudio={() => message.audio_url && toggleAudio(message.id, message.audio_url)}
+                        audioPlayerState={audioPlayers[message.id] || { isPlaying: false }}
+                        onEdit={handleEditMessage}
+                        onDelete={handleDeleteMessage}
+                        bubbleStyle={chatPreferences.bubbleStyle as 'rounded' | 'square' | 'minimal'}
+                        themeColors={currentTheme?.colors}
+                        showReadReceipts={chatPreferences.readReceipts}
+                        fontSize={chatPreferences.fontSize}
+                        isChannel={chatInfo?.is_channel || false}
+                        viewCount={message.view_count || 0}
+                      />
+                    </div>
                   );
                 });
               })()}
