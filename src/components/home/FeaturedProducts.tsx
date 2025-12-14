@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Store, Package, ArrowRight } from 'lucide-react';
+
+const shopshackLogo = '/shopshack-logo.png';
 import { motion } from 'framer-motion';
 import { formatPriceForCountry } from '@/lib/currencyUtils';
 
@@ -98,17 +100,11 @@ export default function FeaturedProducts() {
       {/* Section Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          {merchant?.logo_url ? (
-            <img 
-              src={merchant.logo_url} 
-              alt={merchant.name}
-              className="h-8 w-8 rounded-full object-cover"
-            />
-          ) : (
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <Store className="h-4 w-4 text-primary" />
-            </div>
-          )}
+          <img 
+            src={shopshackLogo} 
+            alt={merchant?.name || 'ShopShack'}
+            className="h-8 w-8 rounded-full object-cover"
+          />
           <div>
             <h2 className="font-semibold text-base">{merchant?.name || 'Shop'}</h2>
             <p className="text-xs text-muted-foreground">Featured Products</p>
