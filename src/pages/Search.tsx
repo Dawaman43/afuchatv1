@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search as SearchIcon, User, MessageSquare, Users, Clock, X, Trash2, MoreHorizontal, Hash, Radio, Crown, Lock, Megaphone } from 'lucide-react';
+import { Search as SearchIcon, User, MessageSquare, Users, Clock, X, Trash2, MoreHorizontal, Hash, Radio, Crown, Lock, Megaphone, Heart, Send, TrendingUp } from 'lucide-react';
 import { useAds } from '@/hooks/useAds';
 import { SponsoredAdCard } from '@/components/ads/SponsoredAdCard';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -92,6 +92,10 @@ interface SearchResult {
   is_member?: boolean;
   group_verified?: boolean;
   is_channel?: boolean;
+  // Post engagement fields
+  like_count?: number;
+  reply_count?: number;
+  view_count?: number;
   // Message-specific fields
   chat_id?: string;
   chat_name?: string;
@@ -642,7 +646,10 @@ const Search = () => {
         .select(`
           id, content, created_at, author_id, image_url,
           profiles!author_id(display_name, handle, is_verified, is_organization_verified, avatar_url),
-          post_images(id, image_url, display_order)
+          post_images(id, image_url, display_order),
+          post_acknowledgments(id),
+          post_replies(id),
+          post_views(id)
         `)
         .textSearch('content', searchTsQuery, { type: 'plain', config: searchConfig })
         .limit(10);
@@ -739,6 +746,9 @@ const Search = () => {
           image_url: p.image_url,
           post_images: p.post_images?.sort((a: any, b: any) => a.display_order - b.display_order) || [],
           author_profiles: p.profiles,
+          like_count: p.post_acknowledgments?.length || 0,
+          reply_count: p.post_replies?.length || 0,
+          view_count: p.post_views?.length || 0,
         })),
         ...messageResults.map((m: any) => ({
           type: 'message' as const,
@@ -1206,6 +1216,55 @@ const Search = () => {
                               />
                             </div>
                           ) : null}
+                          
+                          {/* Post Interaction Icons */}
+                          <div className="flex items-center gap-4 mt-3 text-muted-foreground">
+                            <button 
+                              className="flex items-center gap-1.5 group hover:text-primary transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewPost(result.id);
+                              }}
+                            >
+                              <MessageSquare className="h-4 w-4 group-hover:text-primary" />
+                              <span className="text-sm">{result.reply_count || 0}</span>
+                            </button>
+                            <button 
+                              className="flex items-center gap-1.5 group hover:text-red-500 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewPost(result.id);
+                              }}
+                            >
+                              <Heart className="h-4 w-4 group-hover:text-red-500" />
+                              <span className="text-sm">{result.like_count || 0}</span>
+                            </button>
+                            <button 
+                              className="flex items-center gap-1.5 group hover:text-primary transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewPost(result.id);
+                              }}
+                            >
+                              <TrendingUp className="h-4 w-4 group-hover:text-primary" />
+                              <span className="text-sm">{result.view_count || 0}</span>
+                            </button>
+                            <button 
+                              className="flex items-center gap-1.5 group hover:text-primary transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const url = `${window.location.origin}/post/${result.id}`;
+                                if (navigator.share) {
+                                  navigator.share({ url });
+                                } else {
+                                  navigator.clipboard.writeText(url);
+                                  toast.success(t('common.linkCopied', 'Link copied!'));
+                                }
+                              }}
+                            >
+                              <Send className="h-4 w-4 group-hover:text-primary" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
