@@ -3,7 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search as SearchIcon, User, MessageSquare, Users, Clock, X, Trash2, MoreHorizontal, Hash, Radio, Crown, Lock } from 'lucide-react';
+import { Search as SearchIcon, User, MessageSquare, Users, Clock, X, Trash2, MoreHorizontal, Hash, Radio, Crown, Lock, Megaphone } from 'lucide-react';
+import { useAds } from '@/hooks/useAds';
+import { SponsoredAdCard } from '@/components/ads/SponsoredAdCard';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CustomLoader } from '@/components/ui/CustomLoader';
@@ -839,6 +841,9 @@ const Search = () => {
   const messageResults = safeResults.filter(r => r.type === 'message');
   const hasAnyResults = safeResults.length > 0;
 
+  // Fetch search ads
+  const { ads: searchAds } = useAds('search', 3);
+
   // Get filtered results based on active tab
   const getFilteredResults = () => {
     switch (activeResultTab) {
@@ -1007,6 +1012,21 @@ const Search = () => {
           </div>
         ) : (
           <div>
+            {/* Sponsored Ads - Always First */}
+            {searchAds.length > 0 && (
+              <div className="border-b border-border">
+                <div className="px-4 py-3 flex items-center gap-2">
+                  <Megaphone className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sponsored Results</span>
+                </div>
+                <div className="px-4 pb-4 space-y-3">
+                  {searchAds.map((ad) => (
+                    <SponsoredAdCard key={ad.id} ad={ad} placement="search" variant="search" />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* AI Search Summary for Premium Users */}
             <AISearchSummary query={query} resultsCount={safeResults.length} />
             
