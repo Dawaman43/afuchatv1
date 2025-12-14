@@ -1014,16 +1014,10 @@ const Search = () => {
           <div>
             {/* Sponsored Ads - Always First */}
             {searchAds.length > 0 && (
-              <div className="border-b border-border">
-                <div className="px-4 py-3 flex items-center gap-2">
-                  <Megaphone className="h-4 w-4 text-primary" />
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sponsored Results</span>
-                </div>
-                <div className="px-4 pb-4 space-y-3">
-                  {searchAds.map((ad) => (
-                    <SponsoredAdCard key={ad.id} ad={ad} placement="search" variant="search" />
-                  ))}
-                </div>
+              <div>
+                {searchAds.map((ad) => (
+                  <SponsoredAdCard key={ad.id} ad={ad} placement="search" variant="search" />
+                ))}
               </div>
             )}
 
