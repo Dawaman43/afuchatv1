@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Wallet, Send, Mail, TrendingUp, TrendingDown, Gift, ArrowUpRight, ArrowDownRight, ShoppingBag, Trophy, Heart, Sparkles, Coins } from 'lucide-react';
+import { ArrowLeft, Wallet, Send, Mail, TrendingUp, TrendingDown, Gift, ArrowUpRight, ArrowDownRight, ShoppingBag, Trophy, Heart, Sparkles, Coins, Megaphone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Logo from '@/components/Logo';
 import { formatDistanceToNow } from 'date-fns';
@@ -461,14 +461,18 @@ const FinancialHub = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
         >
-          <div className="grid grid-cols-2 gap-3">
-            <Button onClick={() => navigate('/transfer')} className="w-full h-auto py-4 flex items-center justify-center gap-2">
+          <div className="grid grid-cols-3 gap-3">
+            <Button onClick={() => navigate('/transfer')} className="w-full h-auto py-4 flex flex-col items-center justify-center gap-1">
               <Send className="h-5 w-5" />
-              <span>Transfer</span>
+              <span className="text-xs">Transfer</span>
             </Button>
-            <Button onClick={() => navigate('/red-envelope')} variant="outline" className="w-full h-auto py-4 flex items-center justify-center gap-2">
+            <Button onClick={() => navigate('/red-envelope')} variant="outline" className="w-full h-auto py-4 flex flex-col items-center justify-center gap-1">
               <Mail className="h-5 w-5" />
-              <span>Red Envelope</span>
+              <span className="text-xs">Red Envelope</span>
+            </Button>
+            <Button onClick={() => navigate('/ads')} variant="outline" className="w-full h-auto py-4 flex flex-col items-center justify-center gap-1">
+              <Megaphone className="h-5 w-5" />
+              <span className="text-xs">Ads</span>
             </Button>
           </div>
         </motion.div>
