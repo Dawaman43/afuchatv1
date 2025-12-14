@@ -141,7 +141,7 @@ const aggregateReactions = (reactions: Reaction[]) => {
   return Object.entries(counts).map(([emoji, count]) => ({ emoji, count }));
 };
 
-// --- Component to display reactions on a message ---
+// --- Telegram-style reaction badge displayed at bottom of message bubble ---
 const ReactionsDisplay = ({ 
   reactions, 
   isOwn, 
@@ -159,7 +159,9 @@ const ReactionsDisplay = ({
   if (aggregated.length === 0) return null;
 
   return (
-    <div className={`flex flex-wrap gap-1 mt-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+    <div 
+      className={`absolute -bottom-3 ${isOwn ? 'right-2' : 'left-2'} flex items-center gap-0.5 bg-background/95 backdrop-blur-sm rounded-full px-1.5 py-0.5 shadow-md border border-border/50`}
+    >
       {aggregated.map(({ emoji, count }) => {
         const hasUserReacted = currentUserId && reactions.some(
           r => r.reaction === emoji && r.user_id === currentUserId
@@ -167,15 +169,16 @@ const ReactionsDisplay = ({
         return (
           <button
             key={emoji}
-            onClick={() => onReaction(messageId, emoji)}
-            className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs transition-all ${
-              hasUserReacted 
-                ? 'bg-primary/20 border border-primary/40' 
-                : 'bg-muted/80 border border-border/50 hover:bg-muted'
+            onClick={(e) => {
+              e.stopPropagation();
+              onReaction(messageId, emoji);
+            }}
+            className={`flex items-center text-sm transition-transform hover:scale-110 ${
+              hasUserReacted ? 'opacity-100' : 'opacity-80'
             }`}
           >
             <span>{emoji}</span>
-            {count > 1 && <span className="text-muted-foreground">{count}</span>}
+            {count > 1 && <span className="text-xs text-muted-foreground ml-0.5">{count}</span>}
           </button>
         );
       })}
@@ -387,6 +390,8 @@ export const MessageBubble = ({
     return <Check className="h-3.5 w-3.5 text-muted-foreground" />;
   };
 
+  const hasReactions = message.message_reactions && message.message_reactions.length > 0;
+
   return (
     <>
     <motion.div
@@ -403,19 +408,20 @@ export const MessageBubble = ({
         // For channels, all messages appear left-aligned (from the channel)
         isChannel ? 'justify-start' : (isOwn ? 'justify-end' : 'justify-start')
       } ${
-        isLastInGroup ? 'mb-1' : 'mb-px'
+        hasReactions ? 'mb-5' : (isLastInGroup ? 'mb-1' : 'mb-px')
       }`}
     >
-      <div
-        className={`${
-          // For channels, all messages use receiver styling (muted background)
-          isChannel
-            ? 'bg-muted text-foreground'
-            : isOwn
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-muted text-foreground'
-        } ${getBubbleRadius()} max-w-[85%] overflow-hidden`}
-      >
+      <div className="relative">
+        <div
+          className={`${
+            // For channels, all messages use receiver styling (muted background)
+            isChannel
+              ? 'bg-muted text-foreground'
+              : isOwn
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-foreground'
+          } ${getBubbleRadius()} max-w-[85%] overflow-hidden`}
+        >
         {repliedMessage && (
           <div className={`px-2 pt-1.5 pb-1 border-l-2 ${isOwn ? 'border-primary-foreground/50 bg-primary-foreground/10' : 'border-primary/50 bg-primary/10'} mx-1 mt-1 rounded-r`}>
             <p className="text-xs opacity-80 line-clamp-2">
@@ -529,19 +535,20 @@ export const MessageBubble = ({
               <ReadStatus />
             </span>
           </div>
+          )}
+        </div>
+        
+        {/* Telegram-style Reactions Display - overlapping bottom of bubble */}
+        {hasReactions && (
+          <ReactionsDisplay
+            reactions={message.message_reactions!}
+            isOwn={isChannel ? false : isOwn}
+            onReaction={onReaction}
+            messageId={message.id}
+            currentUserId={user?.id}
+          />
         )}
       </div>
-      
-      {/* Reactions Display */}
-      {message.message_reactions && message.message_reactions.length > 0 && (
-        <ReactionsDisplay
-          reactions={message.message_reactions}
-          isOwn={isChannel ? false : isOwn}
-          onReaction={onReaction}
-          messageId={message.id}
-          currentUserId={user?.id}
-        />
-      )}
     </motion.div>
 
     <MessageActionsMenu
