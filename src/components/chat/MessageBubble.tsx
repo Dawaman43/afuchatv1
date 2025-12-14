@@ -141,16 +141,14 @@ const aggregateReactions = (reactions: Reaction[]) => {
   return Object.entries(counts).map(([emoji, count]) => ({ emoji, count }));
 };
 
-// --- Telegram-style reaction badge displayed at bottom of message bubble ---
+// --- Telegram-style reaction badge displayed inside message bubble ---
 const ReactionsDisplay = ({ 
   reactions, 
-  isOwn, 
   onReaction,
   messageId,
   currentUserId 
 }: { 
   reactions: Reaction[]; 
-  isOwn: boolean;
   onReaction: (messageId: string, emoji: string) => void;
   messageId: string;
   currentUserId?: string;
@@ -159,29 +157,29 @@ const ReactionsDisplay = ({
   if (aggregated.length === 0) return null;
 
   return (
-    <div 
-      className={`absolute -bottom-3 ${isOwn ? 'right-2' : 'left-2'} flex items-center gap-0.5 bg-background/95 backdrop-blur-sm rounded-full px-1.5 py-0.5 shadow-md border border-border/50`}
-    >
-      {aggregated.map(({ emoji, count }) => {
-        const hasUserReacted = currentUserId && reactions.some(
-          r => r.reaction === emoji && r.user_id === currentUserId
-        );
-        return (
-          <button
-            key={emoji}
-            onClick={(e) => {
-              e.stopPropagation();
-              onReaction(messageId, emoji);
-            }}
-            className={`flex items-center text-sm transition-transform hover:scale-110 ${
-              hasUserReacted ? 'opacity-100' : 'opacity-80'
-            }`}
-          >
-            <span>{emoji}</span>
-            {count > 1 && <span className="text-xs text-muted-foreground ml-0.5">{count}</span>}
-          </button>
-        );
-      })}
+    <div className="flex items-center gap-1 px-2 pb-1.5 pt-0.5">
+      <div className="flex items-center bg-black/20 rounded-full px-2 py-0.5">
+        {aggregated.map(({ emoji, count }) => {
+          const hasUserReacted = currentUserId && reactions.some(
+            r => r.reaction === emoji && r.user_id === currentUserId
+          );
+          return (
+            <button
+              key={emoji}
+              onClick={(e) => {
+                e.stopPropagation();
+                onReaction(messageId, emoji);
+              }}
+              className={`flex items-center text-base transition-transform hover:scale-110 ${
+                hasUserReacted ? 'opacity-100' : 'opacity-90'
+              }`}
+            >
+              <span>{emoji}</span>
+              {count > 1 && <span className="text-xs text-white/80 ml-0.5">{count}</span>}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -408,20 +406,19 @@ export const MessageBubble = ({
         // For channels, all messages appear left-aligned (from the channel)
         isChannel ? 'justify-start' : (isOwn ? 'justify-end' : 'justify-start')
       } ${
-        hasReactions ? 'mb-5' : (isLastInGroup ? 'mb-1' : 'mb-px')
+        isLastInGroup ? 'mb-1' : 'mb-px'
       }`}
     >
-      <div className="relative">
-        <div
-          className={`${
-            // For channels, all messages use receiver styling (muted background)
-            isChannel
-              ? 'bg-muted text-foreground'
-              : isOwn
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-foreground'
-          } ${getBubbleRadius()} max-w-[85%] overflow-hidden`}
-        >
+      <div
+        className={`${
+          // For channels, all messages use receiver styling (muted background)
+          isChannel
+            ? 'bg-muted text-foreground'
+            : isOwn
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted text-foreground'
+        } ${getBubbleRadius()} max-w-[85%] overflow-hidden`}
+      >
         {repliedMessage && (
           <div className={`px-2 pt-1.5 pb-1 border-l-2 ${isOwn ? 'border-primary-foreground/50 bg-primary-foreground/10' : 'border-primary/50 bg-primary/10'} mx-1 mt-1 rounded-r`}>
             <p className="text-xs opacity-80 line-clamp-2">
@@ -536,13 +533,11 @@ export const MessageBubble = ({
             </span>
           </div>
           )}
-        </div>
         
-        {/* Telegram-style Reactions Display - overlapping bottom of bubble */}
+        {/* Telegram-style Reactions Display - inside bubble */}
         {hasReactions && (
           <ReactionsDisplay
             reactions={message.message_reactions!}
-            isOwn={isChannel ? false : isOwn}
             onReaction={onReaction}
             messageId={message.id}
             currentUserId={user?.id}
