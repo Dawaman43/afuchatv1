@@ -186,8 +186,8 @@ export default function Shop() {
   return (
     <>
       <SEO 
-        title="Gift Shop - Buy Rare Gifts"
-        description="Browse and purchase rare, epic, and legendary gifts"
+        title="Gift Marketplace - Buy Rare Gifts"
+        description="Browse and purchase rare, epic, and legendary gifts from other users"
       />
 
       <div className="min-h-screen pb-24 lg:pb-4">
@@ -197,7 +197,7 @@ export default function Shop() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Store className="h-6 w-6 text-primary" />
-                <h1 className="text-2xl font-bold">Gift Shop</h1>
+                <h1 className="text-2xl font-bold">Gift Marketplace</h1>
               </div>
               {user && (
                 <Button size="sm" onClick={() => navigate('/marketplace')}>
@@ -210,9 +210,9 @@ export default function Shop() {
         </div>
 
         {/* Content */}
-        <div className="max-w-7xl mx-auto px-4 py-6 pb-24 lg:pb-6">
+        <div className="max-w-7xl mx-auto py-6 pb-24 lg:pb-6">
           {listings.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="flex flex-col items-center justify-center py-20 text-center px-4">
               <Store className="h-16 w-16 text-muted-foreground/50 mb-4" />
               <h2 className="text-2xl font-bold mb-2">No gifts available</h2>
               <p className="text-muted-foreground">Check back later for new listings</p>
@@ -224,44 +224,64 @@ export default function Shop() {
                 if (!rarityListings || rarityListings.length === 0) return null;
 
                 return (
-                  <div key={rarity}>
-                    <div className="flex items-center gap-2 mb-4">
-                      <Badge className={getRarityColor(rarity)} variant="outline">
+                  <div key={rarity} className="space-y-3">
+                    {/* Category Header */}
+                    <div className="flex items-center gap-2 px-4">
+                      <Badge className={`${getRarityColor(rarity)} font-semibold`} variant="outline">
                         {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
                       </Badge>
                       <span className="text-sm text-muted-foreground">
                         {rarityListings.length} {rarityListings.length === 1 ? 'gift' : 'gifts'}
                       </span>
                     </div>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9 gap-4">
-                      {rarityListings.map((listing) => (
-                        <motion.button
-                          key={`${listing.id}-${listing.user_id}`}
-                          onClick={() => setSelectedListing(listing)}
-                          className="flex flex-col items-center gap-2 transition-all"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <GiftImage
-                            giftId={listing.gift.id}
-                            giftName={listing.gift.name}
-                            emoji={listing.gift.emoji}
-                            rarity={listing.gift.rarity}
-                            size="md"
-                          />
-                          <p className="text-xs font-medium text-center truncate max-w-[80px] mx-auto" title={listing.gift.name}>
-                            {listing.gift.name}
-                          </p>
-                          <div className="flex flex-col items-center gap-0.5">
-                            <p className="text-sm font-bold text-primary">
-                              {listing.asking_price.toLocaleString()} Nexa
+                    
+                    {/* Horizontal Scroll Container */}
+                    <div className="relative">
+                      <div className="flex gap-4 overflow-x-auto pb-4 px-4 scrollbar-hide snap-x snap-mandatory">
+                        {rarityListings.map((listing) => (
+                          <motion.button
+                            key={`${listing.id}-${listing.user_id}`}
+                            onClick={() => setSelectedListing(listing)}
+                            className="flex-shrink-0 snap-start flex flex-col items-center gap-3 py-4 px-2 min-w-[120px] group"
+                            whileHover={{ scale: 1.05, y: -4 }}
+                            whileTap={{ scale: 0.95 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                          >
+                            {/* Gift Image with Glow Effect */}
+                            <div className="relative">
+                              <div className={`absolute inset-0 blur-xl opacity-30 group-hover:opacity-50 transition-opacity ${
+                                rarity === 'legendary' ? 'bg-yellow-500' :
+                                rarity === 'epic' ? 'bg-purple-500' :
+                                rarity === 'rare' ? 'bg-blue-500' :
+                                rarity === 'uncommon' ? 'bg-green-500' : 'bg-gray-500'
+                              }`} />
+                              <GiftImage
+                                giftId={listing.gift.id}
+                                giftName={listing.gift.name}
+                                emoji={listing.gift.emoji}
+                                rarity={listing.gift.rarity}
+                                size="lg"
+                              />
+                            </div>
+                            
+                            {/* Gift Name */}
+                            <p className="text-sm font-semibold text-center truncate max-w-[100px] group-hover:text-primary transition-colors" title={listing.gift.name}>
+                              {listing.gift.name}
                             </p>
-                            <p className="text-[10px] text-muted-foreground">
-                              by @{listing.seller.handle}
-                            </p>
-                          </div>
-                        </motion.button>
-                      ))}
+                            
+                            {/* Price & Seller */}
+                            <div className="flex flex-col items-center gap-1">
+                              <p className="text-base font-bold text-primary">
+                                {listing.asking_price.toLocaleString()}
+                                <span className="text-xs font-medium text-muted-foreground ml-1">Nexa</span>
+                              </p>
+                              <p className="text-[11px] text-muted-foreground">
+                                @{listing.seller.handle}
+                              </p>
+                            </div>
+                          </motion.button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 );
