@@ -4,8 +4,8 @@ import React from 'react';
  * Extracts URLs from text content including plain domains
  */
 export function extractUrls(text: string): string[] {
-  // Match both https?:// URLs and plain domain names like afuchat.com
-  const urlRegex = /(https?:\/\/[^\s]+|(?:www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/g;
+  // Match both https?:// URLs and plain domain names like afuchat.com.afu (multi-part TLDs)
+  const urlRegex = /(https?:\/\/[^\s]+|(?:www\.)?[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?)/g;
   const matches = text.match(urlRegex);
   
   // Normalize URLs - add https:// to plain domains if needed
