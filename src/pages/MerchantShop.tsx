@@ -223,37 +223,43 @@ export default function MerchantShop() {
 
               {/* Terms Section */}
               <div className="bg-card border border-border rounded-xl p-5 space-y-4">
-                <h2 className="font-semibold text-lg">ShopShack Service Terms</h2>
+                <h2 className="font-semibold text-lg">Service Availability Notice</h2>
                 
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <div className="space-y-1">
-                    <h3 className="font-medium text-foreground">Geographic Availability</h3>
+                    <h3 className="font-medium text-foreground">Geographic Restrictions</h3>
                     <p>
-                      ShopShack services are currently available exclusively to users located in <strong className="text-foreground">Uganda</strong>. 
-                      This restriction applies to all shopping, ordering, and delivery services offered through our platform.
+                      ShopShack has chosen to operate exclusively within <strong className="text-foreground">Uganda</strong> at this time. 
+                      This decision was made by ShopShack to ensure optimal service delivery, logistics support, and customer experience.
                     </p>
                   </div>
 
                   <div className="space-y-1">
-                    <h3 className="font-medium text-foreground">Why This Restriction?</h3>
+                    <h3 className="font-medium text-foreground">About ShopShack</h3>
                     <p>
-                      Our delivery infrastructure, payment processing, and customer support are currently optimized for the Ugandan market. 
-                      We're working to expand to more regions in the future.
+                      ShopShack is an independent e-commerce platform operating on this marketplace. 
+                      All product listings, pricing, delivery, and customer service are managed directly by ShopShack.
                     </p>
                   </div>
 
                   <div className="space-y-1">
-                    <h3 className="font-medium text-foreground">Supported Regions</h3>
+                    <h3 className="font-medium text-foreground">Currently Serving</h3>
                     <ul className="list-disc list-inside space-y-1 ml-2">
-                      <li>Uganda (All districts)</li>
+                      <li>Uganda — All districts nationwide</li>
                     </ul>
                   </div>
 
                   <div className="space-y-1">
-                    <h3 className="font-medium text-foreground">Future Expansion</h3>
+                    <h3 className="font-medium text-foreground">Expansion Plans</h3>
                     <p>
-                      We plan to expand ShopShack services to additional East African countries. 
-                      Stay tuned for updates on service availability in your region.
+                      ShopShack may expand to additional regions in the future based on their business decisions. 
+                      For updates on service availability, please contact ShopShack directly.
+                    </p>
+                  </div>
+
+                  <div className="pt-2 border-t border-border/50 text-xs">
+                    <p className="italic">
+                      Note: This platform hosts independent merchants who set their own service regions and policies.
                     </p>
                   </div>
                 </div>
