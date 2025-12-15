@@ -617,6 +617,19 @@ const Notifications = () => {
     
     setIsFollowingBack(actorId);
     try {
+      // Check if target user is warned first
+      const { data: warnedCheck } = await supabase
+        .from('profiles')
+        .select('is_warned')
+        .eq('id', actorId)
+        .single();
+
+      if (warnedCheck?.is_warned) {
+        toast.error('This account is not secure or trusted. AfuChat protects users from potentially fraudulent accounts.');
+        setIsFollowingBack(null);
+        return;
+      }
+
       // Check if already following
       const { data: existingFollow } = await supabase
         .from('follows')

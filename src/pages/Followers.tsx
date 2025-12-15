@@ -177,6 +177,15 @@ export default function Followers() {
     }
 
     const isCurrentlyFollowing = followingIds.has(targetUserId);
+    
+    // Block following warned accounts (allow unfollow)
+    if (!isCurrentlyFollowing) {
+      const targetUser = users.find(u => u.id === targetUserId);
+      if (targetUser?.is_warned) {
+        toast.error("This account is not secure or trusted. AfuChat protects users from potentially fraudulent accounts.");
+        return;
+      }
+    }
 
     // Optimistic update
     setFollowingIds((prev) => {

@@ -172,6 +172,29 @@ const DesktopFeed = ({ guestMode = false }: DesktopFeedProps = {}) => {
     try {
       const isFollowing = followingIds.has(userId);
 
+      // Check if target user is warned before following
+      if (!isFollowing) {
+        const { data: targetProfile } = await supabase
+          .from('profiles')
+          .select('is_warned')
+          .eq('id', userId)
+          .single();
+
+        if (targetProfile?.is_warned) {
+          toast({
+            title: "Cannot follow",
+            description: "This account is not secure or trusted. AfuChat protects users from potentially fraudulent accounts.",
+            variant: "destructive",
+          });
+          setProcessingFollow(prev => {
+            const next = new Set(prev);
+            next.delete(userId);
+            return next;
+          });
+          return;
+        }
+      }
+
       if (isFollowing) {
         // Unfollow
         const { error } = await supabase
