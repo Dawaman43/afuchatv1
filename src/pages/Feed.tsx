@@ -1678,7 +1678,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           view_count,
           image_url,
           quoted_post_id,
-          profiles!inner(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status),
+          profiles!inner(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, is_warned, warning_reason),
           post_images(image_url, display_order, alt_text),
           post_link_previews(url, title, description, image_url, site_name)
         `)
