@@ -265,12 +265,21 @@ export default function MerchantShop() {
                 </div>
               </div>
 
-              {/* Contact Info */}
-              <div className="text-center text-xs text-muted-foreground">
-                <p>Questions about service availability?</p>
-                <Button variant="link" className="h-auto p-0 text-xs" onClick={() => navigate('/support')}>
-                  Contact Support
+              {/* Contact ShopShack */}
+              <div className="bg-muted/30 rounded-lg p-4 text-center space-y-2">
+                <p className="text-sm text-muted-foreground">Have questions about ShopShack's service availability?</p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate('/chats')}
+                  className="gap-2"
+                >
+                  <Store className="h-4 w-4" />
+                  Contact ShopShack
                 </Button>
+                <p className="text-xs text-muted-foreground mt-2">
+                  This platform provides the marketplace. Product availability and service regions are determined by each merchant.
+                </p>
               </div>
 
               {/* Back Button */}
