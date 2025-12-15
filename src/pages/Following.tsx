@@ -280,7 +280,7 @@ export default function Following() {
                     <span className="font-semibold text-sm max-w-[120px] truncate" title={profile.display_name}>
                       {profile.display_name.length > 12 ? `${profile.display_name.slice(0, 10)}...` : profile.display_name}
                     </span>
-                    {profile.is_warned && <WarningBadge size="sm" reason={profile.warning_reason} />}
+                    {profile.is_warned && <WarningBadge size="sm" reason={profile.warning_reason} variant="post" />}
                     {profile.is_verified && <VerifiedBadge size="sm" />}
                     {profile.is_organization_verified && (
                       <BusinessBadge size="sm" />

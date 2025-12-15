@@ -382,7 +382,7 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: {
                     )}
                     
                     {reply.profiles.is_warned && (
-                      <WarningBadge size="sm" reason={reply.profiles.warning_reason} />
+                      <WarningBadge size="sm" reason={reply.profiles.warning_reason} variant="post" />
                     )}
                     
                     <VerifiedBadge 
@@ -864,7 +864,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             )}
             
             {post.profiles.is_warned && (
-              <WarningBadge size="sm" reason={post.profiles.warning_reason} />
+              <WarningBadge size="sm" reason={post.profiles.warning_reason} variant="post" />
             )}
             
             <VerifiedBadge 

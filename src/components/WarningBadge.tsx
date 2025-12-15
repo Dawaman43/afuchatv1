@@ -5,26 +5,69 @@ interface WarningBadgeProps {
   className?: string;
   showText?: boolean;
   reason?: string | null;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
+  variant?: 'inline' | 'profile' | 'post';
 }
 
-export function WarningBadge({ className = '', showText = false, reason, size = 'md' }: WarningBadgeProps) {
-  const iconSize = size === 'sm' ? 'h-3 w-3' : 'h-4 w-4';
-  const textSize = size === 'sm' ? 'text-[10px]' : 'text-xs';
+export function WarningBadge({ className = '', showText = false, reason, size = 'md', variant = 'inline' }: WarningBadgeProps) {
+  const iconSize = size === 'sm' ? 'h-3 w-3' : size === 'lg' ? 'h-5 w-5' : 'h-4 w-4';
+  const textSize = size === 'sm' ? 'text-[10px]' : size === 'lg' ? 'text-sm' : 'text-xs';
   
+  // Profile variant - TikTok style bold warning under name
+  if (variant === 'profile') {
+    return (
+      <div className={`flex flex-col items-center gap-1 ${className}`}>
+        <div className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-1.5">
+          <AlertTriangle className="h-4 w-4 text-red-500 fill-red-500/20" />
+          <span className="text-red-500 font-bold text-sm">Account Warning</span>
+        </div>
+        {reason && (
+          <p className="text-xs text-muted-foreground text-center max-w-[250px] mt-1">
+            {reason}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // Post variant - professional warning summary
+  if (variant === 'post') {
+    const shortReason = reason 
+      ? reason.length > 50 ? reason.substring(0, 50) + '...' : reason
+      : 'Community guidelines violation';
+    
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className={`inline-flex items-center gap-1 text-red-500 font-semibold flex-shrink-0 ${className}`}>
+              <AlertTriangle className={`${iconSize} text-red-500 fill-red-500/20`} />
+              <span className={`${textSize} font-bold`}>⚠ Warned</span>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-[280px] bg-red-500/10 border-red-500/30">
+            <p className="text-xs font-bold text-red-500">⚠️ Account Warning</p>
+            <p className="text-xs mt-1 text-foreground">{shortReason}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  // Default inline variant
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={`inline-flex items-center gap-0.5 text-amber-500 flex-shrink-0 ${className}`}>
-            <AlertTriangle className={`${iconSize} fill-amber-500/20`} />
-            {showText && <span className={`${textSize} font-medium`}>Warned</span>}
+          <span className={`inline-flex items-center gap-0.5 text-red-500 font-bold flex-shrink-0 ${className}`}>
+            <AlertTriangle className={`${iconSize} text-red-500 fill-red-500/20`} />
+            {showText && <span className={`${textSize} font-bold`}>Warned</span>}
           </span>
         </TooltipTrigger>
-        <TooltipContent className="max-w-[250px]">
-          <p className="text-xs font-medium text-amber-500">⚠️ Account Warning</p>
+        <TooltipContent className="max-w-[250px] bg-red-500/10 border-red-500/30">
+          <p className="text-xs font-bold text-red-500">⚠️ Account Warning</p>
           <p className="text-xs mt-1">
-            {reason || 'This account has been warned by moderators for violating community guidelines.'}
+            {reason || 'This account has been warned for violating community guidelines.'}
           </p>
         </TooltipContent>
       </Tooltip>
