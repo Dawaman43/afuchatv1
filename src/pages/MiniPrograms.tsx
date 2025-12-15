@@ -21,6 +21,21 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 
+// Import app logos
+import afuArenaLogo from '@/assets/mini-apps/afu-arena-logo.png';
+import nexaCollectorLogo from '@/assets/mini-apps/nexa-collector-logo.png';
+import memoryGameLogo from '@/assets/mini-apps/memory-game-logo.png';
+import puzzleGameLogo from '@/assets/mini-apps/puzzle-game-logo.png';
+import triviaGameLogo from '@/assets/mini-apps/trivia-game-logo.png';
+import eventsLogo from '@/assets/mini-apps/events-logo.png';
+import travelLogo from '@/assets/mini-apps/travel-logo.png';
+import foodDeliveryLogo from '@/assets/mini-apps/food-delivery-logo.png';
+import ridesLogo from '@/assets/mini-apps/rides-logo.png';
+import bookingsLogo from '@/assets/mini-apps/bookings-logo.png';
+import financeLogo from '@/assets/mini-apps/finance-logo.png';
+import momentsLogo from '@/assets/mini-apps/moments-logo.png';
+import shopshackLogo from '@/assets/mini-apps/shopshack-logo.png';
+
 interface MiniProgram {
   id: string;
   name: string;
@@ -41,12 +56,15 @@ interface BuiltInApp {
   name: string;
   description: string;
   icon: any;
+  logo?: string;
   category: string;
   route: string;
   color: string;
   gradient: string;
   isBuiltIn: boolean;
   featured?: boolean;
+  downloads?: string;
+  rating?: number;
 }
 
 const MiniPrograms = () => {
@@ -99,136 +117,187 @@ const MiniPrograms = () => {
       name: 'Afu Arena',
       description: 'Real-time 1v1 reflex battle',
       icon: Swords,
+      logo: afuArenaLogo,
       category: 'games',
       route: '/games/AfuArena',
       color: 'bg-primary',
       gradient: 'from-primary to-primary/60',
       isBuiltIn: true,
-      featured: true
+      featured: true,
+      downloads: '10K+',
+      rating: 4.8
     },
     { 
       id: 'nexa-collector',
       name: 'Nexa Collector',
       description: 'Collect Nexa and level up',
       icon: Zap,
+      logo: nexaCollectorLogo,
       category: 'games',
       route: '/game',
       color: 'bg-orange-500',
       gradient: 'from-orange-500 to-red-500',
-      isBuiltIn: true
+      isBuiltIn: true,
+      downloads: '50K+',
+      rating: 4.6
     },
     { 
       id: 'memory-match',
       name: 'Memory Match',
       description: 'Test your memory skills',
       icon: Brain,
+      logo: memoryGameLogo,
       category: 'games',
       route: '/memory-game',
       color: 'bg-purple-500',
       gradient: 'from-purple-500 to-pink-500',
-      isBuiltIn: true
+      isBuiltIn: true,
+      downloads: '25K+',
+      rating: 4.5
     },
     { 
       id: '15-puzzle',
       name: '15 Puzzle',
       description: 'Classic sliding puzzle',
       icon: Puzzle,
+      logo: puzzleGameLogo,
       category: 'games',
       route: '/puzzle-game',
       color: 'bg-blue-600',
       gradient: 'from-blue-600 to-cyan-500',
-      isBuiltIn: true
+      isBuiltIn: true,
+      downloads: '15K+',
+      rating: 4.4
     },
     { 
       id: 'trivia-challenge',
       name: 'Trivia Challenge',
       description: 'Test your knowledge',
       icon: Brain,
+      logo: triviaGameLogo,
       category: 'games',
       route: '/trivia-game',
       color: 'bg-indigo-500',
       gradient: 'from-indigo-500 to-purple-600',
-      isBuiltIn: true
+      isBuiltIn: true,
+      downloads: '20K+',
+      rating: 4.7
     },
   ];
 
   const builtInServices: BuiltInApp[] = [
     { 
+      id: 'shopshack',
+      name: 'ShopShack',
+      description: 'Shop quality products',
+      icon: ShoppingBag,
+      logo: shopshackLogo,
+      category: 'shopping',
+      route: '/shop',
+      color: 'bg-primary',
+      gradient: 'from-primary to-primary/60',
+      isBuiltIn: true,
+      featured: true,
+      downloads: '100K+',
+      rating: 4.9
+    },
+    { 
       id: 'events',
       name: 'Events',
       description: 'Discover events near you',
       icon: Calendar,
+      logo: eventsLogo,
       category: 'services',
       route: '/events',
       color: 'bg-blue-500',
       gradient: 'from-blue-500 to-cyan-500',
-      isBuiltIn: true
+      isBuiltIn: true,
+      downloads: '30K+',
+      rating: 4.3
     },
     { 
       id: 'travel',
       name: 'Travel',
       description: 'Book flights and hotels',
       icon: Plane,
+      logo: travelLogo,
       category: 'services',
       route: '/travel',
       color: 'bg-sky-500',
       gradient: 'from-sky-500 to-blue-500',
-      isBuiltIn: true
+      isBuiltIn: true,
+      downloads: '45K+',
+      rating: 4.5
     },
     { 
       id: 'food-delivery',
       name: 'Food Delivery',
       description: 'Order from restaurants',
       icon: UtensilsCrossed,
+      logo: foodDeliveryLogo,
       category: 'services',
       route: '/food-delivery',
       color: 'bg-orange-500',
       gradient: 'from-orange-500 to-red-500',
-      isBuiltIn: true
+      isBuiltIn: true,
+      downloads: '80K+',
+      rating: 4.6
     },
     { 
       id: 'rides',
       name: 'Rides',
       description: 'Book transportation',
       icon: Car,
+      logo: ridesLogo,
       category: 'services',
       route: '/rides',
       color: 'bg-green-500',
       gradient: 'from-green-500 to-emerald-500',
-      isBuiltIn: true
+      isBuiltIn: true,
+      downloads: '60K+',
+      rating: 4.4
     },
     { 
       id: 'bookings',
       name: 'Bookings',
       description: 'Manage reservations',
       icon: CalendarCheck,
+      logo: bookingsLogo,
       category: 'services',
       route: '/bookings',
       color: 'bg-purple-500',
       gradient: 'from-purple-500 to-pink-500',
-      isBuiltIn: true
+      isBuiltIn: true,
+      downloads: '35K+',
+      rating: 4.2
     },
     { 
       id: 'finance',
       name: 'Financial Hub',
       description: 'Manage your wallet',
       icon: Wallet,
+      logo: financeLogo,
       category: 'services',
       route: '/wallet',
       color: 'bg-emerald-500',
       gradient: 'from-emerald-500 to-teal-500',
-      isBuiltIn: true
+      isBuiltIn: true,
+      downloads: '70K+',
+      rating: 4.7
     },
-    { 
+    {
       id: 'moments',
       name: 'Moments',
       description: 'Share stories',
       icon: Image,
+      logo: momentsLogo,
       category: 'services',
       route: '/moments',
       color: 'bg-pink-500',
       gradient: 'from-pink-500 to-rose-500',
-      isBuiltIn: true
+      isBuiltIn: true,
+      downloads: '55K+',
+      rating: 4.8
     },
   ];
 
@@ -311,17 +380,23 @@ const MiniPrograms = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const featuredApps = builtInGames.filter(g => g.featured);
+  const featuredApps = [...builtInGames.filter(g => g.featured), ...builtInServices.filter(s => s.featured)];
 
-  // Google Play style app card component
+  // Google Play style app card component - uses actual logos
   const AppCard = ({ app, size = 'medium' }: { app: BuiltInApp; size?: 'small' | 'medium' | 'large' }) => {
     const Icon = app.icon;
     const isComingSoon = app.category === 'services' && !isAdmin;
     
     const sizeClasses = {
-      small: 'w-24',
-      medium: 'w-32',
-      large: 'w-40'
+      small: 'w-20',
+      medium: 'w-[88px]',
+      large: 'w-28'
+    };
+    
+    const iconSizeClasses = {
+      small: 'h-16 w-16',
+      medium: 'h-[72px] w-[72px]',
+      large: 'h-24 w-24'
     };
     
     return (
@@ -330,21 +405,34 @@ const MiniPrograms = () => {
         onClick={() => handleAppClick(app)}
         className={`${sizeClasses[size]} flex-shrink-0 cursor-pointer`}
       >
-        <div className={`relative aspect-square rounded-2xl ${app.color} shadow-lg mb-2 flex items-center justify-center ${isComingSoon ? 'opacity-60' : ''}`}>
-          <Icon className="h-10 w-10 text-white" />
+        <div className={`relative ${iconSizeClasses[size]} rounded-[22px] shadow-lg mb-2 overflow-hidden ${isComingSoon ? 'opacity-60' : ''}`}>
+          {app.logo ? (
+            <img 
+              src={app.logo} 
+              alt={app.name} 
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className={`h-full w-full ${app.color} flex items-center justify-center`}>
+              <Icon className="h-8 w-8 text-white" />
+            </div>
+          )}
           {isComingSoon && (
-            <div className="absolute inset-0 bg-background/50 rounded-2xl flex items-center justify-center">
+            <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
               <Clock className="h-5 w-5 text-muted-foreground" />
             </div>
           )}
         </div>
-        <p className="text-sm font-medium truncate">{app.name}</p>
-        <p className="text-xs text-muted-foreground truncate">{app.category}</p>
+        <p className="text-xs font-medium truncate text-center">{app.name}</p>
+        <div className="flex items-center justify-center gap-1 mt-0.5">
+          <Star className="h-2.5 w-2.5 fill-muted-foreground text-muted-foreground" />
+          <span className="text-[10px] text-muted-foreground">{app.rating || 4.5}</span>
+        </div>
       </motion.div>
     );
   };
 
-  // Google Play style list item component
+  // Google Play style list item component - uses actual logos
   const AppListItem = ({ app }: { app: BuiltInApp }) => {
     const Icon = app.icon;
     const isComingSoon = app.category === 'services' && !isAdmin;
@@ -353,35 +441,45 @@ const MiniPrograms = () => {
       <motion.div
         whileTap={{ scale: 0.99 }}
         onClick={() => handleAppClick(app)}
-        className="flex items-center gap-4 p-3 rounded-xl hover:bg-accent/50 cursor-pointer transition-colors"
+        className="flex items-center gap-3 p-2 rounded-xl hover:bg-accent/50 cursor-pointer transition-colors"
       >
-        <div className={`h-14 w-14 rounded-xl ${app.color} shadow-md flex items-center justify-center flex-shrink-0 ${isComingSoon ? 'opacity-60' : ''}`}>
-          <Icon className="h-7 w-7 text-white" />
+        <div className={`h-16 w-16 rounded-[16px] shadow-md overflow-hidden flex-shrink-0 ${isComingSoon ? 'opacity-60' : ''}`}>
+          {app.logo ? (
+            <img 
+              src={app.logo} 
+              alt={app.name} 
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className={`h-full w-full ${app.color} flex items-center justify-center`}>
+              <Icon className="h-8 w-8 text-white" />
+            </div>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="font-semibold truncate">{app.name}</p>
+            <p className="font-medium truncate">{app.name}</p>
             {isComingSoon && (
-              <Badge variant="secondary" className="text-[10px] py-0">
-                <Clock className="h-3 w-3 mr-1" />
+              <Badge variant="secondary" className="text-[10px] py-0 px-1.5">
+                <Clock className="h-2.5 w-2.5 mr-0.5" />
                 Soon
               </Badge>
             )}
           </div>
-          <p className="text-sm text-muted-foreground truncate">{app.description}</p>
+          <p className="text-xs text-muted-foreground truncate">{app.description}</p>
           <div className="flex items-center gap-2 mt-1">
-            <div className="flex items-center gap-1">
-              <Star className="h-3 w-3 fill-primary text-primary" />
-              <span className="text-xs text-muted-foreground">4.5</span>
+            <div className="flex items-center gap-0.5">
+              <Star className="h-3 w-3 fill-muted-foreground text-muted-foreground" />
+              <span className="text-[11px] text-muted-foreground">{app.rating || 4.5}</span>
             </div>
-            <span className="text-xs text-muted-foreground">•</span>
-            <span className="text-xs text-muted-foreground capitalize">{app.category}</span>
+            <span className="text-[11px] text-muted-foreground">•</span>
+            <span className="text-[11px] text-muted-foreground">{app.downloads || '10K+'}</span>
           </div>
         </div>
         <Button 
           size="sm" 
           variant={isComingSoon ? "secondary" : "default"}
-          className="rounded-full px-6"
+          className="rounded-full px-4 h-8 text-xs"
           disabled={isComingSoon}
         >
           {isComingSoon ? 'Soon' : 'Open'}
@@ -434,11 +532,11 @@ const MiniPrograms = () => {
         </div>
 
         <div className="px-4 py-4 space-y-6">
-          {/* Featured Banner - Google Play style large cards */}
+          {/* Featured Banner - Google Play style large cards with logos */}
           {selectedCategory === 'all' && !searchQuery && featuredApps.length > 0 && (
             <section>
               <ScrollArea className="w-full">
-                <div className="flex gap-4 pb-4">
+                <div className="flex gap-3 pb-4">
                   {featuredApps.map((app) => {
                     const Icon = app.icon;
                     return (
@@ -446,25 +544,53 @@ const MiniPrograms = () => {
                         key={app.id}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleAppClick(app)}
-                        className="w-[300px] flex-shrink-0 cursor-pointer"
+                        className="w-[280px] flex-shrink-0 cursor-pointer"
                       >
-                        <div className={`relative h-40 rounded-2xl bg-gradient-to-br ${app.gradient} p-4 shadow-lg overflow-hidden`}>
-                          <div className="absolute -right-8 -bottom-8 opacity-20">
-                            <Icon className="h-40 w-40 text-white" />
-                          </div>
+                        <div className={`relative h-36 rounded-2xl bg-gradient-to-br ${app.gradient} p-4 shadow-lg overflow-hidden`}>
+                          {app.logo && (
+                            <div className="absolute -right-4 -bottom-4 opacity-30">
+                              <img src={app.logo} alt="" className="h-32 w-32 object-cover" />
+                            </div>
+                          )}
                           <div className="relative z-10 h-full flex flex-col justify-between">
-                            <Badge className="w-fit bg-white/20 text-white border-0">
-                              Featured
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              {app.logo && (
+                                <img src={app.logo} alt={app.name} className="h-10 w-10 rounded-xl shadow-md" />
+                              )}
+                              <Badge className="bg-white/20 text-white border-0 text-[10px]">
+                                Featured
+                              </Badge>
+                            </div>
                             <div>
-                              <h3 className="text-xl font-bold text-white">{app.name}</h3>
-                              <p className="text-white/80 text-sm">{app.description}</p>
+                              <h3 className="text-lg font-bold text-white">{app.name}</h3>
+                              <p className="text-white/80 text-xs">{app.description}</p>
                             </div>
                           </div>
                         </div>
                       </motion.div>
                     );
                   })}
+                </div>
+                <ScrollBar orientation="horizontal" className="invisible" />
+              </ScrollArea>
+            </section>
+          )}
+
+          {/* Shopping Section - ShopShack featured */}
+          {(selectedCategory === 'all' || selectedCategory === 'shopping') && (
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-bold">Shopping</h2>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <ScrollArea className="w-full">
+                <div className="flex gap-3 pb-4">
+                  {builtInServices.filter(s => 
+                    s.category === 'shopping' &&
+                    (!searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                  ).map((app) => (
+                    <AppCard key={app.id} app={app} size="large" />
+                  ))}
                 </div>
                 <ScrollBar orientation="horizontal" className="invisible" />
               </ScrollArea>
@@ -479,7 +605,7 @@ const MiniPrograms = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="text-primary gap-1"
+                  className="text-primary gap-1 h-8 px-2"
                   onClick={() => navigate('/leaderboard')}
                 >
                   <Trophy className="h-4 w-4" />
@@ -487,7 +613,7 @@ const MiniPrograms = () => {
                 </Button>
               </div>
               <ScrollArea className="w-full">
-                <div className="flex gap-4 pb-4">
+                <div className="flex gap-3 pb-4">
                   {builtInGames.filter(g => 
                     !searchQuery || 
                     g.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -506,7 +632,7 @@ const MiniPrograms = () => {
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-bold">Services</h2>
                 {!isAdmin && (
-                  <Badge variant="secondary" className="gap-1">
+                  <Badge variant="secondary" className="gap-1 text-[10px]">
                     <Clock className="h-3 w-3" />
                     Coming Soon
                   </Badge>
@@ -514,8 +640,8 @@ const MiniPrograms = () => {
               </div>
               <div className="space-y-1">
                 {builtInServices.filter(s => 
-                  !searchQuery || 
-                  s.name.toLowerCase().includes(searchQuery.toLowerCase())
+                  s.category === 'services' &&
+                  (!searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase()))
                 ).map((app) => (
                   <AppListItem key={app.id} app={app} />
                 ))}
@@ -554,8 +680,14 @@ const MiniPrograms = () => {
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
               {pendingApp && (
-                <div className={`h-12 w-12 rounded-xl ${pendingApp.color} shadow-md flex items-center justify-center`}>
-                  <pendingApp.icon className="h-6 w-6 text-white" />
+                <div className="h-12 w-12 rounded-xl shadow-md overflow-hidden">
+                  {pendingApp.logo ? (
+                    <img src={pendingApp.logo} alt={pendingApp.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className={`h-full w-full ${pendingApp.color} flex items-center justify-center`}>
+                      <pendingApp.icon className="h-6 w-6 text-white" />
+                    </div>
+                  )}
                 </div>
               )}
               <div>
