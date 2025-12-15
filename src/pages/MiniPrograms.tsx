@@ -403,6 +403,83 @@ const MiniPrograms = () => {
 
   const featuredApps = [...builtInGames.filter(g => g.featured), ...builtInServices.filter(s => s.featured)];
 
+  // Enhanced Game Card component - more polished and real looking
+  const GameCard = ({ app }: { app: BuiltInApp }) => {
+    const Icon = app.icon;
+    
+    return (
+      <motion.div
+        whileHover={{ scale: 1.02, y: -4 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => handleAppClick(app)}
+        className="w-44 flex-shrink-0 cursor-pointer group"
+      >
+        {/* Card Container */}
+        <div className="relative rounded-2xl overflow-hidden bg-card border border-border shadow-lg hover:shadow-xl transition-all">
+          {/* Game Banner/Cover */}
+          <div className={`relative h-28 bg-gradient-to-br ${app.gradient} overflow-hidden`}>
+            {app.logo ? (
+              <>
+                <img 
+                  src={app.logo} 
+                  alt={app.name} 
+                  className="absolute inset-0 h-full w-full object-cover opacity-90"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              </>
+            ) : (
+              <div className="h-full w-full flex items-center justify-center">
+                <Icon className="h-12 w-12 text-white/80" />
+              </div>
+            )}
+            
+            {/* Featured Badge */}
+            {app.featured && (
+              <div className="absolute top-2 left-2">
+                <Badge className="bg-yellow-500/90 text-yellow-950 border-0 text-[10px] font-bold shadow-md">
+                  ⭐ Featured
+                </Badge>
+              </div>
+            )}
+            
+            {/* Play Button Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center shadow-lg">
+                  <Gamepad2 className="h-5 w-5 text-primary ml-0.5" />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Game Info */}
+          <div className="p-3 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <h3 className="font-bold text-sm truncate">{app.name}</h3>
+                <p className="text-xs text-muted-foreground truncate">{app.description}</p>
+              </div>
+            </div>
+            
+            {/* Stats Row */}
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5 bg-yellow-500/10 px-1.5 py-0.5 rounded-full">
+                  <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+                  <span className="text-xs font-semibold text-yellow-600 dark:text-yellow-400">{app.rating}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Download className="h-3 w-3" />
+                <span className="text-[10px] font-medium">{app.downloads}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
   // Google Play style app card component - uses actual logos
   const AppCard = ({ app, size = 'medium' }: { app: BuiltInApp; size?: 'small' | 'medium' | 'large' }) => {
     const Icon = app.icon;
@@ -632,28 +709,31 @@ const MiniPrograms = () => {
             </section>
           )}
 
-          {/* Games Section - Horizontal scroll */}
+          {/* Games Section - Enhanced cards */}
           {(selectedCategory === 'all' || selectedCategory === 'games') && (
             <section>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-bold">Games</h2>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-lg font-bold">Games</h2>
+                  <p className="text-xs text-muted-foreground">Play & earn Nexa</p>
+                </div>
                 <Button 
-                  variant="ghost" 
+                  variant="outline" 
                   size="sm" 
-                  className="text-primary gap-1 h-8 px-2"
+                  className="gap-1.5 h-8 px-3 rounded-full"
                   onClick={() => navigate('/leaderboard')}
                 >
-                  <Trophy className="h-4 w-4" />
-                  Leaderboard
+                  <Trophy className="h-4 w-4 text-yellow-500" />
+                  <span className="text-xs font-semibold">Leaderboard</span>
                 </Button>
               </div>
               <ScrollArea className="w-full">
-                <div className="flex gap-3 pb-4">
+                <div className="flex gap-4 pb-4">
                   {builtInGames.filter(g => 
                     !searchQuery || 
                     g.name.toLowerCase().includes(searchQuery.toLowerCase())
                   ).map((app) => (
-                    <AppCard key={app.id} app={app} size="medium" />
+                    <GameCard key={app.id} app={app} />
                   ))}
                 </div>
                 <ScrollBar orientation="horizontal" className="invisible" />
