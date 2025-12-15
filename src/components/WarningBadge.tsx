@@ -10,8 +10,8 @@ interface WarningBadgeProps {
 }
 
 export function WarningBadge({ className = '', showText = false, reason, size = 'md', variant = 'inline' }: WarningBadgeProps) {
-  const iconSize = size === 'sm' ? 'h-3 w-3' : size === 'lg' ? 'h-5 w-5' : 'h-4 w-4';
-  const textSize = size === 'sm' ? 'text-[10px]' : size === 'lg' ? 'text-sm' : 'text-xs';
+  const iconSize = size === 'sm' ? 'h-4 w-4' : size === 'lg' ? 'h-6 w-6' : 'h-5 w-5';
+  const textSize = size === 'sm' ? 'text-xs' : size === 'lg' ? 'text-base' : 'text-sm';
   
   // Profile variant - TikTok style bold warning under name
   if (variant === 'profile') {
@@ -30,7 +30,7 @@ export function WarningBadge({ className = '', showText = false, reason, size = 
     );
   }
 
-  // Post variant - professional warning summary
+  // Post variant - bold red warning badge with background
   if (variant === 'post') {
     const shortReason = reason 
       ? reason.length > 50 ? reason.substring(0, 50) + '...' : reason
@@ -40,8 +40,8 @@ export function WarningBadge({ className = '', showText = false, reason, size = 
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className={`inline-flex items-center gap-1 text-red-500 font-semibold flex-shrink-0 ${className}`}>
-              <AlertTriangle className={`${iconSize} text-red-500 fill-red-500/20`} />
+            <span className={`inline-flex items-center gap-1 bg-red-500/15 text-red-500 font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${className}`}>
+              <AlertTriangle className={`${iconSize} text-red-500 fill-red-500/30`} />
               <span className={`${textSize} font-bold`}>⚠ Warned</span>
             </span>
           </TooltipTrigger>
@@ -54,13 +54,13 @@ export function WarningBadge({ className = '', showText = false, reason, size = 
     );
   }
 
-  // Default inline variant
+  // Default inline variant - also more visible
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={`inline-flex items-center gap-0.5 text-red-500 font-bold flex-shrink-0 ${className}`}>
-            <AlertTriangle className={`${iconSize} text-red-500 fill-red-500/20`} />
+          <span className={`inline-flex items-center gap-1 bg-red-500/15 text-red-500 font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${className}`}>
+            <AlertTriangle className={`${iconSize} text-red-500 fill-red-500/30`} />
             {showText && <span className={`${textSize} font-bold`}>Warned</span>}
           </span>
         </TooltipTrigger>
