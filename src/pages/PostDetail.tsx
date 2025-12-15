@@ -638,6 +638,7 @@ const PostDetail = () => {
                 <NestedReplyItem
                   key={reply.id}
                   reply={reply}
+                  postId={postId || ''}
                   depth={0}
                   onTranslate={handleTranslateReply}
                   translatedReplies={translatedReplies}
@@ -650,6 +651,34 @@ const PostDetail = () => {
                   currentUserId={user?.id}
                   VerifiedBadge={VerifiedBadge}
                   renderContentWithMentions={renderContentWithMentions}
+                  onCommentSubmitted={async () => {
+                    // Refresh replies
+                    const { data } = await supabase
+                      .from('post_replies')
+                      .select('*, profiles!inner(display_name, handle, is_verified, is_organization_verified, avatar_url)')
+                      .eq('post_id', postId);
+                    
+                    if (data) {
+                      const mappedReplies: Reply[] = data.map((r: any) => ({
+                        id: r.id,
+                        content: r.content,
+                        created_at: r.created_at,
+                        parent_reply_id: r.parent_reply_id,
+                        is_pinned: r.is_pinned,
+                        pinned_by: r.pinned_by,
+                        pinned_at: r.pinned_at,
+                        author: {
+                          display_name: r.profiles.display_name,
+                          handle: r.profiles.handle,
+                          is_verified: r.profiles.is_verified,
+                          is_organization_verified: r.profiles.is_organization_verified,
+                          avatar_url: r.profiles.avatar_url,
+                        },
+                      }));
+                      setReplies(organizeReplies(mappedReplies));
+                      setPost(prev => prev ? { ...prev, replies_count: prev.replies_count + 1 } : null);
+                    }
+                  }}
                 />
               ))}
             </div>
