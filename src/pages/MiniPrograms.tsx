@@ -313,7 +313,7 @@ const MiniPrograms = () => {
       icon: Gift,
       logo: giftsP2PLogo,
       category: 'shopping',
-      route: '/marketplace',
+      route: '/shop',
       color: 'bg-teal-500',
       gradient: 'from-teal-500 to-cyan-500',
       isBuiltIn: true,
