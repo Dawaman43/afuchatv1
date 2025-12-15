@@ -16,6 +16,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ProfileDrawer } from '@/components/ProfileDrawer';
 import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Video, Book, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Image, Brain, Puzzle, Trophy, ChevronRight, Swords, Clock, Shield, FileText, Gift } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -78,6 +80,7 @@ const MiniPrograms = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ avatar_url: string | null; display_name: string } | null>(null);
   
   // Terms dialog state
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
@@ -86,16 +89,19 @@ const MiniPrograms = () => {
   const [acceptedApps, setAcceptedApps] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const checkAdmin = async () => {
+    const fetchUserData = async () => {
       if (!user) return;
       const { data } = await supabase
         .from('profiles')
-        .select('is_admin')
+        .select('is_admin, avatar_url, display_name')
         .eq('id', user.id)
         .single();
-      setIsAdmin(data?.is_admin || false);
+      if (data) {
+        setIsAdmin(data.is_admin || false);
+        setUserProfile({ avatar_url: data.avatar_url, display_name: data.display_name });
+      }
     };
-    checkAdmin();
+    fetchUserData();
     
     // Load accepted apps from localStorage
     const savedAccepted = localStorage.getItem('acceptedMiniApps');
@@ -510,6 +516,20 @@ const MiniPrograms = () => {
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border">
           <div className="px-4 py-3">
             <div className="flex items-center gap-3 mb-3">
+              {user ? (
+                <ProfileDrawer
+                  trigger={
+                    <button className="flex-shrink-0">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={userProfile?.avatar_url || undefined} />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                          {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
+                  }
+                />
+              ) : null}
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
