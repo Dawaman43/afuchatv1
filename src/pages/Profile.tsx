@@ -39,6 +39,7 @@ import { PrivateProfileOverlay } from '@/components/PrivateProfileOverlay';
 import { FollowRequestsSheet } from '@/components/FollowRequestsSheet';
 import UserActionsSheet from '@/components/UserActionsSheet';
 import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
+import { WarningBadge } from '@/components/WarningBadge';
 
 interface Profile {
 	id: string;
@@ -49,6 +50,8 @@ interface Profile {
 	is_organization_verified?: boolean;
 	is_affiliate?: boolean;
 	is_private?: boolean;
+	is_warned?: boolean;
+	is_banned?: boolean;
 	created_at?: string;
 	xp: number;
 	current_grade: Grade;
@@ -1249,6 +1252,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 								)}
 								
 								<UserPremiumBadge userId={profileId} />
+								{profile.is_warned && <WarningBadge />}
 							</div>
 					) : (profile.is_verified || profile.is_organization_verified || profile.is_business_mode) ? (
 						<div className="flex items-center gap-1">
@@ -1289,6 +1293,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 							)}
 							
 							<UserPremiumBadge userId={profileId} />
+							{profile.is_warned && <WarningBadge />}
 						</div>
 						) : (
 							<div className="flex items-center gap-1">
@@ -1299,6 +1304,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 									</div>
 								)}
 								<UserPremiumBadge userId={profileId} />
+								{profile.is_warned && <WarningBadge />}
 							</div>
 						)}
 

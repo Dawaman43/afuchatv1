@@ -11,6 +11,7 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import { SettingsSheet } from "./components/SettingsSheet";
 import { RequireCountry } from "./components/RequireCountry";
 import { RequireDateOfBirth } from "./components/RequireDateOfBirth";
+import { RequireBanCheck } from "./components/RequireBanCheck";
 
 import { useDailyLogin } from "./hooks/useDailyLogin";
 import { useLanguageSync } from "./hooks/useLanguageSync";
@@ -30,6 +31,7 @@ import SignUp from "./pages/auth/SignUp";
 import UserNotFound from "./pages/UserNotFound";
 import NotFound from "./pages/NotFound";
 import CompleteProfile from "./pages/CompleteProfile";
+import Banned from "./pages/Banned";
 
 // Lazy load other pages
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
@@ -151,52 +153,53 @@ const AppRoutes = () => {
         <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/welcome" element={<Welcome />} />
+      <Route path="/banned" element={<Banned />} />
       <Route path="/complete-profile" element={<CompleteProfile />} />
-      <Route path="/home" element={<RequireCountry><RequireDateOfBirth><Layout><Home /></Layout></RequireDateOfBirth></RequireCountry>} />
+      <Route path="/home" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Home /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/auth" element={<Welcome />} />
       <Route path="/auth/signin" element={<SignIn />} />
       <Route path="/auth/signup" element={<SignUp />} />
       <Route path="/auth/forgot-password" element={<ForgotPassword />} />
       <Route path="/auth/reset-password" element={<ResetPassword />} />
-      <Route path="/chats" element={<RequireCountry><RequireDateOfBirth><Layout><DesktopChats /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/chat/:chatId" element={<RequireCountry><RequireDateOfBirth><Layout><DesktopChats /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/search" element={<RequireCountry><RequireDateOfBirth><Layout><SearchPage /></Layout></RequireDateOfBirth></RequireCountry>} />
+      <Route path="/chats" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DesktopChats /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/chat/:chatId" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DesktopChats /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/search" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><SearchPage /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/shop" element={<Layout><ShopPage /></Layout>} />
-      <Route path="/marketplace" element={<RequireCountry><RequireDateOfBirth><Layout><Marketplace /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/notifications" element={<RequireCountry><RequireDateOfBirth><Layout><Notifications /></Layout></RequireDateOfBirth></RequireCountry>} />
+      <Route path="/marketplace" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Marketplace /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/notifications" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Notifications /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/post/:postId" element={<Layout><PostDetail /></Layout>} />
-      <Route path="/admin" element={<RequireCountry><RequireDateOfBirth><Layout><AdminDashboard /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/ai-chat" element={<RequireCountry><RequireDateOfBirth><Layout><AIChat /></Layout></RequireDateOfBirth></RequireCountry>} />
+      <Route path="/admin" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/ai-chat" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AIChat /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/install" element={<Install />} />
       <Route path="/support" element={<Support />} />
       <Route path="/leaderboard" element={<Layout><UnifiedLeaderboard /></Layout>} />
-      <Route path="/wallet" element={<RequireCountry><RequireDateOfBirth><Layout><FinancialHub /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/social" element={<RequireCountry><RequireDateOfBirth><Layout><SocialHub /></Layout></RequireDateOfBirth></RequireCountry>} />
+      <Route path="/wallet" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><FinancialHub /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/social" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><SocialHub /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/gifts" element={<Layout><Gifts /></Layout>} />
       <Route path="/gifts/:id" element={<Layout><GiftDetail /></Layout>} />
-      <Route path="/premium" element={<RequireCountry><RequireDateOfBirth><Layout><Premium /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/creator-earnings" element={<RequireCountry><RequireDateOfBirth><Layout><CreatorEarnings /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/qr-code" element={<RequireCountry><RequireDateOfBirth><Layout><QRCode /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/settings" element={<RequireCountry><RequireDateOfBirth><Layout><Settings /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/security" element={<RequireCountry><RequireDateOfBirth><Layout><SecurityDashboard /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/change-password" element={<RequireCountry><RequireDateOfBirth><Layout><ChangePassword /></Layout></RequireDateOfBirth></RequireCountry>} />
+      <Route path="/premium" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Premium /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/creator-earnings" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><CreatorEarnings /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/qr-code" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><QRCode /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/settings" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Settings /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/security" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><SecurityDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/change-password" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><ChangePassword /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/terms" element={<TermsOfUse />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/suggested-users" element={<SuggestedUsers />} />
       <Route path="/trending" element={<Layout><TrendingHashtags /></Layout>} />
-      <Route path="/admin/affiliate-requests" element={<RequireCountry><RequireDateOfBirth><Layout><AdminAffiliateRequests /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/admin/creator-withdrawals" element={<RequireCountry><RequireDateOfBirth><Layout><AdminCreatorWithdrawals /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/admin/verification-requests" element={<RequireCountry><RequireDateOfBirth><Layout><AdminVerificationRequests /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/affiliate-request" element={<RequireCountry><RequireDateOfBirth><Layout><AffiliateRequest /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/affiliate-dashboard" element={<RequireCountry><RequireDateOfBirth><Layout><AffiliateDashboard /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/business/dashboard" element={<RequireCountry><RequireDateOfBirth><Layout><BusinessDashboard /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/ads" element={<RequireCountry><RequireDateOfBirth><Layout><AdManager /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/moments" element={<RequireCountry><RequireDateOfBirth><Layout><Moments /></Layout></RequireDateOfBirth></RequireCountry>} />
+      <Route path="/admin/affiliate-requests" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminAffiliateRequests /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/admin/creator-withdrawals" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminCreatorWithdrawals /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/admin/verification-requests" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdminVerificationRequests /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/affiliate-request" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AffiliateRequest /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/affiliate-dashboard" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AffiliateDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/business/dashboard" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><BusinessDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/ads" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdManager /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/moments" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Moments /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/mini-programs" element={<Layout><MiniPrograms /></Layout>} />
-      <Route path="/transfer" element={<RequireCountry><RequireDateOfBirth><Layout><Transfer /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/red-envelope" element={<RequireCountry><RequireDateOfBirth><Layout><RedEnvelope /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/developer-sdk" element={<RequireCountry><RequireDateOfBirth><Layout><DeveloperSDK /></Layout></RequireDateOfBirth></RequireCountry>} />
-      <Route path="/verification-request" element={<RequireCountry><RequireDateOfBirth><Layout><VerificationRequest /></Layout></RequireDateOfBirth></RequireCountry>} />
+      <Route path="/transfer" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Transfer /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/red-envelope" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><RedEnvelope /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/developer-sdk" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DeveloperSDK /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/verification-request" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><VerificationRequest /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/games" element={<Layout><Games /></Layout>} />
       <Route path="/games/AfuArena" element={<AfuArena />} />
       <Route path="/game" element={<Layout><SimpleGame /></Layout>} />
@@ -233,13 +236,13 @@ const AppRoutes = () => {
 
       {/* Profile routes with @ prefix - these will show user not found if user doesn't exist */}
       <Route path="/@:userId" element={<Layout><Profile mustExist={true} /></Layout>} />
-      <Route path="/@:userId/edit" element={<RequireCountry><RequireDateOfBirth><Layout><EditProfile /></Layout></RequireDateOfBirth></RequireCountry>} />
+      <Route path="/@:userId/edit" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><EditProfile /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/@:userId/followers" element={<Layout><Followers /></Layout>} />
       <Route path="/@:userId/following" element={<Layout><Following /></Layout>} />
 
       {/* Profile routes without @ prefix - will fall through to 404 if not found */}
       <Route path="/:userId" element={<Layout><Profile mustExist={false} /></Layout>} />
-      <Route path="/:userId/edit" element={<RequireCountry><RequireDateOfBirth><Layout><EditProfile /></Layout></RequireDateOfBirth></RequireCountry>} />
+      <Route path="/:userId/edit" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><EditProfile /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/:userId/followers" element={<Layout><Followers /></Layout>} />
       <Route path="/:userId/following" element={<Layout><Following /></Layout>} />
 
