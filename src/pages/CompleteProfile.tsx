@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Camera, Loader2, Check, Trophy, Sparkles, Calendar, Shield } from 'lucide-react';
+import { Camera, Loader2, Check, Trophy, Sparkles, Calendar } from 'lucide-react';
+import { DateOfBirthSelector } from '@/components/DateOfBirthSelector';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
 import { countries } from '@/lib/countries';
@@ -668,24 +669,11 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
             </div>
 
             {/* Date of Birth - Required */}
-            <div className="space-y-2">
-              <Label htmlFor="date_of_birth">Date of Birth *</Label>
-              <Input
-                id="date_of_birth"
-                type="date"
-                value={formData.date_of_birth}
-                onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
-                max={new Date(new Date().setFullYear(new Date().getFullYear() - 13)).toISOString().split('T')[0]}
-                required
-                className="h-12"
-              />
-              <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/50 border border-border/50">
-                <Shield className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  <span className="font-medium text-foreground">Why we collect this:</span> We use your date of birth to verify you meet our minimum age requirement (13+), personalize your experience, and comply with legal requirements. Your birthday is kept private and never shared publicly.
-                </p>
-              </div>
-            </div>
+            <DateOfBirthSelector
+              value={formData.date_of_birth}
+              onChange={(value) => setFormData({ ...formData, date_of_birth: value })}
+              minAge={13}
+            />
 
             {/* Phone Number - Optional */}
             <div className="space-y-2">
