@@ -189,8 +189,8 @@ const parsePostContent = (content: string, postId: string, navigate: ReturnType<
     navigate(`/profile/${data.id}`); 
   };
   
-  // First process mentions, then process hashtags and links (including plain domains)
-  const combinedRegex = /(@[a-zA-Z0-9_-]+|#\w+|https?:\/\/[^\s]+|(?:www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/g;
+  // First process mentions, then process hashtags and links (including plain domains like dev-write.netlify.app)
+  const combinedRegex = /(@[a-zA-Z0-9_-]+|#\w+|https?:\/\/[^\s]+|(?:www\.)?[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?)/g;
   const parts: (string | JSX.Element)[] = [];
   let lastIndex = 0;
   
