@@ -15,6 +15,7 @@ import { NestedReplyItem } from '@/components/post-detail/NestedReplyItem';
 import { ViewsAnalyticsSheet } from '@/components/ViewsAnalyticsSheet';
 import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
 import { CommentInput } from '@/components/feed/CommentInput';
+import { WarningBadge } from '@/components/WarningBadge';
 // Note: Verified Badge components must be imported or defined here
 
 // --- START: Verified Badge Components (Unchanged) ---
@@ -122,6 +123,8 @@ interface Reply {
     is_verified: boolean;
     is_organization_verified: boolean;
     avatar_url: string | null;
+    is_warned?: boolean;
+    warning_reason?: string | null;
   };
   nested_replies?: Reply[];
 }
@@ -165,6 +168,8 @@ interface Post {
     handle: string;
     is_verified: boolean;
     is_organization_verified: boolean;
+    is_warned?: boolean;
+    warning_reason?: string | null;
   };
 }
 
@@ -229,7 +234,7 @@ const PostDetail = () => {
         .from('posts')
         .select(`
           id, content, created_at, image_url, view_count, quoted_post_id,
-          profiles!inner (id, display_name, handle, is_verified, is_organization_verified),
+          profiles!inner (id, display_name, handle, is_verified, is_organization_verified, is_warned, warning_reason),
           post_images(image_url, display_order, alt_text),
           post_link_previews(url, title, description, image_url, site_name)
         `)
@@ -245,7 +250,7 @@ const PostDetail = () => {
         .from('post_replies')
         .select(`
           id, content, created_at, parent_reply_id, is_pinned, pinned_by, pinned_at,
-          profiles!inner (display_name, handle, is_verified, is_organization_verified, avatar_url)
+          profiles!inner (display_name, handle, is_verified, is_organization_verified, avatar_url, is_warned, warning_reason)
         `)
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
@@ -297,6 +302,8 @@ const PostDetail = () => {
           handle: postData.profiles.handle,
           is_verified: postData.profiles.is_verified,
           is_organization_verified: postData.profiles.is_organization_verified,
+          is_warned: postData.profiles.is_warned,
+          warning_reason: postData.profiles.warning_reason,
         },
       });
 
@@ -315,6 +322,8 @@ const PostDetail = () => {
             is_verified: r.profiles.is_verified,
             is_organization_verified: r.profiles.is_organization_verified,
             avatar_url: r.profiles.avatar_url,
+            is_warned: r.profiles.is_warned,
+            warning_reason: r.profiles.warning_reason,
           },
         }));
         const organizedReplies = organizeReplies(mappedReplies);
@@ -409,7 +418,7 @@ const PostDetail = () => {
     // Refresh replies
     const { data } = await supabase
       .from('post_replies')
-      .select('*, profiles!inner(display_name, handle, is_verified, is_organization_verified, avatar_url)')
+      .select('*, profiles!inner(display_name, handle, is_verified, is_organization_verified, avatar_url, is_warned, warning_reason)')
       .eq('post_id', postId);
     
     if (data) {
@@ -427,6 +436,8 @@ const PostDetail = () => {
           is_verified: r.profiles.is_verified,
           is_organization_verified: r.profiles.is_organization_verified,
           avatar_url: r.profiles.avatar_url,
+          is_warned: r.profiles.is_warned,
+          warning_reason: r.profiles.warning_reason,
         },
       }));
       setReplies(organizeReplies(mappedReplies));
@@ -501,6 +512,9 @@ const PostDetail = () => {
                     isVerified={post.author.is_verified} 
                     isOrgVerified={post.author.is_organization_verified} 
                   />
+                  {post.author.is_warned && (
+                    <WarningBadge size="sm" reason={post.author.warning_reason} variant="post" />
+                  )}
                 </div>
                 <p className="text-base text-muted-foreground truncate">@{post.author.handle}</p>
               </Link>

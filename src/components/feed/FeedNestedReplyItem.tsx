@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useAITranslation } from '@/hooks/useAITranslation';
 import { MessageSquare, Pin, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { WarningBadge } from '@/components/WarningBadge';
 
 interface Reply {
   id: string;
@@ -26,6 +27,8 @@ interface Reply {
     avatar_url?: string | null;
     last_seen?: string | null;
     show_online_status?: boolean;
+    is_warned?: boolean;
+    warning_reason?: string | null;
   };
 }
 
@@ -137,6 +140,9 @@ export const FeedNestedReplyItem = ({
               isVerified={reply.profiles.is_verified} 
               isOrgVerified={reply.profiles.is_organization_verified} 
             />
+            {reply.profiles.is_warned && (
+              <WarningBadge size="sm" reason={reply.profiles.warning_reason} variant="post" />
+            )}
             <span
               className="text-muted-foreground text-xs cursor-pointer hover:underline truncate"
               onClick={() => handleViewProfile(reply.author_id)}
