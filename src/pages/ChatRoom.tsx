@@ -1609,7 +1609,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                   {chatInfo?.is_group ? (chatInfo.name || 'Group') : (otherUser?.display_name || 'Chat')}
                 </h2>
                 {otherUser && !chatInfo?.is_group && otherUser.is_warned && (
-                  <WarningBadge size="sm" reason={otherUser.warning_reason} />
+                  <WarningBadge size="sm" reason={otherUser.warning_reason} variant="post" />
                 )}
                 {otherUser && !chatInfo?.is_group && (
                   <VerifiedBadge

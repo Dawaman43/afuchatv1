@@ -1253,7 +1253,6 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 								)}
 								
 								<UserPremiumBadge userId={profileId} />
-								{profile.is_warned && <WarningBadge reason={profile.warning_reason} showText />}
 							</div>
 					) : (profile.is_verified || profile.is_organization_verified || profile.is_business_mode) ? (
 						<div className="flex items-center gap-1">
@@ -1294,7 +1293,6 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 							)}
 							
 							<UserPremiumBadge userId={profileId} />
-							{profile.is_warned && <WarningBadge reason={profile.warning_reason} showText />}
 						</div>
 						) : (
 							<div className="flex items-center gap-1">
@@ -1305,7 +1303,6 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 									</div>
 								)}
 								<UserPremiumBadge userId={profileId} />
-								{profile.is_warned && <WarningBadge reason={profile.warning_reason} showText />}
 							</div>
 						)}
 
@@ -1321,6 +1318,13 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 						@{profile.handle}
 					</p>
 					</div>
+
+					{/* TikTok-style Account Warning Banner */}
+					{profile.is_warned && (
+						<div className="mt-3">
+							<WarningBadge reason={profile.warning_reason} variant="profile" />
+						</div>
+					)}
 
 					{/* Bio - hide for private accounts */}
 					{!isPrivateAccount && profile.bio && (

@@ -475,7 +475,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
                     </span>
                     {/* Show warning badge for 1-on-1 chats with warned users */}
                     {!chat.is_group && chat.other_user?.is_warned && (
-                      <WarningBadge size="sm" reason={chat.other_user?.warning_reason} />
+                      <WarningBadge size="sm" reason={chat.other_user?.warning_reason} variant="post" />
                     )}
                     {/* Show verified badge for groups/channels */}
                     {chat.is_group && chat.is_verified && (
