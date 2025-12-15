@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, ShoppingCart, Plus, Minus, Store, Package, Ban, MapPin } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Plus, Minus, Store, Package, Ban, MapPin, MessageCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -29,6 +29,7 @@ interface Merchant {
   name: string;
   description: string | null;
   logo_url: string | null;
+  user_id: string;
 }
 
 interface CartItem {
@@ -46,6 +47,7 @@ export default function MerchantShop() {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [userCountry, setUserCountry] = useState<string | null>(null);
+  const [contactingSupport, setContactingSupport] = useState(false);
 
   useEffect(() => {
     fetchUserCountry();
@@ -80,7 +82,7 @@ export default function MerchantShop() {
     try {
       const { data: merchantData } = await supabase
         .from('merchants')
-        .select('id, name, description, logo_url')
+        .select('id, name, description, logo_url, user_id')
         .eq('id', merchantId)
         .single();
 
@@ -165,6 +167,70 @@ export default function MerchantShop() {
   // Check if user is from Uganda - restrict access for non-Ugandans
   const isUgandan = userCountry === 'Uganda';
   const showRestriction = userCountry && !isUgandan;
+
+  const handleContactShopShack = async () => {
+    if (!user || !merchant) {
+      toast.error('Please sign in to contact ShopShack');
+      navigate('/auth/signin');
+      return;
+    }
+
+    setContactingSupport(true);
+    try {
+      // Check for existing chat with this merchant
+      const { data: existingChat } = await supabase
+        .from('merchant_customer_chats')
+        .select('chat_id')
+        .eq('merchant_id', merchant.id)
+        .eq('customer_id', user.id)
+        .maybeSingle();
+
+      let chatId = existingChat?.chat_id;
+
+      if (!chatId) {
+        // Create a new chat
+        const { data: newChat, error: chatError } = await supabase
+          .from('chats')
+          .insert({
+            created_by: user.id,
+            is_group: false,
+            name: null
+          })
+          .select('id')
+          .single();
+
+        if (chatError) throw chatError;
+        chatId = newChat.id;
+
+        // Add both users to the chat
+        await supabase.from('chat_members').insert([
+          { chat_id: chatId, user_id: user.id },
+          { chat_id: chatId, user_id: merchant.user_id }
+        ]);
+
+        // Record the merchant-customer chat relationship
+        await supabase.from('merchant_customer_chats').insert({
+          merchant_id: merchant.id,
+          customer_id: user.id,
+          chat_id: chatId
+        });
+      }
+
+      // Send a support request message
+      await supabase.from('messages').insert({
+        chat_id: chatId,
+        sender_id: user.id,
+        encrypted_content: `👋 **Support Request**\n\nHello ShopShack team,\n\nI'm reaching out regarding your service availability. I noticed that ShopShack is currently only available in Uganda, and I'm located in ${userCountry}.\n\nCould you please help me with:\n• Information about future expansion plans\n• Alternative options for my region\n• Any other assistance you can provide\n\nThank you!`
+      });
+
+      navigate(`/chat/${chatId}`);
+    } catch (error) {
+      console.error('Error contacting ShopShack:', error);
+      toast.error('Failed to start chat with ShopShack');
+    } finally {
+      setContactingSupport(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -271,11 +337,21 @@ export default function MerchantShop() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => navigate('/chats')}
+                  onClick={handleContactShopShack}
+                  disabled={contactingSupport}
                   className="gap-2"
                 >
-                  <Store className="h-4 w-4" />
-                  Contact ShopShack
+                  {contactingSupport ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <MessageCircle className="h-4 w-4" />
+                      Chat with ShopShack
+                    </>
+                  )}
                 </Button>
                 <p className="text-xs text-muted-foreground mt-2">
                   This platform provides the marketplace. Product availability and service regions are determined by each merchant.
