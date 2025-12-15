@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Gift, TrendingUp, Sparkles } from 'lucide-react';
+import { Gift, TrendingUp, Sparkles, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { GiftImage } from './GiftImage';
@@ -67,6 +67,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
   const [userXP, setUserXP] = useState(0);
   const [previewGift, setPreviewGift] = useState<PreviewGift | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [isAnonymous, setIsAnonymous] = useState(false);
 
   const getRarityColor = (rarity: string) => {
     switch (rarity.toLowerCase()) {
@@ -85,6 +86,7 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
     } else {
       // Reset state when dialog closes
       setSelectedGift(null);
+      setIsAnonymous(false);
     }
   }, [open]);
 
@@ -339,6 +341,25 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
 
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className="py-4 space-y-4">
+            {/* Anonymous toggle */}
+            <div 
+              onClick={() => setIsAnonymous(!isAnonymous)}
+              className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
+                isAnonymous ? 'bg-primary/10 border-primary/30' : 'bg-muted/30 border-border/50'
+              } border`}
+            >
+              <div className={`p-2 rounded-lg ${isAnonymous ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                <EyeOff className="h-4 w-4" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Send anonymously</p>
+                <p className="text-xs text-muted-foreground">Hide your identity from public view</p>
+              </div>
+              <div className={`w-10 h-6 rounded-full transition-colors ${isAnonymous ? 'bg-primary' : 'bg-muted'}`}>
+                <div className={`w-5 h-5 rounded-full bg-background shadow-sm transition-transform mt-0.5 ${isAnonymous ? 'ml-4.5 translate-x-0' : 'ml-0.5'}`} />
+              </div>
+            </div>
+            
             <div className="text-xs text-center text-muted-foreground bg-muted/30 rounded-xl p-3 border border-border/50">
               <span className="font-medium">💡 {t('gifts.tapToCombo')}</span>
             </div>

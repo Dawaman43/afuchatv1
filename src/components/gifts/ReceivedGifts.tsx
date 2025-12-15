@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Gift, TrendingUp, Sparkles, Pin } from 'lucide-react';
+import { Gift, TrendingUp, Sparkles, Pin, EyeOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +11,8 @@ import { GiftImage } from './GiftImage';
 import { GiftDetailSheet } from './GiftDetailSheet';
 import { extractText } from '@/lib/textUtils';
 import { toast } from 'sonner';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Link } from 'react-router-dom';
 
 interface GiftTransaction {
   id: string;
@@ -18,9 +20,12 @@ interface GiftTransaction {
   message: string | null;
   created_at: string;
   gift_id: string;
+  is_anonymous: boolean;
+  sender_id: string;
   sender: {
     display_name: string;
     handle: string;
+    avatar_url: string | null;
   };
   gift: {
     id: string;
@@ -139,7 +144,7 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
       // Fetch sender profiles
       const { data: senders, error: senderError } = await supabase
         .from('profiles')
-        .select('id, display_name, handle')
+        .select('id, display_name, handle, avatar_url')
         .in('id', senderIds);
 
       if (senderError) throw senderError;
@@ -175,13 +180,15 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
       const giftMap = new Map(giftDetails?.map(g => [g.id, g]) || []);
 
       // Format gifts with joined data
-      const formattedGifts = transactions.map((item) => ({
+      const formattedGifts = transactions.map((item: any) => ({
         id: item.id,
         xp_cost: item.xp_cost,
         message: item.message,
         created_at: item.created_at,
         gift_id: item.gift_id,
-        sender: senderMap.get(item.sender_id) || { display_name: 'Unknown', handle: 'unknown' },
+        is_anonymous: item.is_anonymous || false,
+        sender_id: item.sender_id,
+        sender: senderMap.get(item.sender_id) || { display_name: 'Unknown', handle: 'unknown', avatar_url: null },
         gift: giftMap.get(item.gift_id) || { id: item.gift_id, name: 'Unknown Gift', emoji: '🎁', rarity: 'common' },
       }));
 
@@ -294,75 +301,117 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
-        {gifts.map((gift) => (
-          <div 
-            key={gift.id} 
-            onClick={() => handleGiftClick(gift)}
-            className="cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 group relative p-2 sm:p-4"
-          >
-            <div className="relative space-y-2">
-              <div className="relative">
-                <GiftImage
-                  giftId={gift.gift.id}
-                  giftName={gift.gift.name}
-                  emoji={gift.gift.emoji}
-                  rarity={gift.gift.rarity}
-                  size="lg"
-                  className="mx-auto"
-                />
-                <Badge className={`absolute -top-2 -right-2 ${getRarityColor(gift.gift.rarity)} text-[10px] px-1.5 py-0.5`}>
-                  {gift.gift.rarity}
-                </Badge>
-                {isOwnProfile && isRareGift(gift.gift.rarity) && (
-                  <Button
-                    size="sm"
-                    variant={pinnedGiftIds.has(gift.gift.id) ? 'default' : 'ghost'}
-                    className="absolute -top-2 -left-2 h-6 w-6 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => handlePinToggle(e, gift.gift.id)}
-                  >
-                    <Pin className={`h-3 w-3 ${pinnedGiftIds.has(gift.gift.id) ? 'fill-current' : ''}`} />
-                  </Button>
-                )}
-              </div>
-
-              <div className="text-center max-w-full overflow-hidden">
-                <h3 className="font-semibold text-xs truncate max-w-[80px] mx-auto" title={gift.gift.name}>{gift.gift.name}</h3>
-                <p className="text-xs text-muted-foreground font-medium">
-                  Base: {gift.gift.base_xp_cost || gift.xp_cost} Nexa
-                </p>
-              </div>
-
-              <div className="text-center space-y-1">
-                <div className="flex items-center justify-center gap-1">
-                  <span className="text-xs font-bold text-primary">
-                    {calculatePrice(gift.gift_id, gift.gift.base_xp_cost || gift.xp_cost).toLocaleString()} Nexa
-                  </span>
-                </div>
-                
-                {(() => {
-                  const currentPrice = calculatePrice(gift.gift_id, gift.gift.base_xp_cost || gift.xp_cost);
-                  const basePrice = gift.gift.base_xp_cost || gift.xp_cost;
-                  const percentIncrease = ((currentPrice - basePrice) / basePrice * 100).toFixed(1);
-                  
-                  return currentPrice > basePrice ? (
-                    <div className="flex items-center justify-center gap-0.5 text-[10px] text-green-500 font-semibold">
-                      <TrendingUp className="h-2.5 w-2.5" />
-                      <span>+{percentIncrease}%</span>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {gifts.map((gift) => {
+          // Determine visibility of sender info
+          const showSenderToPublic = !gift.is_anonymous;
+          const canSeeSender = isOwnProfile || showSenderToPublic;
+          
+          return (
+            <Card 
+              key={gift.id} 
+              onClick={() => handleGiftClick(gift)}
+              className="cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg group relative p-4 bg-card/50 border-border/50"
+            >
+              <div className="space-y-3">
+                {/* Sender Info */}
+                <div className="flex items-center gap-2">
+                  {canSeeSender ? (
+                    <Link 
+                      to={`/@${gift.sender.handle}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-2 flex-1 min-w-0"
+                    >
+                      <Avatar className="h-8 w-8 ring-2 ring-primary/20">
+                        <AvatarImage src={gift.sender.avatar_url || undefined} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          {gift.sender.display_name?.[0]?.toUpperCase() || '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate">{gift.sender.display_name}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">@{gift.sender.handle}</p>
+                      </div>
+                      {isOwnProfile && gift.is_anonymous && (
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">
+                          <EyeOff className="h-3 w-3" />
+                          <span>Hidden</span>
+                        </div>
+                      )}
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-2 flex-1">
+                      <Avatar className="h-8 w-8 bg-muted">
+                        <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+                          <EyeOff className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-muted-foreground">Anonymous</p>
+                        <p className="text-[10px] text-muted-foreground">Identity hidden</p>
+                      </div>
                     </div>
-                  ) : null;
-                })()}
+                  )}
+                </div>
 
-                {giftStats[gift.gift_id] && giftStats[gift.gift_id].total_sent > 0 && (
-                  <div className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
-                    <Sparkles className="h-2.5 w-2.5" />
-                    <span>{giftStats[gift.gift_id].total_sent.toLocaleString()} sent</span>
+                {/* Gift Image */}
+                <div className="relative flex justify-center">
+                  <GiftImage
+                    giftId={gift.gift.id}
+                    giftName={gift.gift.name}
+                    emoji={gift.gift.emoji}
+                    rarity={gift.gift.rarity}
+                    size="lg"
+                    className="mx-auto"
+                  />
+                  <Badge className={`absolute -top-1 -right-1 ${getRarityColor(gift.gift.rarity)} text-[10px] px-1.5 py-0.5`}>
+                    {gift.gift.rarity}
+                  </Badge>
+                  {isOwnProfile && isRareGift(gift.gift.rarity) && (
+                    <Button
+                      size="sm"
+                      variant={pinnedGiftIds.has(gift.gift.id) ? 'default' : 'ghost'}
+                      className="absolute -top-1 -left-1 h-6 w-6 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => handlePinToggle(e, gift.gift.id)}
+                    >
+                      <Pin className={`h-3 w-3 ${pinnedGiftIds.has(gift.gift.id) ? 'fill-current' : ''}`} />
+                    </Button>
+                  )}
+                </div>
+
+                {/* Gift Details */}
+                <div className="text-center space-y-1">
+                  <h3 className="font-semibold text-sm truncate" title={gift.gift.name}>{gift.gift.name}</h3>
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="text-xs font-bold text-primary">
+                      {calculatePrice(gift.gift_id, gift.gift.base_xp_cost || gift.xp_cost).toLocaleString()} Nexa
+                    </span>
                   </div>
-                )}
+                  
+                  {(() => {
+                    const currentPrice = calculatePrice(gift.gift_id, gift.gift.base_xp_cost || gift.xp_cost);
+                    const basePrice = gift.gift.base_xp_cost || gift.xp_cost;
+                    const percentIncrease = ((currentPrice - basePrice) / basePrice * 100).toFixed(1);
+                    
+                    return currentPrice > basePrice ? (
+                      <div className="flex items-center justify-center gap-0.5 text-[10px] text-green-500 font-semibold">
+                        <TrendingUp className="h-2.5 w-2.5" />
+                        <span>+{percentIncrease}%</span>
+                      </div>
+                    ) : null;
+                  })()}
+
+                  {giftStats[gift.gift_id] && giftStats[gift.gift_id].total_sent > 0 && (
+                    <div className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+                      <Sparkles className="h-2.5 w-2.5" />
+                      <span>{giftStats[gift.gift_id].total_sent.toLocaleString()} sent</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
+            </Card>
+          );
+        })}
       </div>
 
       <GiftDetailSheet
