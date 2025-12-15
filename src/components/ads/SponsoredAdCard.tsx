@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Megaphone } from 'lucide-react';
+import { Megaphone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PostInteractionButtons } from '@/components/feed/PostInteractionButtons';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,6 +39,7 @@ interface PostData {
 
 export const SponsoredAdCard = ({ ad, placement, variant = 'feed' }: SponsoredAdCardProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [clicked, setClicked] = useState(false);
   const [advertiser, setAdvertiser] = useState<{ display_name: string; avatar_url: string | null } | null>(null);
   const [postData, setPostData] = useState<PostData | null>(null);
@@ -121,8 +122,20 @@ export const SponsoredAdCard = ({ ad, placement, variant = 'feed' }: SponsoredAd
   const viewCount = postData?.post_views?.length || 0;
   const isLiked = user ? postData?.post_acknowledgments?.some(ack => ack.user_id === user.id) : false;
 
-  const PostContent = (
-    <div className="px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border">
+  const handlePostClick = () => {
+    handleClick();
+    if (ad.ad_type === 'promoted_post' && ad.post_id) {
+      navigate(`/post/${ad.post_id}`);
+    } else if (ad.target_url) {
+      window.open(ad.target_url.startsWith('http') ? ad.target_url : `https://${ad.target_url}`, '_blank');
+    }
+  };
+
+  return (
+    <div 
+      className="px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border"
+      onClick={handlePostClick}
+    >
       {/* Header with advertiser info and sponsored badge */}
       <div className="flex items-start gap-3">
         <Avatar className="h-10 w-10 flex-shrink-0">
@@ -141,9 +154,6 @@ export const SponsoredAdCard = ({ ad, placement, variant = 'feed' }: SponsoredAd
               <Megaphone className="h-2.5 w-2.5 mr-1" />
               Sponsored
             </Badge>
-            {ad.target_url && (
-              <ExternalLink className="h-3 w-3 text-muted-foreground" />
-            )}
           </div>
           
           {/* Ad Title */}
@@ -169,42 +179,22 @@ export const SponsoredAdCard = ({ ad, placement, variant = 'feed' }: SponsoredAd
 
           {/* Interaction buttons for promoted posts */}
           {ad.ad_type === 'promoted_post' && ad.post_id && (
-            <PostInteractionButtons
-              postId={ad.post_id}
-              initialLikeCount={likeCount}
-              initialReplyCount={replyCount}
-              initialViewCount={viewCount}
-              initialIsLiked={isLiked}
-              className="mt-3"
-            />
+            <div onClick={(e) => e.stopPropagation()}>
+              <PostInteractionButtons
+                postId={ad.post_id}
+                initialLikeCount={likeCount}
+                initialReplyCount={replyCount}
+                initialViewCount={viewCount}
+                initialIsLiked={isLiked}
+                onCommentClick={() => navigate(`/post/${ad.post_id}`)}
+                className="mt-3"
+              />
+            </div>
           )}
         </div>
       </div>
     </div>
   );
-
-  if (ad.ad_type === 'promoted_post' && ad.post_id) {
-    return (
-      <div onClick={handleClick}>
-        {PostContent}
-      </div>
-    );
-  }
-
-  if (ad.target_url) {
-    return (
-      <a 
-        href={ad.target_url.startsWith('http') ? ad.target_url : `https://${ad.target_url}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={handleClick}
-      >
-        {PostContent}
-      </a>
-    );
-  }
-
-  return <div onClick={handleClick}>{PostContent}</div>;
 };
 
 export default SponsoredAdCard;
