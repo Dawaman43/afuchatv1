@@ -2,20 +2,19 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomLoader } from '@/components/ui/CustomLoader';
-import { ArrowLeft, User as UserIcon, TrendingUp, MessageCircle, Heart, Send } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, TrendingUp, MessageCircle, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { ImageCarousel } from '@/components/ui/ImageCarousel';
 import { useAITranslation } from '@/hooks/useAITranslation';
 import { LinkPreviewCard } from '@/components/ui/LinkPreviewCard';
-import { Textarea } from '@/components/ui/textarea';
-import { MentionInput } from '@/components/MentionInput';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { NestedReplyItem } from '@/components/post-detail/NestedReplyItem';
 import { ViewsAnalyticsSheet } from '@/components/ViewsAnalyticsSheet';
 import { QuotedPostCard } from '@/components/feed/QuotedPostCard';
+import { CommentInput } from '@/components/feed/CommentInput';
 // Note: Verified Badge components must be imported or defined here
 
 // --- START: Verified Badge Components (Unchanged) ---
@@ -181,9 +180,7 @@ const PostDetail = () => {
   const [translatedPost, setTranslatedPost] = useState<string | null>(null);
   const [translatedReplies, setTranslatedReplies] = useState<Record<string, string>>({});
   const [isTranslatingPost, setIsTranslatingPost] = useState(false);
-  const [replyText, setReplyText] = useState('');
   const [replyingTo, setReplyingTo] = useState<{ replyId: string; authorHandle: string } | null>(null);
-  const [submittingReply, setSubmittingReply] = useState(false);
   const postRef = useRef<HTMLDivElement>(null);
   const [hasTrackedView, setHasTrackedView] = useState(false);
   const [showViewsSheet, setShowViewsSheet] = useState(false);
@@ -453,102 +450,6 @@ const PostDetail = () => {
     setReplies(prev => prev.filter(r => r.id !== replyId));
   };
 
-  const handleReplySubmit = async () => {
-    if (!replyText.trim()) return;
-    if (!user) {
-      toast.error('Please sign in to reply');
-      return;
-    }
-
-    setSubmittingReply(true);
-    try {
-      // Append mention at the end if it exists
-      const mention = replyingTo 
-        ? `@${replyingTo.authorHandle}` 
-        : (post ? `@${post.author.handle}` : '');
-      const finalContent = mention ? `${replyText.trim()} ${mention}` : replyText.trim();
-
-      const { data: replyData, error } = await supabase
-        .from('post_replies')
-        .insert({
-          post_id: postId,
-          author_id: user.id,
-          content: finalContent,
-          parent_reply_id: replyingTo?.replyId || null,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Check if AfuAI was mentioned and trigger AI reply
-      const mentionsAfuAi = /@afuai/i.test(finalContent);
-      const AI_FEATURES_COMING_SOON = true; // Temporarily disabled
-      if (mentionsAfuAi && post && replyData && !AI_FEATURES_COMING_SOON) {
-        try {
-          await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/afu-ai-reply`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-              },
-              body: JSON.stringify({
-                postId: postId,
-                replyContent: finalContent,
-                originalPostContent: post.content || '',
-                triggerReplyId: replyData.id,
-              }),
-            }
-          );
-        } catch (error) {
-          console.error('Failed to trigger AfuAI:', error);
-        }
-      }
-
-      toast.success('Reply posted!');
-      setReplyText('');
-      setReplyingTo(null);
-      
-      // Refresh replies
-      const { data: repliesData } = await supabase
-        .from('post_replies')
-        .select(`
-          *,
-          profiles!inner(display_name, handle, is_verified, is_organization_verified, avatar_url)
-        `)
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
-
-      if (repliesData) {
-        const mappedReplies: Reply[] = repliesData.map((r: any) => ({
-          id: r.id,
-          content: r.content,
-          created_at: r.created_at,
-          parent_reply_id: r.parent_reply_id,
-          is_pinned: r.is_pinned,
-          pinned_by: r.pinned_by,
-          pinned_at: r.pinned_at,
-          author: {
-            display_name: r.profiles.display_name,
-            handle: r.profiles.handle,
-            is_verified: r.profiles.is_verified,
-            is_organization_verified: r.profiles.is_organization_verified,
-            avatar_url: r.profiles.avatar_url,
-          },
-        }));
-        const organizedReplies = organizeReplies(mappedReplies);
-        setReplies(organizedReplies);
-      }
-    } catch (error) {
-      console.error('Error posting reply:', error);
-      toast.error('Failed to post reply');
-    } finally {
-      setSubmittingReply(false);
-    }
-  };
-
   // Remove auto-translate effect - now translate is manual via button
   
   const formatDate = (dateString: string) => {
@@ -680,55 +581,46 @@ const PostDetail = () => {
                   <span className="text-sm font-semibold">{post.view_count}</span>
                 </button>
                 <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors ml-auto">
-                  <Send className="h-5 w-5" />
+                  <MessageCircle className="h-5 w-5" />
                 </button>
             </div>
         </div>
 
         {/* --- REPLY INPUT SECTION --- */}
-        <div className="p-4 border-b border-border">
-          {user ? (
-            <div className="space-y-3">
-              {replyingTo && (
-                <div className="flex items-center justify-between text-sm text-muted-foreground bg-muted/50 p-2 rounded">
-                  <span>Replying to @{replyingTo.authorHandle}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setReplyingTo(null);
-                      setReplyText('');
-                    }}
-                    className="h-6 px-2"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              )}
-              <div className="flex gap-3">
-                <MentionInput
-                  value={replyText}
-                  onChange={setReplyText}
-                  mention={replyingTo ? `@${replyingTo.authorHandle}` : (post ? `@${post.author.handle}` : undefined)}
-                  placeholder={replyingTo ? `Reply to @${replyingTo.authorHandle}...` : "Post your reply..."}
-                  className="min-h-[80px] resize-none"
-                  onSubmit={handleReplySubmit}
-                />
-              </div>
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleReplySubmit}
-                  disabled={!replyText.trim() || submittingReply}
-                  size="sm"
-                >
-                  {submittingReply ? 'Posting...' : 'Reply'}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-center">Sign in to reply</p>
-          )}
-        </div>
+        <CommentInput
+          postId={postId || ''}
+          replyingTo={replyingTo}
+          postAuthorHandle={post?.author.handle}
+          onCancelReply={() => setReplyingTo(null)}
+          onCommentSubmitted={async () => {
+            // Refresh replies
+            const { data } = await supabase
+              .from('post_replies')
+              .select('*, profiles!inner(display_name, handle, is_verified, is_organization_verified, avatar_url)')
+              .eq('post_id', postId);
+            
+            if (data) {
+              const mappedReplies: Reply[] = data.map((r: any) => ({
+                id: r.id,
+                content: r.content,
+                created_at: r.created_at,
+                parent_reply_id: r.parent_reply_id,
+                is_pinned: r.is_pinned,
+                pinned_by: r.pinned_by,
+                pinned_at: r.pinned_at,
+                author: {
+                  display_name: r.profiles.display_name,
+                  handle: r.profiles.handle,
+                  is_verified: r.profiles.is_verified,
+                  is_organization_verified: r.profiles.is_organization_verified,
+                  avatar_url: r.profiles.avatar_url,
+                },
+              }));
+              setReplies(organizeReplies(mappedReplies));
+              setPost(prev => prev ? { ...prev, replies_count: prev.replies_count + 1 } : null);
+            }
+          }}
+        />
 
         {/* --- REPLIES LIST --- */}
         <div className="flex flex-col">
@@ -751,7 +643,6 @@ const PostDetail = () => {
                   translatedReplies={translatedReplies}
                   onReplyClick={(replyId, authorHandle) => {
                     setReplyingTo({ replyId, authorHandle });
-                    setReplyText(`@${authorHandle} `);
                   }}
                   onPinReply={handlePinReply}
                   onDeleteReply={handleDeleteReply}
