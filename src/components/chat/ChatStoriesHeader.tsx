@@ -215,6 +215,13 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
                   </button>
                 }
               />
+              
+              <button 
+                onClick={() => setIsMenuOpen(true)}
+                className="p-2 hover:bg-muted/20 rounded-full transition-all active:scale-95"
+              >
+                <Menu className="h-5 w-5 text-foreground" />
+              </button>
 
               {/* Collapsed stories preview - only show when NOT expanded and has stories */}
               {!isExpanded && totalStories > 0 ? (
