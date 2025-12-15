@@ -123,6 +123,8 @@ export interface Message {
     is_organization_verified: boolean | null;
     is_affiliate: boolean | null;
     affiliated_business_id: string | null;
+    is_warned?: boolean | null;
+    warning_reason?: string | null;
   };
   message_status?: Array<{
     read_at: string | null;

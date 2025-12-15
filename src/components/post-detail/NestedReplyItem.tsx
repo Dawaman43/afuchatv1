@@ -6,6 +6,7 @@ import { UserAvatar } from '@/components/avatar/UserAvatar';
 import { MessageCircle, Pin, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CommentInput } from '@/components/feed/CommentInput';
+import { WarningBadge } from '@/components/WarningBadge';
 import React from 'react';
 
 interface Reply {
@@ -22,6 +23,8 @@ interface Reply {
     is_verified: boolean;
     is_organization_verified: boolean;
     avatar_url: string | null;
+    is_warned?: boolean;
+    warning_reason?: string | null;
   };
   nested_replies?: Reply[];
 }
@@ -127,6 +130,9 @@ export const NestedReplyItem = ({
                 isVerified={reply.author.is_verified} 
                 isOrgVerified={reply.author.is_organization_verified} 
               />
+              {reply.author.is_warned && (
+                <WarningBadge size="sm" reason={reply.author.warning_reason} variant="post" />
+              )}
               <span className="text-xs text-muted-foreground">
                 @{reply.author.handle}
               </span>

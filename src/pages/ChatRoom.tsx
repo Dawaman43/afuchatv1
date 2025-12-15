@@ -397,7 +397,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
             // Fetch profile data
             const { data: profile, error: profileError } = await supabase
               .from('profiles')
-              .select('display_name, handle, avatar_url, is_verified, is_organization_verified, is_affiliate, affiliated_business_id')
+              .select('display_name, handle, avatar_url, is_verified, is_organization_verified, is_affiliate, affiliated_business_id, is_warned, warning_reason')
               .eq('id', payload.new.sender_id)
               .single();
               
@@ -708,7 +708,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
       .from('messages')
       .select(`
         *,
-        profiles(display_name, handle, avatar_url, is_verified, is_organization_verified, is_affiliate, affiliated_business_id),
+        profiles(display_name, handle, avatar_url, is_verified, is_organization_verified, is_affiliate, affiliated_business_id, is_warned, warning_reason),
         message_reactions(reaction, user_id),
         message_status(read_at, delivered_at, user_id),
         reply_to_message:messages!reply_to_message_id(
