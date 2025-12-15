@@ -639,8 +639,9 @@ const Search = () => {
     try {
       const { data: userData } = await supabase
         .from('profiles')
-        .select('id, display_name, handle, bio, is_verified, is_organization_verified, is_private, avatar_url')
+        .select('id, display_name, handle, bio, is_verified, is_organization_verified, is_private, avatar_url, is_warned, warning_reason')
         .or(`display_name.ilike.%${trimmedQuery}%,handle.ilike.%${trimmedQuery}%`)
+        .eq('is_warned', false) // Filter out warned users from search
         .limit(5);
 
       const { data: postData } = await supabase

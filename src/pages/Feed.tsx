@@ -35,6 +35,7 @@ import { CommentInput } from '@/components/feed/CommentInput';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { BusinessBadge } from '@/components/BusinessBadge';
 import { AffiliatedBadge } from '@/components/AffiliatedBadge';
+import { WarningBadge } from '@/components/WarningBadge';
 import { OnlineStatus } from '@/components/OnlineStatus';
 import { StoryAvatar } from '@/components/moments/StoryAvatar';
 import { ViewsAnalyticsSheet } from '@/components/ViewsAnalyticsSheet';
@@ -107,6 +108,8 @@ interface Post {
     } | null;
     last_seen?: string | null;
     show_online_status?: boolean;
+    is_warned?: boolean;
+    warning_reason?: string | null;
   };
   replies: Reply[];
   like_count: number;
@@ -142,6 +145,8 @@ interface Reply {
     } | null;
     last_seen?: string | null;
     show_online_status?: boolean;
+    is_warned?: boolean;
+    warning_reason?: string | null;
   };
   affiliation_date?: string;
 }
@@ -374,6 +379,10 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: {
                     
                     {reply.profiles.is_affiliate && reply.profiles.is_business_mode && (
                       <AffiliatedBadge size="sm" />
+                    )}
+                    
+                    {reply.profiles.is_warned && (
+                      <WarningBadge size="sm" reason={reply.profiles.warning_reason} />
                     )}
                     
                     <VerifiedBadge 
@@ -852,6 +861,10 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
             
             {post.profiles.is_affiliate && post.profiles.is_business_mode && (
               <AffiliatedBadge size="sm" />
+            )}
+            
+            {post.profiles.is_warned && (
+              <WarningBadge size="sm" reason={post.profiles.warning_reason} />
             )}
             
             <VerifiedBadge 
@@ -1699,7 +1712,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
               view_count,
               image_url,
               quoted_post_id,
-              profiles!inner(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status),
+              profiles!inner(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, is_warned, warning_reason),
               post_images(image_url, display_order, alt_text),
               post_link_previews(url, title, description, image_url, site_name)
             `)
@@ -1756,7 +1769,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         // Replies
         supabase
           .from('post_replies')
-          .select('*, profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status)')
+          .select('*, profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, is_warned, warning_reason)')
           .in('post_id', postIds)
           .order('created_at', { ascending: true }),
         
