@@ -180,33 +180,100 @@ export default function MerchantShop() {
   if (showRestriction) {
     return (
       <Layout>
-        <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="max-w-md space-y-6"
-          >
-            <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
-              <Ban className="h-10 w-10 text-destructive" />
+        <div className="min-h-screen bg-background">
+          {/* Header */}
+          <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+            <div className="flex items-center gap-3 p-4">
+              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex items-center gap-2">
+                <img src={shopshackLogo} alt="ShopShack" className="h-8 w-8 rounded-full object-cover" />
+                <h1 className="font-semibold">ShopShack</h1>
+              </div>
             </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold">Not Available in Your Region</h1>
-              <p className="text-muted-foreground">
-                ShopShack is currently only available for users in <strong>Uganda</strong>.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                The developer has selected Uganda as the only supported region for this store.
-              </p>
-            </div>
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
-              <MapPin className="h-4 w-4" />
-              <span>Your location: <strong>{userCountry}</strong></span>
-            </div>
-            <Button onClick={() => navigate(-1)} variant="outline" className="mt-4">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Go Back
-            </Button>
-          </motion.div>
+          </div>
+
+          <div className="max-w-lg mx-auto p-6 space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              {/* Status Icon */}
+              <div className="flex justify-center">
+                <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <Ban className="h-10 w-10 text-destructive" />
+                </div>
+              </div>
+
+              {/* Main Title */}
+              <div className="text-center space-y-2">
+                <h1 className="text-2xl font-bold">Service Unavailable</h1>
+                <p className="text-muted-foreground">
+                  ShopShack is not available in your region
+                </p>
+              </div>
+
+              {/* Your Location */}
+              <div className="flex items-center justify-center gap-2 text-sm bg-muted/50 rounded-lg p-3">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <span>Your location: <strong>{userCountry}</strong></span>
+              </div>
+
+              {/* Terms Section */}
+              <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+                <h2 className="font-semibold text-lg">ShopShack Service Terms</h2>
+                
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <div className="space-y-1">
+                    <h3 className="font-medium text-foreground">Geographic Availability</h3>
+                    <p>
+                      ShopShack services are currently available exclusively to users located in <strong className="text-foreground">Uganda</strong>. 
+                      This restriction applies to all shopping, ordering, and delivery services offered through our platform.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <h3 className="font-medium text-foreground">Why This Restriction?</h3>
+                    <p>
+                      Our delivery infrastructure, payment processing, and customer support are currently optimized for the Ugandan market. 
+                      We're working to expand to more regions in the future.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <h3 className="font-medium text-foreground">Supported Regions</h3>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>Uganda (All districts)</li>
+                    </ul>
+                  </div>
+
+                  <div className="space-y-1">
+                    <h3 className="font-medium text-foreground">Future Expansion</h3>
+                    <p>
+                      We plan to expand ShopShack services to additional East African countries. 
+                      Stay tuned for updates on service availability in your region.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Info */}
+              <div className="text-center text-xs text-muted-foreground">
+                <p>Questions about service availability?</p>
+                <Button variant="link" className="h-auto p-0 text-xs" onClick={() => navigate('/support')}>
+                  Contact Support
+                </Button>
+              </div>
+
+              {/* Back Button */}
+              <Button onClick={() => navigate(-1)} variant="outline" className="w-full">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Go Back
+              </Button>
+            </motion.div>
+          </div>
         </div>
       </Layout>
     );
