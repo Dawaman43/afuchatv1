@@ -12,10 +12,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TrendingUp, Users, Calendar, Sparkles, Gift } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { TrendingUp, Users, Calendar, Sparkles, Gift, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { GiftImage } from '@/components/gifts/GiftImage';
 import { SendGiftDialog } from '@/components/gifts/SendGiftDialog';
+import { Link } from 'react-router-dom';
 
 interface Gift {
   id: string;
@@ -53,15 +55,24 @@ interface RecentTransaction {
   xp_cost: number;
 }
 
+interface SenderInfo {
+  display_name: string;
+  handle: string;
+  avatar_url: string | null;
+}
+
 interface GiftDetailSheetProps {
   giftId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   recipientId?: string;
   recipientName?: string;
+  sender?: SenderInfo | null;
+  isAnonymous?: boolean;
+  isOwnProfile?: boolean;
 }
 
-export const GiftDetailSheet = ({ giftId, open, onOpenChange, recipientId, recipientName }: GiftDetailSheetProps) => {
+export const GiftDetailSheet = ({ giftId, open, onOpenChange, recipientId, recipientName, sender, isAnonymous, isOwnProfile }: GiftDetailSheetProps) => {
   const { user } = useAuth();
   const [gift, setGift] = useState<Gift | null>(null);
   const [stats, setStats] = useState<GiftStats | null>(null);
@@ -69,6 +80,8 @@ export const GiftDetailSheet = ({ giftId, open, onOpenChange, recipientId, recip
   const [loading, setLoading] = useState(false);
 
   const canSendGift = user && recipientId && user.id !== recipientId;
+  const showSenderToPublic = !isAnonymous;
+  const canSeeSender = isOwnProfile || showSenderToPublic;
 
   useEffect(() => {
     if (giftId && open) {
@@ -218,6 +231,48 @@ export const GiftDetailSheet = ({ giftId, open, onOpenChange, recipientId, recip
             </SheetHeader>
 
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              {/* Sender Info */}
+              {sender && (
+                <Card className="p-4">
+                  <p className="text-xs text-muted-foreground mb-2">Sent by</p>
+                  {canSeeSender ? (
+                    <Link 
+                      to={`/@${sender.handle}`}
+                      className="flex items-center gap-3"
+                    >
+                      <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+                        <AvatarImage src={sender.avatar_url || undefined} />
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {sender.display_name?.[0]?.toUpperCase() || '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{sender.display_name}</p>
+                        <p className="text-sm text-muted-foreground truncate">@{sender.handle}</p>
+                      </div>
+                      {isOwnProfile && isAnonymous && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
+                          <EyeOff className="h-3 w-3" />
+                          <span>Hidden from public</span>
+                        </div>
+                      )}
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10 bg-muted">
+                        <AvatarFallback className="bg-muted text-muted-foreground">
+                          <EyeOff className="h-5 w-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-muted-foreground">Anonymous</p>
+                        <p className="text-sm text-muted-foreground">Identity hidden by sender</p>
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              )}
+
               <Card className="p-4 space-y-3">
                 <p className="text-sm text-muted-foreground">{gift.description || 'A special gift to share with friends'}</p>
                 
