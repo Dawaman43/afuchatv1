@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Video, Book, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Image, Brain, Puzzle, Trophy, ChevronRight, Swords, Clock, Shield, FileText } from 'lucide-react';
+import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Video, Book, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Image, Brain, Puzzle, Trophy, ChevronRight, Swords, Clock, Shield, FileText, Gift } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -35,6 +35,7 @@ import bookingsLogo from '@/assets/mini-apps/bookings-logo.png';
 import financeLogo from '@/assets/mini-apps/finance-logo.png';
 import momentsLogo from '@/assets/mini-apps/moments-logo.png';
 import shopshackLogo from '@/assets/mini-apps/shopshack-logo.png';
+import giftsP2PLogo from '@/assets/mini-apps/gifts-p2p-logo.png';
 
 interface MiniProgram {
   id: string;
@@ -298,6 +299,20 @@ const MiniPrograms = () => {
       isBuiltIn: true,
       downloads: '55K+',
       rating: 4.8
+    },
+    {
+      id: 'gifts-p2p',
+      name: 'Gifts P2P',
+      description: 'Trade rare gifts with others',
+      icon: Gift,
+      logo: giftsP2PLogo,
+      category: 'shopping',
+      route: '/marketplace',
+      color: 'bg-teal-500',
+      gradient: 'from-teal-500 to-cyan-500',
+      isBuiltIn: true,
+      downloads: '15K+',
+      rating: 4.6
     },
   ];
 
