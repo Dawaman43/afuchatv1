@@ -816,6 +816,12 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 			navigate('/auth');
 			return;
 		}
+
+		// Block following warned accounts
+		if (profile?.is_warned) {
+			toast.error('This account is not secure or trusted. AfuChat protects users from potentially fraudulent accounts.');
+			return;
+		}
 		
 	setIsRequestingFollow(true);
 	
@@ -853,6 +859,12 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 	const handleFollow = async () => {
 		if (!user || !profileId) {
 			navigate('/auth');
+			return;
+		}
+
+		// Block following warned accounts (allow unfollow)
+		if (profile?.is_warned && !isFollowing) {
+			toast.error('This account is not secure or trusted. AfuChat protects users from potentially fraudulent accounts.');
 			return;
 		}
 
@@ -903,6 +915,12 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 	const handleFollowBack = async () => {
 		if (!user || !profileId) {
 			navigate('/auth');
+			return;
+		}
+
+		// Block following warned accounts
+		if (profile?.is_warned) {
+			toast.error('This account is not secure or trusted. AfuChat protects users from potentially fraudulent accounts.');
 			return;
 		}
 

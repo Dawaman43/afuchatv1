@@ -145,6 +145,23 @@ export default function SuggestedUsers() {
     setProcessingFollow(prev => new Set(prev).add(userId));
 
     try {
+      // Check if target user is warned
+      const { data: targetProfile } = await supabase
+        .from('profiles')
+        .select('is_warned')
+        .eq('id', userId)
+        .single();
+
+      if (targetProfile?.is_warned) {
+        toast.error('This account is not secure or trusted. AfuChat protects users from potentially fraudulent accounts.');
+        setProcessingFollow(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(userId);
+          return newSet;
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('follows')
         .insert({ follower_id: user.id, following_id: userId });

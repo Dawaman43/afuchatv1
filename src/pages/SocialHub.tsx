@@ -9,6 +9,7 @@ import { ArrowLeft, TrendingUp, Users, Image as ImageIcon, Heart, MessageCircle 
 import Logo from '@/components/Logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 const SocialHub = () => {
   const navigate = useNavigate();
@@ -90,6 +91,18 @@ const SocialHub = () => {
     }
 
     try {
+      // Check if target user is warned
+      const { data: targetProfile } = await supabase
+        .from('profiles')
+        .select('is_warned')
+        .eq('id', userId)
+        .single();
+
+      if (targetProfile?.is_warned) {
+        toast.error('This account is not secure or trusted. AfuChat protects users from potentially fraudulent accounts.');
+        return;
+      }
+
       const { error } = await supabase
         .from('follows')
         .insert({ follower_id: user.id, following_id: userId });
