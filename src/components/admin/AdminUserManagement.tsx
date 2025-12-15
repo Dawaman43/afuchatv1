@@ -4,11 +4,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Shield, ShieldOff, BadgeCheck, BadgeX, Trash2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Shield, ShieldOff, BadgeCheck, BadgeX, Trash2, AlertTriangle, Ban, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { getCountryFlag } from '@/lib/countryFlags';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface User {
   id: string;
@@ -21,6 +23,8 @@ interface User {
   acoin: number;
   is_verified: boolean;
   is_admin: boolean;
+  is_warned: boolean;
+  is_banned: boolean;
   created_at: string;
 }
 
@@ -32,6 +36,7 @@ interface AdminUserManagementProps {
 export function AdminUserManagement({ users, onRefresh }: AdminUserManagementProps) {
   const [confirmAction, setConfirmAction] = useState<{ type: string; userId: string; userName: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [reason, setReason] = useState('');
 
   const handleAction = async (action: string, userId: string) => {
     setLoading(true);
@@ -55,6 +60,52 @@ export function AdminUserManagement({ users, onRefresh }: AdminUserManagementPro
           await supabase.from('user_roles').delete().eq('user_id', userId);
           toast.success('Admin privileges removed');
           break;
+        case 'warn':
+          const { data: warnResult } = await supabase.rpc('admin_warn_user', {
+            p_user_id: userId,
+            p_reason: reason || null
+          });
+          const warnData = warnResult as { success: boolean; message: string } | null;
+          if (warnData?.success) {
+            toast.success('User warned successfully');
+          } else {
+            throw new Error(warnData?.message || 'Failed to warn user');
+          }
+          break;
+        case 'removeWarning':
+          const { data: unwarnResult } = await supabase.rpc('admin_remove_warning', {
+            p_user_id: userId
+          });
+          const unwarnData = unwarnResult as { success: boolean; message: string } | null;
+          if (unwarnData?.success) {
+            toast.success('Warning removed');
+          } else {
+            throw new Error(unwarnData?.message || 'Failed to remove warning');
+          }
+          break;
+        case 'ban':
+          const { data: banResult } = await supabase.rpc('admin_ban_user', {
+            p_user_id: userId,
+            p_reason: reason || null
+          });
+          const banData = banResult as { success: boolean; message: string } | null;
+          if (banData?.success) {
+            toast.success('User banned successfully');
+          } else {
+            throw new Error(banData?.message || 'Failed to ban user');
+          }
+          break;
+        case 'unban':
+          const { data: unbanResult } = await supabase.rpc('admin_unban_user', {
+            p_user_id: userId
+          });
+          const unbanData = unbanResult as { success: boolean; message: string } | null;
+          if (unbanData?.success) {
+            toast.success('User unbanned');
+          } else {
+            throw new Error(unbanData?.message || 'Failed to unban user');
+          }
+          break;
         case 'delete':
           const { error } = await supabase.functions.invoke('delete-user-account', {
             body: { userId }
@@ -69,6 +120,7 @@ export function AdminUserManagement({ users, onRefresh }: AdminUserManagementPro
     } finally {
       setLoading(false);
       setConfirmAction(null);
+      setReason('');
     }
   };
 
@@ -117,9 +169,11 @@ export function AdminUserManagement({ users, onRefresh }: AdminUserManagementPro
                 <TableCell>{user.acoin?.toLocaleString() || 0}</TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
+                    {user.is_banned && <Badge variant="destructive" className="text-xs">Banned</Badge>}
+                    {user.is_warned && !user.is_banned && <Badge variant="outline" className="text-xs border-amber-500 text-amber-500">Warned</Badge>}
                     {user.is_admin && <Badge variant="destructive" className="text-xs">Admin</Badge>}
                     {user.is_verified && <Badge className="text-xs bg-primary">Verified</Badge>}
-                    {!user.is_admin && !user.is_verified && (
+                    {!user.is_admin && !user.is_verified && !user.is_warned && !user.is_banned && (
                       <Badge variant="secondary" className="text-xs">User</Badge>
                     )}
                   </div>
@@ -155,6 +209,43 @@ export function AdminUserManagement({ users, onRefresh }: AdminUserManagementPro
                           Make Admin
                         </DropdownMenuItem>
                       )}
+                      
+                      <DropdownMenuSeparator />
+                      
+                      {/* Warning actions */}
+                      {user.is_warned ? (
+                        <DropdownMenuItem onClick={() => handleAction('removeWarning', user.id)}>
+                          <ShieldAlert className="h-4 w-4 mr-2 text-amber-500" />
+                          Remove Warning
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem 
+                          onClick={() => setConfirmAction({ type: 'warn', userId: user.id, userName: user.display_name })}
+                          className="text-amber-500"
+                        >
+                          <AlertTriangle className="h-4 w-4 mr-2" />
+                          Warn User
+                        </DropdownMenuItem>
+                      )}
+                      
+                      {/* Ban actions */}
+                      {user.is_banned ? (
+                        <DropdownMenuItem onClick={() => handleAction('unban', user.id)}>
+                          <Ban className="h-4 w-4 mr-2" />
+                          Unban User
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem 
+                          onClick={() => setConfirmAction({ type: 'ban', userId: user.id, userName: user.display_name })}
+                          className="text-destructive"
+                        >
+                          <Ban className="h-4 w-4 mr-2" />
+                          Ban User
+                        </DropdownMenuItem>
+                      )}
+                      
+                      <DropdownMenuSeparator />
+                      
                       <DropdownMenuItem 
                         onClick={() => setConfirmAction({ type: 'delete', userId: user.id, userName: user.display_name })}
                         className="text-red-500"
@@ -171,7 +262,7 @@ export function AdminUserManagement({ users, onRefresh }: AdminUserManagementPro
         </Table>
       </div>
 
-      <AlertDialog open={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
+      <AlertDialog open={!!confirmAction} onOpenChange={() => { setConfirmAction(null); setReason(''); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Action</AlertDialogTitle>
@@ -179,14 +270,30 @@ export function AdminUserManagement({ users, onRefresh }: AdminUserManagementPro
               {confirmAction?.type === 'delete' && `Are you sure you want to permanently delete ${confirmAction?.userName}'s account? This cannot be undone.`}
               {confirmAction?.type === 'makeAdmin' && `Are you sure you want to give ${confirmAction?.userName} admin privileges?`}
               {confirmAction?.type === 'removeAdmin' && `Are you sure you want to remove admin privileges from ${confirmAction?.userName}?`}
+              {confirmAction?.type === 'warn' && `Are you sure you want to warn ${confirmAction?.userName}? This will be visible on their profile and all their content.`}
+              {confirmAction?.type === 'ban' && `Are you sure you want to ban ${confirmAction?.userName}? They will lose access to all platform features.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          
+          {(confirmAction?.type === 'warn' || confirmAction?.type === 'ban') && (
+            <div className="py-4">
+              <Label htmlFor="reason">Reason (optional)</Label>
+              <Input
+                id="reason"
+                placeholder="Enter reason for this action..."
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                className="mt-2"
+              />
+            </div>
+          )}
+          
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => confirmAction && handleAction(confirmAction.type, confirmAction.userId)}
               disabled={loading}
-              className={confirmAction?.type === 'delete' ? 'bg-red-500 hover:bg-red-600' : ''}
+              className={confirmAction?.type === 'delete' || confirmAction?.type === 'ban' ? 'bg-red-500 hover:bg-red-600' : confirmAction?.type === 'warn' ? 'bg-amber-500 hover:bg-amber-600' : ''}
             >
               {loading ? 'Processing...' : 'Confirm'}
             </AlertDialogAction>

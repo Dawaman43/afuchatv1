@@ -226,7 +226,7 @@ const AdminDashboard = () => {
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('id, display_name, handle, phone_number, country, avatar_url, xp, acoin, is_verified, is_admin, created_at')
+        .select('id, display_name, handle, phone_number, country, avatar_url, xp, acoin, is_verified, is_admin, is_warned, is_banned, created_at')
         .order('created_at', { ascending: false })
         .limit(200);
       setUsers(data || []);

@@ -2764,6 +2764,9 @@ export type Database = {
           ai_chat_id: string | null
           available_balance_ugx: number
           avatar_url: string | null
+          ban_reason: string | null
+          banned_at: string | null
+          banned_by: string | null
           banner_url: string | null
           bio: string | null
           business_category: string | null
@@ -2779,10 +2782,12 @@ export type Database = {
           id: string
           is_admin: boolean | null
           is_affiliate: boolean | null
+          is_banned: boolean | null
           is_business_mode: boolean
           is_organization_verified: boolean | null
           is_private: boolean | null
           is_verified: boolean | null
+          is_warned: boolean | null
           language: string | null
           last_login_date: string | null
           last_seen: string | null
@@ -2794,6 +2799,9 @@ export type Database = {
           show_online_status: boolean | null
           show_read_receipts: boolean | null
           updated_at: string | null
+          warned_at: string | null
+          warned_by: string | null
+          warning_reason: string | null
           website_url: string | null
           withdrawal_network: string | null
           withdrawal_phone: string | null
@@ -2806,6 +2814,9 @@ export type Database = {
           ai_chat_id?: string | null
           available_balance_ugx?: number
           avatar_url?: string | null
+          ban_reason?: string | null
+          banned_at?: string | null
+          banned_by?: string | null
           banner_url?: string | null
           bio?: string | null
           business_category?: string | null
@@ -2821,10 +2832,12 @@ export type Database = {
           id: string
           is_admin?: boolean | null
           is_affiliate?: boolean | null
+          is_banned?: boolean | null
           is_business_mode?: boolean
           is_organization_verified?: boolean | null
           is_private?: boolean | null
           is_verified?: boolean | null
+          is_warned?: boolean | null
           language?: string | null
           last_login_date?: string | null
           last_seen?: string | null
@@ -2836,6 +2849,9 @@ export type Database = {
           show_online_status?: boolean | null
           show_read_receipts?: boolean | null
           updated_at?: string | null
+          warned_at?: string | null
+          warned_by?: string | null
+          warning_reason?: string | null
           website_url?: string | null
           withdrawal_network?: string | null
           withdrawal_phone?: string | null
@@ -2848,6 +2864,9 @@ export type Database = {
           ai_chat_id?: string | null
           available_balance_ugx?: number
           avatar_url?: string | null
+          ban_reason?: string | null
+          banned_at?: string | null
+          banned_by?: string | null
           banner_url?: string | null
           bio?: string | null
           business_category?: string | null
@@ -2863,10 +2882,12 @@ export type Database = {
           id?: string
           is_admin?: boolean | null
           is_affiliate?: boolean | null
+          is_banned?: boolean | null
           is_business_mode?: boolean
           is_organization_verified?: boolean | null
           is_private?: boolean | null
           is_verified?: boolean | null
+          is_warned?: boolean | null
           language?: string | null
           last_login_date?: string | null
           last_seen?: string | null
@@ -2878,6 +2899,9 @@ export type Database = {
           show_online_status?: boolean | null
           show_read_receipts?: boolean | null
           updated_at?: string | null
+          warned_at?: string | null
+          warned_by?: string | null
+          warning_reason?: string | null
           website_url?: string | null
           withdrawal_network?: string | null
           withdrawal_phone?: string | null
@@ -2906,11 +2930,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "profiles_banned_by_fkey"
+            columns: ["banned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_banned_by_fkey"
+            columns: ["banned_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profiles_language_fkey"
             columns: ["language"]
             isOneToOne: false
             referencedRelation: "supported_languages"
             referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "profiles_warned_by_fkey"
+            columns: ["warned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_warned_by_fkey"
+            columns: ["warned_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3900,8 +3952,18 @@ export type Database = {
       }
     }
     Functions: {
+      admin_ban_user: {
+        Args: { p_reason?: string; p_user_id: string }
+        Returns: Json
+      }
       admin_process_withdrawal: {
         Args: { p_action: string; p_notes?: string; p_withdrawal_id: string }
+        Returns: Json
+      }
+      admin_remove_warning: { Args: { p_user_id: string }; Returns: Json }
+      admin_unban_user: { Args: { p_user_id: string }; Returns: Json }
+      admin_warn_user: {
+        Args: { p_reason?: string; p_user_id: string }
         Returns: Json
       }
       approve_affiliate_by_business:
