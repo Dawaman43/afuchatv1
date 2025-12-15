@@ -31,6 +31,7 @@ import { TipButton } from '@/components/tips/TipButton';
 import { ImageCarousel } from '@/components/ui/ImageCarousel';
 import { LinkPreviewCard } from '@/components/ui/LinkPreviewCard';
 import { MentionInput } from '@/components/MentionInput';
+import { CommentInput } from '@/components/feed/CommentInput';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { BusinessBadge } from '@/components/BusinessBadge';
 import { AffiliatedBadge } from '@/components/AffiliatedBadge';
@@ -1095,31 +1096,15 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           )}
 
           {showComments && user && (
-            <div className="mt-2 flex items-start gap-1.5 sm:gap-2">
-              <div className="flex-shrink-0 mt-2">
-                <UserAvatarSmall 
-                  userId={user.id}
-                  name={userProfile?.display_name || 'You'}
-                  avatarUrl={userProfile?.avatar_url}
-                />
-              </div>
-              <MentionInput
-                value={replyText}
-                onChange={setReplyText}
-                mention={post.profiles.handle ? `@${post.profiles.handle}` : undefined}
-                placeholder={t('feed.addComment')}
-                className="flex-1 bg-transparent text-[10px] sm:text-xs text-foreground focus:outline-none focus:ring-0 p-1 min-h-[32px]"
-                onSubmit={handleReplySubmit}
+            <div className="mt-2">
+              <CommentInput
+                postId={post.id}
+                postAuthorHandle={post.profiles.handle}
+                onCommentSubmitted={() => {
+                  awardNexa('create_reply', { post_id: post.id });
+                }}
+                compact
               />
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={!replyText.trim()}
-                onClick={handleReplySubmit}
-                className="text-primary font-bold disabled:text-muted-foreground disabled:opacity-70 p-0 text-[10px] sm:text-xs h-7 sm:h-8"
-              >
-                {t('feed.post')}
-              </Button>
             </div>
           )}
           {showComments && !user && (

@@ -15,8 +15,6 @@ import { Gift, TrendingUp, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { GiftImage } from './GiftImage';
-import { GiftConfetti } from './GiftConfetti';
-import { ComboConfetti } from './ComboConfetti';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
 
@@ -67,9 +65,6 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
   const [selectedGift, setSelectedGift] = useState<SelectedGift | null>(null);
   const [loading, setLoading] = useState(false);
   const [userXP, setUserXP] = useState(0);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [showComboConfetti, setShowComboConfetti] = useState(false);
-  const [sentGiftEmojis, setSentGiftEmojis] = useState<string[]>([]);
   const [previewGift, setPreviewGift] = useState<PreviewGift | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -243,9 +238,6 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
         };
 
         if (result.success) {
-          setSentGiftEmojis(Array(selectedGift.count).fill(selectedGift.emoji));
-          setShowComboConfetti(true);
-          
           const savedNexa = (result.original_cost || 0) - (result.discounted_cost || 0);
           toast.success(
             t('gifts.comboSent', { saved: savedNexa }),
@@ -280,9 +272,6 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
         };
 
         if (result.success) {
-          setSentGiftEmojis([selectedGift.emoji]);
-          setShowConfetti(true);
-          
           toast.success(
             t('gifts.giftSent'),
             { description: result.new_grade ? `${t('gamification.grade')}: ${result.new_grade}` : undefined }
@@ -318,21 +307,6 @@ export const SendGiftDialog = ({ receiverId, receiverName, trigger }: SendGiftDi
 
   return (
     <>
-      {showConfetti && (
-        <GiftConfetti 
-          emoji={sentGiftEmojis[0]} 
-          onComplete={() => setShowConfetti(false)} 
-        />
-      )}
-      
-      {showComboConfetti && (
-        <ComboConfetti 
-          emojis={sentGiftEmojis}
-          giftCount={sentGiftEmojis.length}
-          onComplete={() => setShowComboConfetti(false)} 
-        />
-      )}
-      
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           {trigger || (
