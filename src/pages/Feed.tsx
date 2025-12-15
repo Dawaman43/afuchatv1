@@ -23,7 +23,7 @@ import DeletePostSheet from '@/components/DeletePostSheet';
 import ReportPostSheet from '@/components/ReportPostSheet';
 import { EditPostModal } from '@/components/EditPostModal';
 import NewPostModal from '@/components/ui/NewPostModal';
-import { NestedReplyItem } from '@/components/feed/NestedReplyItem';
+import { FeedNestedReplyItem } from '@/components/feed/FeedNestedReplyItem';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SendGiftDialog } from '@/components/gifts/SendGiftDialog';
 import { ReadMoreText } from '@/components/ui/ReadMoreText';
@@ -1066,7 +1066,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           {showComments && post.replies && post.replies.length > 0 && (
             <div className="space-y-1 pt-2 pl-3 sm:pl-4 ml-2 sm:ml-3">
               {organizedReplies.slice(0, visibleRepliesCount).map((reply) => (
-                <NestedReplyItem
+                <FeedNestedReplyItem
                   key={reply.id} 
                   reply={reply}
                   depth={0}
