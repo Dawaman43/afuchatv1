@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { BusinessBadge } from "@/components/BusinessBadge";
+import { WarningBadge } from "@/components/WarningBadge";
 import { toast } from "sonner";
 
 interface UserProfile {
@@ -20,6 +21,8 @@ interface UserProfile {
   is_business_mode: boolean;
   bio?: string;
   follow_created_at: string;
+  is_warned?: boolean;
+  warning_reason?: string | null;
 }
 
 export default function Following() {
@@ -108,7 +111,9 @@ export default function Following() {
             is_verified,
             is_organization_verified,
             is_business_mode,
-            bio
+            bio,
+            is_warned,
+            warning_reason
           )
         `)
         .eq("follower_id", profileId)
@@ -275,6 +280,7 @@ export default function Following() {
                     <span className="font-semibold text-sm max-w-[120px] truncate" title={profile.display_name}>
                       {profile.display_name.length > 12 ? `${profile.display_name.slice(0, 10)}...` : profile.display_name}
                     </span>
+                    {profile.is_warned && <WarningBadge size="sm" reason={profile.warning_reason} />}
                     {profile.is_verified && <VerifiedBadge size="sm" />}
                     {profile.is_organization_verified && (
                       <BusinessBadge size="sm" />

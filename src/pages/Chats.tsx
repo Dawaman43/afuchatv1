@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { ChatSettingsSheet } from '@/components/chat/ChatSettingsSheet';
 import { UserAvatar } from '@/components/avatar/UserAvatar';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
+import { WarningBadge } from '@/components/WarningBadge';
 import { Input } from '@/components/ui/input';
 import { ChatStoriesHeader } from '@/components/chat/ChatStoriesHeader';
 
@@ -33,6 +34,8 @@ interface Chat {
     avatar_url: string | null;
     is_verified: boolean | null;
     is_organization_verified: boolean | null;
+    is_warned?: boolean | null;
+    warning_reason?: string | null;
   };
   is_muted?: boolean;
   is_pinned?: boolean;
@@ -157,7 +160,7 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
               updated_at,
               chat_members!inner(
                 user_id,
-                profiles(id, display_name, handle, avatar_url, is_verified, is_organization_verified)
+                profiles(id, display_name, handle, avatar_url, is_verified, is_organization_verified, is_warned, warning_reason)
               )
             )
           `)
@@ -276,7 +279,9 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
                 handle: otherMember.profiles.handle,
                 avatar_url: otherMember.profiles.avatar_url,
                 is_verified: otherMember.profiles.is_verified,
-                is_organization_verified: otherMember.profiles.is_organization_verified
+                is_organization_verified: otherMember.profiles.is_organization_verified,
+                is_warned: otherMember.profiles.is_warned,
+                warning_reason: otherMember.profiles.warning_reason
               };
             }
           }
@@ -468,6 +473,10 @@ const Chats = ({ isEmbedded = false }: ChatsProps) => {
                     <span className="font-bold text-foreground truncate max-w-[120px]" title={chatName}>
                       {chatName.length > 12 ? `${chatName.slice(0, 10)}...` : chatName}
                     </span>
+                    {/* Show warning badge for 1-on-1 chats with warned users */}
+                    {!chat.is_group && chat.other_user?.is_warned && (
+                      <WarningBadge size="sm" reason={chat.other_user?.warning_reason} />
+                    )}
                     {/* Show verified badge for groups/channels */}
                     {chat.is_group && chat.is_verified && (
                       <VerifiedBadge 

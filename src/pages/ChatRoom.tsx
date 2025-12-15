@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { FileUploadPreview } from '@/components/chat/FileUploadPreview';
 import { UserAvatar } from '@/components/avatar/UserAvatar';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
+import { WarningBadge } from '@/components/WarningBadge';
 import { useChatPreferences } from '@/hooks/useChatPreferences';
 import { SendGiftDialog } from '@/components/gifts/SendGiftDialog';
 import { ClearHistoryDialog } from '@/components/chat/ClearHistoryDialog';
@@ -128,6 +129,8 @@ interface OtherUserProfile {
   is_organization_verified: boolean | null;
   is_affiliate: boolean | null;
   affiliated_business_id: string | null;
+  is_warned?: boolean | null;
+  warning_reason?: string | null;
 }
 
 const formatLastSeen = (isoString: string): string => {
@@ -665,7 +668,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
         if (members && members.length > 0) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('id, display_name, handle, avatar_url, last_seen, show_online_status, is_verified, is_organization_verified, is_affiliate, affiliated_business_id')
+            .select('id, display_name, handle, avatar_url, last_seen, show_online_status, is_verified, is_organization_verified, is_affiliate, affiliated_business_id, is_warned, warning_reason')
             .eq('id', members[0].user_id)
             .single();
           
@@ -1605,6 +1608,9 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                 <h2 className="font-bold text-base truncate">
                   {chatInfo?.is_group ? (chatInfo.name || 'Group') : (otherUser?.display_name || 'Chat')}
                 </h2>
+                {otherUser && !chatInfo?.is_group && otherUser.is_warned && (
+                  <WarningBadge size="sm" reason={otherUser.warning_reason} />
+                )}
                 {otherUser && !chatInfo?.is_group && (
                   <VerifiedBadge
                     isVerified={otherUser.is_verified || false}

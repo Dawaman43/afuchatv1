@@ -52,6 +52,7 @@ interface Profile {
 	is_private?: boolean;
 	is_warned?: boolean;
 	is_banned?: boolean;
+	warning_reason?: string | null;
 	created_at?: string;
 	xp: number;
 	current_grade: Grade;
@@ -1252,7 +1253,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 								)}
 								
 								<UserPremiumBadge userId={profileId} />
-								{profile.is_warned && <WarningBadge />}
+								{profile.is_warned && <WarningBadge reason={profile.warning_reason} showText />}
 							</div>
 					) : (profile.is_verified || profile.is_organization_verified || profile.is_business_mode) ? (
 						<div className="flex items-center gap-1">
@@ -1293,7 +1294,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 							)}
 							
 							<UserPremiumBadge userId={profileId} />
-							{profile.is_warned && <WarningBadge />}
+							{profile.is_warned && <WarningBadge reason={profile.warning_reason} showText />}
 						</div>
 						) : (
 							<div className="flex items-center gap-1">
@@ -1304,7 +1305,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 									</div>
 								)}
 								<UserPremiumBadge userId={profileId} />
-								{profile.is_warned && <WarningBadge />}
+								{profile.is_warned && <WarningBadge reason={profile.warning_reason} showText />}
 							</div>
 						)}
 
