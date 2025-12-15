@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { UserAvatar } from '@/components/avatar/UserAvatar';
-import { MessageCircle, Pin, Trash2, MoreHorizontal } from 'lucide-react';
+import { MessageCircle, Pin, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CommentInput } from '@/components/feed/CommentInput';
 import React from 'react';
 
 interface Reply {
@@ -26,6 +28,7 @@ interface Reply {
 
 interface NestedReplyItemProps {
   reply: Reply;
+  postId: string;
   depth?: number;
   onTranslate: (replyId: string, content: string) => void;
   translatedReplies: { [key: string]: string };
@@ -36,12 +39,14 @@ interface NestedReplyItemProps {
   currentUserId?: string;
   VerifiedBadge: React.ComponentType<{ isVerified?: boolean; isOrgVerified?: boolean }>;
   renderContentWithMentions: (content: string) => React.ReactNode;
+  onCommentSubmitted?: () => void;
 }
 
 const MAX_DEPTH = 3;
 
 export const NestedReplyItem = ({
   reply,
+  postId,
   depth = 0,
   onTranslate,
   translatedReplies,
@@ -52,8 +57,10 @@ export const NestedReplyItem = ({
   currentUserId,
   VerifiedBadge,
   renderContentWithMentions,
+  onCommentSubmitted,
 }: NestedReplyItemProps) => {
   const { t, i18n } = useTranslation();
+  const [showReplyInput, setShowReplyInput] = useState(false);
   const shouldShowReplyButton = depth < MAX_DEPTH;
 
   const formatTime = (dateString: string) => {
@@ -67,6 +74,10 @@ export const NestedReplyItem = ({
     if (hours < 24) return `${hours}h`;
     if (days < 7) return `${days}d`;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const handleReplyClick = () => {
+    setShowReplyInput(!showReplyInput);
   };
 
   return (
@@ -136,8 +147,11 @@ export const NestedReplyItem = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => onReplyClick(reply.id, reply.author.handle)}
-                  className="h-7 px-2 text-xs text-muted-foreground hover:text-primary gap-1"
+                  onClick={handleReplyClick}
+                  className={cn(
+                    "h-7 px-2 text-xs gap-1",
+                    showReplyInput ? "text-primary" : "text-muted-foreground hover:text-primary"
+                  )}
                 >
                   <MessageCircle className="h-3.5 w-3.5" />
                   Reply
@@ -186,6 +200,24 @@ export const NestedReplyItem = ({
                 </Button>
               )}
             </div>
+
+            {/* Inline Reply Input */}
+            {showReplyInput && (
+              <div className="mt-3 -mx-1">
+                <CommentInput
+                  postId={postId}
+                  replyingTo={{ replyId: reply.id, authorHandle: reply.author.handle }}
+                  onCancelReply={() => setShowReplyInput(false)}
+                  onCommentSubmitted={() => {
+                    setShowReplyInput(false);
+                    onCommentSubmitted?.();
+                  }}
+                  compact
+                  autoFocus
+                  className="border-0 px-1 py-0"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -197,12 +229,14 @@ export const NestedReplyItem = ({
             <NestedReplyItem
               key={nestedReply.id}
               reply={nestedReply}
+              postId={postId}
               depth={depth + 1}
               onTranslate={onTranslate}
               translatedReplies={translatedReplies}
               onReplyClick={onReplyClick}
               VerifiedBadge={VerifiedBadge}
               renderContentWithMentions={renderContentWithMentions}
+              onCommentSubmitted={onCommentSubmitted}
             />
           ))}
         </div>

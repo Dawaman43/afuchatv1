@@ -1,7 +1,5 @@
-import { useState, useRef } from 'react';
-import { Send } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +12,8 @@ interface CommentInputProps {
   onCancelReply?: () => void;
   onCommentSubmitted?: () => void;
   className?: string;
+  compact?: boolean;
+  autoFocus?: boolean;
 }
 
 export const CommentInput = ({
@@ -23,15 +23,17 @@ export const CommentInput = ({
   onCancelReply,
   onCommentSubmitted,
   className,
+  compact = false,
+  autoFocus = false,
 }: CommentInputProps) => {
   const { user } = useAuth();
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [userProfile, setUserProfile] = useState<{ avatar_url: string | null } | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Fetch user profile for avatar
-  useState(() => {
+  useEffect(() => {
     if (user) {
       supabase
         .from('profiles')
@@ -40,7 +42,15 @@ export const CommentInput = ({
         .single()
         .then(({ data }) => setUserProfile(data));
     }
-  });
+  }, [user]);
+
+  useEffect(() => {
+    if (autoFocus && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [autoFocus]);
+
+  const targetHandle = replyingTo?.authorHandle || postAuthorHandle;
 
   const handleSubmit = async () => {
     if (!commentText.trim() || !user) return;
@@ -80,8 +90,8 @@ export const CommentInput = ({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
     }
@@ -96,54 +106,48 @@ export const CommentInput = ({
   }
 
   return (
-    <div className={cn("px-4 py-3 border-t border-border bg-background", className)}>
-      {/* Replying indicator */}
-      {replyingTo && (
-        <div className="flex items-center justify-between mb-2 px-1">
-          <span className="text-xs text-muted-foreground">
-            Replying to <span className="text-primary font-medium">@{replyingTo.authorHandle}</span>
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onCancelReply}
-            className="h-6 px-2 text-xs"
-          >
-            Cancel
-          </Button>
-        </div>
-      )}
+    <div className={cn(
+      "flex items-center gap-3 bg-background",
+      compact ? "px-3 py-2" : "px-4 py-3 border-t border-border",
+      className
+    )}>
+      {/* Avatar */}
+      <Avatar className={cn(compact ? "h-8 w-8" : "h-10 w-10", "flex-shrink-0")}>
+        <AvatarImage src={userProfile?.avatar_url || undefined} />
+        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+          {user.email?.[0]?.toUpperCase() || 'U'}
+        </AvatarFallback>
+      </Avatar>
       
-      {/* Input area */}
-      <div className="flex items-end gap-3">
-        <Avatar className="h-8 w-8 flex-shrink-0">
-          <AvatarImage src={userProfile?.avatar_url || undefined} />
-          <AvatarFallback className="bg-primary/10 text-primary text-xs">
-            {user.email?.[0]?.toUpperCase() || 'U'}
-          </AvatarFallback>
-        </Avatar>
-        
-        <div className="flex-1 relative">
-          <Textarea
-            ref={textareaRef}
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={replyingTo ? `Reply to @${replyingTo.authorHandle}...` : "Write a comment..."}
-            className="min-h-[40px] max-h-[120px] resize-none pr-12 py-2.5 rounded-2xl bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
-            rows={1}
-          />
-          
-          <Button
-            onClick={handleSubmit}
-            disabled={!commentText.trim() || submitting}
-            size="icon"
-            className="absolute right-1.5 bottom-1.5 h-7 w-7 rounded-full"
-          >
-            <Send className="h-3.5 w-3.5" />
-          </Button>
-        </div>
+      {/* Input with mention placeholder */}
+      <div className="flex-1 relative">
+        <input
+          ref={inputRef}
+          type="text"
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={targetHandle ? `@${targetHandle}` : "Write a comment..."}
+          className={cn(
+            "w-full bg-muted/50 border border-border/50 rounded-full px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50",
+            compact ? "h-9 py-2" : "h-11 py-2.5"
+          )}
+        />
       </div>
+      
+      {/* Reply button */}
+      <Button
+        onClick={handleSubmit}
+        disabled={!commentText.trim() || submitting}
+        variant="ghost"
+        size="sm"
+        className={cn(
+          "font-semibold text-primary hover:text-primary/80 hover:bg-transparent px-2",
+          (!commentText.trim() || submitting) && "opacity-50"
+        )}
+      >
+        {submitting ? '...' : 'Reply'}
+      </Button>
     </div>
   );
 };
