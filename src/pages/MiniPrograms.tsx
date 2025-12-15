@@ -194,7 +194,7 @@ const MiniPrograms = () => {
       icon: ShoppingBag,
       logo: shopshackLogo,
       category: 'shopping',
-      route: '/shop',
+      route: '/shop/shopshack',
       color: 'bg-primary',
       gradient: 'from-primary to-primary/60',
       isBuiltIn: true,
