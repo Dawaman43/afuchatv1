@@ -244,8 +244,8 @@ const PostDetail = () => {
       const repliesPromise = supabase
         .from('post_replies')
         .select(`
-          id, content, created_at,
-          profiles!inner (display_name, handle, is_verified, is_organization_verified)
+          id, content, created_at, parent_reply_id, is_pinned, pinned_by, pinned_at,
+          profiles!inner (display_name, handle, is_verified, is_organization_verified, avatar_url)
         `)
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
