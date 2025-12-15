@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, ShoppingCart, Plus, Minus, Store, Package } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Plus, Minus, Store, Package, Ban, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -162,11 +162,51 @@ export default function MerchantShop() {
 
   const cartItemCount = Array.from(cart.values()).reduce((sum, qty) => sum + qty, 0);
 
+  // Check if user is from Uganda - restrict access for non-Ugandans
+  const isUgandan = userCountry === 'Uganda';
+  const showRestriction = userCountry && !isUgandan;
+
   if (loading) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
           <CustomLoader size="lg" />
+        </div>
+      </Layout>
+    );
+  }
+
+  // Show restriction for non-Ugandan users
+  if (showRestriction) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-md space-y-6"
+          >
+            <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+              <Ban className="h-10 w-10 text-destructive" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-2xl font-bold">Not Available in Your Region</h1>
+              <p className="text-muted-foreground">
+                ShopShack is currently only available for users in <strong>Uganda</strong>.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                The developer has selected Uganda as the only supported region for this store.
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
+              <MapPin className="h-4 w-4" />
+              <span>Your location: <strong>{userCountry}</strong></span>
+            </div>
+            <Button onClick={() => navigate(-1)} variant="outline" className="mt-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Go Back
+            </Button>
+          </motion.div>
         </div>
       </Layout>
     );
