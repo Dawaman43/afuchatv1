@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Video, Book, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Image, Brain, Puzzle, Trophy, Sparkles, TrendingUp, Users, ArrowRight, Grid3x3, Swords } from 'lucide-react';
+import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Video, Book, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Image, Brain, Puzzle, Trophy, Sparkles, TrendingUp, Users, ArrowRight, Grid3x3, Swords, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -36,6 +36,20 @@ const MiniPrograms = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single();
+      setIsAdmin(data?.is_admin || false);
+    };
+    checkAdmin();
+  }, [user]);
 
   const categories = [
     { id: 'all', name: 'All', icon: Zap },
@@ -526,36 +540,56 @@ const MiniPrograms = () => {
               animate={{ opacity: 1 }}
               className="mb-12"
             >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10">
-                  <Star className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10">
+                    <Star className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h2 className="text-2xl font-bold">Services</h2>
                 </div>
-                <h2 className="text-2xl font-bold">Services</h2>
+                {!isAdmin && (
+                  <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+                    <Clock className="h-3 w-3 mr-1" />
+                    Coming Soon
+                  </Badge>
+                )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredBuiltInApps.filter(app => app.category === 'services').map((service, index) => {
                   const Icon = service.icon;
+                  const isClickable = isAdmin;
                   return (
                     <motion.div
                       key={service.id}
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: index * 0.05 }}
-                      onClick={() => handleBuiltInLaunch(service.route)}
-                      className="cursor-pointer group relative overflow-hidden rounded-3xl border border-border bg-card hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300"
+                      onClick={() => isClickable && handleBuiltInLaunch(service.route)}
+                      className={`group relative overflow-hidden rounded-3xl border border-border bg-card transition-all duration-300 ${
+                        isClickable 
+                          ? 'cursor-pointer hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1' 
+                          : 'opacity-60 cursor-not-allowed'
+                      }`}
                     >
-                      <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
+                      <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-5 ${isClickable ? 'group-hover:opacity-10' : ''} transition-opacity`} />
                       <div className="relative p-6">
-                        <div className={`inline-flex p-4 rounded-2xl ${service.color} mb-4 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all`}>
+                        <div className={`inline-flex p-4 rounded-2xl ${service.color} mb-4 shadow-lg ${isClickable ? 'group-hover:scale-110 group-hover:rotate-3' : ''} transition-all`}>
                           <Icon className="h-8 w-8 text-white" />
                         </div>
-                        <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{service.name}</h3>
+                        <h3 className={`text-xl font-bold mb-2 ${isClickable ? 'group-hover:text-primary' : ''} transition-colors`}>{service.name}</h3>
                         <p className="text-sm text-muted-foreground mb-6 line-clamp-2">{service.description}</p>
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center text-sm font-semibold text-primary group-hover:translate-x-1 transition-transform">
-                            Open App
-                            <ArrowRight className="h-4 w-4 ml-1" />
-                          </div>
+                          {isClickable ? (
+                            <div className="flex items-center text-sm font-semibold text-primary group-hover:translate-x-1 transition-transform">
+                              Open App
+                              <ArrowRight className="h-4 w-4 ml-1" />
+                            </div>
+                          ) : (
+                            <div className="flex items-center text-sm font-medium text-muted-foreground">
+                              <Clock className="h-4 w-4 mr-1" />
+                              Coming Soon
+                            </div>
+                          )}
                           <Badge variant="secondary" className="text-xs">Free</Badge>
                         </div>
                       </div>
@@ -567,17 +601,25 @@ const MiniPrograms = () => {
           )}
 
           {/* User Mini Programs */}
-          {filteredPrograms.length > 0 && (
+          {(isAdmin || filteredPrograms.length > 0) && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="mb-12"
             >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10">
-                  <Download className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10">
+                    <Download className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <h2 className="text-2xl font-bold">Community Apps</h2>
                 </div>
-                <h2 className="text-2xl font-bold">Community Apps</h2>
+                {!isAdmin && (
+                  <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+                    <Clock className="h-3 w-3 mr-1" />
+                    Coming Soon
+                  </Badge>
+                )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredPrograms.map((program, index) => {

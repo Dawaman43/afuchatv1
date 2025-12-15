@@ -1434,6 +1434,7 @@ export type Database = {
           created_at: string | null
           gift_id: string
           id: string
+          is_anonymous: boolean | null
           message: string | null
           receiver_id: string
           sender_id: string
@@ -1443,6 +1444,7 @@ export type Database = {
           created_at?: string | null
           gift_id: string
           id?: string
+          is_anonymous?: boolean | null
           message?: string | null
           receiver_id: string
           sender_id: string
@@ -1452,6 +1454,7 @@ export type Database = {
           created_at?: string | null
           gift_id?: string
           id?: string
+          is_anonymous?: boolean | null
           message?: string | null
           receiver_id?: string
           sender_id?: string
