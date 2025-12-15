@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Menu, Search, X, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ProfileDrawer } from '@/components/ProfileDrawer';
 import { ChatMenuDrawer } from './ChatMenuDrawer';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -203,24 +202,16 @@ export const ChatStoriesHeader = ({ isExpanded, onToggleExpand, onSearch }: Chat
             </div>
           ) : (
             <>
-              <ProfileDrawer
-                trigger={
-                  <button className="flex-shrink-0">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={currentUserProfile?.avatar_url || undefined} />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                        {currentUserProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                  </button>
-                }
-              />
-              
               <button 
                 onClick={() => setIsMenuOpen(true)}
-                className="p-2 hover:bg-muted/20 rounded-full transition-all active:scale-95"
+                className="flex-shrink-0"
               >
-                <Menu className="h-5 w-5 text-foreground" />
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src={currentUserProfile?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                    {currentUserProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
               </button>
 
               {/* Collapsed stories preview - only show when NOT expanded and has stories */}
