@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -55,7 +55,7 @@ const initialTheme = getStoredTheme();
 const initialResolved = resolveTheme(initialTheme);
 applyTheme(initialResolved);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(initialTheme);
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(initialResolved);
 
