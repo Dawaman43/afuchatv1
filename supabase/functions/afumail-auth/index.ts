@@ -65,13 +65,16 @@ serve(async (req) => {
     console.log(`Calling AfuMail API: ${AFUMAIL_API_URL}/oauth/token`);
     console.log(`Using redirect_uri: ${redirect_uri}`);
 
-    // Call AfuMail OAuth endpoint with only apikey header (not Authorization)
-    // The AfuMail API may be interpreting Authorization header as an OAuth token
+    // Call AfuMail OAuth endpoint.
+    // This endpoint lives behind the AfuMail project's edge function, so it needs that project's anon key.
+    // It also expects X-User-Id for routing.
     const response = await fetch(`${AFUMAIL_API_URL}/oauth/token`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json",
         "apikey": afumailAnonKey,
+        "X-User-Id": user_id || "",
       },
       body: formData.toString(),
     });
