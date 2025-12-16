@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // AfuMail API edge function endpoint
-const AFUMAIL_API_URL = "https://vfcukxlzqfeehhoa.supabase.co/functions/v1/afumail-api";
+const AFUMAIL_API_URL = "https://vfcukxlzqfeehhkiogpf.supabase.co/functions/v1/afumail-api";
 
 serve(async (req) => {
   // Handle CORS preflight
