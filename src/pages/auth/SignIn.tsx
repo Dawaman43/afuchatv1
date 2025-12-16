@@ -114,7 +114,7 @@ const SignIn = () => {
     const redirectUri = `${window.location.origin}/auth/afumail/callback`;
     const scope = 'read:mailbox read:messages';
     
-    const authUrl = `${AFUMAIL_AUTH_URL}?client_id=${AFUMAIL_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}&response_type=code`;
+    const authUrl = `${AFUMAIL_AUTH_URL}?oauth=true&client_id=${AFUMAIL_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}&response_type=code`;
     
     window.location.href = authUrl;
   };
