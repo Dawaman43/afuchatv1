@@ -16,6 +16,10 @@ serve(async (req) => {
   try {
     const { access_token } = await req.json();
 
+    console.log("afumail-userinfo invoked", {
+      hasAccessToken: typeof access_token === "string" && access_token.length > 10,
+    });
+
     if (!access_token || typeof access_token !== "string") {
       return new Response(
         JSON.stringify({ error: "Missing access_token" }),
@@ -23,19 +27,46 @@ serve(async (req) => {
       );
     }
 
-    const userRes = await fetch(`${AFUMAIL_API_BASE}/api/user/me`, {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-        Accept: "application/json",
-      },
-    });
+    let userRes: Response;
+    try {
+      userRes = await fetch(`${AFUMAIL_API_BASE}/api/user/me`, {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+          Accept: "application/json",
+        },
+      });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      console.error("AfuMail /api/user/me fetch failed", message);
+      return new Response(
+        JSON.stringify({ error: "Failed to fetch AfuMail user info", details: message }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const userText = await userRes.text();
+    console.log("AfuMail /api/user/me", {
+      status: userRes.status,
+      bodyPreview: userText.slice(0, 200),
+    });
+
     let userInfo: unknown = null;
     try {
       userInfo = userText.trim() ? JSON.parse(userText) : null;
     } catch {
       userInfo = null;
+    }
+
+    // If the endpoint returned non-JSON or empty body, treat as an error.
+    if (userRes.ok && !userInfo) {
+      return new Response(
+        JSON.stringify({
+          error: "Failed to parse AfuMail user info",
+          status: userRes.status,
+          bodyPreview: userText.slice(0, 500),
+        }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     let mailbox: unknown = null;

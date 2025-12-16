@@ -67,7 +67,8 @@ const AfuMailCallback = () => {
         });
 
         if (userInfoError || !userData?.userInfo) {
-          throw new Error(userInfoError?.message || 'Failed to get user info from AfuMail');
+          const details = userInfoError?.message || JSON.stringify(userData);
+          throw new Error(`Failed to get user info from AfuMail: ${details}`);
         }
 
         const userInfo = userData.userInfo;
