@@ -55,18 +55,20 @@ serve(async (req) => {
 
     console.log(`Processing ${grant_type} request for user: ${user_id}`);
 
-    // Build JSON body for token exchange
-    let requestBody: Record<string, string> = {
-      grant_type,
-      client_id: clientId,
-      client_secret: clientSecret,
-    };
+    // Build form data for token exchange
+    const formData = new URLSearchParams();
+    formData.append("grant_type", grant_type);
+    formData.append("client_id", clientId);
+    formData.append("client_secret", clientSecret);
 
     if (grant_type === "authorization_code" && code) {
-      requestBody.code = code;
-      requestBody.redirect_uri = redirect_uri || "https://afuchat.com/auth/afumail/callback";
+      formData.append("code", code);
+      formData.append(
+        "redirect_uri",
+        redirect_uri || "https://afuchat.com/auth/afumail/callback",
+      );
     } else if (grant_type === "refresh_token" && refresh_token) {
-      requestBody.refresh_token = refresh_token;
+      formData.append("refresh_token", refresh_token);
     } else {
       return new Response(
         JSON.stringify({ error: "Invalid grant_type or missing parameters" }),
@@ -75,16 +77,21 @@ serve(async (req) => {
     }
 
     console.log(`Calling AfuMail API: ${AFUMAIL_API_URL}/oauth/token`);
-    console.log(`Using redirect_uri: ${requestBody.redirect_uri}`);
+    console.log(`Using redirect_uri: ${redirect_uri}`);
 
-    // Call AfuMail OAuth endpoint with JSON body
+    // Call AfuMail OAuth endpoint.
+    // This endpoint lives behind the AfuMail project's edge function, so it needs that project's anon key.
+    // It also expects X-User-Id for routing.
     const response = await fetch(`${AFUMAIL_API_URL}/oauth/token`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json",
         "apikey": afumailAnonKey,
+        "Authorization": `Bearer ${afumailAnonKey}`,
+        "X-User-Id": user_id || "",
       },
-      body: JSON.stringify(requestBody),
+      body: formData.toString(),
     });
 
     const responseText = await response.text();
