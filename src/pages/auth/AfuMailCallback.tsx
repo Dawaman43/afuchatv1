@@ -77,27 +77,38 @@ const AfuMailCallback = () => {
         const signupData = pendingSignupData ? JSON.parse(pendingSignupData) : null;
         const isSignupFlow = sessionStorage.getItem('afumail_oauth_flow') === 'signup';
 
-        // Store AfuMail tokens
-        localStorage.setItem('afumail_access_token', tokenData.access_token);
-        if (tokenData.refresh_token) {
-          localStorage.setItem('afumail_refresh_token', tokenData.refresh_token);
-        }
-        // Store expiry (default 1 hour if not provided)
-        const expiresIn = tokenData.expires_in || 3600;
-        const tokenExpiry = Date.now() + expiresIn * 1000;
-        localStorage.setItem('afumail_token_expiry', tokenExpiry.toString());
-
-        // New user - create account
+        // Signin flow - use magic link to authenticate existing user
         if (!isSignupFlow) {
-          toast.error('No account found. Please sign up first.');
-          navigate('/auth/signup');
+          // Check if user exists by trying to send magic link
+          const { error: otpError } = await supabase.auth.signInWithOtp({
+            email: afumailEmail,
+            options: {
+              shouldCreateUser: false,
+              emailRedirectTo: `${window.location.origin}/home`,
+            },
+          });
+
+          if (otpError) {
+            if (otpError.message.includes('Signups not allowed') || otpError.message.includes('not found')) {
+              toast.error('No account found with this email. Please sign up first.');
+              navigate('/auth/signup');
+              return;
+            }
+            throw otpError;
+          }
+
+          // Clean up
+          sessionStorage.removeItem('afumail_oauth_state');
+          sessionStorage.removeItem('afumail_oauth_flow');
+
+          toast.success('Check your email for a sign-in link!');
+          navigate('/auth/signin');
           return;
         }
 
-        // Generate a secure password for AfuMail users
+        // Signup flow - create new account
         const afumailPassword = `afumail_${userInfo.id}_${crypto.randomUUID().slice(0, 8)}`;
         
-        // Create the account
         const { error: signUpError } = await supabase.auth.signUp({
           email: afumailEmail,
           password: afumailPassword,
@@ -114,7 +125,7 @@ const AfuMailCallback = () => {
 
         if (signUpError) {
           if (signUpError.message.includes('already registered')) {
-            toast.info('This email is already registered. Please sign in with your existing credentials.');
+            toast.info('This email is already registered. Please sign in.');
             navigate('/auth/signin');
             return;
           }
@@ -125,11 +136,8 @@ const AfuMailCallback = () => {
         localStorage.removeItem('pendingSignupData');
         sessionStorage.removeItem('afumail_oauth_state');
         sessionStorage.removeItem('afumail_oauth_flow');
-        
-        // Store flag to redirect to AfuMail app after profile completion
-        sessionStorage.setItem('afumail_post_signup_redirect', 'true');
 
-        toast.success('Account created with AfuMail! Complete your profile.');
+        toast.success('Account created! Complete your profile.');
         navigate('/complete-profile');
       } catch (err: unknown) {
         console.error('AfuMail OAuth error:', err);
