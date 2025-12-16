@@ -28,6 +28,7 @@ import Index from "./pages/Index";
 import Welcome from "./pages/auth/Welcome";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
+import AfuMailCallback from "./pages/auth/AfuMailCallback";
 import UserNotFound from "./pages/UserNotFound";
 import NotFound from "./pages/NotFound";
 import CompleteProfile from "./pages/CompleteProfile";
@@ -160,6 +161,7 @@ const AppRoutes = () => {
       <Route path="/auth" element={<Welcome />} />
       <Route path="/auth/signin" element={<SignIn />} />
       <Route path="/auth/signup" element={<SignUp />} />
+      <Route path="/auth/afumail/callback" element={<AfuMailCallback />} />
       <Route path="/auth/forgot-password" element={<ForgotPassword />} />
       <Route path="/auth/reset-password" element={<ResetPassword />} />
       <Route path="/chats" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DesktopChats /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
