@@ -375,8 +375,8 @@ const MiniPrograms = () => {
   };
 
   const handleAppClick = (app: BuiltInApp) => {
-    // Check if it's a service and user is not admin - show coming soon
-    if (app.category === 'services' && !isAdmin) {
+    // Check if it's a service and user is not admin - show coming soon (except AfuMail)
+    if (app.category === 'services' && !isAdmin && app.id !== 'afumail') {
       toast.info('Coming soon!');
       return;
     }
