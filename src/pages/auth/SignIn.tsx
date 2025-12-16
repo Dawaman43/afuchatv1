@@ -15,7 +15,7 @@ import { CustomLoader } from '@/components/ui/CustomLoader';
 
 // AfuMail OAuth configuration
 const AFUMAIL_CLIENT_ID = 'afuchat_prod_001';
-const AFUMAIL_AUTH_URL = 'https://vfcukxlzqfeehhkiogpf.lovable.app/auth';
+const AFUMAIL_AUTH_URL = 'https://afuchatmail.lovable.app/auth';
 
 const SignIn = () => {
   const navigate = useNavigate();
