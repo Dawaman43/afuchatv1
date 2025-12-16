@@ -1,117 +1,92 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
-const AFUMAIL_API_URL = 'https://vfcukxlzqfeehhkiogpf.supabase.co/functions/v1/afumail-api';
+// AfuMail OAuth token endpoint (direct)
+const AFUMAIL_OAUTH_TOKEN_URL = "https://afuchatmail.lovable.app/oauth/token";
 
 serve(async (req) => {
   // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { grant_type, code, refresh_token, user_id, redirect_uri } = await req.json();
-    
-    const clientId = Deno.env.get('AFUMAIL_CLIENT_ID');
-    const clientSecret = Deno.env.get('AFUMAIL_CLIENT_SECRET');
-    const apiAnonKey = Deno.env.get('AFUMAIL_API_ANON_KEY');
-    
+    const { grant_type, code, refresh_token, user_id, redirect_uri } =
+      await req.json();
+
+    const clientId = Deno.env.get("AFUMAIL_CLIENT_ID");
+    const clientSecret = Deno.env.get("AFUMAIL_CLIENT_SECRET");
+
     if (!clientId || !clientSecret) {
-      console.error('Missing AfuMail credentials');
-      return new Response(
-        JSON.stringify({ error: 'Server configuration error' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.error("Missing AfuMail credentials");
+      return new Response(JSON.stringify({ error: "Server configuration error" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     console.log(`Processing ${grant_type} request for user: ${user_id}`);
 
     // Build form data for token exchange
     const formData = new URLSearchParams();
-    formData.append('grant_type', grant_type);
-    formData.append('client_id', clientId);
-    formData.append('client_secret', clientSecret);
-    
-    if (grant_type === 'authorization_code' && code) {
-      formData.append('code', code);
-      // Use the redirect_uri passed from client (must match what was used in authorization request)
-      formData.append('redirect_uri', redirect_uri || 'https://afuchat.com/auth/afumail/callback');
-    } else if (grant_type === 'refresh_token' && refresh_token) {
-      formData.append('refresh_token', refresh_token);
+    formData.append("grant_type", grant_type);
+    formData.append("client_id", clientId);
+    formData.append("client_secret", clientSecret);
+
+    if (grant_type === "authorization_code" && code) {
+      formData.append("code", code);
+      // Must match redirect_uri used in the authorization request
+      formData.append(
+        "redirect_uri",
+        redirect_uri || "https://afuchat.com/auth/afumail/callback",
+      );
+    } else if (grant_type === "refresh_token" && refresh_token) {
+      formData.append("refresh_token", refresh_token);
     } else {
       return new Response(
-        JSON.stringify({ error: 'Invalid grant_type or missing parameters' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: "Invalid grant_type or missing parameters" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    console.log(`Calling AfuMail API: ${AFUMAIL_API_URL}/oauth/token`);
+    console.log(`Calling AfuMail OAuth token endpoint: ${AFUMAIL_OAUTH_TOKEN_URL}`);
     console.log(`Using redirect_uri: ${redirect_uri}`);
 
-    // NOTE: AFUMAIL_API_URL points to a Supabase Edge Function on a DIFFERENT project.
-    // That function typically requires a JWT from that project (anon key is a valid JWT),
-    // so we must send the *AfuMail project's* anon key here (NOT this project's anon key).
-    const apiAnonKey2 = Deno.env.get('AFUMAIL_API_ANON_KEY');
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'X-User-Id': user_id || '',
-    };
-
-    if (apiAnonKey2) {
-      headers['apikey'] = apiAnonKey2;
-      headers['Authorization'] = `Bearer ${apiAnonKey2}`;
-      console.log(`Using AFUMAIL_API_ANON_KEY prefix: ${apiAnonKey2.slice(0, 12)}...`);
-      // Decode JWT payload (no verification) to confirm it belongs to the AfuMail project
-      try {
-        const parts = apiAnonKey2.split('.');
-        if (parts.length >= 2) {
-          const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
-          const payload = JSON.parse(payloadJson);
-          console.log(`AFUMAIL_API_ANON_KEY jwt ref: ${payload?.ref ?? 'unknown'}`);
-          console.log(`AFUMAIL_API_ANON_KEY jwt iss: ${payload?.iss ?? 'unknown'}`);
-        }
-      } catch (e) {
-        console.warn('Failed to decode AFUMAIL_API_ANON_KEY payload');
-      }
-    } else {
-      console.warn('Missing AFUMAIL_API_ANON_KEY (required to call AfuMail API edge function)');
-    }
-
-    // Call AfuMail OAuth endpoint
-    const response = await fetch(`${AFUMAIL_API_URL}/oauth/token`, {
-      method: 'POST',
-      headers,
+    const response = await fetch(AFUMAIL_OAUTH_TOKEN_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
       body: formData.toString(),
     });
 
     const data = await response.json();
-    
+
     console.log(`AfuMail response status: ${response.status}`);
 
     if (!response.ok) {
-      console.error('AfuMail API error:', data);
-      return new Response(
-        JSON.stringify(data),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.error("AfuMail OAuth token error:", data);
+      return new Response(JSON.stringify(data), {
+        status: response.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    return new Response(
-      JSON.stringify(data),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error: unknown) {
-    console.error('Error in afumail-auth:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error("Error in afumail-auth:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: "Internal server error", details: message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });
