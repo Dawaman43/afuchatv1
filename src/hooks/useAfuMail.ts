@@ -108,20 +108,26 @@ export function useAfuMail() {
     return Date.now() >= tokenExpiry - 5 * 60 * 1000;
   }, [tokenExpiry]);
 
-  const getHeaders = useCallback(async () => {
+  const getHeaders = useCallback(() => {
+    // Always read directly from localStorage to get the most up-to-date token
+    const currentToken = localStorage.getItem('afumail_access_token');
+    const storedExpiry = localStorage.getItem('afumail_token_expiry');
+    const expiry = storedExpiry ? parseInt(storedExpiry, 10) : 0;
+    const isValid = currentToken && Date.now() < expiry - 5 * 60 * 1000;
+    
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
     
-    if (accessToken && !isTokenExpired()) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
+    if (isValid && currentToken) {
+      headers['Authorization'] = `Bearer ${currentToken}`;
     }
     
     if (user?.id) {
       headers['X-User-Id'] = user.id;
     }
     return headers;
-  }, [accessToken, isTokenExpired, user?.id]);
+  }, [user?.id]);
 
   // Refresh the access token via our secure edge function
   const refreshAccessTokenFn = useCallback(async (): Promise<boolean> => {
@@ -212,7 +218,7 @@ export function useAfuMail() {
     try {
       setLoading(true);
       const response = await fetch(`${AFUMAIL_API_BASE}/mailbox`, {
-        headers: await getHeaders(),
+        headers: getHeaders(),
       });
 
       if (!response.ok) throw new Error('Failed to fetch mailbox info');
@@ -228,7 +234,7 @@ export function useAfuMail() {
   const getFolders = useCallback(async (): Promise<EmailFolder[]> => {
     try {
       const response = await fetch(`${AFUMAIL_API_BASE}/mail/folders`, {
-        headers: await getHeaders(),
+        headers: getHeaders(),
       });
 
       if (!response.ok) throw new Error('Failed to fetch folders');
@@ -254,7 +260,7 @@ export function useAfuMail() {
       });
 
       const response = await fetch(`${AFUMAIL_API_BASE}/mail/messages?${params}`, {
-        headers: await getHeaders(),
+        headers: getHeaders(),
       });
 
       if (!response.ok) throw new Error('Failed to fetch messages');
@@ -271,7 +277,7 @@ export function useAfuMail() {
     try {
       setLoading(true);
       const response = await fetch(`${AFUMAIL_API_BASE}/mail/message/${messageId}`, {
-        headers: await getHeaders(),
+        headers: getHeaders(),
       });
 
       if (!response.ok) throw new Error('Failed to fetch message');
@@ -287,9 +293,16 @@ export function useAfuMail() {
   const sendEmail = useCallback(async (email: ComposeEmail): Promise<{ success: boolean; message_id?: string }> => {
     try {
       setLoading(true);
+      
+      // Ensure valid token before API call
+      const hasValidToken = await ensureValidToken();
+      if (!hasValidToken) {
+        throw new Error('Not authenticated. Please reconnect to AfuMail.');
+      }
+      
       const response = await fetch(`${AFUMAIL_API_BASE}/mail/send`, {
         method: 'POST',
-        headers: await getHeaders(),
+        headers: getHeaders(),
         body: JSON.stringify(email),
       });
 
@@ -308,7 +321,7 @@ export function useAfuMail() {
     } finally {
       setLoading(false);
     }
-  }, [getHeaders]);
+  }, [getHeaders, ensureValidToken]);
 
   const saveDraft = useCallback(async (email: ComposeEmail, draftId?: string): Promise<{ success: boolean; draft_id?: string }> => {
     try {
@@ -319,7 +332,7 @@ export function useAfuMail() {
       
       const response = await fetch(url, {
         method: draftId ? 'PUT' : 'POST',
-        headers: await getHeaders(),
+        headers: getHeaders(),
         body: JSON.stringify(email),
       });
 
@@ -341,7 +354,7 @@ export function useAfuMail() {
     try {
       const response = await fetch(`${AFUMAIL_API_BASE}/mail/draft/${draftId}`, {
         method: 'DELETE',
-        headers: await getHeaders(),
+        headers: getHeaders(),
       });
 
       return response.ok;
@@ -359,7 +372,7 @@ export function useAfuMail() {
     try {
       const response = await fetch(`${AFUMAIL_API_BASE}/mail/action`, {
         method: 'POST',
-        headers: await getHeaders(),
+        headers: getHeaders(),
         body: JSON.stringify({
           message_id: messageId,
           action,
@@ -385,7 +398,7 @@ export function useAfuMail() {
       if (params.date_to) searchParams.set('date_to', params.date_to);
 
       const response = await fetch(`${AFUMAIL_API_BASE}/mail/search?${searchParams}`, {
-        headers: await getHeaders(),
+        headers: getHeaders(),
       });
 
       if (!response.ok) throw new Error('Search failed');
@@ -405,10 +418,13 @@ export function useAfuMail() {
       const formData = new FormData();
       formData.append('file', file);
 
+      // Read token directly from localStorage for most up-to-date value
+      const currentToken = localStorage.getItem('afumail_access_token');
+
       const response = await fetch(`${AFUMAIL_API_BASE}/mail/attachment/upload`, {
         method: 'POST',
         headers: {
-          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+          ...(currentToken ? { 'Authorization': `Bearer ${currentToken}` } : {}),
           ...(user?.id ? { 'X-User-Id': user.id } : {}),
         },
         body: formData,
@@ -421,7 +437,7 @@ export function useAfuMail() {
       toast.error('Failed to upload attachment');
       return null;
     }
-  }, [accessToken, ensureValidToken, user?.id]);
+  }, [ensureValidToken, user?.id]);
 
   return {
     loading,
