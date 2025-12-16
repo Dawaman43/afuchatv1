@@ -243,8 +243,11 @@ const SignUpContent = () => {
     sessionStorage.setItem('afumail_oauth_state', state);
     sessionStorage.setItem('afumail_oauth_flow', 'signup');
     
-    // Build authorization URL with correct format
-    const redirectUri = `${window.location.origin}/auth/afumail/callback`;
+    // Use production URL on production, preview URL otherwise
+    const isProduction = window.location.hostname === 'afuchat.com';
+    const redirectUri = isProduction 
+      ? 'https://afuchat.com/auth/afumail/callback'
+      : `${window.location.origin}/auth/afumail/callback`;
     const scope = 'read:mailbox read:messages';
     
     const authUrl = `${AFUMAIL_AUTH_URL}?oauth=true&client_id=${AFUMAIL_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}&response_type=code`;
