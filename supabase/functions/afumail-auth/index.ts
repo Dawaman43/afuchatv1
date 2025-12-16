@@ -6,8 +6,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// AfuMail OAuth token endpoint (direct)
-const AFUMAIL_OAUTH_TOKEN_URL = "https://afuchatmail.lovable.app/oauth/token";
+// AfuMail API edge function endpoint
+const AFUMAIL_API_URL = "https://vfcukxlzqfeehhkiogpf.supabase.co/functions/v1/afumail-api";
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -21,10 +21,19 @@ serve(async (req) => {
 
     const clientId = Deno.env.get("AFUMAIL_CLIENT_ID");
     const clientSecret = Deno.env.get("AFUMAIL_CLIENT_SECRET");
+    const afumailAnonKey = Deno.env.get("AFUMAIL_API_ANON_KEY");
 
     if (!clientId || !clientSecret) {
       console.error("Missing AfuMail credentials");
       return new Response(JSON.stringify({ error: "Server configuration error" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!afumailAnonKey) {
+      console.error("Missing AFUMAIL_API_ANON_KEY");
+      return new Response(JSON.stringify({ error: "Server configuration error - missing API key" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -40,7 +49,6 @@ serve(async (req) => {
 
     if (grant_type === "authorization_code" && code) {
       formData.append("code", code);
-      // Must match redirect_uri used in the authorization request
       formData.append(
         "redirect_uri",
         redirect_uri || "https://afuchat.com/auth/afumail/callback",
@@ -54,20 +62,34 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Calling AfuMail OAuth token endpoint: ${AFUMAIL_OAUTH_TOKEN_URL}`);
+    console.log(`Calling AfuMail API: ${AFUMAIL_API_URL}/oauth/token`);
     console.log(`Using redirect_uri: ${redirect_uri}`);
 
-    const response = await fetch(AFUMAIL_OAUTH_TOKEN_URL, {
+    // Call AfuMail OAuth endpoint with only apikey header (not Authorization)
+    // The AfuMail API may be interpreting Authorization header as an OAuth token
+    const response = await fetch(`${AFUMAIL_API_URL}/oauth/token`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+        "apikey": afumailAnonKey,
       },
       body: formData.toString(),
     });
 
-    const data = await response.json();
-
+    const responseText = await response.text();
     console.log(`AfuMail response status: ${response.status}`);
+    console.log(`AfuMail response body: ${responseText.slice(0, 500)}`);
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      console.error("Failed to parse AfuMail response as JSON");
+      return new Response(
+        JSON.stringify({ error: "Invalid response from AfuMail API", details: responseText.slice(0, 200) }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     if (!response.ok) {
       console.error("AfuMail OAuth token error:", data);
