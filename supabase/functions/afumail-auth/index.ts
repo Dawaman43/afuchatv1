@@ -6,8 +6,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// AfuMail API edge function endpoint
-const AFUMAIL_API_URL = "https://vfcukxlzqfeehhkiogpf.supabase.co/functions/v1/afumail-api";
+// AfuMail API endpoint
+const AFUMAIL_API_URL = "https://afuchatmail.vercel.app";
 
 serve(async (req) => {
   // Handle CORS preflight
