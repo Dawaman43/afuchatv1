@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // AfuMail API edge function endpoint
-const AFUMAIL_API_URL = "https://vfcukxlzqfeehhkiogpf.supabase.co/functions/v1/afumail-api";
+const AFUMAIL_API_URL = "https://vfcukxlzqfeehhoa.supabase.co/functions/v1/afumail-api";
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -55,20 +55,18 @@ serve(async (req) => {
 
     console.log(`Processing ${grant_type} request for user: ${user_id}`);
 
-    // Build form data for token exchange
-    const formData = new URLSearchParams();
-    formData.append("grant_type", grant_type);
-    formData.append("client_id", clientId);
-    formData.append("client_secret", clientSecret);
+    // Build JSON body for token exchange
+    let requestBody: Record<string, string> = {
+      grant_type,
+      client_id: clientId,
+      client_secret: clientSecret,
+    };
 
     if (grant_type === "authorization_code" && code) {
-      formData.append("code", code);
-      formData.append(
-        "redirect_uri",
-        redirect_uri || "https://afuchat.com/auth/afumail/callback",
-      );
+      requestBody.code = code;
+      requestBody.redirect_uri = redirect_uri || "https://afuchat.com/auth/afumail/callback";
     } else if (grant_type === "refresh_token" && refresh_token) {
-      formData.append("refresh_token", refresh_token);
+      requestBody.refresh_token = refresh_token;
     } else {
       return new Response(
         JSON.stringify({ error: "Invalid grant_type or missing parameters" }),
@@ -77,21 +75,16 @@ serve(async (req) => {
     }
 
     console.log(`Calling AfuMail API: ${AFUMAIL_API_URL}/oauth/token`);
-    console.log(`Using redirect_uri: ${redirect_uri}`);
+    console.log(`Using redirect_uri: ${requestBody.redirect_uri}`);
 
-    // Call AfuMail OAuth endpoint.
-    // This endpoint lives behind the AfuMail project's edge function, so it needs that project's anon key.
-    // It also expects X-User-Id for routing.
+    // Call AfuMail OAuth endpoint with JSON body
     const response = await fetch(`${AFUMAIL_API_URL}/oauth/token`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Accept": "application/json",
+        "Content-Type": "application/json",
         "apikey": afumailAnonKey,
-        "Authorization": `Bearer ${afumailAnonKey}`,
-        "X-User-Id": user_id || "",
       },
-      body: formData.toString(),
+      body: JSON.stringify(requestBody),
     });
 
     const responseText = await response.text();

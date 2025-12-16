@@ -19,7 +19,7 @@ import { CustomLoader } from '@/components/ui/CustomLoader';
 // AfuMail OAuth configuration
 const AFUMAIL_CLIENT_ID_PREVIEW = '2cff133dc0b104ab8d819cb47fbbfdc3';
 const AFUMAIL_CLIENT_ID_PROD = '60fb051c2f63890df5617523fcf81a8d';
-const AFUMAIL_AUTH_URL = 'https://afuchatmail.lovable.app/auth';
+const AFUMAIL_AUTH_URL = 'https://f52fe3d4-9e30-4aa3-9f11-922a2cf2ae40.lovableproject.com/auth';
 
 const SignUp = () => {
   const navigate = useNavigate();
