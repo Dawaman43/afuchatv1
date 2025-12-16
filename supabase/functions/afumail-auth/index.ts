@@ -14,10 +14,11 @@ serve(async (req) => {
   }
 
   try {
-    const { grant_type, code, refresh_token, user_id } = await req.json();
+    const { grant_type, code, refresh_token, user_id, redirect_uri } = await req.json();
     
     const clientId = Deno.env.get('AFUMAIL_CLIENT_ID');
     const clientSecret = Deno.env.get('AFUMAIL_CLIENT_SECRET');
+    const apiAnonKey = Deno.env.get('AFUMAIL_API_ANON_KEY');
     
     if (!clientId || !clientSecret) {
       console.error('Missing AfuMail credentials');
@@ -37,7 +38,8 @@ serve(async (req) => {
     
     if (grant_type === 'authorization_code' && code) {
       formData.append('code', code);
-      formData.append('redirect_uri', 'https://afuchat.com'); // Standard redirect URI
+      // Use the redirect_uri passed from client (must match what was used in authorization request)
+      formData.append('redirect_uri', redirect_uri || 'https://afuchat.com/auth/afumail/callback');
     } else if (grant_type === 'refresh_token' && refresh_token) {
       formData.append('refresh_token', refresh_token);
     } else {
@@ -48,14 +50,24 @@ serve(async (req) => {
     }
 
     console.log(`Calling AfuMail API: ${AFUMAIL_API_URL}/oauth/token`);
+    console.log(`Using redirect_uri: ${redirect_uri}`);
+
+    // Build headers for AfuMail API call
+    const afumailHeaders: Record<string, string> = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-User-Id': user_id || '',
+    };
+    
+    // Add API key if available
+    if (apiAnonKey) {
+      afumailHeaders['apikey'] = apiAnonKey;
+      afumailHeaders['Authorization'] = `Bearer ${apiAnonKey}`;
+    }
 
     // Call AfuMail OAuth endpoint
     const response = await fetch(`${AFUMAIL_API_URL}/oauth/token`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-User-Id': user_id || '',
-      },
+      headers: afumailHeaders,
       body: formData.toString(),
     });
 

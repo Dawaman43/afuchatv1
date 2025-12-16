@@ -34,10 +34,12 @@ const AfuMailCallback = () => {
 
       try {
         // Exchange code for tokens via our edge function
+        const redirectUri = `${window.location.origin}/auth/afumail/callback`;
         const { data: tokenData, error: tokenError } = await supabase.functions.invoke('afumail-auth', {
           body: {
             grant_type: 'authorization_code',
             code,
+            redirect_uri: redirectUri,
             user_id: 'oauth_signup',
           },
         });
@@ -110,6 +112,9 @@ const AfuMailCallback = () => {
         localStorage.removeItem('pendingSignupData');
         sessionStorage.removeItem('afumail_oauth_state');
         sessionStorage.removeItem('afumail_oauth_flow');
+        
+        // Store flag to redirect to AfuMail app after profile completion
+        sessionStorage.setItem('afumail_post_signup_redirect', 'true');
 
         toast.success('Account created with AfuMail! Complete your profile.');
         navigate('/complete-profile');
