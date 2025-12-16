@@ -9,6 +9,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import Logo from '@/components/Logo';
 import afumailLogo from '@/assets/mini-apps/afumail-logo.png';
 import { emailSchema, passwordSchema } from '@/lib/validation';
+import { AfuMailTermsDialog } from '@/components/afumail/AfuMailTermsDialog';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { CustomLoader } from '@/components/ui/CustomLoader';
@@ -28,6 +29,7 @@ const SignIn = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
   const [afumailLoading, setAfumailLoading] = useState(false);
+  const [showAfuMailTerms, setShowAfuMailTerms] = useState(false);
 
   // Redirect logged-in users
   if (authLoading) {
@@ -104,6 +106,11 @@ const SignIn = () => {
   };
 
   const handleAfuMailSignIn = () => {
+    // Show terms dialog first
+    setShowAfuMailTerms(true);
+  };
+
+  const proceedWithAfuMailOAuth = () => {
     setAfumailLoading(true);
     
     // Generate state for CSRF protection
@@ -255,6 +262,16 @@ const SignIn = () => {
 
       {/* Bottom gradient accent */}
       <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-primary/20 via-primary/5 to-transparent pointer-events-none" />
+
+      {/* AfuMail Terms Dialog */}
+      <AfuMailTermsDialog
+        open={showAfuMailTerms}
+        onAccept={() => {
+          setShowAfuMailTerms(false);
+          proceedWithAfuMailOAuth();
+        }}
+        onDecline={() => setShowAfuMailTerms(false)}
+      />
     </div>
   );
 };
