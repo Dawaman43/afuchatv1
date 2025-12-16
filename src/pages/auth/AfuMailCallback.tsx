@@ -61,23 +61,19 @@ const AfuMailCallback = () => {
           throw new Error(tokenError?.message || 'Failed to exchange authorization code');
         }
 
-        // Get user info from AfuMail
-        const AFUMAIL_API_BASE = 'https://afuchatmail.vercel.app';
-
-        const userInfoResponse = await fetch(`${AFUMAIL_API_BASE}/api/user/me`, {
-          headers: {
-            'Authorization': `Bearer ${tokenData.access_token}`,
-          },
+        // Get user info from AfuMail via our edge function (avoids CORS "Failed to fetch" in browsers)
+        const { data: userData, error: userInfoError } = await supabase.functions.invoke('afumail-userinfo', {
+          body: { access_token: tokenData.access_token },
         });
 
-        if (!userInfoResponse.ok) {
-          throw new Error('Failed to get user info from AfuMail');
+        if (userInfoError || !userData?.userInfo) {
+          throw new Error(userInfoError?.message || 'Failed to get user info from AfuMail');
         }
 
-        const userInfo = await userInfoResponse.json();
+        const userInfo = userData.userInfo;
 
         // AfuMail may not include an email on /api/user/me.
-        // Fallback to /mailbox which returns { email_address, storage_used, storage_limit }.
+        // We also optionally fetched /mailbox server-side and return it as userData.mailbox.
         let afumailEmail: string | undefined =
           userInfo.email
           || userInfo.mail
@@ -93,18 +89,8 @@ const AfuMailCallback = () => {
               || userInfo.accounts.find((a: any) => a?.email || a?.email_address || a?.address)?.address
             : undefined);
 
-        if (!afumailEmail) {
-          const mailboxRes = await fetch(`${AFUMAIL_API_BASE}/mailbox`, {
-            headers: {
-              'Authorization': `Bearer ${tokenData.access_token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (mailboxRes.ok) {
-            const mailbox = await mailboxRes.json();
-            afumailEmail = mailbox.email_address || mailbox.email || mailbox.address;
-          }
+        if (!afumailEmail && userData?.mailbox) {
+          afumailEmail = userData.mailbox.email_address || userData.mailbox.email || userData.mailbox.address;
         }
 
         if (!afumailEmail) {
