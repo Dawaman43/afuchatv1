@@ -338,9 +338,7 @@ export default function AfuMail() {
         </Sheet>
 
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
-            <img src={afumailLogo} alt="AfuMail" className="h-5 w-5 rounded" />
-          </div>
+          <img src={afumailLogo} alt="AfuMail" className="h-8 w-8 rounded-lg" />
           <h1 className="text-lg font-bold text-blue-600">AfuMail</h1>
           {userEmail && (
             <span className="text-xs text-muted-foreground hidden sm:block">
