@@ -18,7 +18,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ProfileDrawer } from '@/components/ProfileDrawer';
-import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Video, Book, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Image, Brain, Puzzle, Trophy, ChevronRight, Swords, Clock, Shield, FileText, Gift } from 'lucide-react';
+import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Video, Book, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Image, Brain, Puzzle, Trophy, ChevronRight, Swords, Clock, Shield, FileText, Gift, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -38,7 +38,7 @@ import financeLogo from '@/assets/mini-apps/finance-logo.png';
 import momentsLogo from '@/assets/mini-apps/moments-logo.png';
 import shopshackLogo from '@/assets/mini-apps/shopshack-logo.png';
 import giftsP2PLogo from '@/assets/mini-apps/gifts-p2p-logo.png';
-
+import afumailLogo from '@/assets/mini-apps/afumail-logo.png';
 interface MiniProgram {
   id: string;
   name: string;
@@ -319,6 +319,21 @@ const MiniPrograms = () => {
       isBuiltIn: true,
       downloads: '15K+',
       rating: 4.6
+    },
+    {
+      id: 'afumail',
+      name: 'AfuMail',
+      description: 'Full email service',
+      icon: Mail,
+      logo: afumailLogo,
+      category: 'services',
+      route: '/afumail',
+      color: 'bg-primary',
+      gradient: 'from-primary to-cyan-500',
+      isBuiltIn: true,
+      featured: true,
+      downloads: '5K+',
+      rating: 4.9
     },
   ];
 

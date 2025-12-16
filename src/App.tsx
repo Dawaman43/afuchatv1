@@ -86,6 +86,7 @@ const Premium = lazy(() => import("./pages/Premium"));
 const CreatorEarnings = lazy(() => import("./pages/CreatorEarnings"));
 const AdminCreatorWithdrawals = lazy(() => import("./pages/AdminCreatorWithdrawals"));
 const AdManager = lazy(() => import("./pages/AdManager"));
+const AfuMail = lazy(() => import("./pages/AfuMail"));
 
 const FoodDelivery = lazy(() => import("./pages/FoodDelivery"));
 const Bookings = lazy(() => import("./pages/Bookings"));
@@ -194,6 +195,7 @@ const AppRoutes = () => {
       <Route path="/affiliate-dashboard" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AffiliateDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/business/dashboard" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><BusinessDashboard /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/ads" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><AdManager /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
+      <Route path="/afumail" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><AfuMail /></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/moments" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Moments /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/mini-programs" element={<Layout><MiniPrograms /></Layout>} />
       <Route path="/transfer" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Transfer /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
