@@ -25,11 +25,18 @@ serve(async (req) => {
       client_id,
     } = await req.json();
 
-    // Client ID is not a secret; allow passing it from the client to avoid mismatch issues.
-    const envClientId = Deno.env.get("AFUMAIL_CLIENT_ID");
-    const clientId = client_id || envClientId;
+    // Always use server-side OAuth credentials to avoid client/server mismatches.
+    const clientId = Deno.env.get("AFUMAIL_CLIENT_ID");
     const clientSecret = Deno.env.get("AFUMAIL_CLIENT_SECRET");
     const afumailAnonKey = Deno.env.get("AFUMAIL_API_ANON_KEY");
+
+    // Log only non-sensitive info for debugging.
+    console.log("AfuMail OAuth config loaded", {
+      hasClientId: !!clientId,
+      hasClientSecret: !!clientSecret,
+      hasAfuMailAnonKey: !!afumailAnonKey,
+      providedClientId: !!client_id,
+    });
 
     if (!clientId || !clientSecret) {
       console.error("Missing AfuMail credentials", {
