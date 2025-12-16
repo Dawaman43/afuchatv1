@@ -80,9 +80,27 @@ interface TokenResponse {
 export function useAfuMail() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [refreshToken, setRefreshToken] = useState<string | null>(null);
-  const [tokenExpiry, setTokenExpiry] = useState<number | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(() => {
+    // Initialize from localStorage if available
+    return localStorage.getItem('afumail_access_token');
+  });
+  const [refreshToken, setRefreshToken] = useState<string | null>(() => {
+    return localStorage.getItem('afumail_refresh_token');
+  });
+  const [tokenExpiry, setTokenExpiry] = useState<number | null>(() => {
+    const stored = localStorage.getItem('afumail_token_expiry');
+    return stored ? parseInt(stored, 10) : null;
+  });
+
+  // Save tokens to localStorage when they change
+  const saveTokens = useCallback((access: string, refresh: string, expiry: number) => {
+    localStorage.setItem('afumail_access_token', access);
+    localStorage.setItem('afumail_refresh_token', refresh);
+    localStorage.setItem('afumail_token_expiry', expiry.toString());
+    setAccessToken(access);
+    setRefreshToken(refresh);
+    setTokenExpiry(expiry);
+  }, []);
 
   // Check if token needs refresh (5 min buffer)
   const isTokenExpired = useCallback(() => {
@@ -105,41 +123,16 @@ export function useAfuMail() {
     return headers;
   }, [accessToken, isTokenExpired, user?.id]);
 
-  // Exchange Supabase token for AfuMail OAuth token via our secure edge function
-  const exchangeToken = useCallback(async (): Promise<TokenResponse | null> => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token || !user?.id) return null;
-
-    try {
-      const { data, error } = await supabase.functions.invoke('afumail-auth', {
-        body: {
-          grant_type: 'authorization_code',
-          code: session.access_token,
-          user_id: user.id,
-        },
-      });
-
-      if (error) {
-        console.error('Token exchange failed:', error);
-        return null;
-      }
-
-      return data as TokenResponse;
-    } catch (err) {
-      console.error('Token exchange error:', err);
-      return null;
-    }
-  }, [user?.id]);
-
   // Refresh the access token via our secure edge function
-  const refreshAccessToken = useCallback(async (): Promise<boolean> => {
-    if (!refreshToken || !user?.id) return false;
+  const refreshAccessTokenFn = useCallback(async (): Promise<boolean> => {
+    const currentRefreshToken = refreshToken || localStorage.getItem('afumail_refresh_token');
+    if (!currentRefreshToken || !user?.id) return false;
 
     try {
       const { data, error } = await supabase.functions.invoke('afumail-auth', {
         body: {
           grant_type: 'refresh_token',
-          refresh_token: refreshToken,
+          refresh_token: currentRefreshToken,
           user_id: user.id,
         },
       });
@@ -150,37 +143,46 @@ export function useAfuMail() {
       }
 
       const tokenData = data as TokenResponse;
-      setAccessToken(tokenData.access_token);
-      setRefreshToken(tokenData.refresh_token);
-      setTokenExpiry(Date.now() + tokenData.expires_in * 1000);
+      const expiry = Date.now() + tokenData.expires_in * 1000;
+      saveTokens(tokenData.access_token, tokenData.refresh_token, expiry);
       return true;
     } catch (err) {
       console.error('Token refresh error:', err);
       return false;
     }
-  }, [refreshToken, user?.id]);
+  }, [refreshToken, user?.id, saveTokens]);
 
   // Ensure valid token before API calls
   const ensureValidToken = useCallback(async (): Promise<boolean> => {
+    // Check localStorage again in case tokens were set by callback page
+    const storedToken = localStorage.getItem('afumail_access_token');
+    const storedExpiry = localStorage.getItem('afumail_token_expiry');
+    
+    if (storedToken && storedExpiry) {
+      const expiry = parseInt(storedExpiry, 10);
+      if (Date.now() < expiry - 5 * 60 * 1000) {
+        // Token is still valid
+        if (!accessToken) {
+          setAccessToken(storedToken);
+          setRefreshToken(localStorage.getItem('afumail_refresh_token'));
+          setTokenExpiry(expiry);
+        }
+        return true;
+      }
+    }
+    
     if (accessToken && !isTokenExpired()) return true;
     
-    // Try refresh first
-    if (refreshToken) {
-      const refreshed = await refreshAccessToken();
+    // Try refresh if we have a refresh token
+    const currentRefreshToken = refreshToken || localStorage.getItem('afumail_refresh_token');
+    if (currentRefreshToken) {
+      const refreshed = await refreshAccessTokenFn();
       if (refreshed) return true;
     }
     
-    // Fall back to new token exchange
-    const tokenData = await exchangeToken();
-    if (tokenData) {
-      setAccessToken(tokenData.access_token);
-      setRefreshToken(tokenData.refresh_token);
-      setTokenExpiry(Date.now() + tokenData.expires_in * 1000);
-      return true;
-    }
-    
+    // No valid token and can't refresh - user needs to re-authenticate via OAuth
     return false;
-  }, [accessToken, isTokenExpired, refreshToken, refreshAccessToken, exchangeToken]);
+  }, [accessToken, isTokenExpired, refreshToken, refreshAccessTokenFn]);
 
   const authenticate = useCallback(async () => {
     if (!user?.id) {

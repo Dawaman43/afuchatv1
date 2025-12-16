@@ -82,6 +82,10 @@ const AfuMailCallback = () => {
         if (tokenData.refresh_token) {
           localStorage.setItem('afumail_refresh_token', tokenData.refresh_token);
         }
+        // Store expiry (default 1 hour if not provided)
+        const expiresIn = tokenData.expires_in || 3600;
+        const tokenExpiry = Date.now() + expiresIn * 1000;
+        localStorage.setItem('afumail_token_expiry', tokenExpiry.toString());
 
         // New user - create account
         if (!isSignupFlow) {
