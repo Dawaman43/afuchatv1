@@ -42,7 +42,7 @@ export function AfuMailTermsDialog({ open, onAccept, onDecline }: AfuMailTermsDi
                 <li>This service is in beta and may have bugs or interruptions</li>
                 <li>Your email address will be <strong>yourhandle@afuchat.com</strong></li>
                 <li>Only users with @afuchat.com email can use this service</li>
-                <li>Report any issues to <strong>support@afuchat.com</strong></li>
+                <li>Report any issues to <a href="mailto:support@afuchat.com" className="text-primary underline font-medium">support@afuchat.com</a></li>
               </ul>
             </div>
 
