@@ -66,6 +66,18 @@ serve(async (req) => {
       headers['apikey'] = apiAnonKey2;
       headers['Authorization'] = `Bearer ${apiAnonKey2}`;
       console.log(`Using AFUMAIL_API_ANON_KEY prefix: ${apiAnonKey2.slice(0, 12)}...`);
+      // Decode JWT payload (no verification) to confirm it belongs to the AfuMail project
+      try {
+        const parts = apiAnonKey2.split('.');
+        if (parts.length >= 2) {
+          const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+          const payload = JSON.parse(payloadJson);
+          console.log(`AFUMAIL_API_ANON_KEY jwt ref: ${payload?.ref ?? 'unknown'}`);
+          console.log(`AFUMAIL_API_ANON_KEY jwt iss: ${payload?.iss ?? 'unknown'}`);
+        }
+      } catch (e) {
+        console.warn('Failed to decode AFUMAIL_API_ANON_KEY payload');
+      }
     } else {
       console.warn('Missing AFUMAIL_API_ANON_KEY (required to call AfuMail API edge function)');
     }
