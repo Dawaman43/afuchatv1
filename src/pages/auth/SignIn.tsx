@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Mail } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import Logo from '@/components/Logo';
+import afumailLogo from '@/assets/mini-apps/afumail-logo.png';
 import { emailSchema, passwordSchema } from '@/lib/validation';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -222,7 +223,7 @@ const SignIn = () => {
               disabled={googleLoading || githubLoading || afumailLoading || loading}
             >
               {afumailLoading ? '...' : (
-                <Mail className="h-6 w-6" />
+                <img src={afumailLogo} alt="AfuMail" className="h-6 w-6 rounded" />
               )}
             </Button>
           </div>

@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Eye, EyeOff, ArrowLeft, ChevronRight, Search, User, Briefcase, AlertTriangle, Gift, Crown, Link2, Mail } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, ChevronRight, Search, User, Briefcase, AlertTriangle, Gift, Crown, Link2 } from 'lucide-react';
 import Logo from '@/components/Logo';
+import afumailLogo from '@/assets/mini-apps/afumail-logo.png';
 import { emailSchema } from '@/lib/validation';
 import { countries } from '@/lib/countries';
 import { getCountryFlag } from '@/lib/countryFlags';
@@ -459,7 +460,7 @@ const SignUpContent = () => {
                 disabled={googleLoading || githubLoading || afumailLoading || loading}
               >
                 {afumailLoading ? '...' : (
-                  <Mail className="h-6 w-6" />
+                  <img src={afumailLogo} alt="AfuMail" className="h-6 w-6 rounded" />
                 )}
               </Button>
             </div>
