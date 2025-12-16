@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, RefreshCw, Menu } from 'lucide-react';
+import { Search, RefreshCw, Menu, Mail, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -10,10 +10,14 @@ import { FolderSidebar } from '@/components/afumail/FolderSidebar';
 import { EmailList } from '@/components/afumail/EmailList';
 import { EmailView } from '@/components/afumail/EmailView';
 import { ComposeEmail } from '@/components/afumail/ComposeEmail';
+import { AfuMailTermsDialog } from '@/components/afumail/AfuMailTermsDialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 type ViewMode = 'list' | 'email' | 'compose';
+
+const AFUMAIL_TERMS_ACCEPTED_KEY = 'afumail_terms_accepted';
 
 export default function AfuMail() {
   const navigate = useNavigate();
@@ -29,17 +33,62 @@ export default function AfuMail() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [composeMode, setComposeMode] = useState<'new' | 'reply' | 'forward'>('new');
   const [replyToEmail, setReplyToEmail] = useState<EmailDetail | null>(null);
+  
+  // Email eligibility and terms state
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isEligible, setIsEligible] = useState<boolean | null>(null);
+  const [showTermsDialog, setShowTermsDialog] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(() => {
+    return localStorage.getItem(AFUMAIL_TERMS_ACCEPTED_KEY) === 'true';
+  });
 
-  // Initialize
+  // Check user eligibility on mount
   useEffect(() => {
-    if (!user) {
-      toast.error('Please sign in to access AfuMail');
-      navigate('/auth/signin');
-      return;
-    }
-    
+    const checkEligibility = async () => {
+      if (!user) {
+        toast.error('Please sign in to access AfuMail');
+        navigate('/auth/signin');
+        return;
+      }
+
+      // Get user's email from profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('handle')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.handle) {
+        const afuchatEmail = `${profile.handle}@afuchat.com`;
+        setUserEmail(afuchatEmail);
+        setIsEligible(true);
+
+        // Show terms dialog if not accepted yet
+        if (!termsAccepted) {
+          setShowTermsDialog(true);
+        } else {
+          initializeAfuMail();
+        }
+      } else {
+        // User doesn't have a handle, not eligible
+        setIsEligible(false);
+      }
+    };
+
+    checkEligibility();
+  }, [user, termsAccepted]);
+
+  const handleTermsAccept = () => {
+    localStorage.setItem(AFUMAIL_TERMS_ACCEPTED_KEY, 'true');
+    setTermsAccepted(true);
+    setShowTermsDialog(false);
     initializeAfuMail();
-  }, [user]);
+  };
+
+  const handleTermsDecline = () => {
+    setShowTermsDialog(false);
+    navigate(-1);
+  };
 
   const initializeAfuMail = async () => {
     const authenticated = await afuMail.authenticate();
@@ -190,6 +239,79 @@ export default function AfuMail() {
     loadEmails(selectedFolder);
   };
 
+  // Show terms dialog
+  if (showTermsDialog) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <AfuMailTermsDialog
+          open={showTermsDialog}
+          onAccept={handleTermsAccept}
+          onDecline={handleTermsDecline}
+        />
+      </div>
+    );
+  }
+
+  // Show ineligible screen if user doesn't have @afuchat.com email
+  if (isEligible === false) {
+    return (
+      <div className="h-screen flex flex-col bg-background">
+        <header className="border-b border-border px-4 py-3 flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-semibold">AfuMail</h1>
+        </header>
+        
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="max-w-md text-center space-y-6">
+            <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+              <AlertTriangle className="h-10 w-10 text-destructive" />
+            </div>
+            
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold">Access Restricted</h2>
+              <p className="text-muted-foreground">
+                AfuMail is only available for users with an @afuchat.com email address.
+              </p>
+            </div>
+
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 text-left">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                    Experimental Service
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    AfuMail is currently in beta. Report any issues to{' '}
+                    <strong>support@afuchat.com</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Button onClick={() => navigate(-1)} className="w-full">
+              Go Back
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (isEligible === null || !termsAccepted) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <Mail className="h-12 w-12 text-primary mx-auto animate-pulse" />
+          <p className="text-muted-foreground">Loading AfuMail...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Header */}
@@ -214,7 +336,14 @@ export default function AfuMail() {
           </SheetContent>
         </Sheet>
 
-        <h1 className="text-lg font-semibold">AfuMail</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-lg font-semibold">AfuMail</h1>
+          {userEmail && (
+            <span className="text-xs text-muted-foreground hidden sm:block">
+              ({userEmail})
+            </span>
+          )}
+        </div>
 
         <div className="flex-1 max-w-md hidden sm:block">
           <div className="relative">
@@ -268,6 +397,7 @@ export default function AfuMail() {
                 onDiscard={handleDiscardCompose}
                 onUploadAttachment={afuMail.uploadAttachment}
                 sending={afuMail.loading}
+                senderEmail={userEmail || undefined}
               />
             </div>
           ) : (

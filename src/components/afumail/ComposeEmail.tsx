@@ -18,6 +18,7 @@ interface ComposeEmailProps {
   onDiscard: () => void;
   onUploadAttachment: (file: File) => Promise<{ id: string; url: string } | null>;
   sending?: boolean;
+  senderEmail?: string;
 }
 
 interface AttachmentPreview {
@@ -37,6 +38,7 @@ export function ComposeEmail({
   onDiscard,
   onUploadAttachment,
   sending,
+  senderEmail,
 }: ComposeEmailProps) {
   const [to, setTo] = useState<string[]>(initialTo);
   const [cc, setCc] = useState<string[]>([]);
@@ -132,9 +134,14 @@ export function ComposeEmail({
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
-        <h2 className="text-lg font-semibold">
-          {replyTo ? 'Reply' : forwardFrom ? 'Forward' : 'New Message'}
-        </h2>
+        <div>
+          <h2 className="text-lg font-semibold">
+            {replyTo ? 'Reply' : forwardFrom ? 'Forward' : 'New Message'}
+          </h2>
+          {senderEmail && (
+            <p className="text-xs text-muted-foreground">From: {senderEmail}</p>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={onDiscard}>
             <Trash2 className="h-5 w-5" />

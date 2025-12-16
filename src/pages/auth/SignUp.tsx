@@ -12,6 +12,7 @@ import { emailSchema } from '@/lib/validation';
 import { countries } from '@/lib/countries';
 import { getCountryFlag } from '@/lib/countryFlags';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { AfuMailTermsDialog } from '@/components/afumail/AfuMailTermsDialog';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { CustomLoader } from '@/components/ui/CustomLoader';
@@ -56,6 +57,7 @@ const SignUpContent = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
   const [afumailLoading, setAfumailLoading] = useState(false);
+  const [showAfuMailTerms, setShowAfuMailTerms] = useState(false);
 
   // Check if linking account from existing user
   const isLinkingAccount = (location.state as any)?.linkingAccount === true;
@@ -236,6 +238,11 @@ const SignUpContent = () => {
   };
 
   const handleAfuMailSignUp = () => {
+    // Show terms dialog first
+    setShowAfuMailTerms(true);
+  };
+
+  const proceedWithAfuMailOAuth = () => {
     setAfumailLoading(true);
     storeSignupDataForOAuth();
     
@@ -600,6 +607,15 @@ const SignUpContent = () => {
           </div>
         </SheetContent>
       </Sheet>
+      {/* AfuMail Terms Dialog */}
+      <AfuMailTermsDialog
+        open={showAfuMailTerms}
+        onAccept={() => {
+          setShowAfuMailTerms(false);
+          proceedWithAfuMailOAuth();
+        }}
+        onDecline={() => setShowAfuMailTerms(false)}
+      />
     </div>
   );
 };
