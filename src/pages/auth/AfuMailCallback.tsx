@@ -40,8 +40,8 @@ const AfuMailCallback = () => {
           ? 'https://afuchat.com/auth/afumail/callback'
           : `${window.location.origin}/auth/afumail/callback`;
         const clientId = isProduction 
-          ? '60fb051c2f63890df5617523fcf81a8d'
-          : '2cff133dc0b104ab8d819cb47fbbfdc3';
+          ? '404c5ec3776ecbb26809295a7eace970'
+          : '404c5ec3776ecbb26809295a7eace970';
 
         const { data: tokenData, error: tokenError } = await supabase.functions.invoke('afumail-auth', {
           body: {
