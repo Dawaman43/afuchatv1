@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomLoader } from '@/components/ui/CustomLoader';
@@ -8,8 +8,12 @@ const AfuMailCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const hasProcessedRef = useRef(false);
 
   useEffect(() => {
+    if (hasProcessedRef.current) return;
+    hasProcessedRef.current = true;
+
     const handleCallback = async () => {
       const code = searchParams.get('code');
       const state = searchParams.get('state');
