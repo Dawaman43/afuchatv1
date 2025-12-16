@@ -52,13 +52,28 @@ serve(async (req) => {
     console.log(`Calling AfuMail API: ${AFUMAIL_API_URL}/oauth/token`);
     console.log(`Using redirect_uri: ${redirect_uri}`);
 
-    // Call AfuMail OAuth endpoint - standard OAuth token exchange doesn't need auth headers
-    // Client credentials (client_id, client_secret) are sent in the body
+    // NOTE: AFUMAIL_API_URL points to a Supabase Edge Function on a DIFFERENT project.
+    // That function typically requires a JWT from that project (anon key is a valid JWT),
+    // so we must send the *AfuMail project's* anon key here (NOT this project's anon key).
+    const apiAnonKey2 = Deno.env.get('AFUMAIL_API_ANON_KEY');
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-User-Id': user_id || '',
+    };
+
+    if (apiAnonKey2) {
+      headers['apikey'] = apiAnonKey2;
+      headers['Authorization'] = `Bearer ${apiAnonKey2}`;
+      console.log(`Using AFUMAIL_API_ANON_KEY prefix: ${apiAnonKey2.slice(0, 12)}...`);
+    } else {
+      console.warn('Missing AFUMAIL_API_ANON_KEY (required to call AfuMail API edge function)');
+    }
+
+    // Call AfuMail OAuth endpoint
     const response = await fetch(`${AFUMAIL_API_URL}/oauth/token`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+      headers,
       body: formData.toString(),
     });
 
