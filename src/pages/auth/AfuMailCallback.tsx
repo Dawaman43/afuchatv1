@@ -34,12 +34,14 @@ const AfuMailCallback = () => {
 
       try {
         // Exchange code for tokens via our edge function
-        // Use production URL on production, preview URL otherwise
+        // Use production URL + client ID on production, preview URL otherwise
         const isProduction = window.location.hostname === 'afuchat.com';
         const redirectUri = isProduction 
           ? 'https://afuchat.com/auth/afumail/callback'
           : `${window.location.origin}/auth/afumail/callback`;
-        const clientId = '2cff133dc0b104ab8d819cb47fbbfdc3';
+        const clientId = isProduction 
+          ? '60fb051c2f63890df5617523fcf81a8d'
+          : '2cff133dc0b104ab8d819cb47fbbfdc3';
 
         const { data: tokenData, error: tokenError } = await supabase.functions.invoke('afumail-auth', {
           body: {
