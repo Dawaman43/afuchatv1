@@ -6,8 +6,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// AfuMail API endpoint
-const AFUMAIL_API_URL = "https://afuchatmail.vercel.app";
+// AfuMail API base URLs (some deployments serve OAuth routes on a different domain)
+const AFUMAIL_API_BASE_URLS = [
+  "https://afuchatmail.vercel.app",
+  "https://afuchatmail.lovable.app",
+];
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -125,64 +128,65 @@ serve(async (req) => {
       contentTypeTried: string;
     } | null = null;
 
-    for (const endpoint of endpoints) {
-      for (const contentType of [
-        "application/x-www-form-urlencoded",
-        "application/json",
-      ] as const) {
-        const url = `${AFUMAIL_API_URL}${endpoint}`;
-        console.log(`Calling AfuMail API: ${url} (${contentType})`);
-        console.log(`Using redirect_uri: ${redirect_uri}`);
+    for (const baseUrl of AFUMAIL_API_BASE_URLS) {
+      for (const endpoint of endpoints) {
+        for (const contentType of [
+          "application/x-www-form-urlencoded",
+          "application/json",
+        ] as const) {
+          const url = `${baseUrl}${endpoint}`;
+          console.log(`Calling AfuMail API: ${url} (${contentType})`);
+          console.log(`Using redirect_uri: ${redirect_uri}`);
 
-        const response = await fetch(url, {
-          method: "POST",
-          redirect: "follow",
-          headers: makeHeaders(contentType),
-          body: makeBody(contentType),
-        });
-
-        const responseText = await response.text();
-        const location = response.headers.get("location");
-
-        console.log(`AfuMail response status: ${response.status}`);
-        console.log(`AfuMail response location: ${location ?? "(none)"}`);
-        console.log(
-          `AfuMail response body (first 500): ${responseText.slice(0, 500)}`,
-        );
-
-        lastAttempt = {
-          url,
-          status: response.status,
-          statusText: response.statusText,
-          bodyPreview: responseText.slice(0, 500),
-          location,
-          contentTypeTried: contentType,
-        };
-
-        // Try to parse JSON if possible
-        let data: unknown = null;
-        if (responseText.trim().length > 0) {
-          try {
-            data = JSON.parse(responseText);
-          } catch {
-            // Not JSON; keep trying other endpoints/content-types
-            data = null;
-          }
-        }
-
-        if (response.ok && data) {
-          return new Response(JSON.stringify(data), {
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          const response = await fetch(url, {
+            method: "POST",
+            redirect: "follow",
+            headers: makeHeaders(contentType),
+            body: makeBody(contentType),
           });
-        }
 
-        // If server returned a structured error, pass it through
-        if (!response.ok && data) {
-          return new Response(JSON.stringify(data), {
+          const responseText = await response.text();
+          const location = response.headers.get("location");
+
+          console.log(`AfuMail response status: ${response.status}`);
+          console.log(`AfuMail response location: ${location ?? "(none)"}`);
+          console.log(
+            `AfuMail response body (first 500): ${responseText.slice(0, 500)}`,
+          );
+
+          lastAttempt = {
+            url,
             status: response.status,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
+            statusText: response.statusText,
+            bodyPreview: responseText.slice(0, 500),
+            location,
+            contentTypeTried: contentType,
+          };
+
+          // Try to parse JSON if possible
+          let parsed: unknown = null;
+          if (responseText.trim().length > 0) {
+            try {
+              parsed = JSON.parse(responseText);
+            } catch {
+              parsed = null;
+            }
+          }
+
+          if (response.ok && parsed) {
+            return new Response(JSON.stringify(parsed), {
+              status: 200,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+
+          // If server returned a structured error, pass it through
+          if (!response.ok && parsed) {
+            return new Response(JSON.stringify(parsed), {
+              status: response.status,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
         }
       }
     }
