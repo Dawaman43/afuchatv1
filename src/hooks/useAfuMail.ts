@@ -70,29 +70,122 @@ export interface SearchParams {
   date_to?: string;
 }
 
+interface TokenResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+}
+
 export function useAfuMail() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
+  const [tokenExpiry, setTokenExpiry] = useState<number | null>(null);
+
+  // Check if token needs refresh (5 min buffer)
+  const isTokenExpired = useCallback(() => {
+    if (!tokenExpiry) return true;
+    return Date.now() >= tokenExpiry - 5 * 60 * 1000;
+  }, [tokenExpiry]);
 
   const getHeaders = useCallback(async () => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
     
-    // Get the current session access token
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.access_token) {
-      headers['Authorization'] = `Bearer ${session.access_token}`;
-    } else if (sessionToken) {
-      headers['Authorization'] = `Bearer ${sessionToken}`;
+    if (accessToken && !isTokenExpired()) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
     }
     
     if (user?.id) {
       headers['X-User-Id'] = user.id;
     }
     return headers;
-  }, [sessionToken, user?.id]);
+  }, [accessToken, isTokenExpired, user?.id]);
+
+  // Exchange Supabase token for AfuMail OAuth token
+  const exchangeToken = useCallback(async (): Promise<TokenResponse | null> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return null;
+
+    const response = await fetch(`${AFUMAIL_API_BASE}/oauth/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: session.access_token,
+        client_id: 'afuchat',
+        redirect_uri: window.location.origin,
+      }).toString(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Token exchange failed:', errorData);
+      return null;
+    }
+
+    return await response.json();
+  }, []);
+
+  // Refresh the access token
+  const refreshAccessToken = useCallback(async (): Promise<boolean> => {
+    if (!refreshToken) return false;
+
+    try {
+      const response = await fetch(`${AFUMAIL_API_BASE}/oauth/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: refreshToken,
+          client_id: 'afuchat',
+        }).toString(),
+      });
+
+      if (!response.ok) {
+        console.error('Token refresh failed');
+        return false;
+      }
+
+      const data: TokenResponse = await response.json();
+      setAccessToken(data.access_token);
+      setRefreshToken(data.refresh_token);
+      setTokenExpiry(Date.now() + data.expires_in * 1000);
+      return true;
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      return false;
+    }
+  }, [refreshToken]);
+
+  // Ensure valid token before API calls
+  const ensureValidToken = useCallback(async (): Promise<boolean> => {
+    if (accessToken && !isTokenExpired()) return true;
+    
+    // Try refresh first
+    if (refreshToken) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) return true;
+    }
+    
+    // Fall back to new token exchange
+    const tokenData = await exchangeToken();
+    if (tokenData) {
+      setAccessToken(tokenData.access_token);
+      setRefreshToken(tokenData.refresh_token);
+      setTokenExpiry(Date.now() + tokenData.expires_in * 1000);
+      return true;
+    }
+    
+    return false;
+  }, [accessToken, isTokenExpired, refreshToken, refreshAccessToken, exchangeToken]);
 
   const authenticate = useCallback(async () => {
     if (!user?.id) {
@@ -103,29 +196,11 @@ export function useAfuMail() {
     try {
       setLoading(true);
       
-      // Get the current session access token
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('No valid session');
+      const success = await ensureValidToken();
+      if (!success) {
+        throw new Error('Failed to obtain access token');
       }
       
-      const response = await fetch(`${AFUMAIL_API_BASE}/auth/session`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ user_id: user.id }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('AfuMail auth response:', errorData);
-        throw new Error(errorData.error || 'Failed to authenticate with AfuMail');
-      }
-
-      const data = await response.json();
-      setSessionToken(data.token);
       return true;
     } catch (error) {
       console.error('AfuMail auth error:', error);
@@ -134,7 +209,7 @@ export function useAfuMail() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, ensureValidToken]);
 
   const getMailboxInfo = useCallback(async (): Promise<MailboxInfo | null> => {
     try {
@@ -329,15 +404,14 @@ export function useAfuMail() {
 
   const uploadAttachment = useCallback(async (file: File): Promise<{ id: string; url: string } | null> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      await ensureValidToken();
       const formData = new FormData();
       formData.append('file', file);
 
       const response = await fetch(`${AFUMAIL_API_BASE}/mail/attachment/upload`, {
         method: 'POST',
         headers: {
-          ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : 
-             sessionToken ? { 'Authorization': `Bearer ${sessionToken}` } : {}),
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
           ...(user?.id ? { 'X-User-Id': user.id } : {}),
         },
         body: formData,
@@ -350,11 +424,11 @@ export function useAfuMail() {
       toast.error('Failed to upload attachment');
       return null;
     }
-  }, [sessionToken, user?.id]);
+  }, [accessToken, ensureValidToken, user?.id]);
 
   return {
     loading,
-    sessionToken,
+    accessToken,
     authenticate,
     getMailboxInfo,
     getFolders,
