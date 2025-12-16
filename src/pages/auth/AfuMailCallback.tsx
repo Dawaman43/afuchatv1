@@ -69,8 +69,16 @@ const AfuMailCallback = () => {
         }
 
         const userInfo = await userInfoResponse.json();
-        const afumailEmail = userInfo.email;
-        const name = userInfo.name || afumailEmail.split('@')[0];
+        console.log('AfuMail user info:', userInfo);
+        
+        // Get email from AfuMail response - check multiple possible properties
+        const afumailEmail = userInfo.email || userInfo.mail || userInfo.preferred_email;
+        
+        if (!afumailEmail) {
+          throw new Error('Email not provided by AfuMail. Please ensure your AfuMail account has a verified email.');
+        }
+        
+        const name = userInfo.name || userInfo.display_name || afumailEmail.split('@')[0];
 
         // Get signup data if this is coming from signup flow
         const pendingSignupData = localStorage.getItem('pendingSignupData');
