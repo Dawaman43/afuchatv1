@@ -74,6 +74,7 @@ serve(async (req) => {
         "Content-Type": "application/x-www-form-urlencoded",
         "Accept": "application/json",
         "apikey": afumailAnonKey,
+        "Authorization": `Bearer ${afumailAnonKey}`,
         "X-User-Id": user_id || "",
       },
       body: formData.toString(),
