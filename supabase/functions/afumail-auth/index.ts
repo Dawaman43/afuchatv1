@@ -83,50 +83,119 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Calling AfuMail API: ${AFUMAIL_API_URL}/auth/afumail/token`);
-    console.log(`Using redirect_uri: ${redirect_uri}`);
+    const endpoints = [
+      "/api/oauth/token", // previous guess (common)
+      "/oauth/token", // legacy guess
+      "/auth/afumail/token", // based on provided callback structure
+    ];
 
-    // Call AfuMail OAuth endpoint.
-    // Token endpoint matches the callback URL structure.
-    const response = await fetch(`${AFUMAIL_API_URL}/auth/afumail/token`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Accept": "application/json",
-        "apikey": afumailAnonKey,
-        "Authorization": `Bearer ${afumailAnonKey}`,
-        "X-User-Id": user_id || "",
-      },
-      body: formData.toString(),
+    const makeHeaders = (contentType: "application/x-www-form-urlencoded" | "application/json") => ({
+      "Content-Type": contentType,
+      Accept: "application/json",
+      apikey: afumailAnonKey,
+      Authorization: `Bearer ${afumailAnonKey}`,
+      "X-User-Id": user_id || "",
     });
 
-    const responseText = await response.text();
-    console.log(`AfuMail response status: ${response.status}`);
-    console.log(`AfuMail response body: ${responseText.slice(0, 500)}`);
+    const makeBody = (contentType: "application/x-www-form-urlencoded" | "application/json") => {
+      if (contentType === "application/json") {
+        const payload: Record<string, string> = {
+          grant_type,
+          client_id: clientId,
+          client_secret: clientSecret,
+        };
+        if (grant_type === "authorization_code" && code) {
+          payload.code = code;
+          payload.redirect_uri = redirect_uri || "https://afuchat.com/auth/afumail/callback";
+        }
+        if (grant_type === "refresh_token" && refresh_token) {
+          payload.refresh_token = refresh_token;
+        }
+        return JSON.stringify(payload);
+      }
+      return formData.toString();
+    };
 
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch {
-      console.error("Failed to parse AfuMail response as JSON");
-      return new Response(
-        JSON.stringify({ error: "Invalid response from AfuMail API", details: responseText.slice(0, 200) }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+    let lastAttempt: {
+      url: string;
+      status: number;
+      statusText: string;
+      bodyPreview: string;
+      location?: string | null;
+      contentTypeTried: string;
+    } | null = null;
+
+    for (const endpoint of endpoints) {
+      for (const contentType of [
+        "application/x-www-form-urlencoded",
+        "application/json",
+      ] as const) {
+        const url = `${AFUMAIL_API_URL}${endpoint}`;
+        console.log(`Calling AfuMail API: ${url} (${contentType})`);
+        console.log(`Using redirect_uri: ${redirect_uri}`);
+
+        const response = await fetch(url, {
+          method: "POST",
+          redirect: "follow",
+          headers: makeHeaders(contentType),
+          body: makeBody(contentType),
+        });
+
+        const responseText = await response.text();
+        const location = response.headers.get("location");
+
+        console.log(`AfuMail response status: ${response.status}`);
+        console.log(`AfuMail response location: ${location ?? "(none)"}`);
+        console.log(
+          `AfuMail response body (first 500): ${responseText.slice(0, 500)}`,
+        );
+
+        lastAttempt = {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          bodyPreview: responseText.slice(0, 500),
+          location,
+          contentTypeTried: contentType,
+        };
+
+        // Try to parse JSON if possible
+        let data: unknown = null;
+        if (responseText.trim().length > 0) {
+          try {
+            data = JSON.parse(responseText);
+          } catch {
+            // Not JSON; keep trying other endpoints/content-types
+            data = null;
+          }
+        }
+
+        if (response.ok && data) {
+          return new Response(JSON.stringify(data), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // If server returned a structured error, pass it through
+        if (!response.ok && data) {
+          return new Response(JSON.stringify(data), {
+            status: response.status,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
     }
 
-    if (!response.ok) {
-      console.error("AfuMail OAuth token error:", data);
-      return new Response(JSON.stringify(data), {
-        status: response.status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // No endpoint worked.
+    return new Response(
+      JSON.stringify({
+        error: "Invalid response from AfuMail API",
+        details: lastAttempt,
+      }),
+      { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
 
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   } catch (error: unknown) {
     console.error("Error in afumail-auth:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
