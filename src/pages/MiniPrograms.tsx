@@ -498,7 +498,7 @@ const MiniPrograms = () => {
   // Google Play style app card component - uses actual logos
   const AppCard = ({ app, size = 'medium' }: { app: BuiltInApp; size?: 'small' | 'medium' | 'large' }) => {
     const Icon = app.icon;
-    const isComingSoon = app.category === 'services' && !isAdmin;
+    const isComingSoon = app.category === 'services' && !isAdmin && app.id !== 'afumail';
     
     const sizeClasses = {
       small: 'w-20',
@@ -548,7 +548,7 @@ const MiniPrograms = () => {
   // Google Play style list item component - uses actual logos
   const AppListItem = ({ app }: { app: BuiltInApp }) => {
     const Icon = app.icon;
-    const isComingSoon = app.category === 'services' && !isAdmin;
+    const isComingSoon = app.category === 'services' && !isAdmin && app.id !== 'afumail';
     
     return (
       <motion.div
