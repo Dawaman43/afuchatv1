@@ -6,11 +6,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// AfuMail API base URLs (some deployments serve OAuth routes on a different domain)
-const AFUMAIL_API_BASE_URLS = [
-  "https://afuchatmail.vercel.app",
-  "https://afuchatmail.lovable.app",
-];
+// AfuMail token exchange (AfuChat must call this exact endpoint)
+const AFUMAIL_TOKEN_EXCHANGE_URL =
+  "https://vfcukxlzqfeehhkiogpf.supabase.co/functions/v1/afumail-api/oauth/token";
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -86,119 +84,68 @@ serve(async (req) => {
       );
     }
 
-    const endpoints = [
-      "/api/oauth/token", // previous guess (common)
-      "/oauth/token", // legacy guess
-      "/auth/afumail/token", // based on provided callback structure
-    ];
+    // NOTE: AfuChat's AfuMail token exchange MUST use the exact endpoint below.
+    // If this changes, update AFUMAIL_TOKEN_EXCHANGE_URL.
+    console.log(`Calling AfuMail token exchange: ${AFUMAIL_TOKEN_EXCHANGE_URL}`);
+    console.log(`Using redirect_uri: ${redirect_uri}`);
 
-    const makeHeaders = (contentType: "application/x-www-form-urlencoded" | "application/json") => ({
-      "Content-Type": contentType,
-      Accept: "application/json",
-      apikey: afumailAnonKey,
-      Authorization: `Bearer ${afumailAnonKey}`,
-      "X-User-Id": user_id || "",
+    const response = await fetch(AFUMAIL_TOKEN_EXCHANGE_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+        // This endpoint lives behind a Supabase edge function; it typically expects an anon key.
+        apikey: afumailAnonKey,
+        Authorization: `Bearer ${afumailAnonKey}`,
+        "X-User-Id": user_id || "",
+      },
+      body: formData.toString(),
     });
 
-    const makeBody = (contentType: "application/x-www-form-urlencoded" | "application/json") => {
-      if (contentType === "application/json") {
-        const payload: Record<string, string> = {
-          grant_type,
-          client_id: clientId,
-          client_secret: clientSecret,
-        };
-        if (grant_type === "authorization_code" && code) {
-          payload.code = code;
-          payload.redirect_uri = redirect_uri || "https://afuchat.com/auth/afumail/callback";
-        }
-        if (grant_type === "refresh_token" && refresh_token) {
-          payload.refresh_token = refresh_token;
-        }
-        return JSON.stringify(payload);
-      }
-      return formData.toString();
-    };
+    const responseText = await response.text();
+    console.log(`AfuMail token exchange status: ${response.status}`);
+    console.log(
+      `AfuMail token exchange body (first 500): ${responseText.slice(0, 500)}`,
+    );
 
-    let lastAttempt: {
-      url: string;
-      status: number;
-      statusText: string;
-      bodyPreview: string;
-      location?: string | null;
-      contentTypeTried: string;
-    } | null = null;
-
-    for (const baseUrl of AFUMAIL_API_BASE_URLS) {
-      for (const endpoint of endpoints) {
-        for (const contentType of [
-          "application/x-www-form-urlencoded",
-          "application/json",
-        ] as const) {
-          const url = `${baseUrl}${endpoint}`;
-          console.log(`Calling AfuMail API: ${url} (${contentType})`);
-          console.log(`Using redirect_uri: ${redirect_uri}`);
-
-          const response = await fetch(url, {
-            method: "POST",
-            redirect: "follow",
-            headers: makeHeaders(contentType),
-            body: makeBody(contentType),
-          });
-
-          const responseText = await response.text();
-          const location = response.headers.get("location");
-
-          console.log(`AfuMail response status: ${response.status}`);
-          console.log(`AfuMail response location: ${location ?? "(none)"}`);
-          console.log(
-            `AfuMail response body (first 500): ${responseText.slice(0, 500)}`,
-          );
-
-          lastAttempt = {
-            url,
-            status: response.status,
-            statusText: response.statusText,
-            bodyPreview: responseText.slice(0, 500),
-            location,
-            contentTypeTried: contentType,
-          };
-
-          // Try to parse JSON if possible
-          let parsed: unknown = null;
-          if (responseText.trim().length > 0) {
-            try {
-              parsed = JSON.parse(responseText);
-            } catch {
-              parsed = null;
-            }
-          }
-
-          if (response.ok && parsed) {
-            return new Response(JSON.stringify(parsed), {
-              status: 200,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
-          }
-
-          // If server returned a structured error, pass it through
-          if (!response.ok && parsed) {
-            return new Response(JSON.stringify(parsed), {
-              status: response.status,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
-          }
-        }
+    let parsed: unknown = null;
+    if (responseText.trim().length > 0) {
+      try {
+        parsed = JSON.parse(responseText);
+      } catch {
+        parsed = null;
       }
     }
 
-    // No endpoint worked.
-    return new Response(
-      JSON.stringify({
-        error: "Invalid response from AfuMail API",
-        details: lastAttempt,
-      }),
-      { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    if (!response.ok) {
+      // If remote returns JSON error, pass it through; otherwise include a preview.
+      return new Response(
+        JSON.stringify(
+          parsed ?? {
+            error: "AfuMail token exchange failed",
+            status: response.status,
+            statusText: response.statusText,
+            bodyPreview: responseText.slice(0, 500),
+          },
+        ),
+        { status: response.status || 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    if (!parsed) {
+      return new Response(
+        JSON.stringify({
+          error: "Invalid JSON from AfuMail token exchange",
+          bodyPreview: responseText.slice(0, 500),
+        }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    return new Response(JSON.stringify(parsed), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
 
   } catch (error: unknown) {
     console.error("Error in afumail-auth:", error);
