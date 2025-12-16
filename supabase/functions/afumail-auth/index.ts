@@ -16,19 +16,33 @@ serve(async (req) => {
   }
 
   try {
-    const { grant_type, code, refresh_token, user_id, redirect_uri } =
-      await req.json();
+    const {
+      grant_type,
+      code,
+      refresh_token,
+      user_id,
+      redirect_uri,
+      client_id,
+    } = await req.json();
 
-    const clientId = Deno.env.get("AFUMAIL_CLIENT_ID");
+    // Client ID is not a secret; allow passing it from the client to avoid mismatch issues.
+    const envClientId = Deno.env.get("AFUMAIL_CLIENT_ID");
+    const clientId = client_id || envClientId;
     const clientSecret = Deno.env.get("AFUMAIL_CLIENT_SECRET");
     const afumailAnonKey = Deno.env.get("AFUMAIL_API_ANON_KEY");
 
     if (!clientId || !clientSecret) {
-      console.error("Missing AfuMail credentials");
-      return new Response(JSON.stringify({ error: "Server configuration error" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      console.error("Missing AfuMail credentials", {
+        hasClientId: !!clientId,
+        hasClientSecret: !!clientSecret,
       });
+      return new Response(
+        JSON.stringify({ error: "Server configuration error" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     if (!afumailAnonKey) {
