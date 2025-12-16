@@ -52,22 +52,13 @@ serve(async (req) => {
     console.log(`Calling AfuMail API: ${AFUMAIL_API_URL}/oauth/token`);
     console.log(`Using redirect_uri: ${redirect_uri}`);
 
-    // Build headers for AfuMail API call
-    const afumailHeaders: Record<string, string> = {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'X-User-Id': user_id || '',
-    };
-    
-    // Add API key if available
-    if (apiAnonKey) {
-      afumailHeaders['apikey'] = apiAnonKey;
-      afumailHeaders['Authorization'] = `Bearer ${apiAnonKey}`;
-    }
-
-    // Call AfuMail OAuth endpoint
+    // Call AfuMail OAuth endpoint - standard OAuth token exchange doesn't need auth headers
+    // Client credentials (client_id, client_secret) are sent in the body
     const response = await fetch(`${AFUMAIL_API_URL}/oauth/token`, {
       method: 'POST',
-      headers: afumailHeaders,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
       body: formData.toString(),
     });
 
