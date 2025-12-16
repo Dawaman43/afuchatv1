@@ -467,12 +467,15 @@ const SignUpContent = () => {
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1 h-14 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="flex-1 h-14 rounded-xl bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
                 onClick={handleAfuMailSignUp}
                 disabled={googleLoading || githubLoading || afumailLoading || loading}
               >
                 {afumailLoading ? '...' : (
-                  <img src={afumailLogo} alt="AfuMail" className="h-6 w-6 rounded" />
+                  <div className="flex items-center gap-2">
+                    <img src={afumailLogo} alt="AfuMail" className="h-6 w-6 rounded" />
+                    <span className="text-sm font-semibold hidden sm:inline">AfuMail</span>
+                  </div>
                 )}
               </Button>
             </div>
