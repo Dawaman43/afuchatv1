@@ -83,13 +83,12 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Calling AfuMail API: ${AFUMAIL_API_URL}/api/oauth/token`);
+    console.log(`Calling AfuMail API: ${AFUMAIL_API_URL}/auth/afumail/token`);
     console.log(`Using redirect_uri: ${redirect_uri}`);
 
     // Call AfuMail OAuth endpoint.
-    // This endpoint lives behind the AfuMail project's API routes.
-    // It also expects X-User-Id for routing.
-    const response = await fetch(`${AFUMAIL_API_URL}/api/oauth/token`, {
+    // Token endpoint matches the callback URL structure.
+    const response = await fetch(`${AFUMAIL_API_URL}/auth/afumail/token`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
