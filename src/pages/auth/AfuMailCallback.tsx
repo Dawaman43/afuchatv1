@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomLoader } from '@/components/ui/CustomLoader';
@@ -8,12 +8,8 @@ const AfuMailCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
-  const hasProcessedRef = useRef(false);
 
   useEffect(() => {
-    if (hasProcessedRef.current) return;
-    hasProcessedRef.current = true;
-
     const handleCallback = async () => {
       const code = searchParams.get('code');
       const state = searchParams.get('state');
@@ -44,8 +40,8 @@ const AfuMailCallback = () => {
           ? 'https://afuchat.com/auth/afumail/callback'
           : `${window.location.origin}/auth/afumail/callback`;
         const clientId = isProduction 
-          ? '404c5ec3776ecbb26809295a7eace970'
-          : '404c5ec3776ecbb26809295a7eace970';
+          ? '60fb051c2f63890df5617523fcf81a8d'
+          : '2cff133dc0b104ab8d819cb47fbbfdc3';
 
         const { data: tokenData, error: tokenError } = await supabase.functions.invoke('afumail-auth', {
           body: {
@@ -61,20 +57,23 @@ const AfuMailCallback = () => {
           throw new Error(tokenError?.message || 'Failed to exchange authorization code');
         }
 
-        // Get user info from AfuMail via our edge function (avoids CORS "Failed to fetch" in browsers)
-        const { data: userData, error: userInfoError } = await supabase.functions.invoke('afumail-userinfo', {
-          body: { access_token: tokenData.access_token },
+        // Get user info from AfuMail
+        const AFUMAIL_API_BASE = 'https://vfcukxlzqfeehhkiogpf.supabase.co/functions/v1/afumail-api';
+
+        const userInfoResponse = await fetch(`${AFUMAIL_API_BASE}/api/user/me`, {
+          headers: {
+            'Authorization': `Bearer ${tokenData.access_token}`,
+          },
         });
 
-        if (userInfoError || !userData?.userInfo) {
-          const details = userInfoError?.message || JSON.stringify(userData);
-          throw new Error(`Failed to get user info from AfuMail: ${details}`);
+        if (!userInfoResponse.ok) {
+          throw new Error('Failed to get user info from AfuMail');
         }
 
-        const userInfo = userData.userInfo;
+        const userInfo = await userInfoResponse.json();
 
         // AfuMail may not include an email on /api/user/me.
-        // We also optionally fetched /mailbox server-side and return it as userData.mailbox.
+        // Fallback to /mailbox which returns { email_address, storage_used, storage_limit }.
         let afumailEmail: string | undefined =
           userInfo.email
           || userInfo.mail
@@ -90,8 +89,18 @@ const AfuMailCallback = () => {
               || userInfo.accounts.find((a: any) => a?.email || a?.email_address || a?.address)?.address
             : undefined);
 
-        if (!afumailEmail && userData?.mailbox) {
-          afumailEmail = userData.mailbox.email_address || userData.mailbox.email || userData.mailbox.address;
+        if (!afumailEmail) {
+          const mailboxRes = await fetch(`${AFUMAIL_API_BASE}/mailbox`, {
+            headers: {
+              'Authorization': `Bearer ${tokenData.access_token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (mailboxRes.ok) {
+            const mailbox = await mailboxRes.json();
+            afumailEmail = mailbox.email_address || mailbox.email || mailbox.address;
+          }
         }
 
         if (!afumailEmail) {

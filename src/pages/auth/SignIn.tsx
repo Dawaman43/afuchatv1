@@ -17,7 +17,7 @@ import { CustomLoader } from '@/components/ui/CustomLoader';
 // AfuMail OAuth configuration
 const AFUMAIL_CLIENT_ID_PREVIEW = '404c5ec3776ecbb26809295a7eace970';
 const AFUMAIL_CLIENT_ID_PROD = '404c5ec3776ecbb26809295a7eace970';
-const AFUMAIL_AUTH_URL = 'https://afuchatmail.vercel.app/auth';
+const AFUMAIL_AUTH_URL = 'https://afuchatmail.lovable.app/auth';
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -227,8 +227,7 @@ const SignIn = () => {
               )}
             </Button>
 
-            {/* AfuMail disabled - API not working properly */}
-            {/* <Button
+            <Button
               type="button"
               variant="outline"
               className="flex-1 h-14 rounded-xl bg-white hover:bg-gray-50 border-2 border-blue-500"
@@ -238,7 +237,7 @@ const SignIn = () => {
               {afumailLoading ? '...' : (
                 <img src={afumailLogo} alt="AfuMail" className="h-8 w-8 rounded-lg" />
               )}
-            </Button> */}
+            </Button>
           </div>
 
         </div>

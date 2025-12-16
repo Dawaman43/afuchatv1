@@ -47,6 +47,3 @@ verify_jwt = true
 
 [functions.afumail-auth]
 verify_jwt = false
-
-[functions.afumail-userinfo]
-verify_jwt = false

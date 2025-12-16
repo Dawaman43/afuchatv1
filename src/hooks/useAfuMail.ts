@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-const AFUMAIL_API_BASE = 'https://afuchatmail.vercel.app/api';
+const AFUMAIL_API_BASE = 'https://vfcukxlzqfeehhkiogpf.supabase.co/functions/v1/afumail-api';
 
 export interface MailboxInfo {
   email_address: string;
