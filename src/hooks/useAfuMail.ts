@@ -105,65 +105,60 @@ export function useAfuMail() {
     return headers;
   }, [accessToken, isTokenExpired, user?.id]);
 
-  // Exchange Supabase token for AfuMail OAuth token
+  // Exchange Supabase token for AfuMail OAuth token via our secure edge function
   const exchangeToken = useCallback(async (): Promise<TokenResponse | null> => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) return null;
-
-    const response = await fetch(`${AFUMAIL_API_BASE}/oauth/token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code: session.access_token,
-        client_id: 'afuchat',
-        redirect_uri: window.location.origin,
-      }).toString(),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Token exchange failed:', errorData);
-      return null;
-    }
-
-    return await response.json();
-  }, []);
-
-  // Refresh the access token
-  const refreshAccessToken = useCallback(async (): Promise<boolean> => {
-    if (!refreshToken) return false;
+    if (!session?.access_token || !user?.id) return null;
 
     try {
-      const response = await fetch(`${AFUMAIL_API_BASE}/oauth/token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+      const { data, error } = await supabase.functions.invoke('afumail-auth', {
+        body: {
+          grant_type: 'authorization_code',
+          code: session.access_token,
+          user_id: user.id,
         },
-        body: new URLSearchParams({
-          grant_type: 'refresh_token',
-          refresh_token: refreshToken,
-          client_id: 'afuchat',
-        }).toString(),
       });
 
-      if (!response.ok) {
-        console.error('Token refresh failed');
+      if (error) {
+        console.error('Token exchange failed:', error);
+        return null;
+      }
+
+      return data as TokenResponse;
+    } catch (err) {
+      console.error('Token exchange error:', err);
+      return null;
+    }
+  }, [user?.id]);
+
+  // Refresh the access token via our secure edge function
+  const refreshAccessToken = useCallback(async (): Promise<boolean> => {
+    if (!refreshToken || !user?.id) return false;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('afumail-auth', {
+        body: {
+          grant_type: 'refresh_token',
+          refresh_token: refreshToken,
+          user_id: user.id,
+        },
+      });
+
+      if (error) {
+        console.error('Token refresh failed:', error);
         return false;
       }
 
-      const data: TokenResponse = await response.json();
-      setAccessToken(data.access_token);
-      setRefreshToken(data.refresh_token);
-      setTokenExpiry(Date.now() + data.expires_in * 1000);
+      const tokenData = data as TokenResponse;
+      setAccessToken(tokenData.access_token);
+      setRefreshToken(tokenData.refresh_token);
+      setTokenExpiry(Date.now() + tokenData.expires_in * 1000);
       return true;
-    } catch (error) {
-      console.error('Token refresh error:', error);
+    } catch (err) {
+      console.error('Token refresh error:', err);
       return false;
     }
-  }, [refreshToken]);
+  }, [refreshToken, user?.id]);
 
   // Ensure valid token before API calls
   const ensureValidToken = useCallback(async (): Promise<boolean> => {

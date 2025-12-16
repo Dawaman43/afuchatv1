@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.sync-merchant-products]
 verify_jwt = true
+
+[functions.afumail-auth]
+verify_jwt = false
