@@ -227,7 +227,8 @@ const SignIn = () => {
               )}
             </Button>
 
-            <Button
+            {/* AfuMail disabled - API not working properly */}
+            {/* <Button
               type="button"
               variant="outline"
               className="flex-1 h-14 rounded-xl bg-white hover:bg-gray-50 border-2 border-blue-500"
@@ -237,7 +238,7 @@ const SignIn = () => {
               {afumailLoading ? '...' : (
                 <img src={afumailLogo} alt="AfuMail" className="h-8 w-8 rounded-lg" />
               )}
-            </Button>
+            </Button> */}
           </div>
 
         </div>
