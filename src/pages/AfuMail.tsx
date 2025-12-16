@@ -14,6 +14,7 @@ import { AfuMailTermsDialog } from '@/components/afumail/AfuMailTermsDialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import afumailLogo from '@/assets/mini-apps/afumail-logo.png';
 
 type ViewMode = 'list' | 'email' | 'compose';
 
@@ -337,7 +338,10 @@ export default function AfuMail() {
         </Sheet>
 
         <div className="flex items-center gap-2">
-          <h1 className="text-lg font-semibold">AfuMail</h1>
+          <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
+            <img src={afumailLogo} alt="AfuMail" className="h-5 w-5 rounded" />
+          </div>
+          <h1 className="text-lg font-bold text-blue-600">AfuMail</h1>
           {userEmail && (
             <span className="text-xs text-muted-foreground hidden sm:block">
               ({userEmail})
