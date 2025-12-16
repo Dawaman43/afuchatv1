@@ -117,7 +117,7 @@ const SignIn = () => {
       ? 'https://afuchat.com/auth/afumail/callback'
       : `${window.location.origin}/auth/afumail/callback`;
     const clientId = isProduction ? AFUMAIL_CLIENT_ID_PROD : AFUMAIL_CLIENT_ID_PREVIEW;
-    const scope = 'read:mailbox read:messages';
+    const scope = 'openid profile email read:mailbox read:messages read:folders search write:messages write:drafts';
     
     const authUrl = `${AFUMAIL_AUTH_URL}?oauth=true&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}&response_type=code`;
     
