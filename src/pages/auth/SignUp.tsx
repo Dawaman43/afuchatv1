@@ -17,7 +17,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CustomLoader } from '@/components/ui/CustomLoader';
 
 // AfuMail OAuth configuration
-const AFUMAIL_CLIENT_ID = '2cff133dc0b104ab8d819cb47fbbfdc3';
+const AFUMAIL_CLIENT_ID_PREVIEW = '2cff133dc0b104ab8d819cb47fbbfdc3';
+const AFUMAIL_CLIENT_ID_PROD = '60fb051c2f63890df5617523fcf81a8d';
 const AFUMAIL_AUTH_URL = 'https://afuchatmail.lovable.app/auth';
 
 const SignUp = () => {
@@ -243,14 +244,15 @@ const SignUpContent = () => {
     sessionStorage.setItem('afumail_oauth_state', state);
     sessionStorage.setItem('afumail_oauth_flow', 'signup');
     
-    // Use production URL on production, preview URL otherwise
+    // Use production URL + client ID on production, preview URL otherwise
     const isProduction = window.location.hostname === 'afuchat.com';
     const redirectUri = isProduction 
       ? 'https://afuchat.com/auth/afumail/callback'
       : `${window.location.origin}/auth/afumail/callback`;
+    const clientId = isProduction ? AFUMAIL_CLIENT_ID_PROD : AFUMAIL_CLIENT_ID_PREVIEW;
     const scope = 'read:mailbox read:messages';
     
-    const authUrl = `${AFUMAIL_AUTH_URL}?oauth=true&client_id=${AFUMAIL_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}&response_type=code`;
+    const authUrl = `${AFUMAIL_AUTH_URL}?oauth=true&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}&response_type=code`;
     
     window.location.href = authUrl;
   };
