@@ -485,22 +485,27 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
         }
       }
 
+      // Determine redirect destination (AfuMail signups go to /afumail)
+      const afumailRedirect = sessionStorage.getItem('afumail_post_signup_redirect');
+      const redirectTo = afumailRedirect ? '/afumail' : '/home';
+      sessionStorage.removeItem('afumail_post_signup_redirect');
+
       if (referralSuccess) {
         // Show referral welcome banner
         setShowReferralWelcome(true);
         // Redirect after 4 seconds
         setTimeout(() => {
-          window.location.href = '/home';
+          window.location.href = redirectTo;
         }, 4000);
       } else if (shouldReward) {
         setShowRewardModal(true);
         setTimeout(() => {
           setShowRewardModal(false);
-          window.location.href = '/home';
+          window.location.href = redirectTo;
         }, 3000);
       } else {
         toast.success('Profile completed successfully!');
-        window.location.href = '/home';
+        window.location.href = redirectTo;
       }
     } catch (error: any) {
       console.error('Profile completion error:', error);
