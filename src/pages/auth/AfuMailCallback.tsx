@@ -35,11 +35,14 @@ const AfuMailCallback = () => {
       try {
         // Exchange code for tokens via our edge function
         const redirectUri = `${window.location.origin}/auth/afumail/callback`;
+        const clientId = '2cff133dc0b104ab8d819cb47fbbfdc3';
+
         const { data: tokenData, error: tokenError } = await supabase.functions.invoke('afumail-auth', {
           body: {
             grant_type: 'authorization_code',
             code,
             redirect_uri: redirectUri,
+            client_id: clientId,
             user_id: 'oauth_signup',
           },
         });
