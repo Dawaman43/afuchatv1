@@ -17,7 +17,7 @@ import { CustomLoader } from '@/components/ui/CustomLoader';
 
 // AfuMail OAuth configuration
 const AFUMAIL_CLIENT_ID = 'afuchat_prod_001';
-const AFUMAIL_AUTH_URL = 'https://vfcukxlzqfeehhkiogpf.supabase.co/functions/v1/afumail-api/api/oauth/authorize';
+const AFUMAIL_AUTH_URL = 'https://vfcukxlzqfeehhkiogpf.lovable.app/auth';
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -242,11 +242,11 @@ const SignUpContent = () => {
     sessionStorage.setItem('afumail_oauth_state', state);
     sessionStorage.setItem('afumail_oauth_flow', 'signup');
     
-    // Build authorization URL
+    // Build authorization URL with correct format
     const redirectUri = `${window.location.origin}/auth/afumail/callback`;
     const scope = 'read:mailbox read:messages';
     
-    const authUrl = `${AFUMAIL_AUTH_URL}?client_id=${AFUMAIL_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}&response_type=code`;
+    const authUrl = `${AFUMAIL_AUTH_URL}?oauth=true&client_id=${AFUMAIL_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}&response_type=code`;
     
     window.location.href = authUrl;
   };
