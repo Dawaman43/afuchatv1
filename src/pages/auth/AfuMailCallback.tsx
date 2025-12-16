@@ -58,7 +58,7 @@ const AfuMailCallback = () => {
         }
 
         // Get user info from AfuMail
-        const AFUMAIL_API_BASE = 'https://vfcukxlzqfeehhkiogpf.supabase.co/functions/v1/afumail-api';
+        const AFUMAIL_API_BASE = 'https://afuchatmail.vercel.app';
 
         const userInfoResponse = await fetch(`${AFUMAIL_API_BASE}/api/user/me`, {
           headers: {
