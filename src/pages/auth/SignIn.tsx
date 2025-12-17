@@ -132,7 +132,7 @@ const SignIn = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-background relative overflow-hidden">
+    <div className="h-screen flex flex-col bg-gradient-to-b from-primary/10 via-background to-primary/10 relative overflow-hidden">
       {/* Subtle gradient glow at top */}
       <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent pointer-events-none" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
