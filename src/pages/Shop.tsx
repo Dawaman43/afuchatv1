@@ -20,6 +20,8 @@ import { Loader2, ShoppingCart, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { GiftImage } from '@/components/gifts/GiftImage';
 import { invalidateGiftPricingCache } from '@/hooks/useGiftPricing';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UserListings } from '@/components/shop/UserListings';
 
 interface GiftMarketplaceListing {
   id: string;
@@ -209,85 +211,98 @@ export default function Shop() {
           </div>
         </div>
 
-        {/* Content */}
-        <div className="max-w-7xl mx-auto py-6 pb-24 lg:pb-6">
-          {listings.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center px-4">
-              <Store className="h-16 w-16 text-muted-foreground/50 mb-4" />
-              <h2 className="text-2xl font-bold mb-2">No gifts available</h2>
-              <p className="text-muted-foreground">Check back later for new listings</p>
-            </div>
-          ) : (
-            <div className="space-y-8">
-              {rarityOrder.map((rarity) => {
-                const rarityListings = groupedListings[rarity];
-                if (!rarityListings || rarityListings.length === 0) return null;
+        {/* Tabs for Gift Marketplace and Local Marketplace */}
+        <div className="max-w-7xl mx-auto py-6 pb-24 lg:pb-6 px-4">
+          <Tabs defaultValue="gifts" className="w-full">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
+              <TabsTrigger value="gifts">Gift Marketplace</TabsTrigger>
+              <TabsTrigger value="local">Local Products</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="gifts">
+              {listings.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+                  <Store className="h-16 w-16 text-muted-foreground/50 mb-4" />
+                  <h2 className="text-2xl font-bold mb-2">No gifts available</h2>
+                  <p className="text-muted-foreground">Check back later for new listings</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {rarityOrder.map((rarity) => {
+                    const rarityListings = groupedListings[rarity];
+                    if (!rarityListings || rarityListings.length === 0) return null;
 
-                return (
-                  <div key={rarity} className="space-y-3">
-                    {/* Category Header */}
-                    <div className="flex items-center gap-2 px-4">
-                      <Badge className={`${getRarityColor(rarity)} font-semibold`} variant="outline">
-                        {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {rarityListings.length} {rarityListings.length === 1 ? 'gift' : 'gifts'}
-                      </span>
-                    </div>
-                    
-                    {/* Horizontal Scroll Container */}
-                    <div className="relative">
-                      <div className="flex gap-4 overflow-x-auto pb-4 px-4 scrollbar-hide snap-x snap-mandatory">
-                        {rarityListings.map((listing) => (
-                          <motion.button
-                            key={`${listing.id}-${listing.user_id}`}
-                            onClick={() => setSelectedListing(listing)}
-                            className="flex-shrink-0 snap-start flex flex-col items-center gap-3 py-4 px-2 min-w-[120px] group"
-                            whileHover={{ scale: 1.05, y: -4 }}
-                            whileTap={{ scale: 0.95 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                          >
-                            {/* Gift Image with Glow Effect */}
-                            <div className="relative">
-                              <div className={`absolute inset-0 blur-xl opacity-30 group-hover:opacity-50 transition-opacity ${
-                                rarity === 'legendary' ? 'bg-yellow-500' :
-                                rarity === 'epic' ? 'bg-purple-500' :
-                                rarity === 'rare' ? 'bg-blue-500' :
-                                rarity === 'uncommon' ? 'bg-green-500' : 'bg-gray-500'
-                              }`} />
-                              <GiftImage
-                                giftId={listing.gift.id}
-                                giftName={listing.gift.name}
-                                emoji={listing.gift.emoji}
-                                rarity={listing.gift.rarity}
-                                size="lg"
-                              />
-                            </div>
-                            
-                            {/* Gift Name */}
-                            <p className="text-sm font-semibold text-center truncate max-w-[100px] group-hover:text-primary transition-colors" title={listing.gift.name}>
-                              {listing.gift.name}
-                            </p>
-                            
-                            {/* Price & Seller */}
-                            <div className="flex flex-col items-center gap-1">
-                              <p className="text-base font-bold text-primary">
-                                {listing.asking_price.toLocaleString()}
-                                <span className="text-xs font-medium text-muted-foreground ml-1">Nexa</span>
-                              </p>
-                              <p className="text-[11px] text-muted-foreground">
-                                @{listing.seller.handle}
-                              </p>
-                            </div>
-                          </motion.button>
-                        ))}
+                    return (
+                      <div key={rarity} className="space-y-3">
+                        {/* Category Header */}
+                        <div className="flex items-center gap-2">
+                          <Badge className={`${getRarityColor(rarity)} font-semibold`} variant="outline">
+                            {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">
+                            {rarityListings.length} {rarityListings.length === 1 ? 'gift' : 'gifts'}
+                          </span>
+                        </div>
+                        
+                        {/* Horizontal Scroll Container */}
+                        <div className="relative">
+                          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+                            {rarityListings.map((listing) => (
+                              <motion.button
+                                key={`${listing.id}-${listing.user_id}`}
+                                onClick={() => setSelectedListing(listing)}
+                                className="flex-shrink-0 snap-start flex flex-col items-center gap-3 py-4 px-2 min-w-[120px] group"
+                                whileHover={{ scale: 1.05, y: -4 }}
+                                whileTap={{ scale: 0.95 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                              >
+                                {/* Gift Image with Glow Effect */}
+                                <div className="relative">
+                                  <div className={`absolute inset-0 blur-xl opacity-30 group-hover:opacity-50 transition-opacity ${
+                                    rarity === 'legendary' ? 'bg-yellow-500' :
+                                    rarity === 'epic' ? 'bg-purple-500' :
+                                    rarity === 'rare' ? 'bg-blue-500' :
+                                    rarity === 'uncommon' ? 'bg-green-500' : 'bg-gray-500'
+                                  }`} />
+                                  <GiftImage
+                                    giftId={listing.gift.id}
+                                    giftName={listing.gift.name}
+                                    emoji={listing.gift.emoji}
+                                    rarity={listing.gift.rarity}
+                                    size="lg"
+                                  />
+                                </div>
+                                
+                                {/* Gift Name */}
+                                <p className="text-sm font-semibold text-center truncate max-w-[100px] group-hover:text-primary transition-colors" title={listing.gift.name}>
+                                  {listing.gift.name}
+                                </p>
+                                
+                                {/* Price & Seller */}
+                                <div className="flex flex-col items-center gap-1">
+                                  <p className="text-base font-bold text-primary">
+                                    {listing.asking_price.toLocaleString()}
+                                    <span className="text-xs font-medium text-muted-foreground ml-1">Nexa</span>
+                                  </p>
+                                  <p className="text-[11px] text-muted-foreground">
+                                    @{listing.seller.handle}
+                                  </p>
+                                </div>
+                              </motion.button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                    );
+                  })}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="local">
+              <UserListings />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
 
