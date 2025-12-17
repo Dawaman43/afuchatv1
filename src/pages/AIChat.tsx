@@ -4,13 +4,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Bot, Copy, Check, PenSquare, ArrowUp, History } from 'lucide-react';
+import { Bot, Copy, Check, PenSquare, ArrowUp, History, Globe, MessageSquare } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { PremiumGate } from '@/components/PremiumGate';
 import { parseRichText } from '@/lib/richTextUtils';
 import { Link } from 'react-router-dom';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 // Parse AI responses to convert page paths into clickable links
 const parseAIResponse = (content: string): React.ReactNode => {
@@ -83,6 +85,7 @@ const AIChat: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [profile, setProfile] = useState<{ avatar_url: string | null; display_name: string } | null>(null);
+  const [webSearchMode, setWebSearchMode] = useState(false);
   
   useEffect(() => {
     if (!user) {
@@ -146,6 +149,7 @@ const AIChat: React.FC = () => {
         body: {
           message: userMessage.content,
           history: messages.slice(-5),
+          webSearchMode: webSearchMode,
         }
       });
 
@@ -241,6 +245,15 @@ const AIChat: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-1">
+            {/* Web Search Mode Toggle */}
+            <div className="flex items-center gap-1.5 mr-2">
+              <Globe className={`h-4 w-4 ${webSearchMode ? 'text-primary' : 'text-muted-foreground'}`} />
+              <Switch
+                checked={webSearchMode}
+                onCheckedChange={setWebSearchMode}
+                className="scale-75"
+              />
+            </div>
             <Button variant="ghost" size="icon" className="h-10 w-10">
               <History className="h-5 w-5" />
             </Button>
@@ -258,9 +271,19 @@ const AIChat: React.FC = () => {
                 <Bot className="h-8 w-8 text-primary" />
               </div>
               <h2 className="text-xl font-bold mb-2">How can I help you today?</h2>
-              <p className="text-muted-foreground text-sm max-w-xs">
+              <p className="text-muted-foreground text-sm max-w-xs mb-4">
                 Ask me anything about AfuChat, get help with features, or just have a conversation.
               </p>
+              
+              {/* Web Search Mode Info */}
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs ${webSearchMode ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                <Globe className="h-4 w-4" />
+                <span>
+                  {webSearchMode 
+                    ? '🔍 Web Search Mode ON - I can search the internet!' 
+                    : 'Toggle 🌐 for web search mode'}
+                </span>
+              </div>
             </div>
           ) : (
             <div className="p-4 space-y-4">
