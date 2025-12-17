@@ -3636,6 +3636,69 @@ export type Database = {
           },
         ]
       }
+      user_product_listings: {
+        Row: {
+          category: string | null
+          country: string
+          created_at: string | null
+          currency: string
+          description: string | null
+          id: string
+          images: string[] | null
+          is_available: boolean | null
+          price: number
+          seller_id: string
+          title: string
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          country: string
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_available?: boolean | null
+          price: number
+          seller_id: string
+          title: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          country?: string
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_available?: boolean | null
+          price?: number
+          seller_id?: string
+          title?: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_product_listings_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_product_listings_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_reports: {
         Row: {
           additional_info: string | null
