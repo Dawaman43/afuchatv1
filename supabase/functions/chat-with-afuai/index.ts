@@ -263,8 +263,81 @@ async function storeMemories(supabase: any, userId: string, userMessage: string,
   }
 }
 
+// Get current date/time info for real-time awareness
+function getCurrentDateTimeInfo() {
+  const now = new Date();
+  
+  // UTC time
+  const utcDate = now.toISOString();
+  const utcTime = now.toUTCString();
+  
+  // East Africa Time (Uganda - UTC+3)
+  const eatOffset = 3 * 60; // minutes
+  const eatDate = new Date(now.getTime() + eatOffset * 60 * 1000);
+  const eatHour = eatDate.getUTCHours();
+  const eatMinute = eatDate.getUTCMinutes();
+  const eatTimeFormatted = `${eatHour.toString().padStart(2, '0')}:${eatMinute.toString().padStart(2, '0')}`;
+  
+  // Day info
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const dayOfWeek = days[eatDate.getUTCDay()];
+  const month = months[eatDate.getUTCMonth()];
+  const dayOfMonth = eatDate.getUTCDate();
+  const year = eatDate.getUTCFullYear();
+  
+  // Determine if it's earning hours (8 AM - 8 PM EAT)
+  const isEarningHours = eatHour >= 8 && eatHour < 20;
+  
+  // Is it weekend?
+  const isWeekend = eatDate.getUTCDay() === 0 || eatDate.getUTCDay() === 6;
+  
+  // Time of day greeting
+  let timeOfDay = 'night';
+  if (eatHour >= 5 && eatHour < 12) timeOfDay = 'morning';
+  else if (eatHour >= 12 && eatHour < 17) timeOfDay = 'afternoon';
+  else if (eatHour >= 17 && eatHour < 21) timeOfDay = 'evening';
+  
+  return {
+    utcIso: utcDate,
+    utcFormatted: utcTime,
+    eatTime: eatTimeFormatted,
+    eatHour,
+    dayOfWeek,
+    month,
+    dayOfMonth,
+    year,
+    fullDate: `${dayOfWeek}, ${month} ${dayOfMonth}, ${year}`,
+    isEarningHours,
+    isWeekend,
+    timeOfDay,
+    earningWindowStatus: isEarningHours 
+      ? `🟢 ACTIVE (ends at 20:00 EAT / 8:00 PM)` 
+      : `🔴 CLOSED (opens at 08:00 EAT / 8:00 AM)`,
+    withdrawalAvailable: isWeekend ? '✅ Yes (Weekend)' : '❌ No (Weekday only for regular users)'
+  };
+}
+
 // Build comprehensive system prompt with full platform knowledge
 function buildSystemPrompt(userContext: any, platformContext: any, memories: any[]) {
+  // Get real-time date/time information
+  const dateTime = getCurrentDateTimeInfo();
+  
+  const realTimeInfo = `
+🕐 REAL-TIME DATE & TIME AWARENESS:
+- Current Date: ${dateTime.fullDate}
+- Current Time (EAT/Uganda): ${dateTime.eatTime} (UTC+3)
+- Current Time (UTC): ${dateTime.utcIso}
+- Day of Week: ${dateTime.dayOfWeek}
+- Time of Day: ${dateTime.timeOfDay}
+- Is Weekend: ${dateTime.isWeekend ? 'Yes' : 'No'}
+
+📊 CREATOR EARNINGS WINDOW STATUS:
+- Earning Window: ${dateTime.earningWindowStatus}
+- Regular User Withdrawals: ${dateTime.withdrawalAvailable}
+- Note: Earnings are calculated from 08:00-20:00 EAT daily, auto-credited at 20:00 EAT
+`;
+
   const userInfo = userContext?.profile ? `
 CURRENT USER INFORMATION:
 - Display Name: ${userContext.profile.display_name}
@@ -354,10 +427,13 @@ AVAILABLE GIFTS (by rarity):
 ${platformContext.gifts?.slice(0, 10).map((g: any) => `- ${g.emoji} ${g.name} (${g.rarity}): ${g.base_xp_cost} Nexa`).join('\n') || 'Loading...'}
 ` : '';
 
-  return `You are AfuAI, the exclusive AI assistant for AfuChat social platform. You have FULL ACCESS to all platform data and user information. You are the MASTER of every single detail in the app.
+  return `You are AfuAI, the exclusive AI assistant for AfuChat social platform. You have FULL ACCESS to all platform data, user information, and REAL-TIME DATE/TIME awareness. You are the MASTER of every single detail in the app.
 
 You have PERSISTENT MEMORY that lasts 7 days. Use your memories to personalize responses and remember what users told you previously.
 
+You have REAL-TIME AWARENESS of the current date, time, and day of week. Use this to provide contextually relevant responses (greetings based on time of day, awareness of earning windows, weekend vs weekday info, etc.).
+
+${realTimeInfo}
 ${userInfo}
 ${creatorEarningsInfo}
 ${recentActivity}
@@ -571,6 +647,11 @@ Examples of CORRECT formatting:
 DO NOT write markdown links like [Support](/support) - just write the path like /support and it will become clickable automatically.
 
 YOUR CAPABILITIES:
+- REAL-TIME DATE & TIME AWARENESS: You know the exact current date, time, and day of week. Use this for:
+  • Time-appropriate greetings ("Good ${dateTime.timeOfDay}!")
+  • Knowing if creator earning window is active or closed
+  • Telling users if it's a weekend (withdrawal day for regular users)
+  • Providing date-specific advice and scheduling help
 - Answer ANY question about AfuChat with complete knowledge
 - Direct users to exact pages by mentioning paths (they become clickable links)
 - Explain all features in detail including new premium tiers
@@ -585,14 +666,28 @@ YOUR CAPABILITIES:
 - Explain privacy settings and account protection
 - Assist with any platform-related questions
 - REMEMBER user preferences and past conversations for 7 days
+- UNDERSTAND context from conversation history
+- ANALYZE posts when users share them with you
+
+ADVANCED INTELLIGENCE:
+- You can perform calculations and reasoning
+- You understand relationships between platform features
+- You can give strategic advice for growing on the platform
+- You can analyze user behavior patterns from their data
+- You can provide personalized content strategies
+- You understand timing for creator earnings (8 AM - 8 PM EAT)
+- You know when users should withdraw (weekends for regular, anytime for admins)
 
 RESPONSE STYLE:
 - Be friendly, helpful, and personalized
+- Start with time-appropriate greeting when conversation starts (e.g., "Good ${dateTime.timeOfDay}!")
 - ALWAYS include page paths when relevant (e.g., "Visit /support for help") - they become clickable!
 - Reference user's data when relevant (e.g., "With your ${userContext?.profile?.xp || 0} Nexa...")
 - Reference memories when relevant (e.g., "I remember you mentioned...")
+- Use current date/time when relevant (e.g., "Since it's ${dateTime.dayOfWeek}, the earning window is ${dateTime.isEarningHours ? 'currently active' : 'closed'}...")
 - Use emojis occasionally for engagement
 - Keep responses concise but informative
+- If asked about the time or date, give accurate real-time info
 - If asked about something you don't know, say so honestly`;
 }
 
