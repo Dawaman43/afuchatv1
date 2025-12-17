@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -8,8 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Loader2, Upload, X } from 'lucide-react';
-import { getCurrencyForCountry } from '@/lib/currencyUtils';
+import { Plus, Loader2, Upload, X, Coins } from 'lucide-react';
+import { getCurrencyForCountry, convertToACoin } from '@/lib/currencyUtils';
 
 const CATEGORIES = [
   'Electronics',
@@ -60,6 +60,12 @@ export function CreateListingDialog({ onSuccess }: CreateListingDialogProps) {
   }, [user]);
 
   const userCurrency = getCurrencyForCountry(profile?.country || 'Uganda');
+  
+  // Calculate ACoin price from local currency
+  const acoinPrice = useMemo(() => {
+    if (!price || isNaN(parseFloat(price))) return 0;
+    return convertToACoin(parseFloat(price), userCurrency.code);
+  }, [price, userCurrency.code]);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files?.length || images.length >= 4) return;
@@ -121,6 +127,7 @@ export function CreateListingDialog({ onSuccess }: CreateListingDialogProps) {
           country: profile.country || 'Uganda',
           category: category || null,
           images: images.filter(Boolean),
+          acoin_price: acoinPrice,
         });
 
       if (error) throw error;
@@ -186,35 +193,49 @@ export function CreateListingDialog({ onSuccess }: CreateListingDialogProps) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price">Price ({userCurrency.code}) *</Label>
-              <Input
-                id="price"
-                type="number"
-                min="0"
-                step="0.01"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price">Price ({userCurrency.code}) *</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+            
+            {/* ACoin Price Display */}
+            {acoinPrice > 0 && (
+              <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                <Coins className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-sm font-medium">ACoin Price</p>
+                  <p className="text-lg font-bold text-primary">{acoinPrice.toLocaleString()} ACoin</p>
+                  <p className="text-xs text-muted-foreground">≈ ${(acoinPrice * 0.2).toFixed(2)} USD</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
