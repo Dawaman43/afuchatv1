@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageCircle, Eye, MapPin, Loader2 } from 'lucide-react';
+import { MessageCircle, Eye, MapPin, Loader2, Coins } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -21,6 +21,7 @@ interface UserListing {
   images: string[];
   view_count: number;
   created_at: string;
+  acoin_price: number;
   seller: {
     id: string;
     display_name: string;
@@ -40,12 +41,16 @@ export function UserListingCard({ listing }: UserListingCardProps) {
   const [contacting, setContacting] = useState(false);
 
   const formatPrice = (price: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(price);
+    } catch {
+      return `${currency} ${price.toLocaleString()}`;
+    }
   };
 
   const handleContact = async () => {
@@ -157,8 +162,17 @@ export function UserListingCard({ listing }: UserListingCardProps) {
       <div className="p-3 space-y-2">
         <h3 className="font-semibold text-sm line-clamp-2">{listing.title}</h3>
         
-        <p className="text-lg font-bold text-primary">
-          {formatPrice(listing.price, listing.currency)}
+        {/* ACoin Price - Primary */}
+        <div className="flex items-center gap-1.5">
+          <Coins className="h-4 w-4 text-primary" />
+          <span className="text-lg font-bold text-primary">
+            {listing.acoin_price?.toLocaleString() || 0} ACoin
+          </span>
+        </div>
+        
+        {/* Local Currency - Secondary */}
+        <p className="text-xs text-muted-foreground">
+          ≈ {formatPrice(listing.price, listing.currency)}
         </p>
 
         {/* Seller Info */}

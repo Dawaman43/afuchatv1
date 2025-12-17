@@ -3638,6 +3638,7 @@ export type Database = {
       }
       user_product_listings: {
         Row: {
+          acoin_price: number
           category: string | null
           country: string
           created_at: string | null
@@ -3653,6 +3654,7 @@ export type Database = {
           view_count: number | null
         }
         Insert: {
+          acoin_price?: number
           category?: string | null
           country: string
           created_at?: string | null
@@ -3668,6 +3670,7 @@ export type Database = {
           view_count?: number | null
         }
         Update: {
+          acoin_price?: number
           category?: string | null
           country?: string
           created_at?: string | null

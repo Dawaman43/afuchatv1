@@ -34,6 +34,7 @@ interface UserListing {
   images: string[];
   view_count: number;
   created_at: string;
+  acoin_price: number;
   seller: {
     id: string;
     display_name: string;

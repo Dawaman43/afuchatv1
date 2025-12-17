@@ -137,14 +137,76 @@ const exchangeRatesFromUGX: Record<string, number> = {
   "KRW": 0.36,   // 1 UGX ≈ 0.36 KRW
 };
 
+// Exchange rates TO USD (for ACoin conversion)
+// 1 ACoin = $0.2 USD
+const ACOIN_TO_USD = 0.2;
+
+const exchangeRatesToUSD: Record<string, number> = {
+  "USD": 1,
+  "UGX": 0.00027,
+  "KES": 0.0077,
+  "TZS": 0.00039,
+  "RWF": 0.00078,
+  "EUR": 1.08,
+  "GBP": 1.27,
+  "NGN": 0.00065,
+  "GHS": 0.063,
+  "ZAR": 0.054,
+  "EGP": 0.020,
+  "INR": 0.012,
+  "AED": 0.27,
+  "CAD": 0.74,
+  "AUD": 0.65,
+  "CNY": 0.14,
+  "JPY": 0.0067,
+  "BRL": 0.17,
+  "MXN": 0.058,
+  "ETB": 0.0088,
+  "XOF": 0.0016,
+  "XAF": 0.0016,
+  "ZMW": 0.038,
+  "BWP": 0.073,
+  "SSP": 0.00077,
+  "SOS": 0.0018,
+  "BIF": 0.00035,
+  "CDF": 0.00036,
+  "MAD": 0.098,
+  "PKR": 0.0036,
+  "BDT": 0.0084,
+  "IDR": 0.000063,
+  "MYR": 0.21,
+  "SGD": 0.74,
+  "THB": 0.028,
+  "VND": 0.000040,
+  "PHP": 0.018,
+  "KRW": 0.00074,
+};
+
 export function convertFromUGX(amountUGX: number, targetCurrencyCode: string): number {
   const rate = exchangeRatesFromUGX[targetCurrencyCode];
-  if (!rate) return amountUGX; // Return original if no rate found
+  if (!rate) return amountUGX;
   return amountUGX * rate;
 }
 
+// Convert any currency to USD
+export function convertToUSD(amount: number, currencyCode: string): number {
+  const rate = exchangeRatesToUSD[currencyCode];
+  if (!rate) return amount * 0.00027; // Default to UGX rate
+  return amount * rate;
+}
+
+// Convert any currency to ACoin (1 ACoin = $0.2 USD)
+export function convertToACoin(amount: number, currencyCode: string): number {
+  const usdAmount = convertToUSD(amount, currencyCode);
+  return Math.ceil(usdAmount / ACOIN_TO_USD);
+}
+
+// Convert ACoin to USD
+export function acoinToUSD(acoin: number): number {
+  return acoin * ACOIN_TO_USD;
+}
+
 export function formatPrice(amount: number, currency: CurrencyInfo): string {
-  // For currencies with small decimals, round appropriately
   const formatted = currency.code === "USD" || currency.code === "EUR" || currency.code === "GBP"
     ? amount.toFixed(2)
     : Math.round(amount).toLocaleString();
@@ -155,12 +217,10 @@ export function formatPrice(amount: number, currency: CurrencyInfo): string {
 export function formatPriceForCountry(priceUGX: number, userCountry: string | null | undefined): string {
   const currency = getCurrencyForCountry(userCountry);
   
-  // If user is from Uganda, just show UGX
   if (currency.code === "UGX") {
     return `UGX ${priceUGX.toLocaleString()}`;
   }
   
-  // Convert and format
   const convertedAmount = convertFromUGX(priceUGX, currency.code);
   return formatPrice(convertedAmount, currency);
 }
