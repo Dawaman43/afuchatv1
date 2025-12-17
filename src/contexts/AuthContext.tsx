@@ -159,7 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   .from('profiles')
                   .select('country')
                   .eq('id', session.user.id)
-                  .single();
+                  .maybeSingle();
                 
                 if (profile && !profile.country) {
                   const updateData: Record<string, any> = {
