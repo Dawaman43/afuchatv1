@@ -45,7 +45,7 @@ export default function FeaturedProducts() {
           .from('profiles')
           .select('country')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
         if (profile?.country) {
           setUserCountry(profile.country);
         }
@@ -63,7 +63,7 @@ export default function FeaturedProducts() {
         .select('id, name, logo_url')
         .eq('is_active', true)
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (!merchantData) {
         setLoading(false);

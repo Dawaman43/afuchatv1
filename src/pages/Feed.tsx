@@ -1803,7 +1803,13 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
             .in('id', quotedPostIds);
           
           const map = new Map();
-          (data || []).forEach((qp: any) => map.set(qp.id, qp));
+          (data || []).forEach((qp: any) => {
+            // Ensure profiles fallback for quoted posts
+            if (!qp.profiles) {
+              qp.profiles = { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false, avatar_url: null };
+            }
+            map.set(qp.id, qp);
+          });
           return map;
         })()
       ]);
@@ -1845,7 +1851,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
         return {
           ...post,
-          profiles: post.profiles || { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false },
+          profiles: post.profiles || { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false, is_affiliate: false, is_business_mode: false, avatar_url: null, affiliated_business_id: null, affiliated_business: null, last_seen: null, show_online_status: false, is_warned: false, warning_reason: null },
           quoted_post: quotedPost,
           replies,
           reply_count: replies.length,
@@ -2438,7 +2444,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                 </div>
               ) : (
                 <>
-                  {currentPosts.map((post, index) => (
+                  {currentPosts.filter(post => post.profiles).map((post, index) => (
                     <div key={post.id}>
                       <PostCard
                         post={post}
