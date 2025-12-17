@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { format } from 'date-fns';
+import DOMPurify from 'dompurify';
 import { 
   ArrowLeft, 
   Star, 
@@ -77,6 +78,26 @@ function AttachmentItem({ attachment }: { attachment: Attachment }) {
       </div>
       <Download className="h-4 w-4 text-muted-foreground" />
     </a>
+  );
+}
+
+// Sanitize email HTML to prevent XSS attacks
+function SafeEmailBody({ htmlContent, textContent }: { htmlContent?: string; textContent?: string }) {
+  const sanitizedHtml = useMemo(() => {
+    const content = htmlContent || textContent || '';
+    return DOMPurify.sanitize(content, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'blockquote', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'img', 'pre', 'code'],
+      ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style', 'src', 'alt', 'width', 'height'],
+      ALLOW_DATA_ATTR: false,
+      ADD_ATTR: ['target'], // Ensure links open in new tab
+    });
+  }, [htmlContent, textContent]);
+
+  return (
+    <div 
+      className="prose prose-sm max-w-none dark:prose-invert"
+      dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+    />
   );
 }
 
@@ -216,11 +237,8 @@ export function EmailView({
             </div>
           )}
 
-          {/* Email body */}
-          <div 
-            className="prose prose-sm max-w-none dark:prose-invert"
-            dangerouslySetInnerHTML={{ __html: email.body_html || email.body_text }}
-          />
+          {/* Email body - sanitized to prevent XSS */}
+          <SafeEmailBody htmlContent={email.body_html} textContent={email.body_text} />
         </div>
       </div>
 
