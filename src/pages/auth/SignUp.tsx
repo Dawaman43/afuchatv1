@@ -20,7 +20,7 @@ import { CustomLoader } from '@/components/ui/CustomLoader';
 // AfuMail OAuth configuration
 const AFUMAIL_CLIENT_ID_PREVIEW = '404c5ec3776ecbb26809295a7eace970';
 const AFUMAIL_CLIENT_ID_PROD = '404c5ec3776ecbb26809295a7eace970';
-const AFUMAIL_AUTH_URL = 'https://afuchatmail.lovable.app/auth';
+const AFUMAIL_AUTH_URL = 'https://afuchatmail.vercel.app/auth';
 
 const SignUp = () => {
   const navigate = useNavigate();
