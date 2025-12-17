@@ -12,6 +12,7 @@ import { SettingsSheet } from "./components/SettingsSheet";
 import { RequireCountry } from "./components/RequireCountry";
 import { RequireDateOfBirth } from "./components/RequireDateOfBirth";
 import { RequireBanCheck } from "./components/RequireBanCheck";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 import { useDailyLogin } from "./hooks/useDailyLogin";
 import { useLanguageSync } from "./hooks/useLanguageSync";
@@ -261,26 +262,28 @@ const AppRoutes = () => {
 
 const App = () => (
   <div className="select-none">
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <AccountModeProvider>
-            <SettingsProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                  <AnimatePresence mode="wait">
-                    <AppRoutes />
-                  </AnimatePresence>
-                  <SettingsSheet />
-                </BrowserRouter>
-              </TooltipProvider>
-            </SettingsProvider>
-          </AccountModeProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <AccountModeProvider>
+              <SettingsProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                    <AnimatePresence mode="wait">
+                      <AppRoutes />
+                    </AnimatePresence>
+                    <SettingsSheet />
+                  </BrowserRouter>
+                </TooltipProvider>
+              </SettingsProvider>
+            </AccountModeProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   </div>
 );
 
