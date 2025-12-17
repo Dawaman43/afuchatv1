@@ -263,6 +263,70 @@ async function storeMemories(supabase: any, userId: string, userMessage: string,
   }
 }
 
+// Web search function for premium users
+async function performWebSearch(query: string): Promise<string> {
+  try {
+    const YOU_API_KEY = Deno.env.get('YOU_API_KEY');
+    if (!YOU_API_KEY) {
+      console.log('Web search not available - YOU_API_KEY not configured');
+      return '';
+    }
+
+    console.log('Performing web search for:', query);
+    
+    const searchUrl = new URL('https://api.ydc-index.io/search');
+    searchUrl.searchParams.append('query', query);
+    
+    const response = await fetch(searchUrl.toString(), {
+      method: 'GET',
+      headers: {
+        'X-API-Key': YOU_API_KEY,
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Web search error:', response.status);
+      return '';
+    }
+
+    const data = await response.json();
+    
+    const results = data.hits?.slice(0, 5).map((hit: any, index: number) => {
+      const title = hit.title || 'No title';
+      const snippet = hit.description || hit.snippets?.[0] || 'No description';
+      const url = hit.url || '';
+      return `${index + 1}. **${title}**\n   ${snippet}\n   Source: ${url}`;
+    }).join('\n\n') || '';
+
+    console.log(`Web search found ${data.hits?.length || 0} results`);
+    return results;
+  } catch (error) {
+    console.error('Web search error:', error);
+    return '';
+  }
+}
+
+// Detect if user message needs web search
+function needsWebSearch(message: string): boolean {
+  const searchTriggers = [
+    /what('s| is) (?:the )?(?:latest|current|recent|new)/i,
+    /search (?:for|about|the web)/i,
+    /look up/i,
+    /find (?:out|information|me)/i,
+    /(?:tell me|what) (?:about|is) (?:the )?news/i,
+    /(?:who|what|when|where|why|how) (?:is|are|was|were|did|does|do)/i,
+    /latest (?:news|updates|information)/i,
+    /current (?:events|situation|status)/i,
+    /trending/i,
+    /happening (?:now|today|right now)/i,
+    /search online/i,
+    /google|search the internet/i,
+    /real-?time (?:info|information|data)/i,
+  ];
+  
+  return searchTriggers.some(trigger => trigger.test(message));
+}
+
 // Get current date/time info for real-time awareness
 function getCurrentDateTimeInfo() {
   const now = new Date();
@@ -647,6 +711,11 @@ Examples of CORRECT formatting:
 DO NOT write markdown links like [Support](/support) - just write the path like /support and it will become clickable automatically.
 
 YOUR CAPABILITIES:
+- 🔍 **LIVE WEB SEARCH** (PREMIUM EXCLUSIVE): You can search the internet in real-time for current information!
+  • When users ask about news, current events, latest updates, or anything requiring fresh data, you automatically search the web
+  • Use phrases like "what's the latest", "current news", "search for", "look up", "find information about" to trigger web search
+  • You can provide up-to-date information with sources and citations
+  • This is an exclusive premium feature that non-premium users don't have access to
 - REAL-TIME DATE & TIME AWARENESS: You know the exact current date, time, and day of week. Use this for:
   • Time-appropriate greetings ("Good ${dateTime.timeOfDay}!")
   • Knowing if creator earning window is active or closed
@@ -670,6 +739,7 @@ YOUR CAPABILITIES:
 - ANALYZE posts when users share them with you
 
 ADVANCED INTELLIGENCE:
+- 🌐 REAL-TIME WEB ACCESS: You can search the web for current information, news, and updates
 - You can perform calculations and reasoning
 - You understand relationships between platform features
 - You can give strategic advice for growing on the platform
@@ -803,6 +873,13 @@ serve(async (req) => {
 
     console.log(`Loaded ${memories.length} memories for user`);
 
+    // Check if web search is needed for this query (premium feature)
+    let webSearchResults = '';
+    if (needsWebSearch(message)) {
+      console.log('Web search triggered for premium user');
+      webSearchResults = await performWebSearch(message);
+    }
+
     // Build comprehensive system prompt with memories
     const systemPrompt = buildSystemPrompt(userContext, platformContext, memories);
 
@@ -823,10 +900,20 @@ serve(async (req) => {
       }
     }
 
-    // Add current message
+    // Add current message with web search results if available
+    let enhancedMessage = message;
+    if (webSearchResults) {
+      enhancedMessage = `${message}
+
+🔍 **LIVE WEB SEARCH RESULTS** (Use this fresh information to answer the user's question):
+${webSearchResults}
+
+Please use the above search results to provide an accurate, up-to-date response. Cite sources when relevant.`;
+    }
+
     messages.push({
       role: 'user',
-      content: message
+      content: enhancedMessage
     });
 
     console.log('Calling Lovable AI with full platform context');
