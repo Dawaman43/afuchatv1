@@ -19,7 +19,12 @@ interface SuggestedUser {
   is_organization_verified: boolean | null;
   is_affiliate: boolean | null;
   affiliated_business_id: string | null;
+  verification_source: string | null;
   following_me?: boolean;
+  business_profile?: {
+    avatar_url: string | null;
+    display_name: string;
+  } | null;
 }
 
 interface BusinessProfile {
@@ -69,7 +74,7 @@ export default function SuggestedUsers() {
       // Fetch pinned users first
       const { data: pinnedUsers, error: pinnedError } = await supabase
         .from('profiles')
-        .select('id, handle, display_name, avatar_url, bio, is_verified, is_organization_verified, is_affiliate, affiliated_business_id')
+        .select('id, handle, display_name, avatar_url, bio, is_verified, is_organization_verified, is_affiliate, affiliated_business_id, verification_source')
         .in('handle', ['afuchat', 'amkaweesi']);
 
       if (pinnedError) throw pinnedError;
@@ -77,7 +82,7 @@ export default function SuggestedUsers() {
       // Fetch other suggested users (excluding pinned ones and current user)
       const { data: otherUsers, error: otherError } = await supabase
         .from('profiles')
-        .select('id, handle, display_name, avatar_url, bio, is_verified, is_organization_verified, is_affiliate, affiliated_business_id')
+        .select('id, handle, display_name, avatar_url, bio, is_verified, is_organization_verified, is_affiliate, affiliated_business_id, verification_source')
         .not('handle', 'in', '(afuchat,amkaweesi)')
         .neq('id', user?.id || '')
         .limit(8);
@@ -238,8 +243,10 @@ export default function SuggestedUsers() {
                       isVerified={suggestedUser.is_verified || false}
                       isOrgVerified={suggestedUser.is_organization_verified || false}
                       isAffiliate={suggestedUser.is_affiliate || false}
-                      affiliateBusinessLogo={(suggestedUser as any).business_profile?.avatar_url}
-                      affiliateBusinessName={(suggestedUser as any).business_profile?.display_name}
+                      affiliateBusinessLogo={suggestedUser.business_profile?.avatar_url}
+                      affiliateBusinessName={suggestedUser.business_profile?.display_name}
+                      userId={suggestedUser.id}
+                      verificationSource={suggestedUser.verification_source as 'manual' | 'premium' | null}
                       size="sm"
                     />
                     {isPinned(suggestedUser.handle) && (
