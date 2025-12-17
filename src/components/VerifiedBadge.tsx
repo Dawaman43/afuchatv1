@@ -37,6 +37,7 @@ export function VerifiedBadge({
   const iconSize = sizeClasses[size];
   const logoSize = logoSizeClasses[size];
 
+  // Organization verification is separate from premium - it's granted by admins
   if (isOrgVerified) {
     return (
       <svg
@@ -70,8 +71,9 @@ export function VerifiedBadge({
     );
   }
 
-  // Show verified badge if user is verified (regardless of premium status)
-  if (isVerified) {
+  // Show verified badge ONLY if user has an active premium subscription
+  // Verification is tied to premium - when subscription expires, badge disappears
+  if (isVerified && isPremium) {
     return (
       <svg
         viewBox="0 0 22 22"
