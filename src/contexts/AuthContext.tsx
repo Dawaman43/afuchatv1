@@ -184,32 +184,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               return;
             }
             
-            // Check if essential profile fields are complete (including country)
+            // Check if essential profile fields are complete (include country + avatar + DOB)
             supabase
               .from('profiles')
-              .select('display_name, handle, country, avatar_url')
+              .select('display_name, handle, country, avatar_url, date_of_birth')
               .eq('id', session.user.id)
-              .single()
+              .maybeSingle()
               .then(({ data: profile, error }) => {
+                // If we got a hard error (network/permission), don't lock users in a redirect loop.
                 if (error) {
                   console.error('Profile check error:', error);
-                  // If profile doesn't exist yet, redirect to complete profile
-                  if (currentPath === '/' || currentPath.startsWith('/auth')) {
-                    window.location.href = '/complete-profile';
-                  }
                   return;
                 }
 
-                // All essential fields required: display_name, handle, country, and avatar_url
-                const hasEssentialFields = profile?.display_name && profile?.handle && profile?.country && profile?.avatar_url;
+                // If profile row is missing or essential fields are missing, then user must complete profile.
+                const hasEssentialFields =
+                  !!profile?.display_name &&
+                  !!profile?.handle &&
+                  !!profile?.country &&
+                  !!profile?.avatar_url &&
+                  !!profile?.date_of_birth;
 
                 // If on landing/auth pages
                 if (currentPath === '/' || currentPath.startsWith('/auth')) {
-                  if (!hasEssentialFields) {
-                    window.location.href = '/complete-profile';
-                  } else {
-                    window.location.href = '/home';
-                  }
+                  window.location.href = hasEssentialFields ? '/home' : '/complete-profile';
                 }
               });
           }

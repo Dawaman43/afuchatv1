@@ -147,11 +147,16 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
       }
 
       try {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('display_name, handle, phone_number, country, avatar_url, date_of_birth')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error loading profile:', error);
+          return;
+        }
 
         if (profile) {
           setFormData({
@@ -161,10 +166,22 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
             country: profile.country || '',
             date_of_birth: profile.date_of_birth || '',
           });
-          
+
           if (profile.avatar_url) {
             setExistingAvatarUrl(profile.avatar_url);
             setAvatarPreview(profile.avatar_url);
+          }
+
+          const isAlreadyComplete =
+            !!profile.display_name &&
+            !!profile.handle &&
+            !!profile.country &&
+            !!profile.avatar_url &&
+            !!profile.date_of_birth;
+
+          if (isAlreadyComplete) {
+            navigate('/home', { replace: true });
+            return;
           }
         }
       } catch (error) {
@@ -175,7 +192,7 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
     };
 
     loadExistingProfile();
-  }, [user]);
+  }, [user, navigate]);
 
   // Process referral reward - returns true if successful
   const processReferral = async (): Promise<boolean> => {
