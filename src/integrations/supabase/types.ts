@@ -3907,11 +3907,16 @@ export type Database = {
           current_grade: string | null
           display_name: string | null
           handle: string | null
+          hide_on_leaderboard: boolean | null
           id: string | null
+          is_banned: boolean | null
           is_business_mode: boolean | null
           is_organization_verified: boolean | null
           is_private: boolean | null
           is_verified: boolean | null
+          is_warned: boolean | null
+          warned_at: string | null
+          warning_reason: string | null
           website_url: string | null
           xp: number | null
         }
@@ -3925,13 +3930,18 @@ export type Database = {
           current_grade?: string | null
           display_name?: string | null
           handle?: string | null
+          hide_on_leaderboard?: boolean | null
           id?: string | null
+          is_banned?: boolean | null
           is_business_mode?: boolean | null
           is_organization_verified?: boolean | null
           is_private?: boolean | null
           is_verified?: boolean | null
+          is_warned?: boolean | null
+          warned_at?: string | null
+          warning_reason?: string | null
           website_url?: string | null
-          xp?: never
+          xp?: number | null
         }
         Update: {
           avatar_url?: string | null
@@ -3943,13 +3953,18 @@ export type Database = {
           current_grade?: string | null
           display_name?: string | null
           handle?: string | null
+          hide_on_leaderboard?: boolean | null
           id?: string | null
+          is_banned?: boolean | null
           is_business_mode?: boolean | null
           is_organization_verified?: boolean | null
           is_private?: boolean | null
           is_verified?: boolean | null
+          is_warned?: boolean | null
+          warned_at?: string | null
+          warning_reason?: string | null
           website_url?: string | null
-          xp?: never
+          xp?: number | null
         }
         Relationships: []
       }
