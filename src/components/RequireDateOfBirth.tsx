@@ -45,7 +45,7 @@ export const RequireDateOfBirth = ({ children }: RequireDateOfBirthProps) => {
           .from('profiles')
           .select('date_of_birth')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error checking date of birth:', error);

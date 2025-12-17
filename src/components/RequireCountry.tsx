@@ -45,7 +45,7 @@ export const RequireCountry = ({ children }: RequireCountryProps) => {
           .from('profiles')
           .select('country')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error checking country:', error);
