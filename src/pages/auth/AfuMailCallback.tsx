@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomLoader } from '@/components/ui/CustomLoader';
@@ -8,8 +8,12 @@ const AfuMailCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const processedRef = useRef(false);
 
   useEffect(() => {
+    // Prevent duplicate execution in React StrictMode
+    if (processedRef.current) return;
+    processedRef.current = true;
     const handleCallback = async () => {
       const code = searchParams.get('code');
       const state = searchParams.get('state');
@@ -24,6 +28,15 @@ const AfuMailCallback = () => {
         setError('No authorization code received');
         return;
       }
+
+      // Check if this code was already processed
+      const processedCode = sessionStorage.getItem('afumail_processed_code');
+      if (processedCode === code) {
+        console.log('Code already processed, skipping');
+        return;
+      }
+      // Mark code as being processed
+      sessionStorage.setItem('afumail_processed_code', code);
 
       // Verify state matches what we stored
       const storedState = sessionStorage.getItem('afumail_oauth_state');
@@ -140,6 +153,7 @@ const AfuMailCallback = () => {
           // Clean up
           sessionStorage.removeItem('afumail_oauth_state');
           sessionStorage.removeItem('afumail_oauth_flow');
+          sessionStorage.removeItem('afumail_processed_code');
 
           toast.success('Check your email for a sign-in link!');
           navigate('/auth/signin');
@@ -176,6 +190,7 @@ const AfuMailCallback = () => {
         localStorage.removeItem('pendingSignupData');
         sessionStorage.removeItem('afumail_oauth_state');
         sessionStorage.removeItem('afumail_oauth_flow');
+        sessionStorage.removeItem('afumail_processed_code');
 
         toast.success('Account created! Complete your profile.');
         navigate('/complete-profile');
@@ -183,6 +198,8 @@ const AfuMailCallback = () => {
         console.error('AfuMail OAuth error:', err);
         const message = err instanceof Error ? err.message : 'Authentication failed';
         setError(message);
+        // Clean up processed code on error so user can retry
+        sessionStorage.removeItem('afumail_processed_code');
       }
     };
 
