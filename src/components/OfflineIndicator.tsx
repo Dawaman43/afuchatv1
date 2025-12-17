@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { WifiOff, Wifi } from 'lucide-react';
+import { WifiOff, Wifi, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useOfflineStatus } from '@/hooks/useOfflineStatus';
+import usePWA from '@/hooks/usePWA';
 
 export const OfflineIndicator = () => {
-  const { isOnline, isOfflineReady } = useOfflineStatus();
+  const { isOnline, swUpdateAvailable, updateServiceWorker, isStandalone } = usePWA();
   const [showOfflineAlert, setShowOfflineAlert] = useState(!navigator.onLine);
   const [showOnlineToast, setShowOnlineToast] = useState(false);
+  const [showUpdateBanner, setShowUpdateBanner] = useState(false);
 
   useEffect(() => {
     if (!isOnline) {
@@ -22,8 +23,20 @@ export const OfflineIndicator = () => {
     }
   }, [isOnline, showOfflineAlert]);
 
+  useEffect(() => {
+    if (swUpdateAvailable) {
+      setShowUpdateBanner(true);
+    }
+  }, [swUpdateAvailable]);
+
+  const handleUpdate = () => {
+    updateServiceWorker();
+    setShowUpdateBanner(false);
+  };
+
   return (
     <>
+      {/* Offline Alert */}
       <AnimatePresence>
         {showOfflineAlert && (
           <motion.div
@@ -49,8 +62,8 @@ export const OfflineIndicator = () => {
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
                 <span className="text-sm font-semibold">You're Offline</span>
                 <span className="text-xs opacity-80">
-                  {isOfflineReady 
-                    ? "Using cached data - browse freely!" 
+                  {isStandalone 
+                    ? "Using cached data - app works offline!" 
                     : "Limited functionality available"}
                 </span>
               </div>
@@ -59,6 +72,7 @@ export const OfflineIndicator = () => {
         )}
       </AnimatePresence>
 
+      {/* Back Online Toast */}
       <AnimatePresence>
         {showOnlineToast && (
           <motion.div
@@ -71,6 +85,32 @@ export const OfflineIndicator = () => {
             <div className="container mx-auto px-4 py-3 flex items-center justify-center gap-3">
               <Wifi className="h-5 w-5" />
               <span className="text-sm font-semibold">Back Online!</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* App Update Banner */}
+      <AnimatePresence>
+        {showUpdateBanner && (
+          <motion.div
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed top-0 left-0 right-0 z-50 bg-primary text-primary-foreground shadow-lg"
+          >
+            <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="h-5 w-5" />
+                <span className="text-sm font-semibold">New version available!</span>
+              </div>
+              <button
+                onClick={handleUpdate}
+                className="px-3 py-1 bg-primary-foreground text-primary rounded text-sm font-medium"
+              >
+                Update
+              </button>
             </div>
           </motion.div>
         )}

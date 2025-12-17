@@ -11,74 +11,73 @@
     <meta name="application-name" content="AfuChat">
     <meta name="version" content="2.0.0">
 
+    <!-- PWA Essential Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AfuChat" />
+    <meta name="msapplication-TileColor" content="#00C2CB" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="format-detection" content="telephone=no" />
+
     <!-- Theme color for browser toolbar - matches app background -->
-    <meta name="theme-color" content="#F6F6F6" />
+    <meta name="theme-color" content="#0F1114" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F6F6F6" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1114" />
 
     <!-- PWA manifest is injected automatically by vite-plugin-pwa -->
 
-    <!-- Favicon / Apple Touch Icon -->
+    <!-- Favicon / Apple Touch Icons -->
     <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="apple-touch-icon" href="/favicon.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="AfuChat" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="114x114" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="76x76" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="72x72" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="60x60" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="57x57" href="/favicon.png" />
+    
+    <!-- Microsoft Tile -->
+    <meta name="msapplication-TileImage" content="/favicon.png" />
+
+    <!-- Splash screens for iOS -->
+    <link rel="apple-touch-startup-image" href="/favicon.png" />
 
     <!-- Open Graph / Social Media -->
-    
-    
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="AfuChat" />
     <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/whhFMyYxVrYCuMq4BfursQL7NCK2/social-images/social-1765028846874-1000021343.png">
+    <meta property="og:title" content="AfuChat — Post. Chat. Shop. AI. All in One.">
+    <meta property="og:description" content="AfuChat — The all-in-one social app where you can post like X, chat like Telegram, shop on AfuMall, and use built-in AI. Fast, private, and data-friendly.">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    
-    
     <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/whhFMyYxVrYCuMq4BfursQL7NCK2/social-images/social-1765028846874-1000021343.png">
-    
-  
-  
-  
-  
-  
-  
-    
-    
-    <!-- System fonts like X/Twitter -->
+    <meta name="twitter:title" content="AfuChat — Post. Chat. Shop. AI. All in One.">
+    <meta name="twitter:description" content="AfuChat — The all-in-one social app where you can post like X, chat like Telegram, shop on AfuMall, and use built-in AI. Fast, private, and data-friendly.">
+
+    <!-- Preconnect to important domains -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://rhnsjqqtdzlkvqazfcbg.supabase.co" crossorigin>
+    
+    <!-- DNS Prefetch for faster loading -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://rhnsjqqtdzlkvqazfcbg.supabase.co">
     
     <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6547165240467026"
-     crossorigin="anonymous"></script>
-    
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  <meta property="og:title" content="AfuChat — Post. Chat. Shop. AI. All in One.">
-  <meta name="twitter:title" content="AfuChat — Post. Chat. Shop. AI. All in One.">
-  <meta property="og:description" content="AfuChat — The all-in-one social app where you can post like X, chat like Telegram, shop on AfuMall, and use built-in AI. Fast, private, and data-friendly.">
-  <meta name="twitter:description" content="AfuChat — The all-in-one social app where you can post like X, chat like Telegram, shop on AfuMall, and use built-in AI. Fast, private, and data-friendly.">
-</head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6547165240467026" crossorigin="anonymous"></script>
+  </head>
 
   <body>
-    <!-- Inline script to prevent theme flash - runs before React -->
+    <!-- Inline script to prevent theme flash and handle PWA state -->
     <script>
       (function() {
+        // Theme handling
         var theme = localStorage.getItem('afuchat-theme') || 'system';
         var resolved;
         if (theme === 'system') {
@@ -89,13 +88,83 @@
           resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
         document.documentElement.classList.add(resolved);
+        
         // Update theme-color meta tag
         var themeColor = resolved === 'dark' ? '#0F1114' : '#F6F6F6';
         var meta = document.querySelector('meta[name="theme-color"]:not([media])');
         if (meta) meta.setAttribute('content', themeColor);
+
+        // Detect PWA standalone mode
+        var isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                          window.navigator.standalone === true ||
+                          document.referrer.includes('android-app://');
+        
+        if (isStandalone) {
+          document.documentElement.classList.add('pwa-standalone');
+        }
+
+        // Handle iOS safe areas
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+          document.documentElement.classList.add('ios-device');
+        }
+
+        // Handle Android
+        if (/Android/.test(navigator.userAgent)) {
+          document.documentElement.classList.add('android-device');
+        }
       })();
     </script>
+    
+    <!-- App loading indicator for slow connections -->
+    <style>
+      #app-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--loader-bg, #0F1114);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.3s ease;
+      }
+      html.light #app-loader { --loader-bg: #F6F6F6; }
+      html.dark #app-loader { --loader-bg: #0F1114; }
+      #app-loader.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #app-loader .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid transparent;
+        border-top-color: #00C2CB;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+    
+    <div id="app-loader">
+      <div class="spinner"></div>
+    </div>
+    
     <div id="root"></div>
+    
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Hide loader when app is ready -->
+    <script>
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          var loader = document.getElementById('app-loader');
+          if (loader) loader.classList.add('hidden');
+        }, 100);
+      });
+    </script>
   </body>
 </html>
