@@ -235,7 +235,7 @@ const SignIn = () => {
               disabled={googleLoading || githubLoading || afumailLoading || loading}
             >
               {afumailLoading ? '...' : (
-                <img src={afumailLogo} alt="AfuMail" className="h-8 w-8 rounded-lg" />
+                <img src={afumailLogo} alt="AfuMail" className="h-10 w-10 rounded-lg object-contain" />
               )}
             </Button>
           </div>
