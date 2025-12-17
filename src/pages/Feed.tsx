@@ -49,6 +49,7 @@ import { cn } from '@/lib/utils';
 import { AIPostSummary } from '@/components/feed/AIPostSummary';
 import FeaturedProducts from '@/components/home/FeaturedProducts';
 import { FeedSkeleton } from '@/components/feed/FeedSkeleton';
+import { SubscriptionExpiryBanner } from '@/components/SubscriptionExpiryBanner';
 // --- INTERFACES ---
 
 // NEW: Define AuthUser interface for type safety (must match the one in PostActionsSheet.tsx)
@@ -2403,6 +2404,9 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
         {/* Spacer for fixed header */}
         <div className="h-[108px]" />
+
+        {/* Subscription Expiry Reminder Banner */}
+        {user && <SubscriptionExpiryBanner daysThreshold={7} />}
 
         {/* Featured Products */}
         <FeaturedProducts />

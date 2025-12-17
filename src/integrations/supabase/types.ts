@@ -4001,6 +4001,7 @@ export type Database = {
       check_profile_completion: { Args: { p_user_id: string }; Returns: Json }
       claim_red_envelope: { Args: { p_envelope_id: string }; Returns: Json }
       cleanup_expired_sessions: { Args: never; Returns: number }
+      cleanup_expired_subscriptions: { Args: never; Returns: undefined }
       convert_nexa_to_acoin: { Args: { p_nexa_amount: number }; Returns: Json }
       create_ad_campaign: {
         Args: {
