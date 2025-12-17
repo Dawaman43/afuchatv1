@@ -819,7 +819,7 @@ serve(async (req) => {
       );
     }
 
-    const { message, history } = await req.json();
+    const { message, history, webSearchMode } = await req.json();
     
     // Input validation
     if (!message || typeof message !== 'string') {
@@ -873,10 +873,15 @@ serve(async (req) => {
 
     console.log(`Loaded ${memories.length} memories for user`);
 
-    // Check if web search is needed for this query (premium feature)
+    // Check if web search is enabled (explicit mode) or auto-triggered
     let webSearchResults = '';
-    if (needsWebSearch(message)) {
-      console.log('Web search triggered for premium user');
+    if (webSearchMode === true) {
+      // Explicit web search mode - always search
+      console.log('Web search mode enabled - searching for:', message);
+      webSearchResults = await performWebSearch(message);
+    } else if (webSearchMode !== false && needsWebSearch(message)) {
+      // Auto-trigger web search based on message content (legacy behavior)
+      console.log('Web search auto-triggered for premium user');
       webSearchResults = await performWebSearch(message);
     }
 
