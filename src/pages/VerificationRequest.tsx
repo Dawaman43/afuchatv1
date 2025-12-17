@@ -180,6 +180,15 @@ export default function VerificationRequest() {
             <CardDescription>
               Fill out this form to apply for account verification. Our team will review your application within 3-5 business days.
             </CardDescription>
+            <div className="mt-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="font-medium text-primary">Permanent Verification</p>
+                  <p className="text-muted-foreground">Manual verification is permanent and won't expire, unlike premium subscription verification.</p>
+                </div>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
