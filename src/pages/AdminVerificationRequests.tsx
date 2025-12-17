@@ -120,12 +120,13 @@ export default function AdminVerificationRequests() {
 
       if (requestError) throw requestError;
 
-      // Update user profile to mark as verified
+      // Update user profile to mark as verified (manual verification = permanent)
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
           is_verified: request.account_type === "influencer",
           is_organization_verified: request.account_type === "business",
+          verification_source: 'manual', // Manual approval = permanent verification
         })
         .eq("id", request.user_id);
 

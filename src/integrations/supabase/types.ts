@@ -2799,6 +2799,7 @@ export type Database = {
           show_online_status: boolean | null
           show_read_receipts: boolean | null
           updated_at: string | null
+          verification_source: string | null
           warned_at: string | null
           warned_by: string | null
           warning_reason: string | null
@@ -2849,6 +2850,7 @@ export type Database = {
           show_online_status?: boolean | null
           show_read_receipts?: boolean | null
           updated_at?: string | null
+          verification_source?: string | null
           warned_at?: string | null
           warned_by?: string | null
           warning_reason?: string | null
@@ -2899,6 +2901,7 @@ export type Database = {
           show_online_status?: boolean | null
           show_read_receipts?: boolean | null
           updated_at?: string | null
+          verification_source?: string | null
           warned_at?: string | null
           warned_by?: string | null
           warning_reason?: string | null
