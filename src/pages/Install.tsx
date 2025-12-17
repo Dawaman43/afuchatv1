@@ -1,57 +1,22 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Check, Smartphone, Zap, Wifi } from 'lucide-react';
+import { Download, Check, Smartphone, Zap, Wifi, Share } from 'lucide-react';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
+import usePWA from '@/hooks/usePWA';
 
 const Install = () => {
   const navigate = useNavigate();
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
-
-  useEffect(() => {
-    // Check if app is already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstalled(true);
-    }
-
-    const handleBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-    };
-  }, []);
+  const { isInstalled, canInstall, isIOS, install } = usePWA();
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) {
-      toast.error('Install prompt not available. Please use your browser menu to install.');
-      return;
-    }
-
-    try {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-
-      if (outcome === 'accepted') {
-        toast.success('App installed successfully!');
-        setIsInstalled(true);
-        setDeferredPrompt(null);
-      }
-    } catch (error) {
-      console.error('Install prompt error:', error);
-      toast.error('Failed to install app');
+    const result = await install();
+    
+    if (result.success) {
+      toast.success(result.message);
+    } else {
+      toast.info(result.message);
     }
   };
 
@@ -76,8 +41,8 @@ const Install = () => {
                 <Smartphone className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground">App-like Experience</h3>
-                <p className="text-sm text-muted-foreground">Install to your home screen and launch like a native app</p>
+                <h3 className="font-semibold text-foreground">Native App Experience</h3>
+                <p className="text-sm text-muted-foreground">Works just like a native app - no browser required</p>
               </div>
             </div>
 
@@ -87,7 +52,7 @@ const Install = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-foreground">Works Offline</h3>
-                <p className="text-sm text-muted-foreground">Access your chats even without internet connection</p>
+                <p className="text-sm text-muted-foreground">Access your content even without internet</p>
               </div>
             </div>
 
@@ -97,7 +62,7 @@ const Install = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-foreground">Lightning Fast</h3>
-                <p className="text-sm text-muted-foreground">Loads instantly with optimized caching</p>
+                <p className="text-sm text-muted-foreground">Instant loading with smart caching</p>
               </div>
             </div>
           </div>
@@ -117,7 +82,34 @@ const Install = () => {
                 Go to App
               </Button>
             </div>
-          ) : deferredPrompt ? (
+          ) : isIOS ? (
+            <div className="space-y-3">
+              <div className="p-4 bg-muted rounded-lg space-y-3">
+                <p className="text-sm font-medium text-foreground">To install on iOS:</p>
+                <ol className="text-sm text-muted-foreground space-y-2">
+                  <li className="flex items-center gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/20 text-primary text-xs flex items-center justify-center">1</span>
+                    <span>Tap the <Share className="inline h-4 w-4" /> Share button</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/20 text-primary text-xs flex items-center justify-center">2</span>
+                    <span>Scroll and tap "Add to Home Screen"</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/20 text-primary text-xs flex items-center justify-center">3</span>
+                    <span>Tap "Add" to confirm</span>
+                  </li>
+                </ol>
+              </div>
+              <Button 
+                onClick={() => navigate('/')}
+                variant="outline"
+                className="w-full"
+              >
+                Continue in Browser
+              </Button>
+            </div>
+          ) : canInstall ? (
             <div className="space-y-3">
               <Button 
                 onClick={handleInstallClick}
@@ -137,20 +129,16 @@ const Install = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              <Button 
-                onClick={handleInstallClick}
-                className="w-full"
-                size="lg"
-              >
-                <Download className="h-5 w-5 mr-2" />
-                Install Now
-              </Button>
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground text-center">
+                  Use your browser's menu to install this app, or continue using it in your browser.
+                </p>
+              </div>
               <Button 
                 onClick={() => navigate('/')}
-                variant="outline"
                 className="w-full"
               >
-                Maybe Later
+                Continue to App
               </Button>
             </div>
           )}
