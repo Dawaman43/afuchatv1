@@ -606,6 +606,18 @@ ${platformInfo}
 - Affiliate Dashboard: /affiliate-dashboard - Affiliate earnings and stats
 - Affiliate Request: /affiliate-request - Apply to become an affiliate
 
+**AFUMAIL (Email Service Mini-Program):**
+- Page: /afumail - AfuChat's built-in email service (currently in experimental beta, "Coming Soon" status)
+- IMPORTANT: AfuMail is a REAL platform feature - it's our internal email service!
+- Access Restriction: Only users with @afuchat.com email addresses can use AfuMail
+- For users without @afuchat.com: They see a restricted access screen explaining they need an AfuChat email
+- OAuth Authentication: AfuMail can be used as an authentication method for platform signup/login (like Google or GitHub OAuth)
+- AfuMail OAuth ≠ AfuMail mini-program: Using AfuMail to sign up is separate from accessing the email app
+- Current Status: The mini-program is in experimental beta phase, showing "Coming Soon" page
+- Support Contact: Users should email support@afuchat.com for AfuMail-related questions
+- Features (when fully released): Full email functionality - compose, inbox, sent, drafts, spam, trash folders
+- Terms: Users must accept terms before using AfuMail due to experimental nature
+
 **SUPPORT & LEGAL:**
 - Support: /support - Get help, contact support team, report issues
 - Privacy Policy: /privacy - Read our privacy policy (static English)
