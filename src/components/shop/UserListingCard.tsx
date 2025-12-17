@@ -6,9 +6,10 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageCircle, Eye, MapPin, Loader2, Coins } from 'lucide-react';
+import { MessageCircle, Eye, MapPin, Loader2, Coins, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { PurchaseListingDialog } from './PurchaseListingDialog';
 
 interface UserListing {
   id: string;
@@ -35,10 +36,11 @@ interface UserListingCardProps {
   listing: UserListing;
 }
 
-export function UserListingCard({ listing }: UserListingCardProps) {
+export function UserListingCard({ listing, onPurchaseSuccess }: UserListingCardProps & { onPurchaseSuccess?: () => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [contacting, setContacting] = useState(false);
+  const [showPurchase, setShowPurchase] = useState(false);
 
   const formatPrice = (price: number, currency: string) => {
     try {
@@ -207,21 +209,43 @@ export function UserListingCard({ listing }: UserListingCardProps) {
           {formatDistanceToNow(new Date(listing.created_at), { addSuffix: true })}
         </div>
 
-        {/* Contact Button */}
-        <Button
-          size="sm"
-          className="w-full gap-2"
-          onClick={handleContact}
-          disabled={contacting || user?.id === listing.seller.id}
-        >
-          {contacting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <MessageCircle className="h-4 w-4" />
+        {/* Action Buttons */}
+        <div className="space-y-2">
+          {user?.id !== listing.seller.id && (
+            <Button
+              size="sm"
+              className="w-full gap-2"
+              onClick={() => setShowPurchase(true)}
+            >
+              <ShoppingCart className="h-4 w-4" />
+              Buy Now
+            </Button>
           )}
-          {user?.id === listing.seller.id ? 'Your Listing' : 'Contact Seller'}
-        </Button>
+          
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full gap-2"
+            onClick={handleContact}
+            disabled={contacting || user?.id === listing.seller.id}
+          >
+            {contacting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <MessageCircle className="h-4 w-4" />
+            )}
+            {user?.id === listing.seller.id ? 'Your Listing' : 'Contact Seller'}
+          </Button>
+        </div>
       </div>
+
+      {/* Purchase Dialog */}
+      <PurchaseListingDialog
+        open={showPurchase}
+        onOpenChange={setShowPurchase}
+        listing={listing}
+        onSuccess={onPurchaseSuccess}
+      />
     </Card>
   );
 }
