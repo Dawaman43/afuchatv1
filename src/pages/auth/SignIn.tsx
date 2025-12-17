@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
 import Logo from '@/components/Logo';
-import afumailLogo from '@/assets/mini-apps/afumail-logo.png';
+
 import { emailSchema, passwordSchema } from '@/lib/validation';
 import { AfuMailTermsDialog } from '@/components/afumail/AfuMailTermsDialog';
 
@@ -30,8 +30,6 @@ const SignIn = () => {
   const [githubLoading, setGithubLoading] = useState(false);
   const [afumailLoading, setAfumailLoading] = useState(false);
   const [showAfuMailTerms, setShowAfuMailTerms] = useState(false);
-  const [afumailLogoLoaded, setAfumailLogoLoaded] = useState(false);
-  const [afumailLogoError, setAfumailLogoError] = useState(false);
 
   // Redirect logged-in users
   if (authLoading) {
@@ -237,21 +235,11 @@ const SignIn = () => {
                 onClick={handleAfuMailSignIn}
                 disabled={googleLoading || githubLoading || afumailLoading || loading}
               >
-                {afumailLoading ? '...' : (
-                  <>
-                    {!afumailLogoError && (
-                      <img 
-                        src={afumailLogo} 
-                        alt="AfuMail" 
-                        className={`h-8 w-8 rounded-lg object-contain ${afumailLogoLoaded ? 'opacity-100' : 'opacity-0 absolute'}`}
-                        onLoad={() => setAfumailLogoLoaded(true)}
-                        onError={() => setAfumailLogoError(true)}
-                      />
-                    )}
-                    {(afumailLogoError || !afumailLogoLoaded) && (
-                      <span className="text-white font-bold text-sm">@</span>
-                    )}
-                  </>
+              {afumailLoading ? '...' : (
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="4"/>
+                    <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/>
+                  </svg>
                 )}
               </Button>
             </div>
