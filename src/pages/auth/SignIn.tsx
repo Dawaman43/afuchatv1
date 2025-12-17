@@ -235,7 +235,12 @@ const SignIn = () => {
                 onClick={handleAfuMailSignIn}
                 disabled={googleLoading || githubLoading || afumailLoading || loading}
               >
-                {afumailLoading ? '...' : <Mail className="h-5 w-5" />}
+                {afumailLoading ? '...' : (
+                  <div className="flex flex-col items-center gap-0.5">
+                    <Mail className="h-5 w-5" />
+                    <span className="text-[10px] font-medium">AfuMail</span>
+                  </div>
+                )}
               </Button>
             </div>
           </div>
