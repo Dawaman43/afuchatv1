@@ -25,9 +25,13 @@ export function RequireBanCheck({ children }: RequireBanCheckProps) {
           .from('profiles')
           .select('is_banned')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error checking ban status:', error);
+          setChecking(false);
+          return;
+        }
 
         if (data?.is_banned) {
           setIsBanned(true);

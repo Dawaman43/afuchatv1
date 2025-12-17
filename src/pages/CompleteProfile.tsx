@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { getCountryFlag } from '@/lib/countryFlags';
 import { CustomLoader } from '@/components/ui/CustomLoader';
 import { ReferralWelcomeBanner } from '@/components/gamification/ReferralWelcomeBanner';
+import { clearProfileCache } from '@/hooks/useProfileCheck';
 
 const CompleteProfile = () => {
   const { user, loading: authLoading } = useAuth();
@@ -469,7 +470,8 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
 
       if (error) throw error;
 
-      // Process referral - processReferral checks both state and sessionStorage
+      // Clear profile cache so route guards re-check
+      clearProfileCache(user.id);
       const referralSuccess = await processReferral();
 
       // Check if this account should be linked to another account
