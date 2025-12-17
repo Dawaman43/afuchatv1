@@ -230,7 +230,7 @@ const SignIn = () => {
             <Button
               type="button"
               variant="outline"
-              className="flex-1 h-14 rounded-xl bg-white hover:bg-gray-50 border-2 border-blue-500"
+              className="flex-1 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-0 text-white"
               onClick={handleAfuMailSignIn}
               disabled={googleLoading || githubLoading || afumailLoading || loading}
             >
