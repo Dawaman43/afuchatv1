@@ -4195,13 +4195,18 @@ export type Database = {
         Returns: boolean
       }
       mark_notifications_as_read: { Args: never; Returns: undefined }
-      process_referral_reward: {
-        Args: { new_user_id: string; referral_code_input: string }
-        Returns: {
-          referrer_name: string
-          success: boolean
-        }[]
-      }
+      process_referral_reward:
+        | {
+            Args: { new_user_id: string; referral_code_input: string }
+            Returns: {
+              referrer_name: string
+              success: boolean
+            }[]
+          }
+        | {
+            Args: { new_user_id: string; referrer_id: string }
+            Returns: undefined
+          }
       process_xp_transfer: {
         Args: { p_amount: number; p_message?: string; p_receiver_id: string }
         Returns: Json
