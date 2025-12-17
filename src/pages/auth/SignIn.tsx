@@ -30,6 +30,8 @@ const SignIn = () => {
   const [githubLoading, setGithubLoading] = useState(false);
   const [afumailLoading, setAfumailLoading] = useState(false);
   const [showAfuMailTerms, setShowAfuMailTerms] = useState(false);
+  const [afumailLogoLoaded, setAfumailLogoLoaded] = useState(false);
+  const [afumailLogoError, setAfumailLogoError] = useState(false);
 
   // Redirect logged-in users
   if (authLoading) {
@@ -236,7 +238,20 @@ const SignIn = () => {
                 disabled={googleLoading || githubLoading || afumailLoading || loading}
               >
                 {afumailLoading ? '...' : (
-                  <img src={afumailLogo} alt="AfuMail" className="h-8 w-8 rounded-lg object-contain" />
+                  <>
+                    {!afumailLogoError && (
+                      <img 
+                        src={afumailLogo} 
+                        alt="AfuMail" 
+                        className={`h-8 w-8 rounded-lg object-contain ${afumailLogoLoaded ? 'opacity-100' : 'opacity-0 absolute'}`}
+                        onLoad={() => setAfumailLogoLoaded(true)}
+                        onError={() => setAfumailLogoError(true)}
+                      />
+                    )}
+                    {(afumailLogoError || !afumailLogoLoaded) && (
+                      <span className="text-white font-bold text-sm">@</span>
+                    )}
+                  </>
                 )}
               </Button>
             </div>
