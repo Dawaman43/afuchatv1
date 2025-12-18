@@ -139,8 +139,8 @@ const ContentParser: React.FC<{ content: string, isBio?: boolean }> = ({ content
 
 	const displayContent = translatedContent || safeContent;
 	
-	// Parse mentions, hashtags, and links (including plain domains like afuchat.com)
-	const combinedRegex = /(@[a-zA-Z0-9_-]+|#\w+|https?:\/\/[^\s]+|(?:www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/g;
+	// Parse mentions, hashtags, and links (including plain domains like dev-write.netlify.app)
+	const combinedRegex = /(@[a-zA-Z0-9_-]+|#\w+|https?:\/\/[^\s]+|(?:www\.)?[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?:\/[^\s]*)?)/g;
 	const parts: React.ReactNode[] = [];
 	let lastIndex = 0;
 	
