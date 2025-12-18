@@ -23,6 +23,7 @@ interface UserProfile {
   follow_created_at: string;
   is_warned?: boolean;
   warning_reason?: string | null;
+  verification_source?: 'manual' | 'premium' | null;
 }
 
 export default function Followers() {
@@ -115,7 +116,8 @@ export default function Followers() {
             is_business_mode,
             bio,
             is_warned,
-            warning_reason
+            warning_reason,
+            verification_source
           )
         `)
         .eq("following_id", profileId)
@@ -300,7 +302,7 @@ export default function Followers() {
                       {profile.display_name.length > 12 ? `${profile.display_name.slice(0, 10)}...` : profile.display_name}
                     </span>
                     {profile.is_warned && <WarningBadge size="sm" reason={profile.warning_reason} variant="post" />}
-                    {profile.is_verified && <VerifiedBadge size="sm" />}
+                    {profile.is_verified && <VerifiedBadge size="sm" userId={profile.id} verificationSource={profile.verification_source} />}
                     {profile.is_organization_verified && (
                       <BusinessBadge size="sm" />
                     )}
