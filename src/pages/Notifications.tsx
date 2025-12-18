@@ -766,23 +766,46 @@ const Notifications = () => {
       }
 
       try {
-        // Fetch notifications, follow requests, and following list in parallel
-        const [notificationsResult, followRequestsResult, followingResult] = await Promise.all([
-          supabase
-            .from('notifications')
-            .select(`
-              id, created_at, type, is_read, post_id, actor_id,
-              actor:profiles!actor_id ( display_name, handle, avatar_url, is_verified, is_organization_verified ),
-              post:posts!post_id ( content )
-            `)
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false }),
+        // Fetch notifications first
+        const { data: rawNotifications, error: notifError } = await supabase
+          .from('notifications')
+          .select('id, created_at, type, is_read, post_id, actor_id')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        let processedNotifications: Notification[] = [];
+        
+        if (!notifError && rawNotifications && rawNotifications.length > 0) {
+          // Get unique actor IDs and post IDs
+          const actorIds = [...new Set(rawNotifications.map(n => n.actor_id).filter(Boolean))] as string[];
+          const postIds = [...new Set(rawNotifications.map(n => n.post_id).filter(Boolean))] as string[];
+
+          // Fetch actors and posts in parallel
+          const [actorsResult, postsResult] = await Promise.all([
+            actorIds.length > 0 
+              ? supabase.from('profiles').select('id, display_name, handle, avatar_url, is_verified, is_organization_verified').in('id', actorIds)
+              : Promise.resolve({ data: [], error: null }),
+            postIds.length > 0
+              ? supabase.from('posts').select('id, content').in('id', postIds)
+              : Promise.resolve({ data: [], error: null })
+          ]);
+
+          const actorsMap = new Map((actorsResult.data || []).map(a => [a.id, a]));
+          const postsMap = new Map((postsResult.data || []).map(p => [p.id, p]));
+
+          // Combine the data
+          processedNotifications = rawNotifications.map(n => ({
+            ...n,
+            actor: actorsMap.get(n.actor_id) || { display_name: 'Unknown', handle: 'unknown' },
+            post: n.post_id ? postsMap.get(n.post_id) : undefined
+          })) as Notification[];
+        }
+
+        // Fetch follow requests and following list in parallel
+        const [followRequestsResult, followingResult] = await Promise.all([
           supabase
             .from('follow_requests')
-            .select(`
-              id, requester_id, status, created_at,
-              requester:profiles!requester_id ( display_name, handle, avatar_url, is_verified, is_organization_verified )
-            `)
+            .select('id, requester_id, status, created_at')
             .eq('target_id', user.id)
             .eq('status', 'pending')
             .order('created_at', { ascending: false }),
@@ -792,23 +815,33 @@ const Notifications = () => {
             .eq('follower_id', user.id)
         ]);
 
-        if (notificationsResult.error) {
-          console.error('Error fetching notifications:', notificationsResult.error);
-        } else if (notificationsResult.data) {
-          // Filter out any deleted notifications (they shouldn't come from DB but just in case)
-          const freshNotifications = excludeDeleted
-            ? (notificationsResult.data as unknown as Notification[]).filter(n => !deletedIdsRef.current.has(n.id))
-            : notificationsResult.data as unknown as Notification[];
-          setNotifications(freshNotifications);
-          sessionStorage.setItem('cachedNotifications', JSON.stringify(freshNotifications));
+        // Process follow requests with requester profiles
+        let processedFollowRequests: FollowRequest[] = [];
+        if (!followRequestsResult.error && followRequestsResult.data && followRequestsResult.data.length > 0) {
+          const requesterIds = [...new Set(followRequestsResult.data.map(r => r.requester_id))] as string[];
+          const { data: requesters } = await supabase
+            .from('profiles')
+            .select('id, display_name, handle, avatar_url, is_verified, is_organization_verified')
+            .in('id', requesterIds);
+          
+          const requestersMap = new Map((requesters || []).map(r => [r.id, r]));
+          processedFollowRequests = followRequestsResult.data.map(r => ({
+            ...r,
+            requester: requestersMap.get(r.requester_id) || { display_name: 'Unknown', handle: 'unknown' }
+          })) as FollowRequest[];
         }
 
-        if (followRequestsResult.error) {
-          console.error('Error fetching follow requests:', followRequestsResult.error);
-        } else if (followRequestsResult.data) {
-          setFollowRequests(followRequestsResult.data as unknown as FollowRequest[]);
-        }
+        // Set the processed notifications
+        const freshNotifications = excludeDeleted
+          ? processedNotifications.filter(n => !deletedIdsRef.current.has(n.id))
+          : processedNotifications;
+        setNotifications(freshNotifications);
+        sessionStorage.setItem('cachedNotifications', JSON.stringify(freshNotifications));
 
+        // Set follow requests
+        setFollowRequests(processedFollowRequests);
+
+        // Set following IDs
         if (followingResult.error) {
           console.error('Error fetching following:', followingResult.error);
         } else if (followingResult.data) {
