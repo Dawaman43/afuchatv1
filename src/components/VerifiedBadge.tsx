@@ -22,7 +22,9 @@ export function VerifiedBadge({
   userId,
   verificationSource
 }: VerifiedBadgeProps) {
-  const { isPremium } = usePremiumStatus(userId);
+  // Only fetch premium status if we have a userId and verification is premium-based
+  const shouldCheckPremium = userId && verificationSource === 'premium';
+  const { isPremium } = usePremiumStatus(shouldCheckPremium ? userId : undefined);
   
   const sizeClasses = {
     sm: 'w-4 h-4',
