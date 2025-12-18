@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { cn } from '@/lib/utils';
@@ -49,14 +49,18 @@ export const QuotedPostCard: React.FC<QuotedPostCardProps> = ({ quotedPost, clas
   const images = quotedPost.post_images?.sort((a, b) => a.display_order - b.display_order) || 
     (quotedPost.image_url ? [{ image_url: quotedPost.image_url, display_order: 0 }] : []);
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/post/${quotedPost.id}`);
+  };
+
   return (
-    <Link
-      to={`/post/${quotedPost.id}`}
+    <div
       className={cn(
-        "block border border-border rounded-2xl p-3 mt-3 bg-muted/30 hover:bg-muted/50 transition-colors",
+        "block border border-border rounded-2xl p-3 mt-3 bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer",
         className
       )}
-      onClick={(e) => e.stopPropagation()}
+      onClick={handleClick}
     >
       {/* Header */}
       <div className="flex items-center gap-2 mb-2">
@@ -116,6 +120,6 @@ export const QuotedPostCard: React.FC<QuotedPostCardProps> = ({ quotedPost, clas
           )}
         </div>
       )}
-    </Link>
+    </div>
   );
 };
