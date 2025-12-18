@@ -76,9 +76,11 @@ export function VerifiedBadge({
   // Show verified badge based on verification source:
   // - 'manual': Admin-approved verification → always show (permanent)
   // - 'premium': Auto-verified via subscription → only show if subscription is active
-  // - undefined/null: Legacy behavior, check premium status
+  // - undefined/null: Legacy/backward compatibility → always show badge (they were verified somehow)
   if (isVerified) {
-    const shouldShowBadge = verificationSource === 'manual' || isPremium;
+    // For 'premium' verification source, only show if subscription is still active
+    // For 'manual' or legacy (null/undefined), always show
+    const shouldShowBadge = verificationSource === 'premium' ? isPremium : true;
     
     if (shouldShowBadge) {
       return (
