@@ -111,6 +111,7 @@ interface Post {
     show_online_status?: boolean;
     is_warned?: boolean;
     warning_reason?: string | null;
+    verification_source?: 'manual' | 'premium' | null;
   };
   replies: Reply[];
   like_count: number;
@@ -148,6 +149,7 @@ interface Reply {
     show_online_status?: boolean;
     is_warned?: boolean;
     warning_reason?: string | null;
+    verification_source?: 'manual' | 'premium' | null;
   };
   affiliation_date?: string;
 }
@@ -393,6 +395,8 @@ const ReplyItem = ({ reply, navigate, handleViewProfile }: {
                       affiliateBusinessLogo={reply.profiles.affiliated_business?.avatar_url}
                       affiliateBusinessName={reply.profiles.affiliated_business?.display_name}
                       size="sm"
+                      userId={reply.author_id}
+                      verificationSource={reply.profiles.verification_source}
                     />
                     {reply.profiles.is_business_mode && !reply.profiles.is_affiliate && (
                       <BusinessBadge size="sm" />
@@ -667,7 +671,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           content: finalContent,
           parent_reply_id: null,
         })
-        .select('*, profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status)')
+        .select('*, profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, verification_source)')
         .single();
 
       if (error) throw error;
@@ -758,7 +762,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           content: content,
           parent_reply_id: parentReplyId,
         })
-        .select('*, profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status)')
+        .select('*, profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, verification_source)')
         .single();
 
       if (error) throw error;
@@ -875,6 +879,8 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               affiliateBusinessLogo={post.profiles.affiliated_business?.avatar_url}
               affiliateBusinessName={post.profiles.affiliated_business?.display_name}
               size="sm"
+              userId={post.author_id}
+              verificationSource={post.profiles.verification_source}
             />
             {post.profiles.is_business_mode && !post.profiles.is_affiliate && (
               <BusinessBadge size="sm" />
@@ -1412,7 +1418,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         .from('posts')
         .select(`
           *,
-          profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status),
+          profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, verification_source),
           post_images(image_url, display_order, alt_text),
           post_link_previews(url, title, description, image_url, site_name)
         `)
@@ -1437,7 +1443,10 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
         const mappedPost: Post = {
           ...newPost,
-          profiles: newPost.profiles || { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false, is_affiliate: false },
+          profiles: newPost.profiles ? {
+            ...newPost.profiles,
+            verification_source: newPost.profiles.verification_source as 'manual' | 'premium' | null
+          } : { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false, is_affiliate: false, verification_source: null },
           replies: [],
           reply_count: 0,
           like_count: 0,
@@ -1676,7 +1685,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           view_count,
           image_url,
           quoted_post_id,
-          profiles!inner(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, is_warned, warning_reason),
+          profiles!inner(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, is_warned, warning_reason, verification_source),
           post_images(image_url, display_order, alt_text),
           post_link_previews(url, title, description, image_url, site_name)
         `)
@@ -1710,7 +1719,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
               view_count,
               image_url,
               quoted_post_id,
-              profiles!inner(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, is_warned, warning_reason),
+              profiles!inner(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, is_warned, warning_reason, verification_source),
               post_images(image_url, display_order, alt_text),
               post_link_previews(url, title, description, image_url, site_name)
             `)
@@ -1767,7 +1776,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
         // Replies
         supabase
           .from('post_replies')
-          .select('*, profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, is_warned, warning_reason)')
+          .select('*, profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, is_warned, warning_reason, verification_source)')
           .in('post_id', postIds)
           .order('created_at', { ascending: true }),
         
@@ -1848,7 +1857,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
         return {
           ...post,
-          profiles: post.profiles || { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false, is_affiliate: false, is_business_mode: false, avatar_url: null, affiliated_business_id: null, affiliated_business: null, last_seen: null, show_online_status: false, is_warned: false, warning_reason: null },
+          profiles: post.profiles || { display_name: 'Unknown', handle: 'unknown', is_verified: false, is_organization_verified: false, is_affiliate: false, is_business_mode: false, avatar_url: null, affiliated_business_id: null, affiliated_business: null, last_seen: null, show_online_status: false, is_warned: false, warning_reason: null, verification_source: null },
           quoted_post: quotedPost,
           replies,
           reply_count: replies.length,
@@ -1968,7 +1977,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
             .from('posts')
             .select(`
               *,
-              profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status),
+              profiles(display_name, handle, is_verified, is_organization_verified, is_affiliate, is_business_mode, avatar_url, affiliated_business_id, last_seen, show_online_status, verification_source),
               post_images(image_url, display_order, alt_text),
               post_link_previews(url, title, description, image_url, site_name)
             `)
@@ -1977,12 +1986,15 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
           if (!error && updatedPost) {
             // Update post in both feeds while preserving replies and likes
-            const updatePost = (currentPosts: Post[]) =>
+            const updatePost = (currentPosts: Post[]): Post[] =>
               currentPosts.map((p) =>
                 p.id === payload.new.id
                   ? {
                       ...updatedPost,
-                      profiles: updatedPost.profiles || p.profiles,
+                      profiles: updatedPost.profiles ? {
+                        ...updatedPost.profiles,
+                        verification_source: updatedPost.profiles.verification_source as 'manual' | 'premium' | null
+                      } : p.profiles,
                       replies: p.replies, // preserve existing replies
                       reply_count: p.reply_count,
                       like_count: p.like_count,
