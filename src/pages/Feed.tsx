@@ -914,9 +914,9 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
           </div>
         </div>
 
-        <Link 
-          to={`/post/${post.id}`} 
-          className="block"
+        <div 
+          className="block cursor-pointer"
+          onClick={() => navigate(`/post/${post.id}`)}
         >
           <div className="text-foreground whitespace-pre-wrap">
             {expandedPosts.has(post.id) ? (
@@ -926,7 +926,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                   variant="ghost"
                   size="sm"
                   onClick={(e) => {
-                    e.preventDefault();
                     e.stopPropagation();
                     setExpandedPosts(prev => {
                       const newSet = new Set(prev);
@@ -948,7 +947,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                   variant="ghost"
                   size="sm"
                   onClick={(e) => {
-                    e.preventDefault();
                     e.stopPropagation();
                     setExpandedPosts(prev => new Set(prev).add(post.id));
                   }}
@@ -996,7 +994,6 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               variant="ghost"
               size="sm"
               onClick={(e) => {
-                e.preventDefault();
                 e.stopPropagation();
                 handleTranslate();
               }}
@@ -1006,7 +1003,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
               {isTranslating ? t('common.translating') : translatedContent ? t('common.showOriginal') : t('common.translate')}
             </Button>
           )}
-        </Link>
+        </div>
         
         {/* AI Post Summary for longer posts */}
         {post.content.length >= 150 && (
