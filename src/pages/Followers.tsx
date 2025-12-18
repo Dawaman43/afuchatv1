@@ -285,21 +285,26 @@ export default function Followers() {
               >
                 <Avatar
                   className="h-12 w-12 cursor-pointer"
-                  onClick={() => handleUserClick(profile.handle)}
+                  onClick={() => handleUserClick(profile.handle || profile.id)}
                 >
                   <AvatarImage src={profile.avatar_url || undefined} />
                   <AvatarFallback>
-                    {profile.display_name.charAt(0).toUpperCase()}
+                    {(profile.display_name || profile.handle || 'U').charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
 
                 <div
                   className="flex-1 cursor-pointer"
-                  onClick={() => handleUserClick(profile.handle)}
+                  onClick={() => handleUserClick(profile.handle || profile.id)}
                 >
                   <div className="flex items-center gap-1">
-                    <span className="font-semibold text-sm max-w-[120px] truncate" title={profile.display_name}>
-                      {profile.display_name.length > 12 ? `${profile.display_name.slice(0, 10)}...` : profile.display_name}
+                    <span
+                      className="font-semibold text-sm max-w-[120px] truncate"
+                      title={profile.display_name || profile.handle || 'User'}
+                    >
+                      {(profile.display_name || profile.handle || 'User').length > 12
+                        ? `${(profile.display_name || profile.handle || 'User').slice(0, 10)}...`
+                        : (profile.display_name || profile.handle || 'User')}
                     </span>
                     {profile.is_warned && <WarningBadge size="sm" reason={profile.warning_reason} variant="post" />}
                     {profile.is_verified && <VerifiedBadge size="sm" userId={profile.id} verificationSource={profile.verification_source} />}
@@ -307,9 +312,7 @@ export default function Followers() {
                       <BusinessBadge size="sm" />
                     )}
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    @{profile.handle}
-                  </span>
+                  <span className="text-xs text-muted-foreground">@{profile.handle || profile.id}</span>
                   {profile.bio && (
                     <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
                       {profile.bio}
