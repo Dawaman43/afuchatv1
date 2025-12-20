@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Check, X, Phone, Banknote, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { Skeleton } from '@/components/ui/skeleton';
+import { InlineLoader } from '@/components/ui/CustomLoader';
 
 interface Withdrawal {
   id: string;
@@ -166,10 +166,7 @@ export function AdminWithdrawalsPanel() {
 
         <TabsContent value="pending" className="mt-4">
           {pendingLoading ? (
-            <div className="space-y-4">
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-24 w-full" />
-            </div>
+            <InlineLoader text="Loading pending withdrawals..." />
           ) : pendingWithdrawals && pendingWithdrawals.length > 0 ? (
             <div className="space-y-4">
               {pendingWithdrawals.map((withdrawal) => (
@@ -240,7 +237,7 @@ export function AdminWithdrawalsPanel() {
 
         <TabsContent value="history" className="mt-4">
           {historyLoading ? (
-            <Skeleton className="h-64 w-full" />
+            <InlineLoader text="Loading history..." />
           ) : (
             <div className="overflow-x-auto">
               <Table>
