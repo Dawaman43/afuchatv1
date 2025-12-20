@@ -431,6 +431,63 @@
   }
 }
 
+/* Desktop Layout Utilities */
+@layer utilities {
+  /* Desktop content container - centered with max width */
+  .desktop-container {
+    @apply max-w-7xl mx-auto;
+  }
+
+  /* Three column desktop layout */
+  .desktop-grid {
+    @apply grid grid-cols-1;
+  }
+
+  @media (min-width: 1024px) {
+    .desktop-grid {
+      grid-template-columns: 280px 1fr 320px;
+      gap: 0;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .desktop-grid {
+      grid-template-columns: 280px minmax(0, 680px) 320px;
+      gap: 1rem;
+    }
+  }
+
+  /* Sticky sidebar */
+  .sidebar-sticky {
+    @apply sticky top-16;
+    max-height: calc(100vh - 4rem);
+  }
+
+  /* Card containment - prevents content overflow */
+  .card-contained {
+    @apply overflow-hidden;
+    contain: layout style;
+  }
+
+  /* Professional shadow for elevated cards */
+  .shadow-professional {
+    box-shadow: 
+      0 1px 2px hsl(var(--foreground) / 0.04),
+      0 2px 4px hsl(var(--foreground) / 0.02),
+      0 4px 8px hsl(var(--foreground) / 0.01);
+  }
+
+  /* Desktop feed container */
+  .feed-container {
+    @apply max-w-2xl mx-auto;
+  }
+
+  /* Widget card style */
+  .widget-card {
+    @apply bg-card rounded-xl border border-border/50 overflow-hidden;
+  }
+}
+
 /* Premium UI Components */
 
 /* Status indicators */
