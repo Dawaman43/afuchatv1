@@ -34,6 +34,9 @@ const FinancialHub = () => {
   const [acoinBalance, setAcoinBalance] = useState(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Detect if running inside an iframe (embedded app preview)
+  const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
 
   useEffect(() => {
     if (user) {
@@ -386,25 +389,27 @@ const FinancialHub = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="flex h-14 sm:h-16 items-center justify-between">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="shrink-0"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="absolute left-1/2 -translate-x-1/2">
-              <Logo size="sm" />
+      {/* Header - hidden when in iframe */}
+      {!isInIframe && (
+        <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container max-w-4xl mx-auto px-4 sm:px-6">
+            <div className="flex h-14 sm:h-16 items-center justify-between">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(-1)}
+                className="shrink-0"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="absolute left-1/2 -translate-x-1/2">
+                <Logo size="sm" />
+              </div>
+              <div className="w-10" />
             </div>
-            <div className="w-10" />
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Main Content */}
       <main className="container max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-24 space-y-6">

@@ -152,18 +152,16 @@ export const MiniAppTermsDialog = ({
               )}
 
               {/* AfuChat Mini Apps Terms */}
-              <a
-                href="/terms-of-use#mini-programs"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/20 hover:bg-primary/10 transition-colors"
+              <button
+                onClick={() => window.open('/terms', '_blank')}
+                className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/20 hover:bg-primary/10 transition-colors w-full text-left"
               >
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-primary" />
                   <span className="text-sm font-medium text-primary">AfuChat Mini Apps Terms</span>
                 </div>
                 <ExternalLink className="h-4 w-4 text-primary" />
-              </a>
+              </button>
             </div>
 
             {/* Safety Notice */}
@@ -183,9 +181,9 @@ export const MiniAppTermsDialog = ({
               />
               <label htmlFor="accept-terms" className="text-sm cursor-pointer leading-tight">
                 I have reviewed and agree to the app's terms and privacy policy, and the{' '}
-                <a href="/terms-of-use#mini-programs" className="text-primary hover:underline" target="_blank">
+                <button onClick={() => window.open('/terms', '_blank')} className="text-primary hover:underline">
                   AfuChat Mini Apps Terms
-                </a>
+                </button>
               </label>
             </div>
           </div>

@@ -221,20 +221,29 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
   };
 
   const StepIndicator = () => (
-    <div className="flex items-center justify-center gap-2 mb-6">
-      {[1, 2, 3].map((s) => (
-        <div key={s} className="flex items-center">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-            s === step 
-              ? 'bg-primary text-primary-foreground' 
-              : s < step 
-                ? 'bg-primary/20 text-primary' 
-                : 'bg-muted text-muted-foreground'
-          }`}>
-            {s < step ? <CheckCircle2 className="h-4 w-4" /> : s}
+    <div className="flex items-center justify-between mb-6 px-4">
+      {[
+        { step: 1, label: 'Details' },
+        { step: 2, label: 'Assets' },
+        { step: 3, label: 'Submit' }
+      ].map((s, index) => (
+        <div key={s.step} className="flex items-center flex-1">
+          <div className="flex flex-col items-center gap-1">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all shadow-sm ${
+              s.step === step 
+                ? 'bg-primary text-primary-foreground scale-110' 
+                : s.step < step 
+                  ? 'bg-primary/20 text-primary' 
+                  : 'bg-muted text-muted-foreground'
+            }`}>
+              {s.step < step ? <CheckCircle2 className="h-5 w-5" /> : s.step}
+            </div>
+            <span className={`text-[10px] font-medium ${
+              s.step === step ? 'text-primary' : 'text-muted-foreground'
+            }`}>{s.label}</span>
           </div>
-          {s < 3 && (
-            <div className={`w-8 h-0.5 mx-1 ${s < step ? 'bg-primary' : 'bg-muted'}`} />
+          {index < 2 && (
+            <div className={`flex-1 h-0.5 mx-2 ${s.step < step ? 'bg-primary' : 'bg-muted'}`} />
           )}
         </div>
       ))}
@@ -243,30 +252,32 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md mx-4 max-h-[90vh] p-0">
-        <DialogHeader className="p-4 pb-0">
-          <DialogTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5 text-primary" />
+      <DialogContent className="max-w-lg mx-4 max-h-[90vh] p-0 overflow-hidden">
+        <DialogHeader className="p-5 pb-3 bg-gradient-to-r from-primary/5 to-primary/10 border-b">
+          <DialogTitle className="flex items-center gap-3 text-lg">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Upload className="h-5 w-5 text-primary" />
+            </div>
             Submit Your App
           </DialogTitle>
-          <DialogDescription>
-            {step === 1 && 'Tell us about your app'}
-            {step === 2 && 'Upload app assets'}
-            {step === 3 && 'Review and submit'}
+          <DialogDescription className="text-sm">
+            {step === 1 && 'Add basic information about your app'}
+            {step === 2 && 'Upload your app assets and links'}
+            {step === 3 && 'Review and submit for approval'}
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh]">
-          <div className="p-4 pt-2">
+        <ScrollArea className="max-h-[55vh]">
+          <div className="p-5 pt-4">
             <StepIndicator />
 
             {/* Step 1: Basic Info */}
             {step === 1 && (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="flex items-center gap-2">
-                    <Smartphone className="h-4 w-4 text-muted-foreground" />
-                    App Name *
+                  <Label htmlFor="name" className="flex items-center gap-2 text-sm font-medium">
+                    <Smartphone className="h-4 w-4 text-primary" />
+                    App Name <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="name"
@@ -274,14 +285,15 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     maxLength={50}
+                    className="h-11"
                   />
                   <p className="text-xs text-muted-foreground">{formData.name.length}/50 characters</p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    Description *
+                  <Label htmlFor="description" className="flex items-center gap-2 text-sm font-medium">
+                    <FileText className="h-4 w-4 text-primary" />
+                    Description <span className="text-destructive">*</span>
                   </Label>
                   <Textarea
                     id="description"
@@ -290,19 +302,20 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     rows={4}
                     maxLength={500}
+                    className="resize-none"
                   />
                   <p className="text-xs text-muted-foreground">{formData.description.length}/500 characters</p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    Category *
+                  <Label className="flex items-center gap-2 text-sm font-medium">
+                    Category <span className="text-destructive">*</span>
                   </Label>
                   <Select
                     value={formData.category}
                     onValueChange={(value) => handleInputChange('category', value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11">
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -322,21 +335,23 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
 
             {/* Step 2: Assets & Links */}
             {step === 2 && (
-              <div className="space-y-4">
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mb-4">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <div className="space-y-5">
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                      <AlertCircle className="h-4 w-4 text-primary" />
+                    </div>
                     <div className="text-xs text-muted-foreground space-y-1">
-                      <p><strong>📱 Your app will open inside AfuChat</strong></p>
-                      <p>Host your app on any web hosting service and provide the URL.</p>
+                      <p className="font-semibold text-foreground">📱 Your app will open inside AfuChat</p>
+                      <p>Host your app on any web hosting service and provide the URL below.</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="url" className="flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-muted-foreground" />
-                    App URL *
+                  <Label htmlFor="url" className="flex items-center gap-2 text-sm font-medium">
+                    <Globe className="h-4 w-4 text-primary" />
+                    App URL <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="url"
@@ -344,13 +359,14 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                     placeholder="https://myapp.example.com"
                     value={formData.url}
                     onChange={(e) => handleInputChange('url', e.target.value)}
+                    className="h-11"
                   />
                 </div>
 
                 {/* Icon Upload */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">App Icon *</Label>
-                  <div className="flex items-center gap-4">
+                  <Label className="text-sm font-medium">App Icon <span className="text-destructive">*</span></Label>
+                  <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
                     <MiniAppImageUpload
                       type="icon"
                       currentImage={formData.iconUrl}
@@ -364,12 +380,12 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
 
                 {/* Screenshots Upload */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Screenshots (optional)</Label>
+                  <Label className="text-sm font-medium">Screenshots <span className="text-muted-foreground">(optional)</span></Label>
                   <p className="text-xs text-muted-foreground mb-2">Add up to 5 screenshots to showcase your app</p>
                   
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-3">
                     {formData.screenshots.map((screenshot, index) => (
-                      <div key={index} className="relative aspect-video rounded-lg overflow-hidden border border-border">
+                      <div key={index} className="relative aspect-video rounded-lg overflow-hidden border border-border shadow-sm">
                         <img 
                           src={screenshot} 
                           alt={`Screenshot ${index + 1}`}
@@ -379,7 +395,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                           type="button"
                           variant="destructive"
                           size="icon"
-                          className="absolute top-1 right-1 h-5 w-5"
+                          className="absolute top-1 right-1 h-6 w-6"
                           onClick={() => removeScreenshot(index)}
                         >
                           <X className="h-3 w-3" />
@@ -397,111 +413,130 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="features">Key Features (optional)</Label>
+                  <Label htmlFor="features" className="text-sm font-medium">Key Features <span className="text-muted-foreground">(optional)</span></Label>
                   <Textarea
                     id="features"
                     placeholder="• Feature 1&#10;• Feature 2&#10;• Feature 3"
                     value={formData.features}
                     onChange={(e) => handleInputChange('features', e.target.value)}
                     rows={3}
+                    className="resize-none"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="privacyUrl" className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-muted-foreground" />
-                    Privacy Policy URL (optional)
-                  </Label>
-                  <Input
-                    id="privacyUrl"
-                    type="url"
-                    placeholder="https://yourapp.com/privacy"
-                    value={formData.privacyUrl}
-                    onChange={(e) => handleInputChange('privacyUrl', e.target.value)}
-                  />
-                </div>
+                <div className="border-t pt-5 space-y-4">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-primary" />
+                    Legal & Privacy
+                  </h4>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="privacyUrl" className="text-sm font-medium">
+                      Privacy Policy URL <span className="text-muted-foreground">(optional)</span>
+                    </Label>
+                    <Input
+                      id="privacyUrl"
+                      type="url"
+                      placeholder="https://yourapp.com/privacy"
+                      value={formData.privacyUrl}
+                      onChange={(e) => handleInputChange('privacyUrl', e.target.value)}
+                      className="h-11"
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="termsUrl" className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    Terms of Service URL (optional)
-                  </Label>
-                  <Input
-                    id="termsUrl"
-                    type="url"
-                    placeholder="https://yourapp.com/terms"
-                    value={formData.termsUrl}
-                    onChange={(e) => handleInputChange('termsUrl', e.target.value)}
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="termsUrl" className="text-sm font-medium">
+                      Terms of Service URL <span className="text-muted-foreground">(optional)</span>
+                    </Label>
+                    <Input
+                      id="termsUrl"
+                      type="url"
+                      placeholder="https://yourapp.com/terms"
+                      value={formData.termsUrl}
+                      onChange={(e) => handleInputChange('termsUrl', e.target.value)}
+                      className="h-11"
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Step 3: Review & Submit */}
             {step === 3 && (
-              <div className="space-y-4">
-                <div className="bg-card border rounded-lg p-4 space-y-3">
-                  <h4 className="font-medium text-sm">App Summary</h4>
-                  <div className="flex items-center gap-3">
+              <div className="space-y-5">
+                <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-4 space-y-4">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    App Summary
+                  </h4>
+                  <div className="flex items-center gap-4">
                     {formData.iconUrl && (
                       <img 
                         src={formData.iconUrl} 
                         alt={formData.name}
-                        className="w-12 h-12 rounded-xl object-cover"
+                        className="w-16 h-16 rounded-2xl object-cover shadow-md"
                       />
                     )}
-                    <div>
-                      <p className="font-medium">{formData.name}</p>
+                    <div className="flex-1">
+                      <p className="font-semibold text-base">{formData.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {categories.find(c => c.id === formData.category)?.name}
+                        {categories.find(c => c.id === formData.category)?.icon} {categories.find(c => c.id === formData.category)?.name}
                       </p>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">{formData.description}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2 bg-background/50 rounded-lg p-2">{formData.description}</p>
                   {formData.screenshots.length > 0 && (
-                    <p className="text-xs text-muted-foreground">{formData.screenshots.length} screenshot(s) uploaded</p>
+                    <p className="text-xs text-muted-foreground">📷 {formData.screenshots.length} screenshot(s) uploaded</p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="contactEmail">Contact Email *</Label>
+                  <Label htmlFor="contactEmail" className="text-sm font-medium">
+                    Contact Email <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="contactEmail"
                     type="email"
                     placeholder="developer@example.com"
                     value={formData.contactEmail}
                     onChange={(e) => handleInputChange('contactEmail', e.target.value)}
+                    className="h-11"
                   />
                   <p className="text-xs text-muted-foreground">We'll contact you about your submission</p>
                 </div>
 
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-start gap-3">
+                <div className="space-y-4 pt-2 border-t">
+                  <h4 className="text-sm font-semibold pt-2">Agreements</h4>
+                  
+                  <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
                     <Checkbox
                       id="terms"
                       checked={formData.agreeTerms}
                       onCheckedChange={(checked) => handleInputChange('agreeTerms', checked as boolean)}
+                      className="mt-0.5"
                     />
                     <label htmlFor="terms" className="text-sm cursor-pointer leading-tight">
-                      I agree to the <span className="text-primary">Terms of Service</span> and <span className="text-primary">Privacy Policy</span>
+                      I agree to the <button onClick={() => window.open('/terms', '_blank')} className="text-primary hover:underline font-medium">Terms of Service</button> and <button onClick={() => window.open('/privacy', '_blank')} className="text-primary hover:underline font-medium">Privacy Policy</button>
                     </label>
                   </div>
 
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
                     <Checkbox
                       id="guidelines"
                       checked={formData.agreeGuidelines}
                       onCheckedChange={(checked) => handleInputChange('agreeGuidelines', checked as boolean)}
+                      className="mt-0.5"
                     />
                     <label htmlFor="guidelines" className="text-sm cursor-pointer leading-tight">
-                      My app follows the <span className="text-primary">AfuChat App Guidelines</span>
+                      My app follows the <button onClick={() => window.open('/terms', '_blank')} className="text-primary hover:underline font-medium">AfuChat App Guidelines</button>
                     </label>
                   </div>
                 </div>
 
-                <div className="bg-muted/50 rounded-lg p-3 mt-4">
-                  <p className="text-xs text-muted-foreground text-center">
-                    📱 Your app will be reviewed within <strong>24-48 hours</strong>
+                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+                  <p className="text-sm text-center flex items-center justify-center gap-2">
+                    <span className="text-lg">📱</span>
+                    Your app will be reviewed within <strong>24-48 hours</strong>
                   </p>
                 </div>
               </div>
@@ -509,18 +544,18 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
           </div>
         </ScrollArea>
 
-        <DialogFooter className="p-4 pt-2 gap-2 sm:gap-0 border-t">
+        <DialogFooter className="p-4 pt-3 gap-3 border-t bg-muted/20">
           {step > 1 && (
-            <Button variant="outline" onClick={handleBack} className="flex-1">
+            <Button variant="outline" onClick={handleBack} className="flex-1 h-11">
               Back
             </Button>
           )}
           {step < 3 ? (
-            <Button onClick={handleNext} className="flex-1">
+            <Button onClick={handleNext} className="flex-1 h-11 font-semibold">
               Continue
             </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={loading} className="flex-1">
+            <Button onClick={handleSubmit} disabled={loading} className="flex-1 h-11 font-semibold">
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
