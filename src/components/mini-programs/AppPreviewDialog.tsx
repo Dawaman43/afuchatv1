@@ -147,20 +147,22 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
               </div>
             )}
 
-            {/* Developer Info */}
-            <div className="mb-4 p-3 bg-muted/50 rounded-xl">
-              <h3 className="text-sm font-semibold mb-2">Developer</h3>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="h-4 w-4" />
-                <span>{app.profiles?.display_name || 'Community Developer'}</span>
-              </div>
-              {app.created_at && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>Published {format(new Date(app.created_at), 'MMM d, yyyy')}</span>
+            {/* Developer Info - only show if display_name is provided */}
+            {app.profiles?.display_name && (
+              <div className="mb-4 p-3 bg-muted/50 rounded-xl">
+                <h3 className="text-sm font-semibold mb-2">Developer</h3>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="h-4 w-4" />
+                  <span>{app.profiles.display_name}</span>
                 </div>
-              )}
-            </div>
+                {app.created_at && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                    <Calendar className="h-4 w-4" />
+                    <span>Published {format(new Date(app.created_at), 'MMM d, yyyy')}</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Safety Notice */}
             <div className="mb-4 p-3 bg-primary/5 rounded-xl border border-primary/20">

@@ -75,9 +75,7 @@ const SuggestedUsers = lazy(() => import("./pages/SuggestedUsers"));
 const SimpleGame = lazy(() => import("./pages/SimpleGame"));
 const MemoryGame = lazy(() => import("./pages/MemoryGame"));
 const PuzzleGame = lazy(() => import("./pages/PuzzleGame"));
-const TriviaGame = lazy(() => import("./pages/TriviaGame"));
 const Games = lazy(() => import("./pages/Games"));
-const AfuArena = lazy(() => import("./pages/AfuArena"));
 const FinancialHub = lazy(() => import("./pages/FinancialHub"));
 const SocialHub = lazy(() => import("./pages/SocialHub"));
 const SecurityDashboard = lazy(() => import("./pages/SecurityDashboard"));
@@ -206,11 +204,9 @@ const AppRoutes = () => {
       <Route path="/developer-sdk" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><DeveloperSDK /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/verification-request" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><VerificationRequest /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/games" element={<Layout><Games /></Layout>} />
-      <Route path="/games/AfuArena" element={<AfuArena />} />
       <Route path="/game" element={<Layout><SimpleGame /></Layout>} />
       <Route path="/memory-game" element={<Layout><MemoryGame /></Layout>} />
       <Route path="/puzzle-game" element={<Layout><PuzzleGame /></Layout>} />
-      <Route path="/trivia-game" element={<Layout><TriviaGame /></Layout>} />
       
       {/* New Super App Services */}
       <Route path="/food-delivery" element={<Layout><FoodDelivery /></Layout>} />

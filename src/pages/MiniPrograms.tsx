@@ -27,18 +27,15 @@ import { EmbeddedAppViewer } from '@/components/mini-programs/EmbeddedAppViewer'
 import { AppPreviewDialog } from '@/components/mini-programs/AppPreviewDialog';
 
 // Import app logos
-import afuArenaLogo from '@/assets/mini-apps/afu-arena-logo.png';
 import nexaCollectorLogo from '@/assets/mini-apps/nexa-collector-logo.png';
 import memoryGameLogo from '@/assets/mini-apps/memory-game-logo.png';
 import puzzleGameLogo from '@/assets/mini-apps/puzzle-game-logo.png';
-import triviaGameLogo from '@/assets/mini-apps/trivia-game-logo.png';
 import eventsLogo from '@/assets/mini-apps/events-logo.png';
 import travelLogo from '@/assets/mini-apps/travel-logo.png';
 import foodDeliveryLogo from '@/assets/mini-apps/food-delivery-logo.png';
 import ridesLogo from '@/assets/mini-apps/rides-logo.png';
 import bookingsLogo from '@/assets/mini-apps/bookings-logo.png';
 import financeLogo from '@/assets/mini-apps/finance-logo.png';
-import momentsLogo from '@/assets/mini-apps/moments-logo.png';
 import shopshackLogo from '@/assets/mini-apps/shopshack-logo.png';
 import giftsP2PLogo from '@/assets/mini-apps/gifts-p2p-logo.png';
 import afumailLogo from '@/assets/mini-apps/afumail-logo.png';
@@ -137,22 +134,8 @@ const MiniPrograms = () => {
     { id: 'entertainment', name: 'Entertainment', icon: Music },
   ];
 
+  // Built-in games - all disabled for now
   const builtInGames: BuiltInApp[] = [
-    { 
-      id: 'afu-arena',
-      name: 'Afu Arena',
-      description: 'Real-time 1v1 reflex battle',
-      icon: Swords,
-      logo: afuArenaLogo,
-      category: 'games',
-      route: '/games/AfuArena',
-      color: 'bg-primary',
-      gradient: 'from-primary to-primary/60',
-      isBuiltIn: true,
-      featured: true,
-      downloads: '10K+',
-      rating: 4.8
-    },
     { 
       id: 'nexa-collector',
       name: 'Nexa Collector',
@@ -195,22 +178,9 @@ const MiniPrograms = () => {
       downloads: '15K+',
       rating: 4.4
     },
-    { 
-      id: 'trivia-challenge',
-      name: 'Trivia Challenge',
-      description: 'Test your knowledge',
-      icon: Brain,
-      logo: triviaGameLogo,
-      category: 'games',
-      route: '/trivia-game',
-      color: 'bg-indigo-500',
-      gradient: 'from-indigo-500 to-purple-600',
-      isBuiltIn: true,
-      downloads: '20K+',
-      rating: 4.7
-    },
   ];
 
+  // Built-in services - all disabled for now except AfuMail
   const builtInServices: BuiltInApp[] = [
     { 
       id: 'shopshack',
@@ -312,20 +282,6 @@ const MiniPrograms = () => {
       rating: 4.7
     },
     {
-      id: 'moments',
-      name: 'Moments',
-      description: 'Share stories',
-      icon: Image,
-      logo: momentsLogo,
-      category: 'services',
-      route: '/moments',
-      color: 'bg-pink-500',
-      gradient: 'from-pink-500 to-rose-500',
-      isBuiltIn: true,
-      downloads: '55K+',
-      rating: 4.8
-    },
-    {
       id: 'gifts-p2p',
       name: 'Gifts P2P',
       description: 'Trade rare gifts with others',
@@ -395,8 +351,8 @@ const MiniPrograms = () => {
   };
 
   const handleAppClick = (app: BuiltInApp) => {
-    // Check if it's a service and user is not admin - show coming soon (except AfuMail)
-    if (app.category === 'services' && !isAdmin && app.id !== 'afumail') {
+    // All default/built-in apps are disabled for now (except AfuMail)
+    if (app.id !== 'afumail') {
       toast.info('Coming soon!');
       return;
     }
@@ -494,19 +450,19 @@ const MiniPrograms = () => {
     );
   };
 
-  // Enhanced Game Card component - more polished and real looking
+  // Enhanced Game Card component - all built-in disabled
   const GameCard = ({ app }: { app: BuiltInApp }) => {
     const Icon = app.icon;
+    const isDisabled = app.id !== 'afumail'; // All built-in apps disabled except AfuMail
     
     return (
       <motion.div
-        whileHover={{ scale: 1.02, y: -4 }}
-        whileTap={{ scale: 0.98 }}
+        whileTap={isDisabled ? undefined : { scale: 0.98 }}
         onClick={() => handleAppClick(app)}
-        className="w-44 flex-shrink-0 cursor-pointer group"
+        className={`w-44 flex-shrink-0 ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'} group`}
       >
         {/* Card Container */}
-        <div className="relative rounded-2xl overflow-hidden bg-card border border-border shadow-lg hover:shadow-xl transition-all">
+        <div className={`relative rounded-2xl overflow-hidden bg-card border border-border shadow-lg transition-all ${isDisabled ? 'opacity-60' : 'hover:shadow-xl'}`}>
           {/* Game Banner/Cover */}
           <div className={`relative h-28 bg-gradient-to-br ${app.gradient} overflow-hidden`}>
             {app.logo ? (
@@ -524,23 +480,22 @@ const MiniPrograms = () => {
               </div>
             )}
             
-            {/* Featured Badge */}
-            {app.featured && (
+            {/* Coming Soon Badge for disabled apps */}
+            {isDisabled && (
               <div className="absolute top-2 left-2">
-                <Badge className="bg-yellow-500/90 text-yellow-950 border-0 text-[10px] font-bold shadow-md">
-                  ⭐ Featured
+                <Badge className="bg-muted text-muted-foreground border-0 text-[10px] font-bold shadow-md">
+                  <Clock className="h-3 w-3 mr-1" />
+                  Coming Soon
                 </Badge>
               </div>
             )}
             
-            {/* Play Button Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center shadow-lg">
-                  <Gamepad2 className="h-5 w-5 text-primary ml-0.5" />
-                </div>
+            {/* Disabled Overlay */}
+            {isDisabled && (
+              <div className="absolute inset-0 bg-background/40 flex items-center justify-center">
+                <Clock className="h-8 w-8 text-muted-foreground" />
               </div>
-            </div>
+            )}
           </div>
           
           {/* Game Info */}
@@ -574,7 +529,7 @@ const MiniPrograms = () => {
   // Google Play style app card component - uses actual logos
   const AppCard = ({ app, size = 'medium' }: { app: BuiltInApp; size?: 'small' | 'medium' | 'large' }) => {
     const Icon = app.icon;
-    const isComingSoon = app.category === 'services' && !isAdmin && app.id !== 'afumail';
+    const isDisabled = app.id !== 'afumail'; // All built-in apps disabled except AfuMail
     
     const sizeClasses = {
       small: 'w-20',
@@ -590,11 +545,11 @@ const MiniPrograms = () => {
     
     return (
       <motion.div
-        whileTap={{ scale: 0.98 }}
+        whileTap={isDisabled ? undefined : { scale: 0.98 }}
         onClick={() => handleAppClick(app)}
-        className={`${sizeClasses[size]} flex-shrink-0 cursor-pointer`}
+        className={`${sizeClasses[size]} flex-shrink-0 ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       >
-        <div className={`relative ${iconSizeClasses[size]} rounded-[22px] shadow-lg mb-2 overflow-hidden ${isComingSoon ? 'opacity-60' : ''}`}>
+        <div className={`relative ${iconSizeClasses[size]} rounded-[22px] shadow-lg mb-2 overflow-hidden ${isDisabled ? 'opacity-60' : ''}`}>
           {app.logo ? (
             <img 
               src={app.logo} 
@@ -606,7 +561,7 @@ const MiniPrograms = () => {
               <Icon className="h-8 w-8 text-white" />
             </div>
           )}
-          {isComingSoon && (
+          {isDisabled && (
             <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
               <Clock className="h-5 w-5 text-muted-foreground" />
             </div>
@@ -624,15 +579,15 @@ const MiniPrograms = () => {
   // Google Play style list item component - uses actual logos
   const AppListItem = ({ app }: { app: BuiltInApp }) => {
     const Icon = app.icon;
-    const isComingSoon = app.category === 'services' && !isAdmin && app.id !== 'afumail';
+    const isDisabled = app.id !== 'afumail'; // All built-in apps disabled except AfuMail
     
     return (
       <motion.div
-        whileTap={{ scale: 0.99 }}
+        whileTap={isDisabled ? undefined : { scale: 0.99 }}
         onClick={() => handleAppClick(app)}
-        className="flex items-center gap-3 p-2 rounded-xl hover:bg-accent/50 cursor-pointer transition-colors"
+        className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${isDisabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-accent/50'}`}
       >
-        <div className={`h-16 w-16 rounded-[16px] shadow-md overflow-hidden flex-shrink-0 ${isComingSoon ? 'opacity-60' : ''}`}>
+        <div className={`h-16 w-16 rounded-[16px] shadow-md overflow-hidden flex-shrink-0`}>
           {app.logo ? (
             <img 
               src={app.logo} 
@@ -648,7 +603,7 @@ const MiniPrograms = () => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="font-medium truncate">{app.name}</p>
-            {isComingSoon && (
+            {isDisabled && (
               <Badge variant="secondary" className="text-[10px] py-0 px-1.5">
                 <Clock className="h-2.5 w-2.5 mr-0.5" />
                 Soon
@@ -667,11 +622,11 @@ const MiniPrograms = () => {
         </div>
         <Button 
           size="sm" 
-          variant={isComingSoon ? "secondary" : "default"}
+          variant={isDisabled ? "secondary" : "default"}
           className="rounded-full px-4 h-8 text-xs"
-          disabled={isComingSoon}
+          disabled={isDisabled}
         >
-          {isComingSoon ? 'Soon' : 'Open'}
+          {isDisabled ? 'Soon' : 'Open'}
         </Button>
       </motion.div>
     );
@@ -779,7 +734,7 @@ const MiniPrograms = () => {
             </section>
           )}
 
-          {/* Shopping Section - ShopShack featured */}
+          {/* Shopping Section - includes third-party shopping apps */}
           {(selectedCategory === 'all' || selectedCategory === 'shopping') && (
             <section>
               <div className="flex items-center justify-between mb-3">
@@ -794,13 +749,17 @@ const MiniPrograms = () => {
                   ).map((app) => (
                     <AppCard key={app.id} app={app} size="large" />
                   ))}
+                  {/* Third-party shopping apps */}
+                  {filteredMiniPrograms.filter(app => app.category === 'shopping').map((app) => (
+                    <ThirdPartyAppCard key={app.id} app={app} />
+                  ))}
                 </div>
                 <ScrollBar orientation="horizontal" className="invisible" />
               </ScrollArea>
             </section>
           )}
 
-          {/* Games Section - Enhanced cards */}
+          {/* Games Section - includes third-party game apps */}
           {(selectedCategory === 'all' || selectedCategory === 'games') && (
             <section>
               <div className="flex items-center justify-between mb-4">
@@ -826,23 +785,25 @@ const MiniPrograms = () => {
                   ).map((app) => (
                     <GameCard key={app.id} app={app} />
                   ))}
+                  {/* Third-party game apps */}
+                  {filteredMiniPrograms.filter(app => app.category === 'games').map((app) => (
+                    <ThirdPartyAppCard key={app.id} app={app} />
+                  ))}
                 </div>
                 <ScrollBar orientation="horizontal" className="invisible" />
               </ScrollArea>
             </section>
           )}
 
-          {/* Services Section - List view like Play Store */}
+          {/* Services Section - includes third-party service apps */}
           {(selectedCategory === 'all' || selectedCategory === 'services') && (
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-bold">Services</h2>
-                {!isAdmin && (
-                  <Badge variant="secondary" className="gap-1 text-[10px]">
-                    <Clock className="h-3 w-3" />
-                    Coming Soon
-                  </Badge>
-                )}
+                <Badge variant="secondary" className="gap-1 text-[10px]">
+                  <Clock className="h-3 w-3" />
+                  Coming Soon
+                </Badge>
               </div>
               <div className="space-y-1">
                 {builtInServices.filter(s => 
@@ -852,21 +813,30 @@ const MiniPrograms = () => {
                   <AppListItem key={app.id} app={app} />
                 ))}
               </div>
+              {/* Third-party service apps in horizontal scroll */}
+              {filteredMiniPrograms.filter(app => app.category === 'services').length > 0 && (
+                <ScrollArea className="w-full mt-3">
+                  <div className="flex gap-3 pb-4">
+                    {filteredMiniPrograms.filter(app => app.category === 'services').map((app) => (
+                      <ThirdPartyAppCard key={app.id} app={app} />
+                    ))}
+                  </div>
+                  <ScrollBar orientation="horizontal" className="invisible" />
+                </ScrollArea>
+              )}
             </section>
           )}
 
-          {/* Third-Party Community Apps Section */}
-          {filteredMiniPrograms.length > 0 && (selectedCategory === 'all' || !['games', 'services', 'shopping'].includes(selectedCategory)) && (
+          {/* Entertainment Section - third-party entertainment apps */}
+          {(selectedCategory === 'all' || selectedCategory === 'entertainment') && filteredMiniPrograms.filter(app => app.category === 'entertainment').length > 0 && (
             <section>
               <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h2 className="text-lg font-bold">Community Apps</h2>
-                  <p className="text-xs text-muted-foreground">Apps built by developers</p>
-                </div>
+                <h2 className="text-lg font-bold">Entertainment</h2>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </div>
               <ScrollArea className="w-full">
                 <div className="flex gap-3 pb-4">
-                  {filteredMiniPrograms.map((app) => (
+                  {filteredMiniPrograms.filter(app => app.category === 'entertainment').map((app) => (
                     <ThirdPartyAppCard key={app.id} app={app} />
                   ))}
                 </div>
