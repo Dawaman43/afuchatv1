@@ -41,6 +41,9 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
   
+  // Detect if running in iframe (embedded mini program)
+  const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
+  
   // Initialize push notifications listener
   usePushNotifications();
 
@@ -273,17 +276,18 @@ const Layout = ({ children, hideNav = false }: LayoutProps) => {
     return location.pathname.startsWith(path);
   };
   
-  // Hide bottom navigation in chat rooms or when hideNav is true
+  // Hide bottom navigation in chat rooms, when hideNav is true, or when in iframe
   const isChatRoom = location.pathname.startsWith('/chat/');
-  const shouldHideNav = isChatRoom || hideNav;
+  const shouldHideNav = isChatRoom || hideNav || isInIframe;
+  const shouldHideUI = hideNav || isInIframe;
 
   return (
     <div className="min-h-screen bg-background select-none overflow-y-auto">
-      {!hideNav && <InstallPromptBanner />}
-      {!hideNav && <OfflineIndicator />}
+      {!shouldHideUI && <InstallPromptBanner />}
+      {!shouldHideUI && <OfflineIndicator />}
 
       {/* Main Content */}
-      <main className={hideNav ? "min-h-screen" : "pb-20 min-h-screen"}>
+      <main className={shouldHideUI ? "min-h-screen" : "pb-20 min-h-screen"}>
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
