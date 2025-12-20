@@ -69,12 +69,15 @@ export const AdminMiniProgramsPanel = () => {
     try {
       const { error } = await supabase
         .from('mini_programs')
-        .update({ status })
+        .update({ 
+          status,
+          is_published: status === 'approved' // Auto-publish when approved
+        })
         .eq('id', id);
 
       if (error) throw error;
 
-      toast.success(`App ${status === 'approved' ? 'approved' : 'rejected'} successfully`);
+      toast.success(`App ${status === 'approved' ? 'approved and published' : 'rejected'} successfully`);
       await fetchPrograms();
     } catch (error) {
       console.error('Error updating status:', error);
