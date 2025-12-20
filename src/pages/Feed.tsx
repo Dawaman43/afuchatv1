@@ -8,7 +8,7 @@ import { MessageCircle, Heart, Send, Ellipsis, Gift, Eye, TrendingUp, Crown, Use
 import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import platformLogo from '@/assets/ai-chat-icon.ico';
-import aiSparkIcon from '@/assets/ai-spark-icon.png';
+import aiSparkIcon from '@/assets/ai-chat-icon.ico';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 
 import { CustomLoader, InlineLoader } from '@/components/ui/CustomLoader';
@@ -905,7 +905,7 @@ const PostCard = ({ post, addReply, user, navigate, onAcknowledge, onDeletePost,
                 title={t('feed.analyzePost')}
                 onClick={handleAiTransfer}
             >
-                <img src={aiSparkIcon} alt="AI" className="h-6 w-6" />
+                <img src={aiSparkIcon} alt="AI" className="h-6 w-6 select-none" draggable={false} onContextMenu={(e) => e.preventDefault()} />
             </button>
             
             <PostActionsSheet
