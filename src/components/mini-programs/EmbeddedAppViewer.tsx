@@ -66,6 +66,22 @@ export const EmbeddedAppViewer = ({
     window.open(appUrl, '_blank', 'noopener,noreferrer');
   };
 
+  // Check if URL is relative (internal route) or absolute (external URL)
+  const isRelativeUrl = appUrl.startsWith('/');
+  const fullUrl = isRelativeUrl ? `${window.location.origin}${appUrl}` : appUrl;
+  
+  // Get hostname safely
+  const getHostname = () => {
+    try {
+      if (isRelativeUrl) {
+        return window.location.hostname;
+      }
+      return new URL(appUrl).hostname;
+    } catch {
+      return 'App';
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Header */}
@@ -90,7 +106,7 @@ export const EmbeddedAppViewer = ({
           
           <div className="min-w-0 flex-1">
             <h1 className="font-semibold text-sm truncate">{appName}</h1>
-            <p className="text-xs text-muted-foreground truncate">{new URL(appUrl).hostname}</p>
+            <p className="text-xs text-muted-foreground truncate">{getHostname()}</p>
           </div>
         </div>
 
@@ -150,7 +166,7 @@ export const EmbeddedAppViewer = ({
       {/* Embedded iframe */}
       <iframe
         key={key}
-        src={appUrl}
+        src={fullUrl}
         className="flex-1 w-full border-0"
         title={appName}
         onLoad={() => setIsLoading(false)}
