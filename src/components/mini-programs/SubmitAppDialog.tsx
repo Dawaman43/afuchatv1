@@ -306,9 +306,10 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mb-4">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                    <p className="text-xs text-muted-foreground">
-                      Host your app and icon on any web hosting service (GitHub Pages, Vercel, Netlify, etc.) and provide the URLs below.
-                    </p>
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <p><strong>📱 Your app will open inside AfuChat</strong> - not as an external link!</p>
+                      <p>Host your app on any web hosting service (GitHub Pages, Vercel, Netlify, etc.) and provide the URL. Users will experience it as a native tab within AfuChat.</p>
+                    </div>
                   </div>
                 </div>
 
@@ -324,7 +325,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                     value={formData.url}
                     onChange={(e) => handleInputChange('url', e.target.value)}
                   />
-                  <p className="text-xs text-muted-foreground">The URL where your app is hosted</p>
+                  <p className="text-xs text-muted-foreground">Your app will be embedded and open inside AfuChat</p>
                 </div>
 
                 <div className="space-y-2">

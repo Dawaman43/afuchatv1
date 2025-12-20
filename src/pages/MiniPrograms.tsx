@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { SubmitAppDialog } from '@/components/mini-programs/SubmitAppDialog';
+import { EmbeddedAppViewer } from '@/components/mini-programs/EmbeddedAppViewer';
 
 // Import app logos
 import afuArenaLogo from '@/assets/mini-apps/afu-arena-logo.png';
@@ -89,6 +90,13 @@ const MiniPrograms = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [acceptedApps, setAcceptedApps] = useState<Set<string>>(new Set());
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
+  
+  // Embedded app viewer state for third-party apps
+  const [embeddedApp, setEmbeddedApp] = useState<{
+    name: string;
+    url: string;
+    icon?: string;
+  } | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -409,6 +417,15 @@ const MiniPrograms = () => {
     navigate(pendingApp.route);
   };
 
+  // Handler for opening third-party mini programs in embedded viewer
+  const handleThirdPartyAppClick = (app: MiniProgram) => {
+    setEmbeddedApp({
+      name: app.name,
+      url: app.url,
+      icon: app.icon_url || undefined,
+    });
+  };
+
   const allBuiltInApps = [...builtInGames, ...builtInServices];
   
   const filteredBuiltInApps = allBuiltInApps.filter(app => {
@@ -418,7 +435,45 @@ const MiniPrograms = () => {
     return matchesSearch && matchesCategory;
   });
 
+  // Filter third-party mini programs
+  const filteredMiniPrograms = miniPrograms.filter(app => {
+    const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (app.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+    const matchesCategory = selectedCategory === 'all' || app.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
   const featuredApps = [...builtInGames.filter(g => g.featured), ...builtInServices.filter(s => s.featured)];
+
+  // Third-party app card component
+  const ThirdPartyAppCard = ({ app }: { app: MiniProgram }) => {
+    return (
+      <motion.div
+        whileTap={{ scale: 0.98 }}
+        onClick={() => handleThirdPartyAppClick(app)}
+        className="w-[88px] flex-shrink-0 cursor-pointer"
+      >
+        <div className="relative h-[72px] w-[72px] rounded-[22px] shadow-lg mb-2 overflow-hidden bg-muted mx-auto">
+          {app.icon_url ? (
+            <img 
+              src={app.icon_url} 
+              alt={app.name} 
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="h-full w-full bg-primary flex items-center justify-center">
+              <span className="text-2xl">📱</span>
+            </div>
+          )}
+        </div>
+        <p className="text-xs font-medium truncate text-center">{app.name}</p>
+        <div className="flex items-center justify-center gap-1 mt-0.5">
+          <Star className="h-2.5 w-2.5 fill-muted-foreground text-muted-foreground" />
+          <span className="text-[10px] text-muted-foreground">{app.rating || 4.5}</span>
+        </div>
+      </motion.div>
+    );
+  };
 
   // Enhanced Game Card component - more polished and real looking
   const GameCard = ({ app }: { app: BuiltInApp }) => {
@@ -781,20 +836,28 @@ const MiniPrograms = () => {
             </section>
           )}
 
-          {/* Search Results */}
-          {searchQuery && filteredBuiltInApps.length > 0 && (
+          {/* Third-Party Community Apps Section */}
+          {filteredMiniPrograms.length > 0 && (selectedCategory === 'all' || !['games', 'services', 'shopping'].includes(selectedCategory)) && (
             <section>
-              <h2 className="text-lg font-bold mb-3">Search Results</h2>
-              <div className="space-y-1">
-                {filteredBuiltInApps.map((app) => (
-                  <AppListItem key={app.id} app={app} />
-                ))}
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h2 className="text-lg font-bold">Community Apps</h2>
+                  <p className="text-xs text-muted-foreground">Apps built by developers</p>
+                </div>
               </div>
+              <ScrollArea className="w-full">
+                <div className="flex gap-3 pb-4">
+                  {filteredMiniPrograms.map((app) => (
+                    <ThirdPartyAppCard key={app.id} app={app} />
+                  ))}
+                </div>
+                <ScrollBar orientation="horizontal" className="invisible" />
+              </ScrollArea>
             </section>
           )}
 
           {/* Empty state */}
-          {searchQuery && filteredBuiltInApps.length === 0 && (
+          {searchQuery && filteredBuiltInApps.length === 0 && filteredMiniPrograms.length === 0 && (
             <div className="text-center py-16">
               <div className="inline-flex p-4 rounded-full bg-muted mb-4">
                 <Search className="h-8 w-8 text-muted-foreground" />
@@ -936,6 +999,16 @@ const MiniPrograms = () => {
 
       {/* Submit App Dialog */}
       <SubmitAppDialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen} />
+
+      {/* Embedded App Viewer for third-party apps */}
+      {embeddedApp && (
+        <EmbeddedAppViewer
+          appName={embeddedApp.name}
+          appUrl={embeddedApp.url}
+          appIcon={embeddedApp.icon}
+          onClose={() => setEmbeddedApp(null)}
+        />
+      )}
     </Layout>
   );
 };
