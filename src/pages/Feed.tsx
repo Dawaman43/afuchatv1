@@ -2397,7 +2397,9 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
               <img 
                 src={platformLogo} 
                 alt="AfuChat" 
-                className="h-8 w-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" 
+                className="h-8 w-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none" 
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
               />
               <div className="flex items-center gap-2">
                 {user && premiumButton}

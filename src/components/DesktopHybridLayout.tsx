@@ -288,7 +288,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
                           )}
                         >
                           {item.customIcon ? (
-                            <img src={item.customIcon} alt={item.label} className="h-5 w-5 flex-shrink-0 object-contain" />
+                            <img src={item.customIcon} alt={item.label} className="h-5 w-5 flex-shrink-0 object-contain select-none" draggable={false} onContextMenu={(e) => e.preventDefault()} />
                           ) : item.icon ? (
                             <item.icon className="h-5 w-5 flex-shrink-0" />
                           ) : null}
