@@ -336,9 +336,9 @@ const AIChat: React.FC = () => {
           )}
         </div>
 
-        {/* Input Area - Fixed above bottom nav */}
-        <div className="fixed bottom-14 left-0 right-0 px-3 py-2 bg-background z-40">
-          <div className="flex items-end gap-2 bg-card border border-border rounded-full px-4 py-2 max-w-lg mx-auto lg:max-w-none">
+        {/* Input Area - Fixed above bottom nav on mobile, inline on desktop */}
+        <div className="fixed bottom-14 left-0 right-0 md:bottom-0 md:left-auto md:right-auto md:relative md:border-t md:border-border px-3 py-2 bg-background z-40">
+          <div className="flex items-end gap-2 bg-card border border-border rounded-full px-4 py-2 max-w-lg mx-auto md:max-w-2xl lg:max-w-3xl">
             <Textarea
               ref={textareaRef}
               value={input}
