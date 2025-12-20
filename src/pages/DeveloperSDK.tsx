@@ -3,7 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Code, Book, Rocket, Download, ExternalLink, Copy, Check } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { 
+  ArrowLeft, Code, Book, Rocket, Download, ExternalLink, Copy, Check, 
+  Shield, Terminal, Smartphone, Globe, Lock, Zap, Bell, CreditCard, 
+  BarChart3, Upload, Play, Settings, Package, GitBranch, AlertTriangle,
+  Users, MessageSquare, Image, Database, Palette, Navigation
+} from 'lucide-react';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
 
@@ -19,154 +27,271 @@ const DeveloperSDK = () => {
   };
 
   const exampleCode = {
-    basic: `// Basic Mini Program Structure
+    lifecycle: `// Mini Program Lifecycle
 import { AfuSDK } from '@afuchat/sdk';
 
-const sdk = new AfuSDK({
+const app = new AfuSDK({
   appId: 'your-app-id',
-  appSecret: 'your-app-secret'
+  sandbox: true
 });
 
-// Initialize your app
-sdk.ready(() => {
-  console.log('Mini program ready!');
-  
-  // Get user info
-  const user = sdk.getUserInfo();
-  console.log('Current user:', user);
+// App lifecycle hooks
+app.onLaunch(() => {
+  console.log('Mini program launched');
+  // Initialize app state, fetch initial data
+});
+
+app.onShow(() => {
+  console.log('Mini program visible');
+  // Resume activities, refresh data
+});
+
+app.onHide(() => {
+  console.log('Mini program hidden');
+  // Pause activities, save state
+});
+
+app.onClose(() => {
+  console.log('Mini program closing');
+  // Cleanup resources, save final state
 });`,
 
-    nexa: `// Nexa Integration Example
+    auth: `// Authentication API
 import { AfuSDK } from '@afuchat/sdk';
 
 const sdk = new AfuSDK({ appId: 'your-app-id' });
 
-// Award Nexa to user
-async function awardPoints(amount: number) {
-  try {
-    const result = await sdk.nexa.award({
-      amount: amount,
-      reason: 'Game completion',
-      metadata: {
-        game: 'puzzle-master',
-        level: 5
-      }
-    });
-    
-    console.log('Nexa awarded:', result);
-  } catch (error) {
-    console.error('Failed to award Nexa:', error);
+// Get current user ID
+const userId = sdk.auth.getUserId();
+console.log('User ID:', userId);
+
+// Get session token for API calls
+const token = await sdk.auth.getSessionToken();
+
+// Make authenticated API request
+const response = await fetch('https://your-api.com/data', {
+  headers: {
+    'Authorization': \`Bearer \${token}\`
   }
-}
+});`,
 
-// Get user's Nexa balance
-async function getBalance() {
-  const balance = await sdk.nexa.getBalance();
-  console.log('User Nexa:', balance);
-}`,
-
-    social: `// Social Features Example
+    storage: `// Storage API with limits
 import { AfuSDK } from '@afuchat/sdk';
 
 const sdk = new AfuSDK({ appId: 'your-app-id' });
 
-// Share content
-async function shareGame() {
-  await sdk.social.share({
-    title: 'Check out my high score!',
-    description: 'I just scored 10,000 points!',
-    imageUrl: 'https://example.com/share.jpg',
-    link: 'https://miniapp.afuchat.com/puzzle'
-  });
-}
-
-// Get friends list
-async function getFriends() {
-  const friends = await sdk.social.getFriends();
-  console.log('Friends:', friends);
-}
-
-// Send invite
-async function inviteFriend(userId: string) {
-  await sdk.social.invite(userId, {
-    message: 'Join me in this game!'
-  });
-}`,
-
-    storage: `// Data Storage Example
-import { AfuSDK } from '@afuchat/sdk';
-
-const sdk = new AfuSDK({ appId: 'your-app-id' });
-
-// Save user data
-async function saveProgress(data: any) {
-  await sdk.storage.set('game_progress', data);
-}
-
-// Load user data
-async function loadProgress() {
-  const data = await sdk.storage.get('game_progress');
-  return data;
-}
-
-// List all keys
-async function listSaves() {
-  const keys = await sdk.storage.keys();
-  return keys;
-}
-
-// Delete data
-async function deleteSave(key: string) {
-  await sdk.storage.remove(key);
-}`,
-
-    ui: `// UI Components Example
-import { AfuSDK } from '@afuchat/sdk';
-
-const sdk = new AfuSDK({ appId: 'your-app-id' });
-
-// Show toast notification
-sdk.ui.showToast({
-  message: 'Level completed!',
-  type: 'success',
-  duration: 3000
+// Save data (limit enforced per app)
+await sdk.storage.set('game_progress', {
+  level: 5,
+  score: 12500,
+  achievements: ['first_win', 'speed_demon']
 });
 
-// Show loading
-sdk.ui.showLoading('Processing...');
-sdk.ui.hideLoading();
+// Retrieve data
+const progress = await sdk.storage.get('game_progress');
+console.log('Progress:', progress);
 
-// Show confirmation dialog
-const confirmed = await sdk.ui.confirm({
-  title: 'Restart Game?',
-  message: 'Your progress will be lost.',
-  confirmText: 'Restart',
-  cancelText: 'Cancel'
+// Remove data
+await sdk.storage.remove('game_progress');
+
+// Note: Storage limits are enforced per app
+// Exceeding limits will throw an error`,
+
+    network: `// Network API with rate limiting
+import { AfuSDK } from '@afuchat/sdk';
+
+const sdk = new AfuSDK({ appId: 'your-app-id' });
+
+// Make network request (domain allowlist required)
+try {
+  const response = await sdk.network.request({
+    url: 'https://api.allowed-domain.com/data',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ action: 'fetch_leaderboard' })
+  });
+  
+  console.log('Response:', response.data);
+} catch (error) {
+  if (error.code === 'RATE_LIMITED') {
+    console.log('Too many requests, try again later');
+  } else if (error.code === 'DOMAIN_NOT_ALLOWED') {
+    console.log('Domain not in allowlist');
+  }
+}`,
+
+    media: `// Media API
+import { AfuSDK } from '@afuchat/sdk';
+
+const sdk = new AfuSDK({ appId: 'your-app-id' });
+
+// Pick an image from gallery
+const image = await sdk.media.pickImage({
+  maxWidth: 1024,
+  maxHeight: 1024,
+  quality: 0.8
 });
 
-if (confirmed) {
-  // Restart game
-}
+// Upload file to storage
+const uploadResult = await sdk.media.uploadFile(image, {
+  folder: 'user-uploads',
+  public: false
+});
 
-// Show custom modal
-sdk.ui.showModal({
-  title: 'Achievement Unlocked!',
-  content: '<img src="trophy.png" /><p>Master Player</p>',
-  buttons: [{
-    text: 'Share',
-    onClick: () => shareAchievement()
-  }]
-});`
+console.log('File URL:', uploadResult.url);
+
+// Play audio
+const audio = sdk.media.playAudio('https://cdn.afuchat.com/sounds/victory.mp3');
+audio.pause();
+audio.resume();`,
+
+    ui: `// UI Components API
+import { AfuSDK } from '@afuchat/sdk';
+
+const sdk = new AfuSDK({ appId: 'your-app-id' });
+
+// Navigation
+sdk.ui.navigation.push('/game/level-2');
+sdk.ui.navigation.replace('/home');
+sdk.ui.navigation.pop();
+
+// Show modal dialog
+await sdk.ui.showDialog({
+  title: 'Confirm Action',
+  content: 'Are you sure you want to restart?',
+  buttons: [
+    { text: 'Cancel', style: 'secondary' },
+    { text: 'Restart', style: 'primary' }
+  ]
+});
+
+// UI Components available:
+// - Button, List, Card, Modal, Dialog
+
+// Theme support
+sdk.ui.setTheme('dark'); // 'light' | 'dark' | 'system'
+
+// Responsive mobile-first layout is automatic`,
+
+    messaging: `// Messaging Integration
+import { AfuSDK } from '@afuchat/sdk';
+
+const sdk = new AfuSDK({ appId: 'your-app-id' });
+
+// Send message to chat
+await sdk.messaging.sendMessage({
+  chatId: 'chat-uuid',
+  content: 'Check out my high score: 15,000!',
+  type: 'text'
+});
+
+// Listen for incoming messages
+sdk.messaging.receiveMessage((message) => {
+  console.log('New message:', message);
+  // Handle game invites, challenges, etc.
+});`,
+
+    notifications: `// Notifications (in-app only)
+import { AfuSDK } from '@afuchat/sdk';
+
+const sdk = new AfuSDK({ appId: 'your-app-id' });
+
+// Request permission first
+const hasPermission = await sdk.notifications.requestPermission();
+
+if (hasPermission) {
+  // Show in-app notification
+  sdk.notifications.show({
+    title: 'Achievement Unlocked!',
+    body: 'You earned the "Speed Demon" badge',
+    icon: 'trophy'
+  });
+}`,
+
+    analytics: `// Analytics API
+import { AfuSDK } from '@afuchat/sdk';
+
+const sdk = new AfuSDK({ appId: 'your-app-id' });
+
+// Track custom event
+sdk.analytics.trackEvent('game_completed', {
+  level: 5,
+  score: 12500,
+  time_seconds: 120
+});
+
+// Track page view
+sdk.analytics.trackPage('/game/level-5');
+
+// Track errors
+try {
+  // Some risky operation
+} catch (error) {
+  sdk.analytics.trackError(error, {
+    context: 'game_physics',
+    severity: 'warning'
+  });
+}`,
+
+    payments: `// Payments API (optional, sandboxed)
+import { AfuSDK } from '@afuchat/sdk';
+
+const sdk = new AfuSDK({ appId: 'your-app-id' });
+
+// Initiate payment (sandbox mode)
+const payment = await sdk.payments.create({
+  amount: 100, // In Nexa or ACoins
+  currency: 'NEXA',
+  description: 'Premium skin pack',
+  metadata: {
+    item_id: 'skin_dragon_001'
+  }
+});
+
+if (payment.status === 'completed') {
+  // Grant item to user
+  console.log('Payment successful:', payment.transactionId);
+}`
   };
 
+  const cliCommands = [
+    { command: 'afu create my-app', description: 'Create a new mini program project' },
+    { command: 'afu build', description: 'Build your mini program for production' },
+    { command: 'afu preview', description: 'Preview in local simulator' },
+    { command: 'afu publish', description: 'Submit for review and publish' },
+    { command: 'afu rollback [version]', description: 'Rollback to a previous version' },
+  ];
+
+  const permissions = [
+    { name: 'user.info', description: 'Access user profile information', risk: 'low' },
+    { name: 'auth.token', description: 'Get session tokens for API auth', risk: 'medium' },
+    { name: 'storage.read', description: 'Read from app storage', risk: 'low' },
+    { name: 'storage.write', description: 'Write to app storage', risk: 'low' },
+    { name: 'network.request', description: 'Make HTTP requests', risk: 'medium' },
+    { name: 'media.pick', description: 'Pick images from gallery', risk: 'medium' },
+    { name: 'media.upload', description: 'Upload files to storage', risk: 'medium' },
+    { name: 'media.audio', description: 'Play audio files', risk: 'low' },
+    { name: 'messaging.send', description: 'Send messages to chats', risk: 'high' },
+    { name: 'messaging.receive', description: 'Receive chat messages', risk: 'medium' },
+    { name: 'notifications.show', description: 'Show in-app notifications', risk: 'low' },
+    { name: 'payments.create', description: 'Create payment requests', risk: 'high' },
+    { name: 'analytics.track', description: 'Track events and pages', risk: 'low' },
+  ];
+
   const apiEndpoints = [
-    { method: 'GET', endpoint: '/api/v1/user', description: 'Get current user info' },
-    { method: 'GET', endpoint: '/api/v1/nexa/balance', description: 'Get user Nexa balance' },
-    { method: 'POST', endpoint: '/api/v1/nexa/award', description: 'Award Nexa to user (requires approval)' },
-    { method: 'GET', endpoint: '/api/v1/friends', description: 'Get user\'s friends list' },
-    { method: 'POST', endpoint: '/api/v1/share', description: 'Share content to feed' },
-    { method: 'POST', endpoint: '/api/v1/storage/set', description: 'Save user data' },
-    { method: 'GET', endpoint: '/api/v1/storage/get', description: 'Retrieve user data' },
+    { method: 'GET', endpoint: '/api/v1/auth/user', description: 'Get current user info' },
+    { method: 'GET', endpoint: '/api/v1/auth/token', description: 'Get session token' },
+    { method: 'POST', endpoint: '/api/v1/storage/set', description: 'Save data to storage' },
+    { method: 'GET', endpoint: '/api/v1/storage/get/:key', description: 'Retrieve stored data' },
+    { method: 'DELETE', endpoint: '/api/v1/storage/remove/:key', description: 'Delete stored data' },
+    { method: 'POST', endpoint: '/api/v1/network/proxy', description: 'Proxy HTTP request' },
+    { method: 'POST', endpoint: '/api/v1/media/upload', description: 'Upload media file' },
+    { method: 'POST', endpoint: '/api/v1/messaging/send', description: 'Send chat message' },
+    { method: 'POST', endpoint: '/api/v1/notifications/show', description: 'Show notification' },
+    { method: 'POST', endpoint: '/api/v1/analytics/event', description: 'Track analytics event' },
+    { method: 'POST', endpoint: '/api/v1/payments/create', description: 'Create payment' },
   ];
 
   return (
@@ -187,11 +312,16 @@ sdk.ui.showModal({
 
         <main className="container px-4 py-8">
           <div className="text-center space-y-4 mb-8">
-            <h1 className="text-4xl font-bold">Mini Program SDK</h1>
-            <p className="text-lg text-muted-foreground">
-              Build powerful mini apps integrated with AfuChat
+            <Badge variant="outline" className="mb-2">
+              <Zap className="h-3 w-3 mr-1" />
+              AfuChat Platform
+            </Badge>
+            <h1 className="text-4xl font-bold">Mini Programs SDK</h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Build, deploy, and run isolated apps inside AfuChat. Create powerful mini programs
+              with access to platform features, social integration, and analytics.
             </p>
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-4 flex-wrap">
               <Button size="lg">
                 <Download className="mr-2 h-4 w-4" />
                 Download SDK
@@ -206,106 +336,202 @@ sdk.ui.showModal({
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview">
-                <Book className="mr-2 h-4 w-4" />
-                Overview
-              </TabsTrigger>
-              <TabsTrigger value="quickstart">
-                <Rocket className="mr-2 h-4 w-4" />
-                Quick Start
-              </TabsTrigger>
-              <TabsTrigger value="examples">
-                <Code className="mr-2 h-4 w-4" />
-                Examples
-              </TabsTrigger>
-              <TabsTrigger value="api">
-                <ExternalLink className="mr-2 h-4 w-4" />
-                API Reference
-              </TabsTrigger>
-            </TabsList>
+            <ScrollArea className="w-full">
+              <TabsList className="inline-flex w-full md:w-auto min-w-max">
+                <TabsTrigger value="overview" className="gap-2">
+                  <Book className="h-4 w-4" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="quickstart" className="gap-2">
+                  <Rocket className="h-4 w-4" />
+                  Quick Start
+                </TabsTrigger>
+                <TabsTrigger value="core" className="gap-2">
+                  <Code className="h-4 w-4" />
+                  Core SDK
+                </TabsTrigger>
+                <TabsTrigger value="platform" className="gap-2">
+                  <Smartphone className="h-4 w-4" />
+                  Platform APIs
+                </TabsTrigger>
+                <TabsTrigger value="security" className="gap-2">
+                  <Shield className="h-4 w-4" />
+                  Security
+                </TabsTrigger>
+                <TabsTrigger value="api" className="gap-2">
+                  <Globe className="h-4 w-4" />
+                  API Reference
+                </TabsTrigger>
+              </TabsList>
+            </ScrollArea>
 
             {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>What are Mini Programs?</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Smartphone className="h-5 w-5" />
+                    What are Mini Programs?
+                  </CardTitle>
                   <CardDescription>
-                    Mini programs are lightweight apps that run inside AfuChat without requiring installation
+                    Lightweight, isolated apps that run inside AfuChat without installation
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div className="p-4 border rounded-lg">
-                      <h3 className="font-semibold mb-2">✨ Key Features</h3>
-                      <ul className="space-y-1 text-sm text-muted-foreground">
-                        <li>• Instant load - no installation needed</li>
-                        <li>• Access to Nexa system</li>
-                        <li>• Social sharing capabilities</li>
-                        <li>• User data storage</li>
-                        <li>• Native UI components</li>
+                    <div className="p-4 border rounded-lg space-y-3">
+                      <h3 className="font-semibold flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-primary" />
+                        Key Features
+                      </h3>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li className="flex items-start gap-2">
+                          <span className="text-primary">•</span>
+                          <span>JavaScript/TypeScript support</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-primary">•</span>
+                          <span>Complete app lifecycle management</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-primary">•</span>
+                          <span>Sandboxed execution environment</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-primary">•</span>
+                          <span>Explicit permission model</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-primary">•</span>
+                          <span>Responsive mobile-first UI</span>
+                        </li>
                       </ul>
                     </div>
-                    <div className="p-4 border rounded-lg">
-                      <h3 className="font-semibold mb-2">🎯 Use Cases</h3>
-                      <ul className="space-y-1 text-sm text-muted-foreground">
-                        <li>• Games and puzzles</li>
-                        <li>• Productivity tools</li>
-                        <li>• Shopping experiences</li>
-                        <li>• Educational content</li>
-                        <li>• Entertainment apps</li>
+                    <div className="p-4 border rounded-lg space-y-3">
+                      <h3 className="font-semibold flex items-center gap-2">
+                        <Package className="h-4 w-4 text-primary" />
+                        Use Cases
+                      </h3>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li className="flex items-start gap-2">
+                          <span className="text-primary">•</span>
+                          <span>Tools & utilities</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-primary">•</span>
+                          <span>Chat extensions</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-primary">•</span>
+                          <span>Mini games</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-primary">•</span>
+                          <span>Productivity apps</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-primary">•</span>
+                          <span>Shopping experiences</span>
+                        </li>
                       </ul>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
+              <div className="grid md:grid-cols-4 gap-4">
+                <Card className="text-center">
+                  <CardContent className="pt-6">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                      <Lock className="h-6 w-6 text-primary" />
+                    </div>
+                    <h4 className="font-semibold mb-1">Sandboxed</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Strict isolation between apps
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="text-center">
+                  <CardContent className="pt-6">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                      <Shield className="h-6 w-6 text-primary" />
+                    </div>
+                    <h4 className="font-semibold mb-1">Reviewed</h4>
+                    <p className="text-xs text-muted-foreground">
+                      All apps require approval
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="text-center">
+                  <CardContent className="pt-6">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                      <Zap className="h-6 w-6 text-primary" />
+                    </div>
+                    <h4 className="font-semibold mb-1">Fast</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Instant load, no install
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="text-center">
+                  <CardContent className="pt-6">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                      <GitBranch className="h-6 w-6 text-primary" />
+                    </div>
+                    <h4 className="font-semibold mb-1">Versioned</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Semantic versioning & rollback
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
               <Card>
                 <CardHeader>
-                  <CardTitle>SDK Features</CardTitle>
+                  <CardTitle>Platform Integration</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid md:grid-cols-3 gap-4">
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-2xl mb-2">👤</div>
-                      <h4 className="font-medium mb-1">User Auth</h4>
+                    <div className="p-4 border rounded-lg">
+                      <MessageSquare className="h-5 w-5 text-primary mb-2" />
+                      <h4 className="font-medium mb-1">Messaging</h4>
                       <p className="text-xs text-muted-foreground">
-                        Seamless user authentication
+                        Send and receive messages in chats
                       </p>
                     </div>
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-2xl mb-2">💎</div>
-                      <h4 className="font-medium mb-1">Nexa Integration</h4>
+                    <div className="p-4 border rounded-lg">
+                      <Bell className="h-5 w-5 text-primary mb-2" />
+                      <h4 className="font-medium mb-1">Notifications</h4>
                       <p className="text-xs text-muted-foreground">
-                        Award and manage user Nexa
+                        In-app notifications with permission
                       </p>
                     </div>
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-2xl mb-2">📱</div>
-                      <h4 className="font-medium mb-1">Social Features</h4>
+                    <div className="p-4 border rounded-lg">
+                      <CreditCard className="h-5 w-5 text-primary mb-2" />
+                      <h4 className="font-medium mb-1">Payments</h4>
                       <p className="text-xs text-muted-foreground">
-                        Share, invite, and connect
+                        Optional sandboxed payments
                       </p>
                     </div>
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-2xl mb-2">💾</div>
-                      <h4 className="font-medium mb-1">Data Storage</h4>
+                    <div className="p-4 border rounded-lg">
+                      <BarChart3 className="h-5 w-5 text-primary mb-2" />
+                      <h4 className="font-medium mb-1">Analytics</h4>
                       <p className="text-xs text-muted-foreground">
-                        Persistent user data
+                        Track events, pages, and errors
                       </p>
                     </div>
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-2xl mb-2">🎨</div>
-                      <h4 className="font-medium mb-1">UI Components</h4>
+                    <div className="p-4 border rounded-lg">
+                      <Database className="h-5 w-5 text-primary mb-2" />
+                      <h4 className="font-medium mb-1">Storage</h4>
                       <p className="text-xs text-muted-foreground">
-                        Native-looking interfaces
+                        Persistent key-value storage
                       </p>
                     </div>
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-2xl mb-2">⚡</div>
-                      <h4 className="font-medium mb-1">Real-time Updates</h4>
+                    <div className="p-4 border rounded-lg">
+                      <Image className="h-5 w-5 text-primary mb-2" />
+                      <h4 className="font-medium mb-1">Media</h4>
                       <p className="text-xs text-muted-foreground">
-                        Live data synchronization
+                        Pick images, upload files, play audio
                       </p>
                     </div>
                   </div>
@@ -317,40 +543,40 @@ sdk.ui.showModal({
             <TabsContent value="quickstart" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Installation</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Terminal className="h-5 w-5" />
+                    CLI Installation
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-2">Using npm:</p>
+                    <p className="text-sm text-muted-foreground mb-2">Install the AfuChat CLI globally:</p>
                     <div className="relative">
                       <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
-                        <code>npm install @afuchat/sdk</code>
+                        <code>npm install -g @afuchat/cli</code>
                       </pre>
                       <Button
                         size="sm"
                         variant="ghost"
                         className="absolute top-2 right-2"
-                        onClick={() => copyCode('npm install @afuchat/sdk', 'install-npm')}
+                        onClick={() => copyCode('npm install -g @afuchat/cli', 'cli-install')}
                       >
-                        {copiedCode === 'install-npm' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        {copiedCode === 'cli-install' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                       </Button>
                     </div>
                   </div>
 
+                  <Separator />
+
                   <div>
-                    <p className="text-sm text-muted-foreground mb-2">Using yarn:</p>
-                    <div className="relative">
-                      <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
-                        <code>yarn add @afuchat/sdk</code>
-                      </pre>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="absolute top-2 right-2"
-                        onClick={() => copyCode('yarn add @afuchat/sdk', 'install-yarn')}
-                      >
-                        {copiedCode === 'install-yarn' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                      </Button>
+                    <p className="text-sm font-medium mb-3">CLI Commands:</p>
+                    <div className="space-y-2">
+                      {cliCommands.map((cmd, index) => (
+                        <div key={index} className="flex items-center gap-4 p-3 bg-muted rounded-lg">
+                          <code className="text-sm font-mono text-primary flex-1">{cmd.command}</code>
+                          <span className="text-sm text-muted-foreground">{cmd.description}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </CardContent>
@@ -358,20 +584,33 @@ sdk.ui.showModal({
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Basic Setup</CardTitle>
+                  <CardTitle>Create Your First App</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
                   <div className="relative">
                     <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
-                      <code>{exampleCode.basic}</code>
+                      <code>{`# Create a new mini program
+afu create my-awesome-app
+
+# Navigate to project
+cd my-awesome-app
+
+# Start local simulator
+afu preview
+
+# Build for production
+afu build
+
+# Submit for review
+afu publish`}</code>
                     </pre>
                     <Button
                       size="sm"
                       variant="ghost"
                       className="absolute top-2 right-2"
-                      onClick={() => copyCode(exampleCode.basic, 'basic')}
+                      onClick={() => copyCode('afu create my-awesome-app\ncd my-awesome-app\nafu preview', 'create-app')}
                     >
-                      {copiedCode === 'basic' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      {copiedCode === 'create-app' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                     </Button>
                   </div>
                 </CardContent>
@@ -383,7 +622,7 @@ sdk.ui.showModal({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-sm text-muted-foreground">
-                    Create a <code className="bg-muted px-1 rounded">afu.config.json</code> file in your project root:
+                    Create an <code className="bg-muted px-1 rounded">afu.config.json</code> file:
                   </p>
                   <div className="relative">
                     <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
@@ -393,14 +632,19 @@ sdk.ui.showModal({
   "version": "1.0.0",
   "description": "An awesome mini program",
   "category": "games",
+  "sandbox": true,
   "permissions": [
     "user.info",
-    "nexa.read",
-    "nexa.award",
-    "social.share",
     "storage.read",
-    "storage.write"
+    "storage.write",
+    "analytics.track"
   ],
+  "network": {
+    "domainAllowlist": [
+      "api.yourservice.com",
+      "cdn.yourservice.com"
+    ]
+  },
   "pages": {
     "index": "/index.html",
     "game": "/game.html"
@@ -411,7 +655,7 @@ sdk.ui.showModal({
                       size="sm"
                       variant="ghost"
                       className="absolute top-2 right-2"
-                      onClick={() => copyCode('config', 'config')}
+                      onClick={() => copyCode('afu.config.json', 'config')}
                     >
                       {copiedCode === 'config' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                     </Button>
@@ -420,30 +664,381 @@ sdk.ui.showModal({
               </Card>
             </TabsContent>
 
-            {/* Examples Tab */}
-            <TabsContent value="examples" className="space-y-6">
-              {Object.entries(exampleCode).slice(1).map(([key, code]) => (
-                <Card key={key}>
+            {/* Core SDK Tab */}
+            <TabsContent value="core" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Play className="h-5 w-5" />
+                    App Lifecycle
+                  </CardTitle>
+                  <CardDescription>
+                    Manage your app's lifecycle with built-in hooks
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative">
+                    <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm max-h-96">
+                      <code>{exampleCode.lifecycle}</code>
+                    </pre>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="absolute top-2 right-2"
+                      onClick={() => copyCode(exampleCode.lifecycle, 'lifecycle')}
+                    >
+                      {copiedCode === 'lifecycle' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card>
                   <CardHeader>
-                    <CardTitle className="capitalize">{key.replace('_', ' ')} Integration</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Users className="h-4 w-4" />
+                      Authentication
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="relative">
-                      <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm max-h-96">
-                        <code>{code}</code>
+                      <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm max-h-64">
+                        <code>{exampleCode.auth}</code>
                       </pre>
                       <Button
                         size="sm"
                         variant="ghost"
                         className="absolute top-2 right-2"
-                        onClick={() => copyCode(code, key)}
+                        onClick={() => copyCode(exampleCode.auth, 'auth')}
                       >
-                        {copiedCode === key ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        {copiedCode === 'auth' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Database className="h-4 w-4" />
+                      Storage
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="relative">
+                      <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm max-h-64">
+                        <code>{exampleCode.storage}</code>
+                      </pre>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="absolute top-2 right-2"
+                        onClick={() => copyCode(exampleCode.storage, 'storage')}
+                      >
+                        {copiedCode === 'storage' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Globe className="h-4 w-4" />
+                      Network
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="relative">
+                      <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm max-h-64">
+                        <code>{exampleCode.network}</code>
+                      </pre>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="absolute top-2 right-2"
+                        onClick={() => copyCode(exampleCode.network, 'network')}
+                      >
+                        {copiedCode === 'network' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Image className="h-4 w-4" />
+                      Media
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="relative">
+                      <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm max-h-64">
+                        <code>{exampleCode.media}</code>
+                      </pre>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="absolute top-2 right-2"
+                        onClick={() => copyCode(exampleCode.media, 'media')}
+                      >
+                        {copiedCode === 'media' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Palette className="h-5 w-5" />
+                    UI Components & Navigation
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative">
+                    <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm max-h-96">
+                      <code>{exampleCode.ui}</code>
+                    </pre>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="absolute top-2 right-2"
+                      onClick={() => copyCode(exampleCode.ui, 'ui')}
+                    >
+                      {copiedCode === 'ui' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Badge variant="outline">Button</Badge>
+                    <Badge variant="outline">List</Badge>
+                    <Badge variant="outline">Card</Badge>
+                    <Badge variant="outline">Modal</Badge>
+                    <Badge variant="outline">Dialog</Badge>
+                    <Badge variant="secondary">Light Theme</Badge>
+                    <Badge variant="secondary">Dark Theme</Badge>
+                    <Badge variant="secondary">System Theme</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Platform APIs Tab */}
+            <TabsContent value="platform" className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <MessageSquare className="h-4 w-4" />
+                      Messaging
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="relative">
+                      <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm max-h-64">
+                        <code>{exampleCode.messaging}</code>
+                      </pre>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="absolute top-2 right-2"
+                        onClick={() => copyCode(exampleCode.messaging, 'messaging')}
+                      >
+                        {copiedCode === 'messaging' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Bell className="h-4 w-4" />
+                      Notifications
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="relative">
+                      <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm max-h-64">
+                        <code>{exampleCode.notifications}</code>
+                      </pre>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="absolute top-2 right-2"
+                        onClick={() => copyCode(exampleCode.notifications, 'notifications')}
+                      >
+                        {copiedCode === 'notifications' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <BarChart3 className="h-4 w-4" />
+                      Analytics
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="relative">
+                      <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm max-h-64">
+                        <code>{exampleCode.analytics}</code>
+                      </pre>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="absolute top-2 right-2"
+                        onClick={() => copyCode(exampleCode.analytics, 'analytics')}
+                      >
+                        {copiedCode === 'analytics' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <CreditCard className="h-4 w-4" />
+                      Payments (Optional)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="relative">
+                      <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm max-h-64">
+                        <code>{exampleCode.payments}</code>
+                      </pre>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="absolute top-2 right-2"
+                        onClick={() => copyCode(exampleCode.payments, 'payments')}
+                      >
+                        {copiedCode === 'payments' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Security Tab */}
+            <TabsContent value="security" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Security Model
+                  </CardTitle>
+                  <CardDescription>
+                    AfuChat Mini Programs use a strict security model to protect users
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="p-4 border rounded-lg">
+                      <h4 className="font-semibold flex items-center gap-2 mb-2">
+                        <Lock className="h-4 w-4 text-primary" />
+                        Strict Isolation
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Each app runs in its own sandbox with no access to other apps' data or the host platform.
+                      </p>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <h4 className="font-semibold flex items-center gap-2 mb-2">
+                        <Shield className="h-4 w-4 text-primary" />
+                        App Review Required
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        All apps must pass review before publishing. We check for security issues and policy violations.
+                      </p>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <h4 className="font-semibold flex items-center gap-2 mb-2">
+                        <AlertTriangle className="h-4 w-4 text-primary" />
+                        Rate Limiting
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        All API calls are rate-limited to prevent abuse and ensure fair usage across all apps.
+                      </p>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <h4 className="font-semibold flex items-center gap-2 mb-2">
+                        <Database className="h-4 w-4 text-primary" />
+                        Per-App Data Scope
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Each app can only access its own storage. User data is isolated between apps.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Permissions</CardTitle>
+                  <CardDescription>
+                    Declare required permissions in your config. Users must approve before use.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {permissions.map((perm, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <code className="text-sm font-mono bg-muted px-2 py-1 rounded">{perm.name}</code>
+                          <span className="text-sm text-muted-foreground">{perm.description}</span>
+                        </div>
+                        <Badge variant={
+                          perm.risk === 'low' ? 'secondary' : 
+                          perm.risk === 'medium' ? 'outline' : 
+                          'destructive'
+                        }>
+                          {perm.risk} risk
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Distribution & Updates</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="p-4 border rounded-lg text-center">
+                      <Package className="h-8 w-8 mx-auto mb-2 text-primary" />
+                      <h4 className="font-medium">Marketplace</h4>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Discover apps via search and categories
+                      </p>
+                    </div>
+                    <div className="p-4 border rounded-lg text-center">
+                      <GitBranch className="h-8 w-8 mx-auto mb-2 text-primary" />
+                      <h4 className="font-medium">Staged Rollout</h4>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Gradually release updates to users
+                      </p>
+                    </div>
+                    <div className="p-4 border rounded-lg text-center">
+                      <Settings className="h-8 w-8 mx-auto mb-2 text-primary" />
+                      <h4 className="font-medium">Backward Compatible</h4>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Updates must maintain compatibility
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* API Reference Tab */}
@@ -460,12 +1055,14 @@ sdk.ui.showModal({
                     {apiEndpoints.map((endpoint, index) => (
                       <div key={index} className="flex items-center gap-4 p-3 border rounded-lg">
                         <span className={`px-2 py-1 rounded text-xs font-mono ${
-                          endpoint.method === 'GET' ? 'bg-blue-500/10 text-blue-500' : 'bg-green-500/10 text-green-500'
+                          endpoint.method === 'GET' ? 'bg-blue-500/10 text-blue-500' : 
+                          endpoint.method === 'POST' ? 'bg-green-500/10 text-green-500' :
+                          'bg-red-500/10 text-red-500'
                         }`}>
                           {endpoint.method}
                         </span>
                         <code className="flex-1 text-sm">{endpoint.endpoint}</code>
-                        <span className="text-sm text-muted-foreground">{endpoint.description}</span>
+                        <span className="text-sm text-muted-foreground hidden md:block">{endpoint.description}</span>
                       </div>
                     ))}
                   </div>
@@ -478,12 +1075,21 @@ sdk.ui.showModal({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-sm text-muted-foreground">
-                    All API requests require authentication using your app credentials:
+                    All API requests require a valid session token in the Authorization header:
                   </p>
                   <div className="relative">
                     <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
-                      <code>{`Authorization: Bearer YOUR_APP_TOKEN
-X-App-ID: YOUR_APP_ID`}</code>
+                      <code>{`// Get token from SDK
+const token = await sdk.auth.getSessionToken();
+
+// Use in API requests
+fetch('https://api.afuchat.com/api/v1/storage/get/key', {
+  headers: {
+    'Authorization': \`Bearer \${token}\`,
+    'Content-Type': 'application/json',
+    'X-App-ID': 'your-app-id'
+  }
+});`}</code>
                     </pre>
                   </div>
                 </CardContent>
@@ -494,19 +1100,50 @@ X-App-ID: YOUR_APP_ID`}</code>
                   <CardTitle>Rate Limits</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between p-2 border-b">
-                      <span>Standard tier:</span>
-                      <span className="font-medium">1,000 requests/hour</span>
+                  <div className="space-y-4">
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div className="p-4 border rounded-lg text-center">
+                        <p className="text-2xl font-bold text-primary">1000</p>
+                        <p className="text-sm text-muted-foreground">requests/minute</p>
+                      </div>
+                      <div className="p-4 border rounded-lg text-center">
+                        <p className="text-2xl font-bold text-primary">10MB</p>
+                        <p className="text-sm text-muted-foreground">storage/app</p>
+                      </div>
+                      <div className="p-4 border rounded-lg text-center">
+                        <p className="text-2xl font-bold text-primary">5MB</p>
+                        <p className="text-sm text-muted-foreground">max upload size</p>
+                      </div>
                     </div>
-                    <div className="flex justify-between p-2 border-b">
-                      <span>Premium tier:</span>
-                      <span className="font-medium">10,000 requests/hour</span>
-                    </div>
-                    <div className="flex justify-between p-2">
-                      <span>Enterprise tier:</span>
-                      <span className="font-medium">Unlimited</span>
-                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Exceeding rate limits will return a <code className="bg-muted px-1 rounded">429 Too Many Requests</code> response.
+                      Implement exponential backoff for retries.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Error Codes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { code: 'RATE_LIMITED', description: 'Too many requests, implement backoff' },
+                      { code: 'DOMAIN_NOT_ALLOWED', description: 'Network domain not in allowlist' },
+                      { code: 'STORAGE_LIMIT_EXCEEDED', description: 'App storage quota exceeded' },
+                      { code: 'PERMISSION_DENIED', description: 'Missing required permission' },
+                      { code: 'INVALID_TOKEN', description: 'Session token expired or invalid' },
+                      { code: 'SANDBOX_VIOLATION', description: 'Attempted forbidden operation' },
+                    ].map((error, index) => (
+                      <div key={index} className="flex items-center gap-4 p-3 border rounded-lg">
+                        <code className="text-sm font-mono bg-destructive/10 text-destructive px-2 py-1 rounded">
+                          {error.code}
+                        </code>
+                        <span className="text-sm text-muted-foreground">{error.description}</span>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
