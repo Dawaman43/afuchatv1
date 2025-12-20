@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { 
   ArrowLeft, 
   RefreshCw, 
-  ExternalLink, 
   MoreVertical,
   Share2,
   Flag,
@@ -62,25 +61,9 @@ export const EmbeddedAppViewer = ({
     toast.info('Report submitted. Our team will review this app.');
   };
 
-  const handleOpenExternal = () => {
-    window.open(appUrl, '_blank', 'noopener,noreferrer');
-  };
-
   // Check if URL is relative (internal route) or absolute (external URL)
   const isRelativeUrl = appUrl.startsWith('/');
   const fullUrl = isRelativeUrl ? `${window.location.origin}${appUrl}` : appUrl;
-  
-  // Get hostname safely
-  const getHostname = () => {
-    try {
-      if (isRelativeUrl) {
-        return window.location.hostname;
-      }
-      return new URL(appUrl).hostname;
-    } catch {
-      return 'App';
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
@@ -106,7 +89,7 @@ export const EmbeddedAppViewer = ({
           
           <div className="min-w-0 flex-1">
             <h1 className="font-semibold text-sm truncate">{appName}</h1>
-            <p className="text-xs text-muted-foreground truncate">{getHostname()}</p>
+            <p className="text-xs text-muted-foreground">Mini Program</p>
           </div>
         </div>
 
@@ -130,10 +113,6 @@ export const EmbeddedAppViewer = ({
               <DropdownMenuItem onClick={handleShare}>
                 <Share2 className="h-4 w-4 mr-2" />
                 Share
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleOpenExternal}>
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Open in Browser
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleReport} className="text-destructive">
                 <Flag className="h-4 w-4 mr-2" />
