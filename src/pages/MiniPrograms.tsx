@@ -22,6 +22,7 @@ import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Video, Book, Zap,
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
+import { SubmitAppDialog } from '@/components/mini-programs/SubmitAppDialog';
 
 // Import app logos
 import afuArenaLogo from '@/assets/mini-apps/afu-arena-logo.png';
@@ -87,6 +88,7 @@ const MiniPrograms = () => {
   const [pendingApp, setPendingApp] = useState<BuiltInApp | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [acceptedApps, setAcceptedApps] = useState<Set<string>>(new Set());
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -819,7 +821,7 @@ const MiniPrograms = () => {
               variant="ghost" 
               size="sm" 
               className="text-primary hover:text-primary hover:bg-primary/10 gap-1.5 h-9 px-3"
-              onClick={() => toast.info('Coming soon!')}
+              onClick={() => user ? setSubmitDialogOpen(true) : toast.error('Please sign in to submit an app')}
             >
               <PlusCircle className="h-4 w-4" />
               <span className="text-sm font-medium">Submit Your App</span>
@@ -931,6 +933,9 @@ const MiniPrograms = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Submit App Dialog */}
+      <SubmitAppDialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen} />
     </Layout>
   );
 };
