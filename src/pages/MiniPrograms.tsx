@@ -420,7 +420,7 @@ const MiniPrograms = () => {
     }
   };
 
-  // Check if app is available - games, shopping, afumail, and finance are open, other services coming soon
+  // Check if app is available - games, shopping, and finance are open, other services coming soon
   const isAppAvailable = (app: BuiltInApp) => {
     if (isAdmin) return true;
     
@@ -431,10 +431,10 @@ const MiniPrograms = () => {
     if (app.category === 'shopping') return true;
     
     // Specific services available
-    const openServices = ['afumail', 'finance'];
+    const openServices = ['finance'];
     if (openServices.includes(app.id)) return true;
     
-    // Other services coming soon
+    // Other services coming soon (including afumail)
     return false;
   };
 
