@@ -20,13 +20,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ProfileDrawer } from '@/components/ProfileDrawer';
-import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Brain, Puzzle, Trophy, ChevronRight, Clock, Shield, Gift, Mail, Send, PlusCircle, Code, Heart, Eye, MoreVertical, ExternalLink, Edit, Play } from 'lucide-react';
+import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Brain, Puzzle, Trophy, ChevronRight, Clock, Shield, Gift, Mail, Send, PlusCircle, Code, Heart, MoreVertical, ExternalLink, Edit, Play, History, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { SubmitAppDialog } from '@/components/mini-programs/SubmitAppDialog';
 import { EmbeddedAppViewer } from '@/components/mini-programs/EmbeddedAppViewer';
 import { AppPreviewDialog } from '@/components/mini-programs/AppPreviewDialog';
+import { getRecentApps, addRecentApp, hasUsedApp, RecentApp } from '@/lib/recentApps';
 
 // Import app logos
 import nexaCollectorLogo from '@/assets/mini-apps/nexa-collector-logo.png';
@@ -116,6 +117,14 @@ const MiniPrograms = () => {
   // Built-in app preview state
   const [builtInPreviewApp, setBuiltInPreviewApp] = useState<BuiltInApp | null>(null);
   const [builtInPreviewOpen, setBuiltInPreviewOpen] = useState(false);
+
+  // Recent apps state
+  const [recentApps, setRecentApps] = useState<RecentApp[]>([]);
+
+  // Load recent apps on mount
+  useEffect(() => {
+    setRecentApps(getRecentApps());
+  }, []);
 
   // Fetch user country from profile
   useEffect(() => {
@@ -417,10 +426,21 @@ const MiniPrograms = () => {
     return app.id === 'afumail';
   };
 
-  // Handle built-in app click - open preview first
+  // Handle built-in app click - skip preview if used before
   const handleBuiltInAppClick = (app: BuiltInApp) => {
-    setBuiltInPreviewApp(app);
-    setBuiltInPreviewOpen(true);
+    if (!isAppAvailable(app)) {
+      toast.info('Coming soon!');
+      return;
+    }
+    
+    // If used before, open directly
+    if (hasUsedApp(app.id)) {
+      openBuiltInApp(app);
+    } else {
+      // First time - show preview
+      setBuiltInPreviewApp(app);
+      setBuiltInPreviewOpen(true);
+    }
   };
 
   // Open built-in app in embedded viewer directly
@@ -430,6 +450,16 @@ const MiniPrograms = () => {
       return;
     }
     
+    // Track in recent apps
+    addRecentApp({
+      id: app.id,
+      name: app.name,
+      icon: app.logo,
+      isBuiltIn: true,
+      route: app.route,
+    });
+    setRecentApps(getRecentApps());
+    
     setEmbeddedApp({
       name: app.name,
       url: app.route,
@@ -438,8 +468,35 @@ const MiniPrograms = () => {
     });
   };
 
-  // Handler for opening third-party mini programs in embedded viewer
+  // Handler for third-party apps - skip preview if used before
   const handleThirdPartyAppClick = (app: MiniProgram) => {
+    if (!isAppAvailableInCountry(app)) {
+      toast.error('This app is not available in your country');
+      return;
+    }
+    
+    // If used before, open directly
+    if (hasUsedApp(app.id)) {
+      openThirdPartyApp(app);
+    } else {
+      // First time - show preview
+      setPreviewApp(app);
+      setPreviewDialogOpen(true);
+    }
+  };
+
+  // Open third-party app in embedded viewer
+  const openThirdPartyApp = (app: MiniProgram) => {
+    // Track in recent apps
+    addRecentApp({
+      id: app.id,
+      name: app.name,
+      icon: app.icon_url || undefined,
+      isBuiltIn: false,
+      url: app.url,
+    });
+    setRecentApps(getRecentApps());
+    
     setEmbeddedApp({
       name: app.name,
       url: app.url,
@@ -450,6 +507,26 @@ const MiniPrograms = () => {
       termsUrl: app.terms_url,
       isBuiltIn: false,
     });
+  };
+
+  // Show about for an app (from embedded viewer)
+  const handleShowAbout = () => {
+    if (embeddedApp) {
+      // Find the app and show its preview
+      if (embeddedApp.isBuiltIn) {
+        const app = allBuiltInApps.find(a => a.id === embeddedApp.appId || a.route === embeddedApp.url);
+        if (app) {
+          setBuiltInPreviewApp(app);
+          setBuiltInPreviewOpen(true);
+        }
+      } else {
+        const app = miniPrograms.find(a => a.id === embeddedApp.appId);
+        if (app) {
+          setPreviewApp(app);
+          setPreviewDialogOpen(true);
+        }
+      }
+    }
   };
 
   const allBuiltInApps = [...builtInGames, ...builtInServices];
@@ -490,14 +567,7 @@ const MiniPrograms = () => {
         className={`w-[72px] flex-shrink-0 relative group ${isRestricted ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <div 
-          onClick={() => {
-            if (isRestricted) {
-              toast.error('This app is not available in your country');
-              return;
-            }
-            setPreviewApp(app);
-            setPreviewDialogOpen(true);
-          }}
+          onClick={() => handleThirdPartyAppClick(app)}
           className={`relative h-[72px] w-[72px] rounded-[18px] shadow-lg overflow-hidden bg-muted mx-auto ${isRestricted ? 'opacity-50' : ''}`}
         >
           {app.icon_url ? (
@@ -882,6 +952,48 @@ const MiniPrograms = () => {
         )}
 
         <div className="px-4 py-4 space-y-6">
+          {/* Recent Apps Section */}
+          {selectedCategory === 'all' && !searchQuery && recentApps.length > 0 && (
+            <section>
+              <div className="flex items-center gap-2 mb-3">
+                <History className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold text-muted-foreground">Recent</h2>
+              </div>
+              <ScrollArea className="w-full">
+                <div className="flex gap-3 pb-2">
+                  {recentApps.slice(0, 8).map((app) => (
+                    <motion.div
+                      key={app.id}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        if (app.isBuiltIn) {
+                          const builtIn = allBuiltInApps.find(a => a.id === app.id);
+                          if (builtIn) openBuiltInApp(builtIn);
+                        } else {
+                          const thirdParty = miniPrograms.find(a => a.id === app.id);
+                          if (thirdParty) openThirdPartyApp(thirdParty);
+                        }
+                      }}
+                      className="w-[60px] flex-shrink-0 cursor-pointer"
+                    >
+                      <div className="h-[60px] w-[60px] rounded-2xl shadow-md overflow-hidden bg-muted mx-auto">
+                        {app.icon ? (
+                          <img src={app.icon} alt={app.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full bg-primary flex items-center justify-center">
+                            <span className="text-xl">📱</span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-[10px] font-medium truncate text-center mt-1">{app.name}</p>
+                    </motion.div>
+                  ))}
+                </div>
+                <ScrollBar orientation="horizontal" className="invisible" />
+              </ScrollArea>
+            </section>
+          )}
+
           {/* Featured Banner */}
           {selectedCategory === 'all' && !searchQuery && featuredApps.length > 0 && (
             <section>
@@ -1076,16 +1188,7 @@ const MiniPrograms = () => {
         app={previewApp}
         onOpen={() => {
           if (previewApp) {
-            setEmbeddedApp({
-              name: previewApp.name,
-              url: previewApp.url,
-              icon: previewApp.icon_url || undefined,
-              appId: previewApp.id,
-              developerEmail: previewApp.developer_email,
-              privacyUrl: previewApp.privacy_url,
-              termsUrl: previewApp.terms_url,
-              isBuiltIn: false,
-            });
+            openThirdPartyApp(previewApp);
           }
         }}
       />
@@ -1105,6 +1208,7 @@ const MiniPrograms = () => {
           termsUrl={embeddedApp.termsUrl}
           isBuiltIn={embeddedApp.isBuiltIn}
           onClose={() => setEmbeddedApp(null)}
+          onShowAbout={handleShowAbout}
         />
       )}
     </Layout>
