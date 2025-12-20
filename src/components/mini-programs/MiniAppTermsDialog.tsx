@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -9,9 +8,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Shield, ExternalLink, MessageSquare, Mail, FileText } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { Shield, ExternalLink, FileText } from 'lucide-react';
 
 interface MiniAppTermsDialogProps {
   open: boolean;
@@ -62,140 +59,96 @@ export const MiniAppTermsDialog = ({
   termsUrl,
   onAccept,
 }: MiniAppTermsDialogProps) => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const [accepted, setAccepted] = useState(false);
 
   const handleAccept = () => {
     if (accepted) {
       markAppAsAccepted(appId);
       onAccept();
-      onOpenChange(false);
-    }
-  };
-
-  const handleContactDeveloper = () => {
-    // Navigate to chats with developer email as context
-    if (developerEmail) {
-      // For now, show a toast or navigate to a support chat
-      navigate('/chats');
+      // Dialog closes automatically and app opens immediately
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md mx-4 max-h-[90vh] p-0">
-        <DialogHeader className="p-4 pb-0">
-          <div className="flex items-center gap-2 mb-2">
+      <DialogContent className="max-w-sm mx-4 p-0">
+        <DialogHeader className="p-4 pb-2">
+          <div className="flex items-center gap-2 mb-1">
             <Shield className="h-5 w-5 text-primary" />
-            <DialogTitle>Before you continue</DialogTitle>
+            <DialogTitle className="text-base">Before you continue</DialogTitle>
           </div>
-          <DialogDescription>
+          <DialogDescription className="text-sm">
             Review the terms for <strong>{appName}</strong>
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh]">
-          <div className="p-4 space-y-4">
-            {/* Developer Contact */}
-            {developerEmail && (
-              <div className="p-3 bg-muted/50 rounded-lg border border-border">
-                <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  Developer Contact
-                </h4>
-                <p className="text-xs text-muted-foreground mb-2">
-                  For support or questions about this app:
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full gap-2"
-                  onClick={handleContactDeveloper}
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  Contact Developer
-                </Button>
-              </div>
+        <div className="px-4 pb-4 space-y-3">
+          {/* Quick Links - No cards, just clean links */}
+          <div className="space-y-2">
+            {termsUrl && (
+              <a
+                href={termsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-primary hover:underline"
+              >
+                <FileText className="h-4 w-4" />
+                Terms of Service
+                <ExternalLink className="h-3 w-3" />
+              </a>
             )}
 
-            {/* Terms & Privacy Links */}
-            <div className="space-y-2">
-              {termsUrl && (
-                <a
-                  href={termsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border hover:bg-muted transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Terms of Service</span>
-                  </div>
-                  <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                </a>
-              )}
-
-              {privacyUrl && (
-                <a
-                  href={privacyUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border hover:bg-muted transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Privacy Policy</span>
-                  </div>
-                  <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                </a>
-              )}
-
-              {/* AfuChat Mini Apps Terms */}
-              <button
-                onClick={() => window.open('/terms', '_blank')}
-                className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/20 hover:bg-primary/10 transition-colors w-full text-left"
+            {privacyUrl && (
+              <a
+                href={privacyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-primary hover:underline"
               >
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-primary">AfuChat Mini Apps Terms</span>
-                </div>
-                <ExternalLink className="h-4 w-4 text-primary" />
-              </button>
-            </div>
+                <Shield className="h-4 w-4" />
+                Privacy Policy
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
 
-            {/* Safety Notice */}
-            <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-              <p className="text-xs text-muted-foreground">
-                <strong className="text-yellow-600">Safety Notice:</strong> This app is provided by a third-party developer. 
-                AfuChat does not control the content or data practices of this app. Use at your own discretion.
-              </p>
-            </div>
-
-            {/* Accept Checkbox */}
-            <div className="flex items-start gap-3 pt-2">
-              <Checkbox
-                id="accept-terms"
-                checked={accepted}
-                onCheckedChange={(checked) => setAccepted(checked as boolean)}
-              />
-              <label htmlFor="accept-terms" className="text-sm cursor-pointer leading-tight">
-                I have reviewed and agree to the app's terms and privacy policy, and the{' '}
-                <button onClick={() => window.open('/terms', '_blank')} className="text-primary hover:underline">
-                  AfuChat Mini Apps Terms
-                </button>
-              </label>
-            </div>
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary hover:underline"
+            >
+              <FileText className="h-4 w-4" />
+              AfuChat Mini Apps Terms
+              <ExternalLink className="h-3 w-3" />
+            </a>
           </div>
-        </ScrollArea>
 
-        <div className="p-4 pt-2 border-t flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button className="flex-1" disabled={!accepted} onClick={handleAccept}>
-            Continue
-          </Button>
+          {/* Compact Safety Notice */}
+          <p className="text-xs text-muted-foreground">
+            This app is provided by a third-party developer. Use at your own discretion.
+          </p>
+
+          {/* Accept Checkbox */}
+          <div className="flex items-center gap-2 pt-1">
+            <Checkbox
+              id="accept-terms"
+              checked={accepted}
+              onCheckedChange={(checked) => setAccepted(checked as boolean)}
+            />
+            <label htmlFor="accept-terms" className="text-xs cursor-pointer">
+              I agree to the terms and privacy policy
+            </label>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" size="sm" className="flex-1" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" className="flex-1" disabled={!accepted} onClick={handleAccept}>
+              Open App
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

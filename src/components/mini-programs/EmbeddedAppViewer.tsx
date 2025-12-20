@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
   RefreshCw, 
@@ -7,8 +6,8 @@ import {
   Share2,
   Flag,
   X,
-  Loader2,
-  FileText
+  FileText,
+  Info
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -20,6 +19,18 @@ import {
 import { toast } from 'sonner';
 import { MiniAppTermsDialog, hasAcceptedApp } from './MiniAppTermsDialog';
 
+interface AppInfo {
+  name: string;
+  description?: string;
+  icon_url?: string;
+  category?: string;
+  rating?: number;
+  install_count?: number;
+  screenshots?: string[];
+  features?: string;
+  developer_name?: string;
+}
+
 interface EmbeddedAppViewerProps {
   appName: string;
   appUrl: string;
@@ -29,7 +40,9 @@ interface EmbeddedAppViewerProps {
   privacyUrl?: string;
   termsUrl?: string;
   isBuiltIn?: boolean;
+  appInfo?: AppInfo;
   onClose: () => void;
+  onShowAbout?: () => void;
 }
 
 export const EmbeddedAppViewer = ({ 
@@ -41,10 +54,10 @@ export const EmbeddedAppViewer = ({
   privacyUrl,
   termsUrl,
   isBuiltIn = false,
-  onClose 
+  appInfo,
+  onClose,
+  onShowAbout
 }: EmbeddedAppViewerProps) => {
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
   const [key, setKey] = useState(0);
   
   // Check if user has already accepted terms for this app
@@ -54,7 +67,6 @@ export const EmbeddedAppViewer = ({
   const [termsAccepted, setTermsAccepted] = useState(!needsTermsAcceptance);
 
   const handleRefresh = () => {
-    setIsLoading(true);
     setKey(prev => prev + 1);
   };
 
@@ -68,7 +80,7 @@ export const EmbeddedAppViewer = ({
         });
       } else {
         await navigator.clipboard.writeText(window.location.href);
-        toast.success('Link copied to clipboard!');
+        toast.success('Link copied!');
       }
     } catch (error) {
       console.error('Error sharing:', error);
@@ -76,7 +88,7 @@ export const EmbeddedAppViewer = ({
   };
 
   const handleReport = () => {
-    toast.info('Report submitted. Our team will review this app.');
+    toast.info('Report submitted');
   };
 
   const handleTermsAccept = () => {
@@ -114,55 +126,61 @@ export const EmbeddedAppViewer = ({
 
       <div className="fixed inset-0 z-50 bg-background flex flex-col">
         {/* Header */}
-        <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/95 backdrop-blur-lg safe-area-top">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
+        <header className="flex items-center justify-between px-3 py-2 border-b border-border bg-background/95 backdrop-blur-lg safe-area-top">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             {appIcon && (
               <img 
                 src={appIcon} 
                 alt={appName} 
-                className="h-10 w-10 rounded-xl shrink-0 shadow-sm"
+                className="h-8 w-8 rounded-lg shrink-0"
               />
             )}
             
             <div className="min-w-0 flex-1">
-              <h1 className="font-semibold text-base truncate">{appName}</h1>
-              <p className="text-xs text-muted-foreground">Mini Program</p>
+              <h1 className="font-medium text-sm truncate">{appName}</h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={handleRefresh}
-              className="shrink-0"
+              className="h-8 w-8"
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className="h-4 w-4" />
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="shrink-0">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {/* About option */}
+                {onShowAbout && (
+                  <DropdownMenuItem onClick={onShowAbout}>
+                    <Info className="h-4 w-4 mr-2" />
+                    About
+                  </DropdownMenuItem>
+                )}
+                
                 <DropdownMenuItem onClick={handleShare}>
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
                 </DropdownMenuItem>
                 
-                {/* Terms of Mini Apps link */}
                 <DropdownMenuItem onClick={() => window.open('/terms', '_blank')}>
                   <FileText className="h-4 w-4 mr-2" />
-                  Terms of Mini Apps
+                  Terms
                 </DropdownMenuItem>
                 
                 <DropdownMenuSeparator />
                 
                 <DropdownMenuItem onClick={handleReport} className="text-destructive">
                   <Flag className="h-4 w-4 mr-2" />
-                  Report App
+                  Report
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -171,31 +189,20 @@ export const EmbeddedAppViewer = ({
               variant="ghost" 
               size="icon" 
               onClick={onClose}
-              className="shrink-0"
+              className="h-8 w-8"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
         </header>
 
-        {/* Loading indicator */}
-        {(isLoading || !termsAccepted) && (
-          <div className="absolute inset-0 top-14 flex items-center justify-center bg-background z-10">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Loading {appName}...</p>
-            </div>
-          </div>
-        )}
-
-        {/* Embedded iframe - only show if terms accepted */}
+        {/* Embedded iframe - loads in background, no loading overlay */}
         {termsAccepted && (
           <iframe
             key={key}
             src={fullUrl}
             className="flex-1 w-full border-0"
             title={appName}
-            onLoad={() => setIsLoading(false)}
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
             allow="camera; microphone; geolocation; payment"
           />
