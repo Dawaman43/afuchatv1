@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { MessageCircle, Heart, Send, Ellipsis, Gift, Eye, TrendingUp, Crown, Users } from 'lucide-react';
 import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
-import platformLogo from '@/assets/platform-logo.png';
+import platformLogo from '@/assets/ai-chat-icon.ico';
 import aiSparkIcon from '@/assets/ai-spark-icon.png';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 
