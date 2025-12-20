@@ -366,11 +366,11 @@ if (payment.status === 'completed') {
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto w-full">
         {/* Header */}
         <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur">
-          <div className="container px-4">
-            <div className="flex h-16 items-center justify-between">
+          <div className="px-3 sm:px-4">
+            <div className="flex h-14 sm:h-16 items-center justify-between">
               <Button variant="ghost" size="icon" onClick={() => navigate('/mini-programs')}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
@@ -380,23 +380,23 @@ if (payment.status === 'completed') {
           </div>
         </header>
 
-        <main className="container px-4 py-8">
-          <div className="text-center space-y-4 mb-8">
+        <main className="px-3 sm:px-4 py-4 sm:py-8">
+          <div className="text-center space-y-3 sm:space-y-4 mb-6 sm:mb-8">
             <Badge variant="outline" className="mb-2">
               <Zap className="h-3 w-3 mr-1" />
               AfuChat Platform
             </Badge>
-            <h1 className="text-4xl font-bold">Mini Programs SDK</h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Mini Programs SDK</h1>
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
               Build, deploy, and run isolated apps inside AfuChat. Create powerful mini programs
               with access to platform features, social integration, and analytics.
             </p>
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <Button size="lg">
+            <div className="flex items-center justify-center gap-2 sm:gap-4 flex-wrap">
+              <Button size="sm" className="sm:h-10 sm:px-4 sm:text-sm">
                 <Download className="mr-2 h-4 w-4" />
                 Download SDK
               </Button>
-              <Button size="lg" variant="outline" asChild>
+              <Button size="sm" variant="outline" className="sm:h-10 sm:px-4 sm:text-sm" asChild>
                 <a href="https://github.com/afuchat/mini-sdk" target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="mr-2 h-4 w-4" />
                   View on GitHub
@@ -405,41 +405,48 @@ if (payment.status === 'completed') {
             </div>
           </div>
 
-          <Tabs defaultValue="overview" className="space-y-6">
-            <ScrollArea className="w-full">
-              <TabsList className="inline-flex w-full md:w-auto min-w-max">
-                <TabsTrigger value="overview" className="gap-2">
-                  <Book className="h-4 w-4" />
-                  Overview
+          <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+            <div className="w-full overflow-x-auto scrollbar-hide -mx-3 px-3 sm:mx-0 sm:px-0">
+              <TabsList className="inline-flex min-w-max gap-1 p-1">
+                <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3">
+                  <Book className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Overview</span>
+                  <span className="sm:hidden">Intro</span>
                 </TabsTrigger>
-                <TabsTrigger value="quickstart" className="gap-2">
-                  <Rocket className="h-4 w-4" />
-                  Quick Start
+                <TabsTrigger value="quickstart" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3">
+                  <Rocket className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Quick Start</span>
+                  <span className="sm:hidden">Start</span>
                 </TabsTrigger>
-                <TabsTrigger value="core" className="gap-2">
-                  <Code className="h-4 w-4" />
-                  Core SDK
+                <TabsTrigger value="core" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3">
+                  <Code className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Core SDK</span>
+                  <span className="sm:hidden">SDK</span>
                 </TabsTrigger>
-                <TabsTrigger value="platform" className="gap-2">
-                  <Smartphone className="h-4 w-4" />
-                  Platform APIs
+                <TabsTrigger value="platform" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3">
+                  <Smartphone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Platform APIs</span>
+                  <span className="sm:hidden">APIs</span>
                 </TabsTrigger>
-                <TabsTrigger value="security" className="gap-2">
-                  <Shield className="h-4 w-4" />
-                  Security
+                <TabsTrigger value="security" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3">
+                  <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Security</span>
+                  <span className="sm:hidden">Sec</span>
                 </TabsTrigger>
-                <TabsTrigger value="api" className="gap-2">
-                  <Globe className="h-4 w-4" />
-                  API Reference
+                <TabsTrigger value="api" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3">
+                  <Globe className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">API Reference</span>
+                  <span className="sm:hidden">API</span>
                 </TabsTrigger>
                 {isAdmin && (
-                  <TabsTrigger value="launch-guide" className="gap-2 text-primary">
-                    <Hammer className="h-4 w-4" />
-                    Launch Guide
+                  <TabsTrigger value="launch-guide" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 text-primary">
+                    <Hammer className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Launch Guide</span>
+                    <span className="sm:hidden">Launch</span>
                   </TabsTrigger>
                 )}
               </TabsList>
-            </ScrollArea>
+            </div>
 
             {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-6">
@@ -515,46 +522,46 @@ if (payment.status === 'completed') {
                 </CardContent>
               </Card>
 
-              <div className="grid md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
                 <Card className="text-center">
-                  <CardContent className="pt-6">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                      <Lock className="h-6 w-6 text-primary" />
+                  <CardContent className="pt-4 sm:pt-6 px-2 sm:px-4">
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                      <Lock className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </div>
-                    <h4 className="font-semibold mb-1">Sandboxed</h4>
+                    <h4 className="font-semibold mb-1 text-sm sm:text-base">Sandboxed</h4>
                     <p className="text-xs text-muted-foreground">
                       Strict isolation between apps
                     </p>
                   </CardContent>
                 </Card>
                 <Card className="text-center">
-                  <CardContent className="pt-6">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                      <Shield className="h-6 w-6 text-primary" />
+                  <CardContent className="pt-4 sm:pt-6 px-2 sm:px-4">
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                      <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </div>
-                    <h4 className="font-semibold mb-1">Reviewed</h4>
+                    <h4 className="font-semibold mb-1 text-sm sm:text-base">Reviewed</h4>
                     <p className="text-xs text-muted-foreground">
                       All apps require approval
                     </p>
                   </CardContent>
                 </Card>
                 <Card className="text-center">
-                  <CardContent className="pt-6">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                      <Zap className="h-6 w-6 text-primary" />
+                  <CardContent className="pt-4 sm:pt-6 px-2 sm:px-4">
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                      <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </div>
-                    <h4 className="font-semibold mb-1">Fast</h4>
+                    <h4 className="font-semibold mb-1 text-sm sm:text-base">Fast</h4>
                     <p className="text-xs text-muted-foreground">
                       Instant load, no install
                     </p>
                   </CardContent>
                 </Card>
                 <Card className="text-center">
-                  <CardContent className="pt-6">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                      <GitBranch className="h-6 w-6 text-primary" />
+                  <CardContent className="pt-4 sm:pt-6 px-2 sm:px-4">
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                      <GitBranch className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </div>
-                    <h4 className="font-semibold mb-1">Versioned</h4>
+                    <h4 className="font-semibold mb-1 text-sm sm:text-base">Versioned</h4>
                     <p className="text-xs text-muted-foreground">
                       Semantic versioning & rollback
                     </p>
@@ -564,10 +571,10 @@ if (payment.status === 'completed') {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Platform Integration</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">Platform Integration</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
                     <div className="p-4 border rounded-lg">
                       <MessageSquare className="h-5 w-5 text-primary mb-2" />
                       <h4 className="font-medium mb-1">Messaging</h4>
@@ -769,7 +776,7 @@ afu publish`}</code>
                 </CardContent>
               </Card>
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
@@ -1128,17 +1135,19 @@ afu publish`}</code>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {apiEndpoints.map((endpoint, index) => (
-                      <div key={index} className="flex items-center gap-4 p-3 border rounded-lg">
-                        <span className={`px-2 py-1 rounded text-xs font-mono ${
-                          endpoint.method === 'GET' ? 'bg-blue-500/10 text-blue-500' : 
-                          endpoint.method === 'POST' ? 'bg-green-500/10 text-green-500' :
-                          'bg-red-500/10 text-red-500'
-                        }`}>
-                          {endpoint.method}
-                        </span>
-                        <code className="flex-1 text-sm">{endpoint.endpoint}</code>
-                        <span className="text-sm text-muted-foreground hidden md:block">{endpoint.description}</span>
+                      {apiEndpoints.map((endpoint, index) => (
+                      <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-2 sm:p-3 border rounded-lg">
+                        <div className="flex items-center gap-2 sm:gap-4">
+                          <span className={`px-2 py-1 rounded text-xs font-mono shrink-0 ${
+                            endpoint.method === 'GET' ? 'bg-blue-500/10 text-blue-500' : 
+                            endpoint.method === 'POST' ? 'bg-green-500/10 text-green-500' :
+                            'bg-red-500/10 text-red-500'
+                          }`}>
+                            {endpoint.method}
+                          </span>
+                          <code className="text-xs sm:text-sm break-all">{endpoint.endpoint}</code>
+                        </div>
+                        <span className="text-xs sm:text-sm text-muted-foreground sm:ml-auto">{endpoint.description}</span>
                       </div>
                     ))}
                   </div>
@@ -1177,18 +1186,18 @@ fetch('https://api.afuchat.com/api/v1/storage/get/key', {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="grid md:grid-cols-3 gap-4">
-                      <div className="p-4 border rounded-lg text-center">
-                        <p className="text-2xl font-bold text-primary">1000</p>
-                        <p className="text-sm text-muted-foreground">requests/minute</p>
+                    <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                      <div className="p-2 sm:p-4 border rounded-lg text-center">
+                        <p className="text-lg sm:text-2xl font-bold text-primary">1000</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">req/min</p>
                       </div>
-                      <div className="p-4 border rounded-lg text-center">
-                        <p className="text-2xl font-bold text-primary">10MB</p>
-                        <p className="text-sm text-muted-foreground">storage/app</p>
+                      <div className="p-2 sm:p-4 border rounded-lg text-center">
+                        <p className="text-lg sm:text-2xl font-bold text-primary">10MB</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">storage</p>
                       </div>
-                      <div className="p-4 border rounded-lg text-center">
-                        <p className="text-2xl font-bold text-primary">5MB</p>
-                        <p className="text-sm text-muted-foreground">max upload size</p>
+                      <div className="p-2 sm:p-4 border rounded-lg text-center">
+                        <p className="text-lg sm:text-2xl font-bold text-primary">5MB</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">upload</p>
                       </div>
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -1318,7 +1327,7 @@ fetch('https://api.afuchat.com/api/v1/storage/get/key', {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-3">
                         <h4 className="font-semibold text-sm">Required Files</h4>
                         <div className="space-y-2">
