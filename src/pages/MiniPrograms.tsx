@@ -18,7 +18,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ProfileDrawer } from '@/components/ProfileDrawer';
-import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Video, Book, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Image, Brain, Puzzle, Trophy, ChevronRight, Swords, Clock, Shield, FileText, Gift, Mail } from 'lucide-react';
+import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Video, Book, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Image, Brain, Puzzle, Trophy, ChevronRight, Swords, Clock, Shield, FileText, Gift, Mail, Send, PlusCircle, Code, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -801,6 +801,53 @@ const MiniPrograms = () => {
               <p className="text-sm text-muted-foreground">Try a different search term</p>
             </div>
           )}
+        </div>
+
+        {/* Developer Navigation Footer */}
+        <div className="border-t border-border bg-card/50 py-6 px-4 mt-8 mb-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-2 sm:gap-4 max-w-lg mx-auto">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-primary hover:text-primary hover:bg-primary/10 gap-1.5 h-9 px-3"
+              onClick={() => toast.info('Coming soon!')}
+            >
+              <Send className="h-4 w-4" />
+              <span className="text-sm font-medium">Join Channel</span>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-primary hover:text-primary hover:bg-primary/10 gap-1.5 h-9 px-3"
+              onClick={() => toast.info('Coming soon!')}
+            >
+              <PlusCircle className="h-4 w-4" />
+              <span className="text-sm font-medium">Submit Your App</span>
+            </Button>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-2 sm:gap-4 max-w-lg mx-auto mt-1">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-primary hover:text-primary hover:bg-primary/10 gap-1.5 h-9 px-3"
+              onClick={() => navigate('/developer-sdk')}
+            >
+              <Code className="h-4 w-4" />
+              <span className="text-sm font-medium">For Developers</span>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-primary hover:text-primary hover:bg-primary/10 gap-1.5 h-9 px-3"
+              onClick={() => navigate('/support')}
+            >
+              <Heart className="h-4 w-4" />
+              <span className="text-sm font-medium">Support</span>
+            </Button>
+          </div>
+          <p className="text-center text-xs text-muted-foreground mt-4">
+            © {new Date().getFullYear()} AfuChat Mini Programs
+          </p>
         </div>
       </div>
 
