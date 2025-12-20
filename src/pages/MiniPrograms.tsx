@@ -9,8 +9,6 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -20,10 +18,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ProfileDrawer } from '@/components/ProfileDrawer';
-import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Brain, Puzzle, Trophy, ChevronRight, Clock, Shield, FileText, Gift, Mail, Send, PlusCircle, Code, Heart, Eye, MoreVertical, ExternalLink, Edit, Play } from 'lucide-react';
+import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Brain, Puzzle, Trophy, ChevronRight, Clock, Shield, Gift, Mail, Send, PlusCircle, Code, Heart, Eye, MoreVertical, ExternalLink, Edit, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -93,11 +90,6 @@ const MiniPrograms = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [userProfile, setUserProfile] = useState<{ avatar_url: string | null; display_name: string } | null>(null);
   
-  // Terms dialog state
-  const [termsDialogOpen, setTermsDialogOpen] = useState(false);
-  const [pendingApp, setPendingApp] = useState<BuiltInApp | null>(null);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [acceptedApps, setAcceptedApps] = useState<Set<string>>(new Set());
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   
   // Embedded app viewer state
@@ -129,12 +121,6 @@ const MiniPrograms = () => {
       }
     };
     fetchUserData();
-    
-    // Load accepted apps from localStorage
-    const savedAccepted = localStorage.getItem('acceptedMiniApps');
-    if (savedAccepted) {
-      setAcceptedApps(new Set(JSON.parse(savedAccepted)));
-    }
   }, [user]);
 
   const categories = [
@@ -396,44 +382,17 @@ const MiniPrograms = () => {
     setBuiltInPreviewOpen(true);
   };
 
-  // Open built-in app in embedded viewer
+  // Open built-in app in embedded viewer directly
   const openBuiltInApp = (app: BuiltInApp) => {
     if (!isAppAvailable(app)) {
       toast.info('Coming soon!');
       return;
     }
     
-    // Check if terms already accepted
-    if (acceptedApps.has(app.id)) {
-      setEmbeddedApp({
-        name: app.name,
-        url: app.route,
-        icon: app.logo,
-      });
-      return;
-    }
-    
-    // Show terms dialog
-    setPendingApp(app);
-    setTermsAccepted(false);
-    setTermsDialogOpen(true);
-  };
-
-  const handleAcceptTerms = () => {
-    if (!pendingApp || !termsAccepted) return;
-    
-    // Save accepted app
-    const newAccepted = new Set(acceptedApps);
-    newAccepted.add(pendingApp.id);
-    setAcceptedApps(newAccepted);
-    localStorage.setItem('acceptedMiniApps', JSON.stringify([...newAccepted]));
-    
-    // Open in embedded viewer
-    setTermsDialogOpen(false);
     setEmbeddedApp({
-      name: pendingApp.name,
-      url: pendingApp.route,
-      icon: pendingApp.logo,
+      name: app.name,
+      url: app.route,
+      icon: app.logo,
     });
   };
 
@@ -992,87 +951,6 @@ const MiniPrograms = () => {
           </p>
         </div>
       </div>
-
-      {/* Terms Agreement Dialog */}
-      <Dialog open={termsDialogOpen} onOpenChange={setTermsDialogOpen}>
-        <DialogContent className="max-w-md mx-4">
-          <DialogHeader>
-            <div className="flex items-center gap-3 mb-2">
-              {pendingApp && (
-                <div className="h-12 w-12 rounded-xl shadow-md overflow-hidden">
-                  {pendingApp.logo ? (
-                    <img src={pendingApp.logo} alt={pendingApp.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className={`h-full w-full ${pendingApp.color} flex items-center justify-center`}>
-                      <pendingApp.icon className="h-6 w-6 text-white" />
-                    </div>
-                  )}
-                </div>
-              )}
-              <div>
-                <DialogTitle>{pendingApp?.name}</DialogTitle>
-                <DialogDescription className="text-xs">
-                  Review before using
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="bg-muted/50 rounded-xl p-4 space-y-3 max-h-48 overflow-y-auto">
-              <div className="flex items-start gap-2">
-                <Shield className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-medium">Privacy & Data</p>
-                  <p className="text-xs text-muted-foreground">This app may collect and use data as described in our privacy policy.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <FileText className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-medium">Terms of Use</p>
-                  <p className="text-xs text-muted-foreground">By using this app, you agree to our terms of service and acceptable use policy.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <Gamepad2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-medium">App Responsibility</p>
-                  <p className="text-xs text-muted-foreground">You are responsible for your actions within this app. Misuse may result in account restrictions.</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3 p-3 bg-primary/5 rounded-xl border border-primary/20">
-              <Checkbox 
-                id="terms" 
-                checked={termsAccepted}
-                onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
-              />
-              <label htmlFor="terms" className="text-sm cursor-pointer leading-tight">
-                I have read and agree to the terms of use and privacy policy for this app
-              </label>
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button 
-              variant="outline" 
-              onClick={() => setTermsDialogOpen(false)}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleAcceptTerms}
-              disabled={!termsAccepted}
-              className="flex-1"
-            >
-              Accept & Open
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Submit App Dialog */}
       <SubmitAppDialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen} />
