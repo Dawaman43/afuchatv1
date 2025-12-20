@@ -48,6 +48,9 @@ export default function MerchantShop() {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [userCountry, setUserCountry] = useState<string | null>(null);
   const [contactingSupport, setContactingSupport] = useState(false);
+  
+  // Detect if running in iframe (embedded app viewer)
+  const isInIframe = window.self !== window.top;
 
   useEffect(() => {
     fetchUserCountry();
@@ -383,39 +386,41 @@ export default function MerchantShop() {
   }
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-background pb-24">
-        {/* Header */}
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div className="flex items-center gap-2">
-                <img src={shopshackLogo} alt={merchant.name} className="h-8 w-8 rounded-full object-cover" />
-                <div>
-                  <h1 className="font-semibold">{merchant.name}</h1>
-                  <p className="text-xs text-muted-foreground">{products.length} products</p>
+    <Layout hideNav={isInIframe}>
+      <div className={`min-h-screen bg-background ${isInIframe ? 'pb-4' : 'pb-24'}`}>
+        {/* Header - hide when in iframe */}
+        {!isInIframe && (
+          <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="flex items-center gap-2">
+                  <img src={shopshackLogo} alt={merchant.name} className="h-8 w-8 rounded-full object-cover" />
+                  <div>
+                    <h1 className="font-semibold">{merchant.name}</h1>
+                    <p className="text-xs text-muted-foreground">{products.length} products</p>
+                  </div>
                 </div>
               </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="relative"
+                onClick={() => navigate(`/shop/${merchantId}/cart`)}
+              >
+                <ShoppingCart className="h-4 w-4 mr-1" />
+                Cart
+                {cartItemCount > 0 && (
+                  <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                    {cartItemCount}
+                  </Badge>
+                )}
+              </Button>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="relative"
-              onClick={() => navigate(`/shop/${merchantId}/cart`)}
-            >
-              <ShoppingCart className="h-4 w-4 mr-1" />
-              Cart
-              {cartItemCount > 0 && (
-                <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
-                  {cartItemCount}
-                </Badge>
-              )}
-            </Button>
           </div>
-        </div>
+        )}
 
         {/* Categories */}
         <div className="px-4 py-3 overflow-x-auto">
