@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { 
   Upload, 
   Smartphone, 
@@ -31,17 +32,19 @@ import {
   AlertCircle,
   Loader2,
   X,
-  Shield
+  Shield,
+  MapPin
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { MiniAppImageUpload } from './MiniAppImageUpload';
+import { countries } from '@/lib/countries';
 
 interface SubmitAppDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const categories = [
+const appCategories = [
   { id: 'games', name: 'Games', icon: '🎮' },
   { id: 'services', name: 'Services', icon: '⚙️' },
   { id: 'shopping', name: 'Shopping', icon: '🛒' },
@@ -67,9 +70,11 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
     contactEmail: '',
     privacyUrl: '',
     termsUrl: '',
+    targetCountries: [] as string[], // Empty means all countries
     agreeTerms: false,
     agreeGuidelines: false,
   });
+  const [countrySearchQuery, setCountrySearchQuery] = useState('');
 
   const handleInputChange = (field: string, value: string | boolean | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -189,6 +194,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
           developer_email: formData.contactEmail.trim(),
           privacy_url: formData.privacyUrl.trim() || null,
           terms_url: formData.termsUrl.trim() || null,
+          target_countries: formData.targetCountries.length > 0 ? formData.targetCountries : null,
           status: 'pending',
           is_published: false,
         });
@@ -209,6 +215,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
         contactEmail: '',
         privacyUrl: '',
         termsUrl: '',
+        targetCountries: [],
         agreeTerms: false,
         agreeGuidelines: false,
       });
@@ -319,7 +326,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map((cat) => (
+                      {appCategories.map((cat) => (
                         <SelectItem key={cat.id} value={cat.id}>
                           <span className="flex items-center gap-2">
                             <span>{cat.icon}</span>
@@ -458,6 +465,117 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                     />
                   </div>
                 </div>
+
+                {/* Country Targeting Section */}
+                <div className="border-t pt-5 space-y-4">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    Country Availability
+                  </h4>
+                  
+                  <p className="text-xs text-muted-foreground">
+                    Choose which countries can access your app. Leave empty to make it available worldwide.
+                  </p>
+                  
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant={formData.targetCountries.length === 0 ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleInputChange('targetCountries', [])}
+                        className="flex-1"
+                      >
+                        <Globe className="h-4 w-4 mr-2" />
+                        All Countries
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={formData.targetCountries.length > 0 ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          if (formData.targetCountries.length === 0) {
+                            handleInputChange('targetCountries', ['Uganda']); // Default to one country
+                          }
+                        }}
+                        className="flex-1"
+                      >
+                        <MapPin className="h-4 w-4 mr-2" />
+                        Specific Countries
+                      </Button>
+                    </div>
+                    
+                    {formData.targetCountries.length > 0 && (
+                      <div className="space-y-3">
+                        {/* Selected countries */}
+                        {formData.targetCountries.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {formData.targetCountries.map((country) => (
+                              <Badge 
+                                key={country} 
+                                variant="secondary"
+                                className="pl-2 pr-1 py-1 gap-1"
+                              >
+                                {country}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleInputChange(
+                                      'targetCountries',
+                                      formData.targetCountries.filter(c => c !== country)
+                                    );
+                                  }}
+                                  className="ml-1 hover:bg-muted rounded p-0.5"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* Country search and selection */}
+                        <div className="space-y-2">
+                          <Input
+                            placeholder="Search countries..."
+                            value={countrySearchQuery}
+                            onChange={(e) => setCountrySearchQuery(e.target.value)}
+                            className="h-10"
+                          />
+                          <ScrollArea className="h-32 border rounded-lg">
+                            <div className="p-2 space-y-1">
+                              {countries
+                                .filter(c => 
+                                  c.toLowerCase().includes(countrySearchQuery.toLowerCase()) &&
+                                  !formData.targetCountries.includes(c)
+                                )
+                                .slice(0, 20)
+                                .map((country) => (
+                                  <button
+                                    key={country}
+                                    type="button"
+                                    onClick={() => {
+                                      handleInputChange('targetCountries', [...formData.targetCountries, country]);
+                                      setCountrySearchQuery('');
+                                    }}
+                                    className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded-md transition-colors"
+                                  >
+                                    {country}
+                                  </button>
+                                ))}
+                              {countries.filter(c => 
+                                c.toLowerCase().includes(countrySearchQuery.toLowerCase()) &&
+                                !formData.targetCountries.includes(c)
+                              ).length === 0 && (
+                                <p className="text-sm text-muted-foreground p-2 text-center">No countries found</p>
+                              )}
+                            </div>
+                          </ScrollArea>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -480,7 +598,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                     <div className="flex-1">
                       <p className="font-semibold text-base">{formData.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {categories.find(c => c.id === formData.category)?.icon} {categories.find(c => c.id === formData.category)?.name}
+                        {appCategories.find(c => c.id === formData.category)?.icon} {appCategories.find(c => c.id === formData.category)?.name}
                       </p>
                     </div>
                   </div>

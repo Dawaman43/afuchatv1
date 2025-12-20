@@ -2206,6 +2206,7 @@ export type Database = {
           rating: number | null
           screenshots: string[] | null
           status: string
+          target_countries: string[] | null
           terms_url: string | null
           updated_at: string
           url: string
@@ -2227,6 +2228,7 @@ export type Database = {
           rating?: number | null
           screenshots?: string[] | null
           status?: string
+          target_countries?: string[] | null
           terms_url?: string | null
           updated_at?: string
           url: string
@@ -2248,6 +2250,7 @@ export type Database = {
           rating?: number | null
           screenshots?: string[] | null
           status?: string
+          target_countries?: string[] | null
           terms_url?: string | null
           updated_at?: string
           url?: string

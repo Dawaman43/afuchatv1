@@ -58,6 +58,7 @@ interface MiniProgram {
   created_at?: string;
   privacy_url?: string;
   terms_url?: string;
+  target_countries?: string[] | null;
   profiles: {
     display_name: string;
   };
@@ -92,6 +93,7 @@ const MiniPrograms = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userProfile, setUserProfile] = useState<{ avatar_url: string | null; display_name: string } | null>(null);
+  const [userCountry, setUserCountry] = useState<string | null>(null);
   
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   
@@ -115,6 +117,23 @@ const MiniPrograms = () => {
   const [builtInPreviewApp, setBuiltInPreviewApp] = useState<BuiltInApp | null>(null);
   const [builtInPreviewOpen, setBuiltInPreviewOpen] = useState(false);
 
+  // Fetch user country from profile
+  useEffect(() => {
+    const fetchUserCountry = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('country')
+          .eq('id', user.id)
+          .single();
+        if (data?.country) {
+          setUserCountry(data.country);
+        }
+      }
+    };
+    fetchUserCountry();
+  }, [user]);
+
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) return;
@@ -130,6 +149,20 @@ const MiniPrograms = () => {
     };
     fetchUserData();
   }, [user]);
+
+  // Check if app is available in user's country
+  const isAppAvailableInCountry = (app: MiniProgram): boolean => {
+    // If no target countries specified, app is available worldwide
+    if (!app.target_countries || app.target_countries.length === 0) {
+      return true;
+    }
+    // If user is not logged in or has no country, block access to restricted apps
+    if (!userCountry) {
+      return false;
+    }
+    // Check if user's country is in the target countries
+    return app.target_countries.includes(userCountry);
+  };
 
   const categories = [
     { id: 'all', name: 'For you', icon: Zap },
@@ -449,17 +482,23 @@ const MiniPrograms = () => {
 
   // Third-party app card component
   const ThirdPartyAppCard = ({ app }: { app: MiniProgram }) => {
+    const isRestricted = !isAppAvailableInCountry(app);
+    
     return (
       <motion.div
-        whileTap={{ scale: 0.98 }}
-        className="w-[72px] flex-shrink-0 cursor-pointer relative group"
+        whileTap={isRestricted ? undefined : { scale: 0.98 }}
+        className={`w-[72px] flex-shrink-0 relative group ${isRestricted ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <div 
           onClick={() => {
+            if (isRestricted) {
+              toast.error('This app is not available in your country');
+              return;
+            }
             setPreviewApp(app);
             setPreviewDialogOpen(true);
           }}
-          className="relative h-[72px] w-[72px] rounded-[18px] shadow-lg overflow-hidden bg-muted mx-auto"
+          className={`relative h-[72px] w-[72px] rounded-[18px] shadow-lg overflow-hidden bg-muted mx-auto ${isRestricted ? 'opacity-50' : ''}`}
         >
           {app.icon_url ? (
             <img 
@@ -472,14 +511,27 @@ const MiniPrograms = () => {
               <span className="text-2xl">📱</span>
             </div>
           )}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <Eye className="h-5 w-5 text-white" />
-          </div>
+          {isRestricted && (
+            <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+              <Shield className="h-5 w-5 text-muted-foreground" />
+            </div>
+          )}
+          {!isRestricted && (
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Eye className="h-5 w-5 text-white" />
+            </div>
+          )}
         </div>
         <p className="text-[11px] font-medium truncate text-center mt-1.5">{app.name}</p>
         <div className="flex items-center justify-center gap-1">
-          <Star className="h-2.5 w-2.5 fill-muted-foreground text-muted-foreground" />
-          <span className="text-[10px] text-muted-foreground">{app.rating || 4.5}</span>
+          {isRestricted ? (
+            <span className="text-[10px] text-muted-foreground">Restricted</span>
+          ) : (
+            <>
+              <Star className="h-2.5 w-2.5 fill-muted-foreground text-muted-foreground" />
+              <span className="text-[10px] text-muted-foreground">{app.rating || 4.5}</span>
+            </>
+          )}
         </div>
       </motion.div>
     );
@@ -724,62 +776,110 @@ const MiniPrograms = () => {
     );
   };
 
+  // Detect if in iframe or on desktop (to hide duplicate header)
+  const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const showMobileHeader = isMobile && !isInIframe;
+
   return (
     <Layout>
       <div className="min-h-screen bg-background pb-safe">
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border">
-          <div className="px-4 py-3">
-            <div className="flex items-center gap-3 mb-3">
-              {user ? (
-                <ProfileDrawer
-                  trigger={
-                    <button className="flex-shrink-0">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={userProfile?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                          {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                    </button>
-                  }
-                />
-              ) : null}
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  placeholder="Search apps and games"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-12 rounded-full bg-muted/50 border-0"
-                />
+        {/* Header - Only show on mobile */}
+        {showMobileHeader && (
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border">
+            <div className="px-4 py-3">
+              <div className="flex items-center gap-3 mb-3">
+                {user ? (
+                  <ProfileDrawer
+                    trigger={
+                      <button className="flex-shrink-0">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={userProfile?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                            {userProfile?.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </button>
+                    }
+                  />
+                ) : null}
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search apps and games"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-12 rounded-full bg-muted/50 border-0"
+                  />
+                </div>
               </div>
+              
+              {/* Category tabs */}
+              <ScrollArea className="w-full">
+                <div className="flex gap-2 pb-2">
+                  {categories.map((cat) => {
+                    const isActive = selectedCategory === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                          isActive 
+                            ? 'bg-primary/10 text-primary border-2 border-primary' 
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    );
+                  })}
+                </div>
+                <ScrollBar orientation="horizontal" className="invisible" />
+              </ScrollArea>
             </div>
-            
-            {/* Category tabs */}
-            <ScrollArea className="w-full">
-              <div className="flex gap-2 pb-2">
-                {categories.map((cat) => {
-                  const isActive = selectedCategory === cat.id;
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                        isActive 
-                          ? 'bg-primary/10 text-primary border-2 border-primary' 
-                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                      }`}
-                    >
-                      {cat.name}
-                    </button>
-                  );
-                })}
-              </div>
-              <ScrollBar orientation="horizontal" className="invisible" />
-            </ScrollArea>
           </div>
-        </div>
+        )}
+
+        {/* Desktop category tabs (no profile/search, just categories) */}
+        {!showMobileHeader && (
+          <div className="border-b border-border">
+            <div className="px-4 py-3">
+              <div className="flex items-center gap-4 mb-3">
+                <h1 className="text-xl font-bold">Mini Programs</h1>
+                <div className="flex-1 relative max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search apps and games"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-10 rounded-full bg-muted/50 border-0"
+                  />
+                </div>
+              </div>
+              <ScrollArea className="w-full">
+                <div className="flex gap-2 pb-2">
+                  {categories.map((cat) => {
+                    const isActive = selectedCategory === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                          isActive 
+                            ? 'bg-primary/10 text-primary border-2 border-primary' 
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    );
+                  })}
+                </div>
+                <ScrollBar orientation="horizontal" className="invisible" />
+              </ScrollArea>
+            </div>
+          </div>
+        )}
 
         <div className="px-4 py-4 space-y-6">
           {/* Featured Banner */}
