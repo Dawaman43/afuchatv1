@@ -1,55 +1,22 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useProfileCheck } from '@/hooks/useProfileCheck';
+import { useEffect } from 'react';
 
 interface RequireBanCheckProps {
   children: React.ReactNode;
 }
 
 export function RequireBanCheck({ children }: RequireBanCheckProps) {
-  const { user, loading } = useAuth();
+  const { loading, isBanned } = useProfileCheck();
   const navigate = useNavigate();
-  const [checking, setChecking] = useState(true);
-  const [isBanned, setIsBanned] = useState(false);
 
   useEffect(() => {
-    const checkBanStatus = async () => {
-      if (!user) {
-        setChecking(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('is_banned')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error checking ban status:', error);
-          setChecking(false);
-          return;
-        }
-
-        if (data?.is_banned) {
-          setIsBanned(true);
-          navigate('/banned', { replace: true });
-        }
-      } catch (error) {
-        console.error('Error checking ban status:', error);
-      } finally {
-        setChecking(false);
-      }
-    };
-
-    if (!loading) {
-      checkBanStatus();
+    if (!loading && isBanned) {
+      navigate('/banned', { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [loading, isBanned, navigate]);
 
-  if (loading || checking) {
+  if (loading) {
     return null;
   }
 
