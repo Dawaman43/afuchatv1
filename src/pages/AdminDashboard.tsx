@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PageLoader } from '@/components/ui/CustomLoader';
 import { 
   Users, MessageSquare, Package, Activity, Shield, Gift, Coins, 
   TrendingUp, Globe, Briefcase, Wallet, AlertTriangle, Eye, 
@@ -508,17 +508,7 @@ const AdminDashboard = () => {
   const formatDate = (date: string) => new Date(date).toLocaleString();
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background p-4 max-w-7xl mx-auto">
-        <Skeleton className="h-10 w-48 mb-6" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-          {[...Array(10)].map((_, i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
-        </div>
-        <Skeleton className="h-96" />
-      </div>
-    );
+    return <PageLoader text="Loading admin dashboard..." />;
   }
 
   if (!user || !hasAdminPrivileges) {
