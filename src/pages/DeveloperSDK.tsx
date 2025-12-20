@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,14 +10,32 @@ import {
   ArrowLeft, Code, Book, Rocket, Download, ExternalLink, Copy, Check, 
   Shield, Terminal, Smartphone, Globe, Lock, Zap, Bell, CreditCard, 
   BarChart3, Upload, Play, Settings, Package, GitBranch, AlertTriangle,
-  Users, MessageSquare, Image, Database, Palette, Navigation
+  Users, MessageSquare, Image, Database, Palette, Navigation, Hammer,
+  CheckCircle2, Circle, FileCode, FolderOpen, TestTube, Send
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const DeveloperSDK = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single();
+      if (data?.is_admin) setIsAdmin(true);
+    };
+    checkAdmin();
+  }, [user]);
 
   const copyCode = (code: string, id: string) => {
     navigator.clipboard.writeText(code);
@@ -25,6 +43,58 @@ const DeveloperSDK = () => {
     toast.success('Code copied to clipboard!');
     setTimeout(() => setCopiedCode(null), 2000);
   };
+
+  // Step-by-step guide for launching first app (admin only)
+  const launchGuideSteps = [
+    {
+      step: 1,
+      title: 'Install the CLI',
+      description: 'Install the AfuChat CLI globally using npm',
+      code: 'npm install -g @afuchat/cli',
+      completed: false,
+    },
+    {
+      step: 2,
+      title: 'Create Your Project',
+      description: 'Generate a new mini program project with the starter template',
+      code: 'afu create my-first-app --template game',
+      completed: false,
+    },
+    {
+      step: 3,
+      title: 'Configure Your App',
+      description: 'Edit afu.config.json with your app details and permissions',
+      code: `{
+  "appId": "my-first-app",
+  "name": "My First App",
+  "version": "1.0.0",
+  "category": "games",
+  "permissions": ["user.info", "storage.read", "storage.write"]
+}`,
+      completed: false,
+    },
+    {
+      step: 4,
+      title: 'Develop Locally',
+      description: 'Start the local development server with hot reload',
+      code: 'cd my-first-app && afu preview',
+      completed: false,
+    },
+    {
+      step: 5,
+      title: 'Build for Production',
+      description: 'Create an optimized production build',
+      code: 'afu build',
+      completed: false,
+    },
+    {
+      step: 6,
+      title: 'Submit for Review',
+      description: 'Publish your app to the AfuChat marketplace',
+      code: 'afu publish',
+      completed: false,
+    },
+  ];
 
   const exampleCode = {
     lifecycle: `// Mini Program Lifecycle
@@ -362,6 +432,12 @@ if (payment.status === 'completed') {
                   <Globe className="h-4 w-4" />
                   API Reference
                 </TabsTrigger>
+                {isAdmin && (
+                  <TabsTrigger value="launch-guide" className="gap-2 text-primary">
+                    <Hammer className="h-4 w-4" />
+                    Launch Guide
+                  </TabsTrigger>
+                )}
               </TabsList>
             </ScrollArea>
 
@@ -1148,6 +1224,135 @@ fetch('https://api.afuchat.com/api/v1/storage/get/key', {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Admin-only Launch Guide Tab */}
+            {isAdmin && (
+              <TabsContent value="launch-guide" className="space-y-6">
+                <Card className="border-primary/50">
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-primary text-primary-foreground">Admin Only</Badge>
+                    </div>
+                    <CardTitle className="flex items-center gap-2 mt-2">
+                      <Hammer className="h-5 w-5" />
+                      Launch Your First Mini Program
+                    </CardTitle>
+                    <CardDescription>
+                      Step-by-step guide to create, test, and publish your first AfuChat mini program
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {launchGuideSteps.map((step, index) => (
+                        <div key={step.step} className="relative">
+                          {index < launchGuideSteps.length - 1 && (
+                            <div className="absolute left-4 top-12 bottom-0 w-0.5 bg-border" />
+                          )}
+                          <div className="flex gap-4">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                              {step.step}
+                            </div>
+                            <div className="flex-1 space-y-3 pb-6">
+                              <div>
+                                <h4 className="font-semibold">{step.title}</h4>
+                                <p className="text-sm text-muted-foreground">{step.description}</p>
+                              </div>
+                              <div className="relative">
+                                <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
+                                  <code>{step.code}</code>
+                                </pre>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="absolute top-2 right-2"
+                                  onClick={() => copyCode(step.code, `step-${step.step}`)}
+                                >
+                                  {copiedCode === `step-${step.step}` ? (
+                                    <Check className="h-4 w-4" />
+                                  ) : (
+                                    <Copy className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TestTube className="h-5 w-5" />
+                      Testing Checklist
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {[
+                        'App loads without errors in the simulator',
+                        'All permissions are declared in config',
+                        'Network requests use allowlisted domains',
+                        'Storage usage is within limits',
+                        'UI is responsive on mobile and desktop',
+                        'Lifecycle hooks work correctly',
+                        'Error handling is implemented',
+                        'App follows AfuChat design guidelines',
+                      ].map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50">
+                          <Circle className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Send className="h-5 w-5" />
+                      Submission Requirements
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <h4 className="font-semibold text-sm">Required Files</h4>
+                        <div className="space-y-2">
+                          {[
+                            { icon: FileCode, name: 'afu.config.json', desc: 'App configuration' },
+                            { icon: FolderOpen, name: 'dist/', desc: 'Production build' },
+                            { icon: Image, name: 'icon.png', desc: '512x512 app icon' },
+                            { icon: FileCode, name: 'README.md', desc: 'Documentation' },
+                          ].map((file, idx) => (
+                            <div key={idx} className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg">
+                              <file.icon className="h-4 w-4 text-primary" />
+                              <div>
+                                <p className="text-sm font-mono">{file.name}</p>
+                                <p className="text-xs text-muted-foreground">{file.desc}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <h4 className="font-semibold text-sm">Review Process</h4>
+                        <div className="space-y-2 text-sm text-muted-foreground">
+                          <p>1. Submit via <code className="bg-muted px-1 rounded">afu publish</code></p>
+                          <p>2. Automated security scan (1-2 minutes)</p>
+                          <p>3. Manual review by AfuChat team (24-48 hours)</p>
+                          <p>4. Approval notification via email</p>
+                          <p>5. App appears in marketplace</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
           </Tabs>
         </main>
       </div>
