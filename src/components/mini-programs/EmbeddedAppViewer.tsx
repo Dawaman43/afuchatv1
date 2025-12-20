@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
-  ArrowLeft, 
   RefreshCw, 
   MoreVertical,
   Share2,
@@ -115,27 +114,18 @@ export const EmbeddedAppViewer = ({
 
       <div className="fixed inset-0 z-50 bg-background flex flex-col">
         {/* Header */}
-        <header className="flex items-center justify-between px-3 py-2 border-b border-border bg-background/95 backdrop-blur-lg safe-area-top">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={onClose}
-              className="shrink-0"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            
+        <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/95 backdrop-blur-lg safe-area-top">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             {appIcon && (
               <img 
                 src={appIcon} 
                 alt={appName} 
-                className="h-8 w-8 rounded-lg shrink-0"
+                className="h-10 w-10 rounded-xl shrink-0 shadow-sm"
               />
             )}
             
             <div className="min-w-0 flex-1">
-              <h1 className="font-semibold text-sm truncate">{appName}</h1>
+              <h1 className="font-semibold text-base truncate">{appName}</h1>
               <p className="text-xs text-muted-foreground">Mini Program</p>
             </div>
           </div>
@@ -163,7 +153,7 @@ export const EmbeddedAppViewer = ({
                 </DropdownMenuItem>
                 
                 {/* Terms of Mini Apps link */}
-                <DropdownMenuItem onClick={() => window.open('/terms-of-use#mini-programs', '_blank')}>
+                <DropdownMenuItem onClick={() => window.open('/terms', '_blank')}>
                   <FileText className="h-4 w-4 mr-2" />
                   Terms of Mini Apps
                 </DropdownMenuItem>
