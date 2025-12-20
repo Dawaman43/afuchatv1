@@ -21,9 +21,10 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 interface LayoutProps {
   children: ReactNode;
+  hideNav?: boolean;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const Layout = ({ children, hideNav = false }: LayoutProps) => {
   const { user } = useAuth();
   const { mode, canUseBusiness } = useAccountMode();
   const { openSettings } = useSettings();
@@ -272,16 +273,17 @@ const Layout = ({ children }: LayoutProps) => {
     return location.pathname.startsWith(path);
   };
   
-  // Hide bottom navigation in chat rooms
+  // Hide bottom navigation in chat rooms or when hideNav is true
   const isChatRoom = location.pathname.startsWith('/chat/');
+  const shouldHideNav = isChatRoom || hideNav;
 
   return (
     <div className="min-h-screen bg-background select-none overflow-y-auto">
-      <InstallPromptBanner />
-      <OfflineIndicator />
+      {!hideNav && <InstallPromptBanner />}
+      {!hideNav && <OfflineIndicator />}
 
       {/* Main Content */}
-      <main className="pb-20 min-h-screen">
+      <main className={hideNav ? "min-h-screen" : "pb-20 min-h-screen"}>
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -293,7 +295,7 @@ const Layout = ({ children }: LayoutProps) => {
       </main>
 
       {/* Mobile Bottom Navigation - X-style with AfuAI center */}
-      {!isChatRoom && (
+      {!shouldHideNav && (
         <div className={cn(
           "lg:hidden fixed bottom-0 left-0 right-0 z-50 transition-all duration-300",
           (isScrollingDown || chatScrollHide) ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
