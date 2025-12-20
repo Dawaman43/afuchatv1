@@ -21,6 +21,7 @@ import { AdminUserManagement } from '@/components/admin/AdminUserManagement';
 import { AdminWithdrawalsPanel } from '@/components/admin/AdminWithdrawalsPanel';
 import { AdminReportsPanel } from '@/components/admin/AdminReportsPanel';
 import { AdminGroupChannelVerification } from '@/components/admin/AdminGroupChannelVerification';
+import { AdminMiniProgramsPanel } from '@/components/admin/AdminMiniProgramsPanel';
 import { PageHeader } from '@/components/PageHeader';
 
 interface DashboardStats {
@@ -716,6 +717,7 @@ const AdminDashboard = () => {
           <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
             <TabsTrigger value="analytics" className="text-xs">Analytics</TabsTrigger>
             <TabsTrigger value="users" className="text-xs">Users</TabsTrigger>
+            <TabsTrigger value="mini-programs" className="text-xs">Mini Apps</TabsTrigger>
             <TabsTrigger value="withdrawals" className="text-xs">Withdrawals</TabsTrigger>
             <TabsTrigger value="reports" className="text-xs">Reports</TabsTrigger>
             <TabsTrigger value="groups" className="text-xs">Groups/Channels</TabsTrigger>
@@ -762,6 +764,10 @@ const AdminDashboard = () => {
                 <AdminUserManagement users={users} onRefresh={fetchUsers} />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="mini-programs" className="mt-6">
+            <AdminMiniProgramsPanel />
           </TabsContent>
 
           <TabsContent value="withdrawals" className="mt-6">

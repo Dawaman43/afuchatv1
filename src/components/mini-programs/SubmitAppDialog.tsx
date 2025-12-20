@@ -172,7 +172,9 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
           url: formData.url.trim(),
           icon_url: formData.iconUrl.trim(),
           developer_id: user.id,
-          is_published: false, // Needs review before publishing
+          developer_email: formData.contactEmail.trim(),
+          status: 'pending',
+          is_published: false,
         });
 
       if (error) throw error;

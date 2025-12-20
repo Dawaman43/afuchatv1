@@ -2193,6 +2193,7 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          developer_email: string | null
           developer_id: string
           icon_url: string | null
           id: string
@@ -2201,6 +2202,7 @@ export type Database = {
           is_published: boolean
           name: string
           rating: number | null
+          status: string
           updated_at: string
           url: string
         }
@@ -2208,6 +2210,7 @@ export type Database = {
           category: string
           created_at?: string
           description?: string | null
+          developer_email?: string | null
           developer_id: string
           icon_url?: string | null
           id?: string
@@ -2216,6 +2219,7 @@ export type Database = {
           is_published?: boolean
           name: string
           rating?: number | null
+          status?: string
           updated_at?: string
           url: string
         }
@@ -2223,6 +2227,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          developer_email?: string | null
           developer_id?: string
           icon_url?: string | null
           id?: string
@@ -2231,6 +2236,7 @@ export type Database = {
           is_published?: boolean
           name?: string
           rating?: number | null
+          status?: string
           updated_at?: string
           url?: string
         }

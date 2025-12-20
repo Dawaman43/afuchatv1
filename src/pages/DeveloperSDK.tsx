@@ -365,7 +365,7 @@ if (payment.status === 'completed') {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
+    <div className="min-h-screen bg-background pb-20 md:pb-0 overflow-x-hidden">
       <div className="max-w-6xl mx-auto w-full">
         {/* Header */}
         <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur">
@@ -380,7 +380,7 @@ if (payment.status === 'completed') {
           </div>
         </header>
 
-        <main className="px-3 sm:px-4 py-4 sm:py-8">
+        <main className="px-3 sm:px-4 py-4 sm:py-8 overflow-x-hidden">
           <div className="text-center space-y-3 sm:space-y-4 mb-6 sm:mb-8">
             <Badge variant="outline" className="mb-2">
               <Zap className="h-3 w-3 mr-1" />
@@ -406,47 +406,40 @@ if (payment.status === 'completed') {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
-            <div className="w-full overflow-x-auto scrollbar-hide -mx-3 px-3 sm:mx-0 sm:px-0">
-              <TabsList className="inline-flex min-w-max gap-1 p-1">
-                <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3">
-                  <Book className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Overview</span>
-                  <span className="sm:hidden">Intro</span>
+            <ScrollArea className="w-full pb-2">
+              <TabsList className="inline-flex w-max gap-1 p-1">
+                <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
+                  <Book className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                  <span>Overview</span>
                 </TabsTrigger>
-                <TabsTrigger value="quickstart" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3">
-                  <Rocket className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Quick Start</span>
-                  <span className="sm:hidden">Start</span>
+                <TabsTrigger value="quickstart" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
+                  <Rocket className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                  <span>Quick Start</span>
                 </TabsTrigger>
-                <TabsTrigger value="core" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3">
-                  <Code className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Core SDK</span>
-                  <span className="sm:hidden">SDK</span>
+                <TabsTrigger value="core" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
+                  <Code className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                  <span>Core SDK</span>
                 </TabsTrigger>
-                <TabsTrigger value="platform" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3">
-                  <Smartphone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Platform APIs</span>
-                  <span className="sm:hidden">APIs</span>
+                <TabsTrigger value="platform" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
+                  <Smartphone className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                  <span>APIs</span>
                 </TabsTrigger>
-                <TabsTrigger value="security" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3">
-                  <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Security</span>
-                  <span className="sm:hidden">Sec</span>
+                <TabsTrigger value="security" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
+                  <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                  <span>Security</span>
                 </TabsTrigger>
-                <TabsTrigger value="api" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3">
-                  <Globe className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">API Reference</span>
-                  <span className="sm:hidden">API</span>
+                <TabsTrigger value="api" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
+                  <Globe className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                  <span>API Ref</span>
                 </TabsTrigger>
                 {isAdmin && (
-                  <TabsTrigger value="launch-guide" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 text-primary">
-                    <Hammer className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">Launch Guide</span>
-                    <span className="sm:hidden">Launch</span>
+                  <TabsTrigger value="launch-guide" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 text-primary whitespace-nowrap">
+                    <Hammer className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                    <span>Launch</span>
                   </TabsTrigger>
                 )}
               </TabsList>
-            </div>
+            </ScrollArea>
 
             {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-6">
