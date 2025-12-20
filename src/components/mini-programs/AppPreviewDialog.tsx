@@ -5,10 +5,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Star, Download, ExternalLink, Play, User, Calendar, Shield } from 'lucide-react';
+import { Star, Download, ExternalLink, Play, User, Calendar, Shield, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface AppPreviewDialogProps {
@@ -65,7 +71,23 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
                 
                 {/* App Info */}
                 <div className="flex-1 min-w-0">
-                  <DialogTitle className="text-xl font-bold mb-1">{app.name}</DialogTitle>
+                  <div className="flex items-start justify-between">
+                    <DialogTitle className="text-xl font-bold mb-1">{app.name}</DialogTitle>
+                    {/* More menu with external link option */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => window.open(app.url, '_blank')}>
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Open External
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                   <Badge variant="outline" className="text-xs capitalize mb-2">
                     {app.category}
                   </Badge>
@@ -175,27 +197,17 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={() => window.open(app.url, '_blank')}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                External
-              </Button>
-              <Button 
-                className="flex-1"
-                onClick={() => {
-                  onOpenChange(false);
-                  onOpen();
-                }}
-              >
-                <Play className="h-4 w-4 mr-2" />
-                Open App
-              </Button>
-            </div>
+            {/* Action Button - Only Open App, no external button */}
+            <Button 
+              className="w-full"
+              onClick={() => {
+                onOpenChange(false);
+                onOpen();
+              }}
+            >
+              <Play className="h-4 w-4 mr-2" />
+              Open App
+            </Button>
           </div>
         </ScrollArea>
       </DialogContent>
