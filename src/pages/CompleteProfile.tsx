@@ -15,7 +15,7 @@ import { countries } from '@/lib/countries';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { getCountryFlag } from '@/lib/countryFlags';
-import { CustomLoader } from '@/components/ui/CustomLoader';
+import { CustomLoader, ButtonLoader } from '@/components/ui/CustomLoader';
 import { ReferralWelcomeBanner } from '@/components/gamification/ReferralWelcomeBanner';
 import { clearProfileCache } from '@/hooks/useProfileCheck';
 
@@ -537,7 +537,7 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
   if (initialLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <CustomLoader size="lg" text="Loading profile..." />
       </div>
     );
   }
@@ -717,7 +717,7 @@ const CompleteProfileContent = ({ user }: CompleteProfileContentProps) => {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <ButtonLoader className="mr-2" />
                   Completing Profile...
                 </>
               ) : (

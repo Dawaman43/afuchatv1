@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { Loader2, ShoppingCart, User } from 'lucide-react';
+import { ShoppingCart, User } from 'lucide-react';
+import { ButtonLoader, CustomLoader } from '@/components/ui/CustomLoader';
 import { motion } from 'framer-motion';
 
 interface GiftMarketplaceListing {
@@ -202,7 +203,7 @@ export const GiftMarketplaceCard = ({ listing, onPurchaseComplete }: GiftMarketp
             >
               {purchasing ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <ButtonLoader className="mr-2" />
                   Processing...
                 </>
               ) : (

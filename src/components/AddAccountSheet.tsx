@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Loader2, UserPlus, Mail, Lock } from 'lucide-react';
+import { UserPlus, Mail, Lock } from 'lucide-react';
+import { ButtonLoader } from '@/components/ui/CustomLoader';
 
 interface AddAccountSheetProps {
   open: boolean;
@@ -192,7 +193,7 @@ export function AddAccountSheet({ open, onOpenChange, onSuccess }: AddAccountShe
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <ButtonLoader className="mr-2" />
                 Linking Account...
               </>
             ) : (

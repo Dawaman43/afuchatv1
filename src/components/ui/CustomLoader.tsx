@@ -91,3 +91,24 @@ export const InlineLoader = ({ text }: { text?: string }) => {
     </motion.div>
   );
 };
+
+// Small inline loading indicator (replacement for Loader2 with animate-spin)
+export const ButtonLoader = ({ className }: { className?: string }) => {
+  return (
+    <span className={cn('inline-flex items-center gap-1', className)}>
+      {[0, 1, 2].map((i) => (
+        <motion.span
+          key={i}
+          className="w-1 h-1 rounded-full bg-current"
+          animate={{ opacity: [0.3, 1, 0.3] }}
+          transition={{ 
+            duration: 0.6, 
+            repeat: Infinity, 
+            delay: i * 0.15,
+            ease: "easeInOut"
+          }}
+        />
+      ))}
+    </span>
+  );
+};
