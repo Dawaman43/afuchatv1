@@ -39,32 +39,43 @@ export default function SuggestedUsers() {
   const [loading, setLoading] = useState(true);
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [processingFollow, setProcessingFollow] = useState<Set<string>>(new Set());
+  const [hasCheckedFollows, setHasCheckedFollows] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user && !hasCheckedFollows && !isNavigating) {
       checkIfAlreadyFollowing();
+    }
+  }, [user, hasCheckedFollows, isNavigating]);
+
+  useEffect(() => {
+    if (user && hasCheckedFollows) {
       fetchSuggestedUsers();
     }
-  }, [user]);
+  }, [user, hasCheckedFollows]);
 
   const checkIfAlreadyFollowing = async () => {
-    if (!user) return;
+    if (!user || isNavigating) return;
 
     try {
       const { data, error } = await supabase
         .from('follows')
-        .select('id')
-        .eq('follower_id', user.id)
-        .limit(1);
+        .select('id, following_id')
+        .eq('follower_id', user.id);
 
       if (error) throw error;
 
       // If user already follows someone, redirect to home
       if (data && data.length > 0) {
+        setIsNavigating(true);
         navigate('/home', { replace: true });
+        return;
       }
+      
+      setHasCheckedFollows(true);
     } catch (error) {
       console.error('Error checking follows:', error);
+      setHasCheckedFollows(true);
     }
   };
 
@@ -145,7 +156,7 @@ export default function SuggestedUsers() {
   };
 
   const handleFollow = async (userId: string) => {
-    if (!user) return;
+    if (!user || followingIds.has(userId)) return;
 
     setProcessingFollow(prev => new Set(prev).add(userId));
 
@@ -155,10 +166,29 @@ export default function SuggestedUsers() {
         .from('profiles')
         .select('is_warned')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (targetProfile?.is_warned) {
         toast.error('This account is not secure or trusted. AfuChat protects users from potentially fraudulent accounts.');
+        setProcessingFollow(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(userId);
+          return newSet;
+        });
+        return;
+      }
+
+      // Check if already following (prevent duplicate key error)
+      const { data: existingFollow } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('follower_id', user.id)
+        .eq('following_id', userId)
+        .maybeSingle();
+
+      if (existingFollow) {
+        // Already following, just update UI state
+        setFollowingIds(prev => new Set(prev).add(userId));
         setProcessingFollow(prev => {
           const newSet = new Set(prev);
           newSet.delete(userId);
@@ -171,7 +201,14 @@ export default function SuggestedUsers() {
         .from('follows')
         .insert({ follower_id: user.id, following_id: userId });
 
-      if (error) throw error;
+      if (error) {
+        // Handle duplicate key constraint error gracefully
+        if (error.code === '23505') {
+          setFollowingIds(prev => new Set(prev).add(userId));
+          return;
+        }
+        throw error;
+      }
 
       setFollowingIds(prev => new Set(prev).add(userId));
       toast.success('Followed successfully');
@@ -192,6 +229,7 @@ export default function SuggestedUsers() {
       toast.error('Please follow at least one user to continue');
       return;
     }
+    setIsNavigating(true);
     navigate('/home', { replace: true });
   };
 
