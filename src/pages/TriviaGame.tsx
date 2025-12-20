@@ -6,7 +6,6 @@ import Logo from '@/components/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { AdGate } from '@/components/AdGate';
 
 interface Question {
   question: string;
@@ -49,7 +48,6 @@ const TriviaGame = () => {
   const [score, setScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
-  const [adWatched, setAdWatched] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [bestScore, setBestScore] = useState(0);
 
@@ -107,14 +105,6 @@ const TriviaGame = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Ad Gate - Must watch ad before playing */}
-      {!adWatched && (
-        <AdGate 
-          onAdWatched={() => setAdWatched(true)} 
-          gameName="Trivia Challenge"
-        />
-      )}
-
       <main className="container max-w-4xl mx-auto px-4 py-6">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">

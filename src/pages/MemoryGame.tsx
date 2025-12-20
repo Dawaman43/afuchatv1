@@ -8,7 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import DifficultySelector from '@/components/games/DifficultySelector';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AdGate } from '@/components/AdGate';
 
 type Difficulty = 'easy' | 'medium' | 'hard';
 
@@ -43,7 +42,6 @@ const MemoryGame = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [bestScore, setBestScore] = useState<number | null>(null);
   const [streak, setStreak] = useState(0);
-  const [adWatched, setAdWatched] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
@@ -209,14 +207,6 @@ const MemoryGame = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Ad Gate - Must watch ad before playing */}
-      {!adWatched && (
-        <AdGate 
-          onAdWatched={() => setAdWatched(true)} 
-          gameName="Memory Match"
-        />
-      )}
-
       <main className="container max-w-4xl mx-auto px-4 py-6">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold mb-2 flex items-center justify-center gap-2">

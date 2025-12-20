@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { AdGate } from '@/components/AdGate';
 
 const PuzzleGame = () => {
   const navigate = useNavigate();
@@ -17,7 +16,6 @@ const PuzzleGame = () => {
   const [time, setTime] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [bestScore, setBestScore] = useState<number | null>(null);
-  const [adWatched, setAdWatched] = useState(false);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -156,14 +154,6 @@ const PuzzleGame = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Ad Gate - Must watch ad before playing */}
-      {!adWatched && (
-        <AdGate 
-          onAdWatched={() => setAdWatched(true)} 
-          gameName="15 Puzzle Challenge"
-        />
-      )}
-
       <main className="container max-w-4xl mx-auto px-4 py-6">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold mb-2 flex items-center justify-center gap-2">
