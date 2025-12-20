@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccountMode } from '@/contexts/AccountModeContext';
 import { useSettings } from '@/contexts/SettingsContext';
-import { Home, MessageSquare, Search, Bell, User, Settings, Shield, BarChart3, Grid3x3, Gamepad2, Bot, ShoppingBag, Wallet, Send, Gift, Image as ImageIcon, Hash, TrendingUp, Building2, MessageCircle } from 'lucide-react';
+import { Home, MessageSquare, Search, Bell, User, Settings, Shield, BarChart3, Grid3x3, Gamepad2, ShoppingBag, Wallet, Send, Gift, Image as ImageIcon, Hash, TrendingUp, Building2, MessageCircle } from 'lucide-react';
+import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
 import NotificationIcon from '@/components/nav/NotificationIcon';
@@ -236,7 +237,7 @@ const Layout = ({ children }: LayoutProps) => {
 
   // Additional features section
   const featureItems = [
-    { path: '/ai-chat', icon: Bot, label: 'AI Chat', requiresAuth: true },
+    { path: '/ai-chat', icon: null, customIcon: aiChatIcon, label: 'AI Chat', requiresAuth: true },
     { path: '/shop', icon: ShoppingBag, label: 'Shop' },
     { path: '/wallet', icon: Wallet, label: 'Wallet', requiresAuth: true },
     { path: '/transfer', icon: Send, label: 'Transfer', requiresAuth: true },
@@ -338,12 +339,13 @@ const Layout = ({ children }: LayoutProps) => {
                   to="/ai-chat"
                   className="flex items-center justify-center w-12 h-12 transition-colors"
                 >
-                  <Bot 
+                  <img 
+                    src={aiChatIcon} 
+                    alt="AI Chat" 
                     className={cn(
-                      "h-7 w-7",
-                      isActive('/ai-chat') ? "text-primary" : "text-foreground"
+                      "h-7 w-7 object-contain",
+                      isActive('/ai-chat') ? "opacity-100" : "opacity-70"
                     )} 
-                    strokeWidth={isActive('/ai-chat') ? 2.5 : 1.5} 
                   />
                 </Link>
               ) : (
@@ -351,7 +353,7 @@ const Layout = ({ children }: LayoutProps) => {
                   to="/auth/signin"
                   className="flex items-center justify-center w-12 h-12 transition-colors"
                 >
-                  <Bot className="h-7 w-7 text-muted-foreground" strokeWidth={1.5} />
+                  <img src={aiChatIcon} alt="AI Chat" className="h-7 w-7 object-contain opacity-50" />
                 </Link>
               )}
               

@@ -4,10 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAccountMode } from '@/contexts/AccountModeContext';
 import { 
   Home, MessageSquare, Search, Bell, User, Settings, Shield, 
-  BarChart3, Grid3x3, Bot, ShoppingBag, Wallet, Send, Gift, 
-  Image as ImageIcon, Hash, TrendingUp, Menu, X, Plus, DollarSign,
-  ChevronLeft, ChevronRight
+  BarChart3, Grid3x3, ShoppingBag, Wallet, Send, Gift, 
+  Image as ImageIcon, Hash, TrendingUp, Menu, Plus, DollarSign,
+  ChevronLeft
 } from 'lucide-react';
+import aiChatIcon from '@/assets/ai-chat-icon.ico';
 import Logo from '@/components/Logo';
 import { AccountModeSwitcher } from '@/components/AccountModeSwitcher';
 import NewPostModal from '@/components/ui/NewPostModal';
@@ -114,7 +115,7 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
   ];
 
   const featureItems = [
-    { path: '/ai-chat', icon: Bot, label: 'AI Chat', requiresAuth: true },
+    { path: '/ai-chat', icon: null, customIcon: aiChatIcon, label: 'AI Chat', requiresAuth: true },
     { path: '/creator-earnings', icon: DollarSign, label: 'Creator Earnings', requiresAuth: true },
     { path: '/shop', icon: ShoppingBag, label: 'Shop' },
     { path: '/wallet', icon: Wallet, label: 'Wallet', requiresAuth: true },
@@ -286,7 +287,11 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
                               : "hover:bg-muted/70 text-foreground"
                           )}
                         >
-                          <item.icon className="h-5 w-5 flex-shrink-0" />
+                          {item.customIcon ? (
+                            <img src={item.customIcon} alt={item.label} className="h-5 w-5 flex-shrink-0 object-contain" />
+                          ) : item.icon ? (
+                            <item.icon className="h-5 w-5 flex-shrink-0" />
+                          ) : null}
                           <span className="truncate">{item.label}</span>
                         </Link>
                       );
