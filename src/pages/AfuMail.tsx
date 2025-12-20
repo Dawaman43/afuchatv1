@@ -6,19 +6,24 @@ import afumailLogo from '@/assets/mini-apps/afumail-logo.png';
 
 export default function AfuMail() {
   const navigate = useNavigate();
+  
+  // Detect if running in iframe (embedded app viewer)
+  const isInIframe = window.self !== window.top;
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      {/* Header */}
-      <header className="border-b border-border px-4 py-3 flex items-center gap-4 shrink-0">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex items-center gap-2">
-          <img src={afumailLogo} alt="AfuMail" className="h-8 w-8 rounded-lg" />
-          <h1 className="text-lg font-bold text-blue-600">AfuMail</h1>
-        </div>
-      </header>
+      {/* Header - hide when in iframe */}
+      {!isInIframe && (
+        <header className="border-b border-border px-4 py-3 flex items-center gap-4 shrink-0">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <img src={afumailLogo} alt="AfuMail" className="h-8 w-8 rounded-lg" />
+            <h1 className="text-lg font-bold text-blue-600">AfuMail</h1>
+          </div>
+        </header>
+      )}
 
       {/* Coming Soon Content */}
       <div className="flex-1 flex items-center justify-center p-6">
