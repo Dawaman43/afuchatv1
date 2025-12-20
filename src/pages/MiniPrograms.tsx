@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,10 +14,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ProfileDrawer } from '@/components/ProfileDrawer';
-import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Video, Book, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Image, Brain, Puzzle, Trophy, ChevronRight, Swords, Clock, Shield, FileText, Gift, Mail, Send, PlusCircle, Code, Heart, Eye } from 'lucide-react';
+import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Brain, Puzzle, Trophy, ChevronRight, Clock, Shield, FileText, Gift, Mail, Send, PlusCircle, Code, Heart, Eye, MoreVertical, ExternalLink, Edit, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -66,16 +71,18 @@ interface BuiltInApp {
   logo?: string;
   category: string;
   route: string;
+  url?: string; // For embedded viewing
   color: string;
   gradient: string;
   isBuiltIn: boolean;
   featured?: boolean;
   downloads?: string;
   rating?: number;
+  screenshots?: string[];
+  features?: string;
 }
 
 const MiniPrograms = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
   const [miniPrograms, setMiniPrograms] = useState<MiniProgram[]>([]);
@@ -93,7 +100,7 @@ const MiniPrograms = () => {
   const [acceptedApps, setAcceptedApps] = useState<Set<string>>(new Set());
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   
-  // Embedded app viewer state for third-party apps
+  // Embedded app viewer state
   const [embeddedApp, setEmbeddedApp] = useState<{
     name: string;
     url: string;
@@ -103,6 +110,10 @@ const MiniPrograms = () => {
   // Preview dialog state
   const [previewApp, setPreviewApp] = useState<MiniProgram | null>(null);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+
+  // Built-in app preview state
+  const [builtInPreviewApp, setBuiltInPreviewApp] = useState<BuiltInApp | null>(null);
+  const [builtInPreviewOpen, setBuiltInPreviewOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -134,7 +145,7 @@ const MiniPrograms = () => {
     { id: 'entertainment', name: 'Entertainment', icon: Music },
   ];
 
-  // Built-in games - all disabled for now
+  // Built-in games - all system apps that can be edited by admin
   const builtInGames: BuiltInApp[] = [
     { 
       id: 'nexa-collector',
@@ -144,11 +155,13 @@ const MiniPrograms = () => {
       logo: nexaCollectorLogo,
       category: 'games',
       route: '/game',
+      url: '/game',
       color: 'bg-orange-500',
       gradient: 'from-orange-500 to-red-500',
       isBuiltIn: true,
       downloads: '50K+',
-      rating: 4.6
+      rating: 4.6,
+      features: 'Collect Nexa points\nLevel up your profile\nCompete with friends'
     },
     { 
       id: 'memory-match',
@@ -158,11 +171,13 @@ const MiniPrograms = () => {
       logo: memoryGameLogo,
       category: 'games',
       route: '/memory-game',
+      url: '/memory-game',
       color: 'bg-purple-500',
       gradient: 'from-purple-500 to-pink-500',
       isBuiltIn: true,
       downloads: '25K+',
-      rating: 4.5
+      rating: 4.5,
+      features: 'Multiple difficulty levels\nTrack your best times\nEarn rewards'
     },
     { 
       id: '15-puzzle',
@@ -172,15 +187,17 @@ const MiniPrograms = () => {
       logo: puzzleGameLogo,
       category: 'games',
       route: '/puzzle-game',
+      url: '/puzzle-game',
       color: 'bg-blue-600',
       gradient: 'from-blue-600 to-cyan-500',
       isBuiltIn: true,
       downloads: '15K+',
-      rating: 4.4
+      rating: 4.4,
+      features: 'Classic puzzle gameplay\nTrack your moves\nCompete on leaderboards'
     },
   ];
 
-  // Built-in services - all disabled for now except AfuMail
+  // Built-in services - system apps
   const builtInServices: BuiltInApp[] = [
     { 
       id: 'shopshack',
@@ -190,12 +207,14 @@ const MiniPrograms = () => {
       logo: shopshackLogo,
       category: 'shopping',
       route: '/shop/3e75ceb8-e9c1-4399-93c0-5b8620f40fda',
+      url: '/shop/3e75ceb8-e9c1-4399-93c0-5b8620f40fda',
       color: 'bg-primary',
       gradient: 'from-primary to-primary/60',
       isBuiltIn: true,
       featured: true,
       downloads: '100K+',
-      rating: 4.9
+      rating: 4.9,
+      features: 'Browse quality products\nSecure checkout\nFast delivery'
     },
     { 
       id: 'events',
@@ -205,11 +224,13 @@ const MiniPrograms = () => {
       logo: eventsLogo,
       category: 'services',
       route: '/events',
+      url: '/events',
       color: 'bg-blue-500',
       gradient: 'from-blue-500 to-cyan-500',
       isBuiltIn: true,
       downloads: '30K+',
-      rating: 4.3
+      rating: 4.3,
+      features: 'Find local events\nBook tickets\nGet reminders'
     },
     { 
       id: 'travel',
@@ -219,11 +240,13 @@ const MiniPrograms = () => {
       logo: travelLogo,
       category: 'services',
       route: '/travel',
+      url: '/travel',
       color: 'bg-sky-500',
       gradient: 'from-sky-500 to-blue-500',
       isBuiltIn: true,
       downloads: '45K+',
-      rating: 4.5
+      rating: 4.5,
+      features: 'Search flights\nBook hotels\nManage bookings'
     },
     { 
       id: 'food-delivery',
@@ -233,11 +256,13 @@ const MiniPrograms = () => {
       logo: foodDeliveryLogo,
       category: 'services',
       route: '/food-delivery',
+      url: '/food-delivery',
       color: 'bg-orange-500',
       gradient: 'from-orange-500 to-red-500',
       isBuiltIn: true,
       downloads: '80K+',
-      rating: 4.6
+      rating: 4.6,
+      features: 'Order from local restaurants\nTrack your delivery\nSave favorites'
     },
     { 
       id: 'rides',
@@ -247,11 +272,13 @@ const MiniPrograms = () => {
       logo: ridesLogo,
       category: 'services',
       route: '/rides',
+      url: '/rides',
       color: 'bg-green-500',
       gradient: 'from-green-500 to-emerald-500',
       isBuiltIn: true,
       downloads: '60K+',
-      rating: 4.4
+      rating: 4.4,
+      features: 'Book rides instantly\nTrack your driver\nCashless payments'
     },
     { 
       id: 'bookings',
@@ -261,11 +288,13 @@ const MiniPrograms = () => {
       logo: bookingsLogo,
       category: 'services',
       route: '/bookings',
+      url: '/bookings',
       color: 'bg-purple-500',
       gradient: 'from-purple-500 to-pink-500',
       isBuiltIn: true,
       downloads: '35K+',
-      rating: 4.2
+      rating: 4.2,
+      features: 'Manage reservations\nSet reminders\nSync with calendar'
     },
     { 
       id: 'finance',
@@ -275,11 +304,13 @@ const MiniPrograms = () => {
       logo: financeLogo,
       category: 'services',
       route: '/wallet',
+      url: '/wallet',
       color: 'bg-emerald-500',
       gradient: 'from-emerald-500 to-teal-500',
       isBuiltIn: true,
       downloads: '70K+',
-      rating: 4.7
+      rating: 4.7,
+      features: 'Track spending\nManage wallet\nSend money'
     },
     {
       id: 'gifts-p2p',
@@ -289,11 +320,13 @@ const MiniPrograms = () => {
       logo: giftsP2PLogo,
       category: 'shopping',
       route: '/shop',
+      url: '/shop',
       color: 'bg-teal-500',
       gradient: 'from-teal-500 to-cyan-500',
       isBuiltIn: true,
       downloads: '15K+',
-      rating: 4.6
+      rating: 4.6,
+      features: 'Trade rare gifts\nMarketplace listings\nSecure transactions'
     },
     {
       id: 'afumail',
@@ -303,12 +336,14 @@ const MiniPrograms = () => {
       logo: afumailLogo,
       category: 'services',
       route: '/afumail',
+      url: '/afumail',
       color: 'bg-primary',
       gradient: 'from-primary to-cyan-500',
       isBuiltIn: true,
       featured: true,
       downloads: '5K+',
-      rating: 4.9
+      rating: 4.9,
+      features: 'Full email service\nSend and receive emails\nOrganize with folders'
     },
   ];
 
@@ -319,7 +354,6 @@ const MiniPrograms = () => {
 
   const fetchMiniPrograms = async () => {
     try {
-      // Fetch approved apps (status = 'approved') regardless of is_published
       const { data, error } = await supabase
         .from('mini_programs')
         .select(`*, profiles (display_name)`)
@@ -350,16 +384,32 @@ const MiniPrograms = () => {
     }
   };
 
-  const handleAppClick = (app: BuiltInApp) => {
-    // All default/built-in apps are disabled for now (except AfuMail)
-    if (app.id !== 'afumail') {
+  // Check if app is available (admin can access all, others only afumail)
+  const isAppAvailable = (app: BuiltInApp) => {
+    if (isAdmin) return true;
+    return app.id === 'afumail';
+  };
+
+  // Handle built-in app click - open preview first
+  const handleBuiltInAppClick = (app: BuiltInApp) => {
+    setBuiltInPreviewApp(app);
+    setBuiltInPreviewOpen(true);
+  };
+
+  // Open built-in app in embedded viewer
+  const openBuiltInApp = (app: BuiltInApp) => {
+    if (!isAppAvailable(app)) {
       toast.info('Coming soon!');
       return;
     }
     
-    // Check if terms already accepted for this app
+    // Check if terms already accepted
     if (acceptedApps.has(app.id)) {
-      navigate(app.route);
+      setEmbeddedApp({
+        name: app.name,
+        url: app.route,
+        icon: app.logo,
+      });
       return;
     }
     
@@ -378,9 +428,13 @@ const MiniPrograms = () => {
     setAcceptedApps(newAccepted);
     localStorage.setItem('acceptedMiniApps', JSON.stringify([...newAccepted]));
     
-    // Navigate to app
+    // Open in embedded viewer
     setTermsDialogOpen(false);
-    navigate(pendingApp.route);
+    setEmbeddedApp({
+      name: pendingApp.name,
+      url: pendingApp.route,
+      icon: pendingApp.logo,
+    });
   };
 
   // Handler for opening third-party mini programs in embedded viewer
@@ -411,19 +465,28 @@ const MiniPrograms = () => {
 
   const featuredApps = [...builtInGames.filter(g => g.featured), ...builtInServices.filter(s => s.featured)];
 
-  // Third-party app card component with preview button
+  // Chunk apps into groups of 4 for grid display
+  const chunkApps = <T,>(apps: T[], size: number): T[][] => {
+    const chunks: T[][] = [];
+    for (let i = 0; i < apps.length; i += size) {
+      chunks.push(apps.slice(i, i + size));
+    }
+    return chunks;
+  };
+
+  // Third-party app card component
   const ThirdPartyAppCard = ({ app }: { app: MiniProgram }) => {
     return (
       <motion.div
         whileTap={{ scale: 0.98 }}
-        className="w-[88px] flex-shrink-0 cursor-pointer relative group"
+        className="w-[72px] flex-shrink-0 cursor-pointer relative group"
       >
         <div 
           onClick={() => {
             setPreviewApp(app);
             setPreviewDialogOpen(true);
           }}
-          className="relative h-[72px] w-[72px] rounded-[22px] shadow-lg mb-2 overflow-hidden bg-muted mx-auto"
+          className="relative h-[72px] w-[72px] rounded-[18px] shadow-lg overflow-hidden bg-muted mx-auto"
         >
           {app.icon_url ? (
             <img 
@@ -436,13 +499,12 @@ const MiniPrograms = () => {
               <span className="text-2xl">📱</span>
             </div>
           )}
-          {/* Preview overlay on hover */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <Eye className="h-5 w-5 text-white" />
           </div>
         </div>
-        <p className="text-xs font-medium truncate text-center">{app.name}</p>
-        <div className="flex items-center justify-center gap-1 mt-0.5">
+        <p className="text-[11px] font-medium truncate text-center mt-1.5">{app.name}</p>
+        <div className="flex items-center justify-center gap-1">
           <Star className="h-2.5 w-2.5 fill-muted-foreground text-muted-foreground" />
           <span className="text-[10px] text-muted-foreground">{app.rating || 4.5}</span>
         </div>
@@ -450,106 +512,18 @@ const MiniPrograms = () => {
     );
   };
 
-  // Enhanced Game Card component - all built-in disabled
-  const GameCard = ({ app }: { app: BuiltInApp }) => {
+  // Built-in app card component - consistent with third-party apps
+  const BuiltInAppCard = ({ app }: { app: BuiltInApp }) => {
     const Icon = app.icon;
-    const isDisabled = app.id !== 'afumail'; // All built-in apps disabled except AfuMail
+    const isDisabled = !isAppAvailable(app);
     
     return (
       <motion.div
         whileTap={isDisabled ? undefined : { scale: 0.98 }}
-        onClick={() => handleAppClick(app)}
-        className={`w-44 flex-shrink-0 ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'} group`}
+        onClick={() => handleBuiltInAppClick(app)}
+        className={`w-[72px] flex-shrink-0 ${isDisabled && !isAdmin ? 'cursor-not-allowed' : 'cursor-pointer'} relative group`}
       >
-        {/* Card Container */}
-        <div className={`relative rounded-2xl overflow-hidden bg-card border border-border shadow-lg transition-all ${isDisabled ? 'opacity-60' : 'hover:shadow-xl'}`}>
-          {/* Game Banner/Cover */}
-          <div className={`relative h-28 bg-gradient-to-br ${app.gradient} overflow-hidden`}>
-            {app.logo ? (
-              <>
-                <img 
-                  src={app.logo} 
-                  alt={app.name} 
-                  className="absolute inset-0 h-full w-full object-cover opacity-90"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              </>
-            ) : (
-              <div className="h-full w-full flex items-center justify-center">
-                <Icon className="h-12 w-12 text-white/80" />
-              </div>
-            )}
-            
-            {/* Coming Soon Badge for disabled apps */}
-            {isDisabled && (
-              <div className="absolute top-2 left-2">
-                <Badge className="bg-muted text-muted-foreground border-0 text-[10px] font-bold shadow-md">
-                  <Clock className="h-3 w-3 mr-1" />
-                  Coming Soon
-                </Badge>
-              </div>
-            )}
-            
-            {/* Disabled Overlay */}
-            {isDisabled && (
-              <div className="absolute inset-0 bg-background/40 flex items-center justify-center">
-                <Clock className="h-8 w-8 text-muted-foreground" />
-              </div>
-            )}
-          </div>
-          
-          {/* Game Info */}
-          <div className="p-3 space-y-2">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <h3 className="font-bold text-sm truncate">{app.name}</h3>
-                <p className="text-xs text-muted-foreground truncate">{app.description}</p>
-              </div>
-            </div>
-            
-            {/* Stats Row */}
-            <div className="flex items-center justify-between pt-1">
-              <div className="flex items-center gap-1">
-                <div className="flex items-center gap-0.5 bg-yellow-500/10 px-1.5 py-0.5 rounded-full">
-                  <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
-                  <span className="text-xs font-semibold text-yellow-600 dark:text-yellow-400">{app.rating}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <Download className="h-3 w-3" />
-                <span className="text-[10px] font-medium">{app.downloads}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    );
-  };
-
-  // Google Play style app card component - uses actual logos
-  const AppCard = ({ app, size = 'medium' }: { app: BuiltInApp; size?: 'small' | 'medium' | 'large' }) => {
-    const Icon = app.icon;
-    const isDisabled = app.id !== 'afumail'; // All built-in apps disabled except AfuMail
-    
-    const sizeClasses = {
-      small: 'w-20',
-      medium: 'w-[88px]',
-      large: 'w-28'
-    };
-    
-    const iconSizeClasses = {
-      small: 'h-16 w-16',
-      medium: 'h-[72px] w-[72px]',
-      large: 'h-24 w-24'
-    };
-    
-    return (
-      <motion.div
-        whileTap={isDisabled ? undefined : { scale: 0.98 }}
-        onClick={() => handleAppClick(app)}
-        className={`${sizeClasses[size]} flex-shrink-0 ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-      >
-        <div className={`relative ${iconSizeClasses[size]} rounded-[22px] shadow-lg mb-2 overflow-hidden ${isDisabled ? 'opacity-60' : ''}`}>
+        <div className={`relative h-[72px] w-[72px] rounded-[18px] shadow-lg overflow-hidden mx-auto ${isDisabled && !isAdmin ? 'opacity-60' : ''}`}>
           {app.logo ? (
             <img 
               src={app.logo} 
@@ -561,74 +535,219 @@ const MiniPrograms = () => {
               <Icon className="h-8 w-8 text-white" />
             </div>
           )}
-          {isDisabled && (
+          {isDisabled && !isAdmin && (
             <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
               <Clock className="h-5 w-5 text-muted-foreground" />
             </div>
           )}
+          {/* Preview overlay on hover for available apps */}
+          {(!isDisabled || isAdmin) && (
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Eye className="h-5 w-5 text-white" />
+            </div>
+          )}
         </div>
-        <p className="text-xs font-medium truncate text-center">{app.name}</p>
-        <div className="flex items-center justify-center gap-1 mt-0.5">
-          <Star className="h-2.5 w-2.5 fill-muted-foreground text-muted-foreground" />
-          <span className="text-[10px] text-muted-foreground">{app.rating || 4.5}</span>
+        <p className="text-[11px] font-medium truncate text-center mt-1.5">{app.name}</p>
+        <div className="flex items-center justify-center gap-1">
+          {isDisabled && !isAdmin ? (
+            <span className="text-[10px] text-muted-foreground">Soon</span>
+          ) : (
+            <>
+              <Star className="h-2.5 w-2.5 fill-muted-foreground text-muted-foreground" />
+              <span className="text-[10px] text-muted-foreground">{app.rating || 4.5}</span>
+            </>
+          )}
         </div>
       </motion.div>
     );
   };
 
-  // Google Play style list item component - uses actual logos
-  const AppListItem = ({ app }: { app: BuiltInApp }) => {
-    const Icon = app.icon;
-    const isDisabled = app.id !== 'afumail'; // All built-in apps disabled except AfuMail
+  // Combined app grid with 4 apps per row, horizontal scrolling
+  const AppGrid = ({ apps, thirdPartyApps = [] }: { apps: BuiltInApp[]; thirdPartyApps?: MiniProgram[] }) => {
+    // Combine both built-in and third-party apps
+    const allApps = [
+      ...apps.map(app => ({ type: 'builtin' as const, app })),
+      ...thirdPartyApps.map(app => ({ type: 'thirdparty' as const, app })),
+    ];
+    
+    // Chunk into groups of 4
+    const chunks = chunkApps(allApps, 4);
     
     return (
-      <motion.div
-        whileTap={isDisabled ? undefined : { scale: 0.99 }}
-        onClick={() => handleAppClick(app)}
-        className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${isDisabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-accent/50'}`}
-      >
-        <div className={`h-16 w-16 rounded-[16px] shadow-md overflow-hidden flex-shrink-0`}>
-          {app.logo ? (
-            <img 
-              src={app.logo} 
-              alt={app.name} 
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className={`h-full w-full ${app.color} flex items-center justify-center`}>
-              <Icon className="h-8 w-8 text-white" />
+      <ScrollArea className="w-full">
+        <div className="flex gap-4 pb-4">
+          {chunks.map((chunk, chunkIndex) => (
+            <div key={chunkIndex} className="flex-shrink-0 grid grid-cols-4 gap-3">
+              {chunk.map((item, index) => (
+                item.type === 'builtin' ? (
+                  <BuiltInAppCard key={`builtin-${item.app.id}`} app={item.app as BuiltInApp} />
+                ) : (
+                  <ThirdPartyAppCard key={`thirdparty-${(item.app as MiniProgram).id}`} app={item.app as MiniProgram} />
+                )
+              ))}
             </div>
-          )}
+          ))}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="font-medium truncate">{app.name}</p>
-            {isDisabled && (
-              <Badge variant="secondary" className="text-[10px] py-0 px-1.5">
-                <Clock className="h-2.5 w-2.5 mr-0.5" />
-                Soon
-              </Badge>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground truncate">{app.description}</p>
-          <div className="flex items-center gap-2 mt-1">
-            <div className="flex items-center gap-0.5">
-              <Star className="h-3 w-3 fill-muted-foreground text-muted-foreground" />
-              <span className="text-[11px] text-muted-foreground">{app.rating || 4.5}</span>
+        <ScrollBar orientation="horizontal" className="invisible" />
+      </ScrollArea>
+    );
+  };
+
+  // Built-in App Preview Dialog
+  const BuiltInAppPreviewDialog = () => {
+    if (!builtInPreviewApp) return null;
+    
+    const Icon = builtInPreviewApp.icon;
+    const isDisabled = !isAppAvailable(builtInPreviewApp);
+    const featuresList = builtInPreviewApp.features?.split('\n').filter(f => f.trim()) || [];
+    
+    return (
+      <Dialog open={builtInPreviewOpen} onOpenChange={setBuiltInPreviewOpen}>
+        <DialogContent className="max-w-md mx-4 max-h-[90vh] p-0 overflow-hidden">
+          <ScrollArea className="max-h-[90vh]">
+            <div className="p-4">
+              <DialogHeader className="pb-4">
+                <div className="flex items-start gap-4">
+                  {/* App Icon */}
+                  <div className="h-20 w-20 rounded-2xl shadow-lg overflow-hidden flex-shrink-0">
+                    {builtInPreviewApp.logo ? (
+                      <img 
+                        src={builtInPreviewApp.logo} 
+                        alt={builtInPreviewApp.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className={`h-full w-full ${builtInPreviewApp.color} flex items-center justify-center`}>
+                        <Icon className="h-10 w-10 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* App Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
+                      <DialogTitle className="text-xl font-bold mb-1">{builtInPreviewApp.name}</DialogTitle>
+                      {/* More menu for admin */}
+                      {isAdmin && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => toast.info('Edit feature coming soon')}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit App Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => window.open(builtInPreviewApp.route, '_blank')}>
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              Open External
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                    <Badge variant="outline" className="text-xs capitalize mb-2">
+                      {builtInPreviewApp.category}
+                    </Badge>
+                    
+                    {/* Stats */}
+                    <div className="flex items-center gap-3 text-sm">
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                        <span className="font-medium">{builtInPreviewApp.rating?.toFixed(1) || '4.5'}</span>
+                      </div>
+                      <span className="text-muted-foreground">•</span>
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Download className="h-3.5 w-3.5" />
+                        <span className="text-xs">{builtInPreviewApp.downloads || '10K+'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              {/* Preview Screenshots placeholder */}
+              {builtInPreviewApp.screenshots && builtInPreviewApp.screenshots.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold mb-2">Screenshots</h3>
+                  <ScrollArea className="w-full">
+                    <div className="flex gap-2 pb-2">
+                      {builtInPreviewApp.screenshots.map((screenshot, index) => (
+                        <div key={index} className="flex-shrink-0 rounded-lg overflow-hidden border border-border">
+                          <img 
+                            src={screenshot} 
+                            alt={`Screenshot ${index + 1}`}
+                            className="h-32 w-auto object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <ScrollBar orientation="horizontal" className="invisible" />
+                  </ScrollArea>
+                </div>
+              )}
+
+              {/* Description */}
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold mb-2">About</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {builtInPreviewApp.description}
+                </p>
+              </div>
+
+              {/* Features */}
+              {featuresList.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold mb-2">Features</h3>
+                  <ul className="space-y-1.5">
+                    {featuresList.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <span className="text-primary mt-0.5">•</span>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* System App Badge */}
+              <div className="mb-4 p-3 bg-primary/5 rounded-xl border border-primary/20">
+                <div className="flex items-start gap-2">
+                  <Shield className="h-4 w-4 text-primary mt-0.5" />
+                  <div className="text-xs text-muted-foreground">
+                    <p className="font-medium text-foreground mb-1">System App</p>
+                    <p>This is a built-in AfuChat app. Your data is protected by our security policies.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <Button 
+                className="w-full"
+                disabled={isDisabled && !isAdmin}
+                onClick={() => {
+                  setBuiltInPreviewOpen(false);
+                  openBuiltInApp(builtInPreviewApp);
+                }}
+              >
+                {isDisabled && !isAdmin ? (
+                  <>
+                    <Clock className="h-4 w-4 mr-2" />
+                    Coming Soon
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 mr-2" />
+                    Open App
+                  </>
+                )}
+              </Button>
             </div>
-            <span className="text-[11px] text-muted-foreground">•</span>
-            <span className="text-[11px] text-muted-foreground">{app.downloads || '10K+'}</span>
-          </div>
-        </div>
-        <Button 
-          size="sm" 
-          variant={isDisabled ? "secondary" : "default"}
-          className="rounded-full px-4 h-8 text-xs"
-          disabled={isDisabled}
-        >
-          {isDisabled ? 'Soon' : 'Open'}
-        </Button>
-      </motion.div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     );
   };
 
@@ -664,7 +783,7 @@ const MiniPrograms = () => {
               </div>
             </div>
             
-            {/* Category tabs - Google Play style */}
+            {/* Category tabs */}
             <ScrollArea className="w-full">
               <div className="flex gap-2 pb-2">
                 {categories.map((cat) => {
@@ -690,7 +809,7 @@ const MiniPrograms = () => {
         </div>
 
         <div className="px-4 py-4 space-y-6">
-          {/* Featured Banner - Google Play style large cards with logos */}
+          {/* Featured Banner */}
           {selectedCategory === 'all' && !searchQuery && featuredApps.length > 0 && (
             <section>
               <ScrollArea className="w-full">
@@ -701,7 +820,7 @@ const MiniPrograms = () => {
                       <motion.div
                         key={app.id}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => handleAppClick(app)}
+                        onClick={() => handleBuiltInAppClick(app)}
                         className="w-[280px] flex-shrink-0 cursor-pointer"
                       >
                         <div className={`relative h-36 rounded-2xl bg-gradient-to-br ${app.gradient} p-4 shadow-lg overflow-hidden`}>
@@ -734,35 +853,27 @@ const MiniPrograms = () => {
             </section>
           )}
 
-          {/* Shopping Section - includes third-party shopping apps */}
+          {/* Shopping Section */}
           {(selectedCategory === 'all' || selectedCategory === 'shopping') && (
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-bold">Shopping</h2>
                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </div>
-              <ScrollArea className="w-full">
-                <div className="flex gap-3 pb-4">
-                  {builtInServices.filter(s => 
-                    s.category === 'shopping' &&
-                    (!searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                  ).map((app) => (
-                    <AppCard key={app.id} app={app} size="large" />
-                  ))}
-                  {/* Third-party shopping apps */}
-                  {filteredMiniPrograms.filter(app => app.category === 'shopping').map((app) => (
-                    <ThirdPartyAppCard key={app.id} app={app} />
-                  ))}
-                </div>
-                <ScrollBar orientation="horizontal" className="invisible" />
-              </ScrollArea>
+              <AppGrid 
+                apps={builtInServices.filter(s => 
+                  s.category === 'shopping' &&
+                  (!searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                )}
+                thirdPartyApps={filteredMiniPrograms.filter(app => app.category === 'shopping')}
+              />
             </section>
           )}
 
-          {/* Games Section - includes third-party game apps */}
+          {/* Games Section */}
           {(selectedCategory === 'all' || selectedCategory === 'games') && (
             <section>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3">
                 <div>
                   <h2 className="text-lg font-bold">Games</h2>
                   <p className="text-xs text-muted-foreground">Play & earn Nexa</p>
@@ -771,77 +882,54 @@ const MiniPrograms = () => {
                   variant="outline" 
                   size="sm" 
                   className="gap-1.5 h-8 px-3 rounded-full"
-                  onClick={() => navigate('/leaderboard')}
+                  onClick={() => toast.info('Leaderboard coming soon')}
                 >
                   <Trophy className="h-4 w-4 text-yellow-500" />
                   <span className="text-xs font-semibold">Leaderboard</span>
                 </Button>
               </div>
-              <ScrollArea className="w-full">
-                <div className="flex gap-4 pb-4">
-                  {builtInGames.filter(g => 
-                    !searchQuery || 
-                    g.name.toLowerCase().includes(searchQuery.toLowerCase())
-                  ).map((app) => (
-                    <GameCard key={app.id} app={app} />
-                  ))}
-                  {/* Third-party game apps */}
-                  {filteredMiniPrograms.filter(app => app.category === 'games').map((app) => (
-                    <ThirdPartyAppCard key={app.id} app={app} />
-                  ))}
-                </div>
-                <ScrollBar orientation="horizontal" className="invisible" />
-              </ScrollArea>
+              <AppGrid 
+                apps={builtInGames.filter(g => 
+                  !searchQuery || g.name.toLowerCase().includes(searchQuery.toLowerCase())
+                )}
+                thirdPartyApps={filteredMiniPrograms.filter(app => app.category === 'games')}
+              />
             </section>
           )}
 
-          {/* Services Section - includes third-party service apps */}
+          {/* Services Section */}
           {(selectedCategory === 'all' || selectedCategory === 'services') && (
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-bold">Services</h2>
-                <Badge variant="secondary" className="gap-1 text-[10px]">
-                  <Clock className="h-3 w-3" />
-                  Coming Soon
-                </Badge>
+                {!isAdmin && (
+                  <Badge variant="secondary" className="gap-1 text-[10px]">
+                    <Clock className="h-3 w-3" />
+                    Coming Soon
+                  </Badge>
+                )}
               </div>
-              <div className="space-y-1">
-                {builtInServices.filter(s => 
+              <AppGrid 
+                apps={builtInServices.filter(s => 
                   s.category === 'services' &&
                   (!searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                ).map((app) => (
-                  <AppListItem key={app.id} app={app} />
-                ))}
-              </div>
-              {/* Third-party service apps in horizontal scroll */}
-              {filteredMiniPrograms.filter(app => app.category === 'services').length > 0 && (
-                <ScrollArea className="w-full mt-3">
-                  <div className="flex gap-3 pb-4">
-                    {filteredMiniPrograms.filter(app => app.category === 'services').map((app) => (
-                      <ThirdPartyAppCard key={app.id} app={app} />
-                    ))}
-                  </div>
-                  <ScrollBar orientation="horizontal" className="invisible" />
-                </ScrollArea>
-              )}
+                )}
+                thirdPartyApps={filteredMiniPrograms.filter(app => app.category === 'services')}
+              />
             </section>
           )}
 
-          {/* Entertainment Section - third-party entertainment apps */}
+          {/* Entertainment Section */}
           {(selectedCategory === 'all' || selectedCategory === 'entertainment') && filteredMiniPrograms.filter(app => app.category === 'entertainment').length > 0 && (
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-bold">Entertainment</h2>
                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </div>
-              <ScrollArea className="w-full">
-                <div className="flex gap-3 pb-4">
-                  {filteredMiniPrograms.filter(app => app.category === 'entertainment').map((app) => (
-                    <ThirdPartyAppCard key={app.id} app={app} />
-                  ))}
-                </div>
-                <ScrollBar orientation="horizontal" className="invisible" />
-              </ScrollArea>
+              <AppGrid 
+                apps={[]}
+                thirdPartyApps={filteredMiniPrograms.filter(app => app.category === 'entertainment')}
+              />
             </section>
           )}
 
@@ -884,7 +972,7 @@ const MiniPrograms = () => {
               variant="ghost" 
               size="sm" 
               className="text-primary hover:text-primary hover:bg-primary/10 gap-1.5 h-9 px-3"
-              onClick={() => navigate('/developer-sdk')}
+              onClick={() => toast.info('Developer SDK coming soon')}
             >
               <Code className="h-4 w-4" />
               <span className="text-sm font-medium">For Developers</span>
@@ -893,7 +981,7 @@ const MiniPrograms = () => {
               variant="ghost" 
               size="sm" 
               className="text-primary hover:text-primary hover:bg-primary/10 gap-1.5 h-9 px-3"
-              onClick={() => navigate('/support')}
+              onClick={() => toast.info('Support coming soon')}
             >
               <Heart className="h-4 w-4" />
               <span className="text-sm font-medium">Support</span>
@@ -989,7 +1077,7 @@ const MiniPrograms = () => {
       {/* Submit App Dialog */}
       <SubmitAppDialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen} />
 
-      {/* App Preview Dialog */}
+      {/* Third-party App Preview Dialog */}
       <AppPreviewDialog
         open={previewDialogOpen}
         onOpenChange={setPreviewDialogOpen}
@@ -1005,7 +1093,10 @@ const MiniPrograms = () => {
         }}
       />
 
-      {/* Embedded App Viewer for third-party apps */}
+      {/* Built-in App Preview Dialog */}
+      <BuiltInAppPreviewDialog />
+
+      {/* Embedded App Viewer */}
       {embeddedApp && (
         <EmbeddedAppViewer
           appName={embeddedApp.name}
