@@ -30,7 +30,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  X
+  X,
+  Shield
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { MiniAppImageUpload } from './MiniAppImageUpload';
@@ -64,6 +65,8 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
     screenshots: [] as string[],
     features: '',
     contactEmail: '',
+    privacyUrl: '',
+    termsUrl: '',
     agreeTerms: false,
     agreeGuidelines: false,
   });
@@ -184,6 +187,8 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
           features: formData.features.trim() || null,
           developer_id: user.id,
           developer_email: formData.contactEmail.trim(),
+          privacy_url: formData.privacyUrl.trim() || null,
+          terms_url: formData.termsUrl.trim() || null,
           status: 'pending',
           is_published: false,
         });
@@ -202,6 +207,8 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
         screenshots: [],
         features: '',
         contactEmail: '',
+        privacyUrl: '',
+        termsUrl: '',
         agreeTerms: false,
         agreeGuidelines: false,
       });
@@ -397,6 +404,34 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                     value={formData.features}
                     onChange={(e) => handleInputChange('features', e.target.value)}
                     rows={3}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="privacyUrl" className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                    Privacy Policy URL (optional)
+                  </Label>
+                  <Input
+                    id="privacyUrl"
+                    type="url"
+                    placeholder="https://yourapp.com/privacy"
+                    value={formData.privacyUrl}
+                    onChange={(e) => handleInputChange('privacyUrl', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="termsUrl" className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    Terms of Service URL (optional)
+                  </Label>
+                  <Input
+                    id="termsUrl"
+                    type="url"
+                    placeholder="https://yourapp.com/terms"
+                    value={formData.termsUrl}
+                    onChange={(e) => handleInputChange('termsUrl', e.target.value)}
                   />
                 </div>
               </div>

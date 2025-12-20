@@ -2202,9 +2202,11 @@ export type Database = {
           install_count: number
           is_published: boolean
           name: string
+          privacy_url: string | null
           rating: number | null
           screenshots: string[] | null
           status: string
+          terms_url: string | null
           updated_at: string
           url: string
         }
@@ -2221,9 +2223,11 @@ export type Database = {
           install_count?: number
           is_published?: boolean
           name: string
+          privacy_url?: string | null
           rating?: number | null
           screenshots?: string[] | null
           status?: string
+          terms_url?: string | null
           updated_at?: string
           url: string
         }
@@ -2240,9 +2244,11 @@ export type Database = {
           install_count?: number
           is_published?: boolean
           name?: string
+          privacy_url?: string | null
           rating?: number | null
           screenshots?: string[] | null
           status?: string
+          terms_url?: string | null
           updated_at?: string
           url?: string
         }

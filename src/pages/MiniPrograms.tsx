@@ -48,6 +48,7 @@ interface MiniProgram {
   description: string | null;
   icon_url: string | null;
   developer_id: string;
+  developer_email?: string;
   category: string;
   url: string;
   install_count: number;
@@ -55,6 +56,8 @@ interface MiniProgram {
   screenshots?: string[];
   features?: string;
   created_at?: string;
+  privacy_url?: string;
+  terms_url?: string;
   profiles: {
     display_name: string;
   };
@@ -97,6 +100,11 @@ const MiniPrograms = () => {
     name: string;
     url: string;
     icon?: string;
+    appId?: string;
+    developerEmail?: string;
+    privacyUrl?: string;
+    termsUrl?: string;
+    isBuiltIn?: boolean;
   } | null>(null);
 
   // Preview dialog state
@@ -393,6 +401,7 @@ const MiniPrograms = () => {
       name: app.name,
       url: app.route,
       icon: app.logo,
+      isBuiltIn: true,
     });
   };
 
@@ -402,6 +411,11 @@ const MiniPrograms = () => {
       name: app.name,
       url: app.url,
       icon: app.icon_url || undefined,
+      appId: app.id,
+      developerEmail: app.developer_email,
+      privacyUrl: app.privacy_url,
+      termsUrl: app.terms_url,
+      isBuiltIn: false,
     });
   };
 
@@ -966,6 +980,11 @@ const MiniPrograms = () => {
               name: previewApp.name,
               url: previewApp.url,
               icon: previewApp.icon_url || undefined,
+              appId: previewApp.id,
+              developerEmail: previewApp.developer_email,
+              privacyUrl: previewApp.privacy_url,
+              termsUrl: previewApp.terms_url,
+              isBuiltIn: false,
             });
           }
         }}
@@ -980,6 +999,11 @@ const MiniPrograms = () => {
           appName={embeddedApp.name}
           appUrl={embeddedApp.url}
           appIcon={embeddedApp.icon}
+          appId={embeddedApp.appId}
+          developerEmail={embeddedApp.developerEmail}
+          privacyUrl={embeddedApp.privacyUrl}
+          termsUrl={embeddedApp.termsUrl}
+          isBuiltIn={embeddedApp.isBuiltIn}
           onClose={() => setEmbeddedApp(null)}
         />
       )}
