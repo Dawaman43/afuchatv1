@@ -1,4 +1,4 @@
-import platformIcon from '@/assets/platform-icon.png';
+import platformIcon from '@/assets/ai-chat-icon.ico';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
