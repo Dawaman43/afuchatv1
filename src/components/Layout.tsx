@@ -343,9 +343,11 @@ const Layout = ({ children }: LayoutProps) => {
                     src={aiChatIcon} 
                     alt="AI Chat" 
                     className={cn(
-                      "h-7 w-7 object-contain",
+                      "h-7 w-7 object-contain select-none",
                       isActive('/ai-chat') ? "opacity-100" : "opacity-70"
-                    )} 
+                    )}
+                    draggable={false}
+                    onContextMenu={(e) => e.preventDefault()}
                   />
                 </Link>
               ) : (
@@ -353,7 +355,7 @@ const Layout = ({ children }: LayoutProps) => {
                   to="/auth/signin"
                   className="flex items-center justify-center w-12 h-12 transition-colors"
                 >
-                  <img src={aiChatIcon} alt="AI Chat" className="h-7 w-7 object-contain opacity-50" />
+                  <img src={aiChatIcon} alt="AI Chat" className="h-7 w-7 object-contain opacity-50 select-none" draggable={false} onContextMenu={(e) => e.preventDefault()} />
                 </Link>
               )}
               

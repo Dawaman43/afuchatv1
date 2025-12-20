@@ -16,7 +16,9 @@ const Logo = ({ size = 'md', className = '' }: LogoProps) => {
     <img
       src={platformIcon}
       alt="AfuChat"
-      className={`${sizeClasses[size]} ${className} object-contain`}
+      className={`${sizeClasses[size]} ${className} object-contain pointer-events-none select-none`}
+      draggable={false}
+      onContextMenu={(e) => e.preventDefault()}
     />
   );
 };
