@@ -26,14 +26,14 @@ import {
   Upload, 
   Smartphone, 
   Globe, 
-  Image as ImageIcon, 
   FileText, 
   CheckCircle2,
   AlertCircle,
   Loader2,
-  Link as LinkIcon
+  X
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { MiniAppImageUpload } from './MiniAppImageUpload';
 
 interface SubmitAppDialogProps {
   open: boolean;
@@ -61,15 +61,31 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
     category: '',
     url: '',
     iconUrl: '',
-    screenshots: '',
+    screenshots: [] as string[],
     features: '',
     contactEmail: '',
     agreeTerms: false,
     agreeGuidelines: false,
   });
 
-  const handleInputChange = (field: string, value: string | boolean) => {
+  const handleInputChange = (field: string, value: string | boolean | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const addScreenshot = (url: string) => {
+    if (url && formData.screenshots.length < 5) {
+      setFormData(prev => ({ 
+        ...prev, 
+        screenshots: [...prev.screenshots, url] 
+      }));
+    }
+  };
+
+  const removeScreenshot = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      screenshots: prev.screenshots.filter((_, i) => i !== index)
+    }));
   };
 
   const validateStep1 = () => {
@@ -108,13 +124,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
       return false;
     }
     if (!formData.iconUrl.trim()) {
-      toast.error('App icon URL is required');
-      return false;
-    }
-    try {
-      new URL(formData.iconUrl);
-    } catch {
-      toast.error('Please enter a valid icon URL');
+      toast.error('App icon is required');
       return false;
     }
     return true;
@@ -162,7 +172,6 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
 
     setLoading(true);
     try {
-      // Insert into mini_programs table
       const { error } = await supabase
         .from('mini_programs')
         .insert({
@@ -171,6 +180,8 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
           category: formData.category,
           url: formData.url.trim(),
           icon_url: formData.iconUrl.trim(),
+          screenshots: formData.screenshots,
+          features: formData.features.trim() || null,
           developer_id: user.id,
           developer_email: formData.contactEmail.trim(),
           status: 'pending',
@@ -188,7 +199,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
         category: '',
         url: '',
         iconUrl: '',
-        screenshots: '',
+        screenshots: [],
         features: '',
         contactEmail: '',
         agreeTerms: false,
@@ -233,7 +244,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
           </DialogTitle>
           <DialogDescription>
             {step === 1 && 'Tell us about your app'}
-            {step === 2 && 'Add your app links'}
+            {step === 2 && 'Upload app assets'}
             {step === 3 && 'Review and submit'}
           </DialogDescription>
         </DialogHeader>
@@ -302,15 +313,15 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
               </div>
             )}
 
-            {/* Step 2: Links & Assets */}
+            {/* Step 2: Assets & Links */}
             {step === 2 && (
               <div className="space-y-4">
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mb-4">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                     <div className="text-xs text-muted-foreground space-y-1">
-                      <p><strong>📱 Your app will open inside AfuChat</strong> - not as an external link!</p>
-                      <p>Host your app on any web hosting service (GitHub Pages, Vercel, Netlify, etc.) and provide the URL. Users will experience it as a native tab within AfuChat.</p>
+                      <p><strong>📱 Your app will open inside AfuChat</strong></p>
+                      <p>Host your app on any web hosting service and provide the URL.</p>
                     </div>
                   </div>
                 </div>
@@ -327,37 +338,55 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                     value={formData.url}
                     onChange={(e) => handleInputChange('url', e.target.value)}
                   />
-                  <p className="text-xs text-muted-foreground">Your app will be embedded and open inside AfuChat</p>
                 </div>
 
+                {/* Icon Upload */}
                 <div className="space-y-2">
-                  <Label htmlFor="iconUrl" className="flex items-center gap-2">
-                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                    App Icon URL *
-                  </Label>
-                  <Input
-                    id="iconUrl"
-                    type="url"
-                    placeholder="https://example.com/icon.png"
-                    value={formData.iconUrl}
-                    onChange={(e) => handleInputChange('iconUrl', e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">512x512 PNG recommended</p>
+                  <Label className="text-sm font-medium">App Icon *</Label>
+                  <div className="flex items-center gap-4">
+                    <MiniAppImageUpload
+                      type="icon"
+                      currentImage={formData.iconUrl}
+                      onUploadComplete={(url) => handleInputChange('iconUrl', url)}
+                    />
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">Upload a 512x512 PNG icon for your app</p>
+                    </div>
+                  </div>
                 </div>
 
+                {/* Screenshots Upload */}
                 <div className="space-y-2">
-                  <Label htmlFor="screenshots" className="flex items-center gap-2">
-                    <LinkIcon className="h-4 w-4 text-muted-foreground" />
-                    Screenshot URLs (optional)
-                  </Label>
-                  <Textarea
-                    id="screenshots"
-                    placeholder="https://example.com/screenshot1.png&#10;https://example.com/screenshot2.png"
-                    value={formData.screenshots}
-                    onChange={(e) => handleInputChange('screenshots', e.target.value)}
-                    rows={3}
-                  />
-                  <p className="text-xs text-muted-foreground">One URL per line (up to 5)</p>
+                  <Label className="text-sm font-medium">Screenshots (optional)</Label>
+                  <p className="text-xs text-muted-foreground mb-2">Add up to 5 screenshots to showcase your app</p>
+                  
+                  <div className="grid grid-cols-3 gap-2">
+                    {formData.screenshots.map((screenshot, index) => (
+                      <div key={index} className="relative aspect-video rounded-lg overflow-hidden border border-border">
+                        <img 
+                          src={screenshot} 
+                          alt={`Screenshot ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-1 right-1 h-5 w-5"
+                          onClick={() => removeScreenshot(index)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                    {formData.screenshots.length < 5 && (
+                      <MiniAppImageUpload
+                        type="screenshot"
+                        onUploadComplete={addScreenshot}
+                        className="aspect-video"
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -378,24 +407,29 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
               <div className="space-y-4">
                 <div className="bg-card border rounded-lg p-4 space-y-3">
                   <h4 className="font-medium text-sm">App Summary</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="text-muted-foreground">Name:</div>
-                    <div className="font-medium truncate">{formData.name}</div>
-                    <div className="text-muted-foreground">Category:</div>
-                    <div className="font-medium">
-                      {categories.find(c => c.id === formData.category)?.name}
+                  <div className="flex items-center gap-3">
+                    {formData.iconUrl && (
+                      <img 
+                        src={formData.iconUrl} 
+                        alt={formData.name}
+                        className="w-12 h-12 rounded-xl object-cover"
+                      />
+                    )}
+                    <div>
+                      <p className="font-medium">{formData.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {categories.find(c => c.id === formData.category)?.name}
+                      </p>
                     </div>
                   </div>
-                  <div className="text-sm">
-                    <div className="text-muted-foreground mb-1">Description:</div>
-                    <p className="text-xs line-clamp-3">{formData.description}</p>
-                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{formData.description}</p>
+                  {formData.screenshots.length > 0 && (
+                    <p className="text-xs text-muted-foreground">{formData.screenshots.length} screenshot(s) uploaded</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="contactEmail" className="flex items-center gap-2">
-                    Contact Email *
-                  </Label>
+                  <Label htmlFor="contactEmail">Contact Email *</Label>
                   <Input
                     id="contactEmail"
                     type="email"
@@ -425,14 +459,14 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                       onCheckedChange={(checked) => handleInputChange('agreeGuidelines', checked as boolean)}
                     />
                     <label htmlFor="guidelines" className="text-sm cursor-pointer leading-tight">
-                      My app follows the <span className="text-primary">AfuChat App Guidelines</span> and doesn't contain prohibited content
+                      My app follows the <span className="text-primary">AfuChat App Guidelines</span>
                     </label>
                   </div>
                 </div>
 
                 <div className="bg-muted/50 rounded-lg p-3 mt-4">
                   <p className="text-xs text-muted-foreground text-center">
-                    📱 Your app will be reviewed within <strong>24-48 hours</strong>. You'll receive an email once approved!
+                    📱 Your app will be reviewed within <strong>24-48 hours</strong>
                   </p>
                 </div>
               </div>

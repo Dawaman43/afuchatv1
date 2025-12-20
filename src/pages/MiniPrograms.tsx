@@ -18,12 +18,13 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ProfileDrawer } from '@/components/ProfileDrawer';
-import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Video, Book, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Image, Brain, Puzzle, Trophy, ChevronRight, Swords, Clock, Shield, FileText, Gift, Mail, Send, PlusCircle, Code, Heart } from 'lucide-react';
+import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Video, Book, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Image, Brain, Puzzle, Trophy, ChevronRight, Swords, Clock, Shield, FileText, Gift, Mail, Send, PlusCircle, Code, Heart, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { SubmitAppDialog } from '@/components/mini-programs/SubmitAppDialog';
 import { EmbeddedAppViewer } from '@/components/mini-programs/EmbeddedAppViewer';
+import { AppPreviewDialog } from '@/components/mini-programs/AppPreviewDialog';
 
 // Import app logos
 import afuArenaLogo from '@/assets/mini-apps/afu-arena-logo.png';
@@ -41,6 +42,7 @@ import momentsLogo from '@/assets/mini-apps/moments-logo.png';
 import shopshackLogo from '@/assets/mini-apps/shopshack-logo.png';
 import giftsP2PLogo from '@/assets/mini-apps/gifts-p2p-logo.png';
 import afumailLogo from '@/assets/mini-apps/afumail-logo.png';
+
 interface MiniProgram {
   id: string;
   name: string;
@@ -51,6 +53,9 @@ interface MiniProgram {
   url: string;
   install_count: number;
   rating: number;
+  screenshots?: string[];
+  features?: string;
+  created_at?: string;
   profiles: {
     display_name: string;
   };
@@ -97,6 +102,10 @@ const MiniPrograms = () => {
     url: string;
     icon?: string;
   } | null>(null);
+
+  // Preview dialog state
+  const [previewApp, setPreviewApp] = useState<MiniProgram | null>(null);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -354,10 +363,11 @@ const MiniPrograms = () => {
 
   const fetchMiniPrograms = async () => {
     try {
+      // Fetch approved apps (status = 'approved') regardless of is_published
       const { data, error } = await supabase
         .from('mini_programs')
         .select(`*, profiles (display_name)`)
-        .eq('is_published', true)
+        .eq('status', 'approved')
         .order('install_count', { ascending: false });
 
       if (error) throw error;
@@ -445,15 +455,20 @@ const MiniPrograms = () => {
 
   const featuredApps = [...builtInGames.filter(g => g.featured), ...builtInServices.filter(s => s.featured)];
 
-  // Third-party app card component
+  // Third-party app card component with preview button
   const ThirdPartyAppCard = ({ app }: { app: MiniProgram }) => {
     return (
       <motion.div
         whileTap={{ scale: 0.98 }}
-        onClick={() => handleThirdPartyAppClick(app)}
-        className="w-[88px] flex-shrink-0 cursor-pointer"
+        className="w-[88px] flex-shrink-0 cursor-pointer relative group"
       >
-        <div className="relative h-[72px] w-[72px] rounded-[22px] shadow-lg mb-2 overflow-hidden bg-muted mx-auto">
+        <div 
+          onClick={() => {
+            setPreviewApp(app);
+            setPreviewDialogOpen(true);
+          }}
+          className="relative h-[72px] w-[72px] rounded-[22px] shadow-lg mb-2 overflow-hidden bg-muted mx-auto"
+        >
           {app.icon_url ? (
             <img 
               src={app.icon_url} 
@@ -465,6 +480,10 @@ const MiniPrograms = () => {
               <span className="text-2xl">📱</span>
             </div>
           )}
+          {/* Preview overlay on hover */}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <Eye className="h-5 w-5 text-white" />
+          </div>
         </div>
         <p className="text-xs font-medium truncate text-center">{app.name}</p>
         <div className="flex items-center justify-center gap-1 mt-0.5">
@@ -999,6 +1018,22 @@ const MiniPrograms = () => {
 
       {/* Submit App Dialog */}
       <SubmitAppDialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen} />
+
+      {/* App Preview Dialog */}
+      <AppPreviewDialog
+        open={previewDialogOpen}
+        onOpenChange={setPreviewDialogOpen}
+        app={previewApp}
+        onOpen={() => {
+          if (previewApp) {
+            setEmbeddedApp({
+              name: previewApp.name,
+              url: previewApp.url,
+              icon: previewApp.icon_url || undefined,
+            });
+          }
+        }}
+      />
 
       {/* Embedded App Viewer for third-party apps */}
       {embeddedApp && (
