@@ -420,10 +420,22 @@ const MiniPrograms = () => {
     }
   };
 
-  // Check if app is available (admin can access all, others only afumail)
+  // Check if app is available - games, shopping, afumail, and finance are open, other services coming soon
   const isAppAvailable = (app: BuiltInApp) => {
     if (isAdmin) return true;
-    return app.id === 'afumail';
+    
+    // Games are all available
+    if (app.category === 'games') return true;
+    
+    // Shopping apps available
+    if (app.category === 'shopping') return true;
+    
+    // Specific services available
+    const openServices = ['afumail', 'finance'];
+    if (openServices.includes(app.id)) return true;
+    
+    // Other services coming soon
+    return false;
   };
 
   // Handle built-in app click - skip preview if used before
