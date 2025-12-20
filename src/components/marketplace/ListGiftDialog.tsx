@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
+import { ButtonLoader, CustomLoader } from '@/components/ui/CustomLoader';
 
 interface ReceivedGift {
   id: string;
@@ -172,7 +173,7 @@ export const ListGiftDialog = ({ open, onOpenChange, onListingCreated }: ListGif
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <CustomLoader size="md" />
           </div>
         ) : receivedGifts.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
@@ -238,7 +239,7 @@ export const ListGiftDialog = ({ open, onOpenChange, onListingCreated }: ListGif
                 className="flex-1"
                 disabled={!selectedGift || !askingPrice || submitting}
               >
-                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {submitting && <ButtonLoader className="mr-2" />}
                 List Gift
               </Button>
             </div>

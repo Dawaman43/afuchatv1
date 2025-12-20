@@ -14,6 +14,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { CancelSubscriptionDialog } from '@/components/premium/CancelSubscriptionDialog';
+import { CustomLoader, ButtonLoader } from '@/components/ui/CustomLoader';
 
 interface SubscriptionPlan {
   id: string;
@@ -327,8 +328,7 @@ export default function Premium() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
-            <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-            <Crown className="absolute inset-0 m-auto h-6 w-6 text-primary" />
+            <CustomLoader size="lg" />
           </div>
           <p className="text-muted-foreground text-sm">Loading premium plans...</p>
         </div>
@@ -572,7 +572,7 @@ export default function Premium() {
                           >
                             {purchasing === plan.id ? (
                               <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <ButtonLoader />
                                 Processing...
                               </div>
                             ) : !canAfford ? (
@@ -602,7 +602,7 @@ export default function Premium() {
                           >
                             {purchasing === plan.id ? (
                               <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <ButtonLoader />
                                 Processing...
                               </div>
                             ) : !canAfford ? (

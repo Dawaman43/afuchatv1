@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { MessageSquare, UserPlus, Calendar, Lock, Camera, Building2, UserX, Clock, Users, MoreVertical } from 'lucide-react';
+import { ButtonLoader } from '@/components/ui/CustomLoader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { ProfileSkeleton } from '@/components/skeletons';
@@ -1064,7 +1065,7 @@ const Profile = ({ mustExist = false }: ProfileProps) => {
 								className="hidden"
 							/>
 							{isUploadingBanner ? (
-								<div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+								<ButtonLoader className="h-5 w-5" />
 							) : (
 								<Camera className="h-5 w-5 text-foreground" />
 							)}

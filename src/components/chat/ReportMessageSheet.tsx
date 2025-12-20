@@ -8,7 +8,8 @@ import {
   SheetClose,
   SheetDescription 
 } from '@/components/ui/sheet';
-import { Flag, Loader2 } from 'lucide-react';
+import { Flag } from 'lucide-react';
+import { ButtonLoader } from '@/components/ui/CustomLoader';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -107,7 +108,7 @@ const ReportMessageSheet = ({ isOpen, onClose, messageId, messageContent }: Repo
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <ButtonLoader className="mr-2" />
                 Submitting...
               </>
             ) : (
