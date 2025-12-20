@@ -2374,7 +2374,7 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
           isScrollingDown ? "-translate-y-full" : "translate-y-0"
         )}>
           <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center justify-between px-4 py-3 relative">
               {user ? (
                 <ProfileDrawer
                   trigger={
@@ -2393,7 +2393,12 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
                   Sign In
                 </Link>
               )}
-              <img src={platformLogo} alt="AfuChat" className="h-8 w-8" />
+              {/* Centered Logo - absolutely positioned */}
+              <img 
+                src={platformLogo} 
+                alt="AfuChat" 
+                className="h-8 w-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" 
+              />
               <div className="flex items-center gap-2">
                 {user && premiumButton}
               </div>
