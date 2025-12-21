@@ -60,6 +60,8 @@ interface MiniProgram {
   privacy_url?: string;
   terms_url?: string;
   target_countries?: string[] | null;
+  app_type?: string;
+  apk_url?: string | null;
   profiles: {
     display_name: string;
   };

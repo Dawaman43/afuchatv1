@@ -2190,6 +2190,8 @@ export type Database = {
       }
       mini_programs: {
         Row: {
+          apk_url: string | null
+          app_type: string | null
           category: string
           created_at: string
           description: string | null
@@ -2212,6 +2214,8 @@ export type Database = {
           url: string
         }
         Insert: {
+          apk_url?: string | null
+          app_type?: string | null
           category: string
           created_at?: string
           description?: string | null
@@ -2234,6 +2238,8 @@ export type Database = {
           url: string
         }
         Update: {
+          apk_url?: string | null
+          app_type?: string | null
           category?: string
           created_at?: string
           description?: string | null

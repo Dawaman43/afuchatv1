@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Star, Download, ExternalLink, Play, User, Calendar, Shield, MoreVertical } from 'lucide-react';
+import { Star, Download, ExternalLink, Play, User, Calendar, Shield, MoreVertical, Package, Globe } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface AppPreviewDialogProps {
@@ -32,6 +32,8 @@ interface AppPreviewDialogProps {
     screenshots?: string[];
     features?: string;
     created_at?: string;
+    app_type?: string;
+    apk_url?: string | null;
     profiles?: {
       display_name: string;
     };
@@ -85,13 +87,31 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
                           <ExternalLink className="h-4 w-4 mr-2" />
                           Open External
                         </DropdownMenuItem>
+                        {app.apk_url && (
+                          <DropdownMenuItem onClick={() => window.open(app.apk_url!, '_blank')}>
+                            <Package className="h-4 w-4 mr-2" />
+                            Download APK
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  <Badge variant="outline" className="text-xs capitalize mb-2">
-                    {app.category}
-                  </Badge>
-                  
+                  <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                    <Badge variant="outline" className="text-xs capitalize">
+                      {app.category}
+                    </Badge>
+                    {app.app_type === 'android' && (
+                      <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
+                        <Package className="h-3 w-3 mr-1" />
+                        Android
+                      </Badge>
+                    )}
+                    {app.app_type === 'both' && (
+                      <Badge variant="secondary" className="text-xs bg-purple-500/10 text-purple-600 border-purple-500/30">
+                        Web + APK
+                      </Badge>
+                    )}
+                  </div>
                   {/* Stats */}
                   <div className="flex items-center gap-3 text-sm">
                     <div className="flex items-center gap-1">
@@ -192,22 +212,44 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
                 <Shield className="h-4 w-4 text-primary mt-0.5" />
                 <div className="text-xs text-muted-foreground">
                   <p className="font-medium text-foreground mb-1">Safety Notice</p>
-                  <p>This app runs inside AfuChat. Your data is protected by our security policies.</p>
+                  <p>
+                    {app.app_type === 'android' 
+                      ? 'This APK file will be downloaded to your device. Install at your own discretion.'
+                      : 'This app runs inside AfuChat. Your data is protected by our security policies.'
+                    }
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Action Button - Only Open App, no external button */}
-            <Button 
-              className="w-full"
-              onClick={() => {
-                onOpenChange(false);
-                onOpen();
-              }}
-            >
-              <Play className="h-4 w-4 mr-2" />
-              Open App
-            </Button>
+            {/* Action Buttons */}
+            <div className="space-y-2">
+              {/* Web App Button */}
+              {(app.app_type === 'web' || app.app_type === 'both' || !app.app_type) && app.url && (
+                <Button 
+                  className="w-full"
+                  onClick={() => {
+                    onOpenChange(false);
+                    onOpen();
+                  }}
+                >
+                  <Play className="h-4 w-4 mr-2" />
+                  Open App
+                </Button>
+              )}
+              
+              {/* APK Download Button */}
+              {(app.app_type === 'android' || app.app_type === 'both') && app.apk_url && (
+                <Button 
+                  variant={app.app_type === 'android' ? 'default' : 'outline'}
+                  className={`w-full ${app.app_type === 'android' ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                  onClick={() => window.open(app.apk_url!, '_blank')}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download APK
+                </Button>
+              )}
+            </div>
           </div>
         </ScrollArea>
       </DialogContent>
