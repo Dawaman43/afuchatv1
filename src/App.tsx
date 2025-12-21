@@ -81,6 +81,7 @@ const SocialHub = lazy(() => import("./pages/SocialHub"));
 const SecurityDashboard = lazy(() => import("./pages/SecurityDashboard"));
 const ChangePassword = lazy(() => import("./pages/ChangePassword"));
 const Gifts = lazy(() => import("./pages/Gifts"));
+const ChristmasGifts = lazy(() => import("./pages/ChristmasGifts"));
 const GiftDetail = lazy(() => import("./pages/GiftDetail"));
 const Premium = lazy(() => import("./pages/Premium"));
 const CreatorEarnings = lazy(() => import("./pages/CreatorEarnings"));
@@ -178,6 +179,7 @@ const AppRoutes = () => {
       <Route path="/wallet" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><FinancialHub /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/social" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><SocialHub /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/gifts" element={<Layout><Gifts /></Layout>} />
+      <Route path="/christmas-gifts" element={<Layout><ChristmasGifts /></Layout>} />
       <Route path="/gifts/:id" element={<Layout><GiftDetail /></Layout>} />
       <Route path="/premium" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><Premium /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
       <Route path="/creator-earnings" element={<RequireBanCheck><RequireCountry><RequireDateOfBirth><Layout><CreatorEarnings /></Layout></RequireDateOfBirth></RequireCountry></RequireBanCheck>} />
