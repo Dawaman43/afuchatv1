@@ -125,7 +125,9 @@ const OFFLINE_PAGE = `
         cache.keys().then(keys => {
           if (keys.length > 0) {
             const container = document.getElementById('cachedPages');
-            container.innerHTML = '<h3>Available Offline:</h3>';
+            const heading = document.createElement('h3');
+            heading.textContent = 'Available Offline:';
+            container.appendChild(heading);
             keys.slice(0, 5).forEach(req => {
               const url = new URL(req.url);
               const a = document.createElement('a');
