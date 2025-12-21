@@ -628,17 +628,20 @@ Are you absolutely sure you want to delete your account?`;
 function buildLinkAccountMenu() {
   const text = `🔗 <b>Link Your AfuChat Account</b>
 
-Choose how you want to link your account:
+<b>🔐 Secure Verification</b>
 
-<b>🔐 Secure Email Verification</b>
-We'll send a 6-digit code to your email to verify ownership.
+To securely link your Telegram to your AfuChat account:
 
-<b>🔑 Link Code</b>
-Get a code from AfuChat Settings → Security → Link Telegram`;
+1️⃣ Open the AfuChat app or website
+2️⃣ Go to <b>Settings → Security → Link Telegram</b>
+3️⃣ Click "Generate Link Code"
+4️⃣ Enter the 6-digit code below
+
+This ensures only you can link your account - no one else can use your email to access it!`;
 
   const buttons = [
-    [{ text: '📧 Secure Email Verification', callback_data: 'link_via_email' }],
     [{ text: '🔑 Enter Link Code', callback_data: 'enter_link_code' }],
+    [{ text: '🌐 Open AfuChat Web', url: 'https://afuchat.com/settings' }],
     [{ text: '⬅️ Back', callback_data: 'main_menu' }],
   ];
 
@@ -1620,32 +1623,6 @@ Or describe your issue and we'll help you!`, {
       break;
     }
     
-    case 'link_via_email': {
-      await supabase.from('telegram_users').update({ current_menu: 'awaiting_email_link' }).eq('telegram_id', telegramUser.id);
-      await editMessage(chatId, messageId, `📧 <b>Secure Email Verification</b>
-
-Enter your AfuChat email address.
-We'll send a 6-digit verification code to confirm you own this account.
-
-⚠️ This is required for security - we never link accounts without verification.`, {
-        inline_keyboard: [[{ text: '⬅️ Cancel', callback_data: 'link_account' }]]
-      });
-      break;
-    }
-    
-    case 'resend_verification': {
-      const email = tgUser?.menu_data?.email;
-      if (!email) {
-        await editMessage(chatId, messageId, '❌ Session expired. Please start again.', {
-          inline_keyboard: [[{ text: '🔗 Link Account', callback_data: 'link_account' }]]
-        });
-        break;
-      }
-      await supabase.from('telegram_users').update({ current_menu: 'awaiting_email_link' }).eq('telegram_id', telegramUser.id);
-      await handleEmailLink(chatId, telegramUser, tgUser, email);
-      break;
-    }
-    
     case 'enter_link_code': {
       await supabase.from('telegram_users').update({ current_menu: 'awaiting_link_code' }).eq('telegram_id', telegramUser.id);
       await editMessage(chatId, messageId, '🔑 Please enter your link code:\n\n<i>Get this code from AfuChat Settings → Security → Link Telegram</i>', {
@@ -2415,14 +2392,6 @@ async function handleMessage(message: any) {
       await handleRegistrationPassword(chatId, telegramUser, tgUser, text);
       break;
       
-    case 'awaiting_email_link':
-      await handleEmailLink(chatId, telegramUser, tgUser, text);
-      break;
-      
-    case 'awaiting_verification_code':
-      await handleVerificationCode(chatId, telegramUser, tgUser, text);
-      break;
-      
     case 'admin_awaiting_user_search':
       await handleAdminUserSearch(chatId, telegramUser, tgUser, text);
       break;
@@ -3115,136 +3084,6 @@ You can now log in at afuchat.com with:
 📧 ${email}
 
 ` + menu.text, menu.reply_markup);
-}
-
-async function handleEmailLink(chatId: number, telegramUser: any, tgUser: any, text: string) {
-  const email = text.trim().toLowerCase();
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  
-  if (!emailRegex.test(email)) {
-    await sendTelegramMessage(chatId, '❌ Invalid email format. Please enter a valid email address:', {
-      inline_keyboard: [[{ text: '⬅️ Cancel', callback_data: 'link_account' }]]
-    });
-    return;
-  }
-  
-  await sendTelegramMessage(chatId, '⏳ Sending verification code to your email...');
-  
-  // Call the verification edge function to send the code
-  try {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/send-telegram-verification`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
-      },
-      body: JSON.stringify({
-        email: email,
-        telegramChatId: String(chatId)
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (result.error) {
-      await sendTelegramMessage(chatId, `❌ ${result.error}`, {
-        inline_keyboard: [[{ text: '🔄 Try Again', callback_data: 'link_via_email' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
-      });
-      await supabase.from('telegram_users').update({ current_menu: 'main' }).eq('telegram_id', telegramUser.id);
-      return;
-    }
-    
-    // Store email and update state to wait for verification code
-    await supabase.from('telegram_users').update({ 
-      current_menu: 'awaiting_verification_code', 
-      menu_data: { email, telegram_chat_id: String(chatId) } 
-    }).eq('telegram_id', telegramUser.id);
-    
-    await sendTelegramMessage(chatId, `📧 <b>Verification Code Sent!</b>
-
-A 6-digit verification code has been sent to:
-<b>${email}</b>
-
-Please check your email (and spam folder) and enter the code below.
-
-⏱️ <i>The code expires in 10 minutes.</i>
-
-⚠️ <b>Security Notice:</b> Never share this code with anyone. AfuChat staff will never ask for your verification code.`, {
-      inline_keyboard: [[{ text: '📧 Resend Code', callback_data: 'resend_verification' }], [{ text: '⬅️ Cancel', callback_data: 'link_account' }]]
-    });
-    
-  } catch (error: any) {
-    console.error('Error sending verification:', error);
-    await sendTelegramMessage(chatId, '❌ Failed to send verification code. Please try again later.', {
-      inline_keyboard: [[{ text: '🔄 Try Again', callback_data: 'link_via_email' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
-    });
-    await supabase.from('telegram_users').update({ current_menu: 'main' }).eq('telegram_id', telegramUser.id);
-  }
-}
-
-async function handleVerificationCode(chatId: number, telegramUser: any, tgUser: any, text: string) {
-  const code = text.trim();
-  
-  // Validate code format (6 digits)
-  if (!/^\d{6}$/.test(code)) {
-    await sendTelegramMessage(chatId, '❌ Invalid code format. Please enter the 6-digit code from your email:', {
-      inline_keyboard: [[{ text: '📧 Resend Code', callback_data: 'resend_verification' }], [{ text: '⬅️ Cancel', callback_data: 'link_account' }]]
-    });
-    return;
-  }
-  
-  await sendTelegramMessage(chatId, '⏳ Verifying code...');
-  
-  try {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/verify-telegram-link`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
-      },
-      body: JSON.stringify({
-        telegramChatId: String(chatId),
-        verificationCode: code
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (!result.success) {
-      await sendTelegramMessage(chatId, `❌ ${result.error || 'Verification failed'}
-
-Please try again:`, {
-        inline_keyboard: [[{ text: '📧 Resend Code', callback_data: 'resend_verification' }], [{ text: '⬅️ Cancel', callback_data: 'link_account' }]]
-      });
-      return;
-    }
-    
-    // Successfully verified - update telegram_users to link the account
-    await supabase.from('telegram_users').update({ 
-      user_id: result.user.id, 
-      is_linked: true, 
-      current_menu: 'main',
-      menu_data: {}
-    }).eq('telegram_id', telegramUser.id);
-    
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', result.user.id).single();
-    const isAdminUser = await isAdmin(result.user.id);
-    const menu = buildMainMenu(true, profile, isAdminUser);
-    
-    await sendTelegramMessage(chatId, `✅ <b>Account Linked Successfully!</b>
-
-🎉 Welcome, ${profile?.display_name || 'there'}!
-
-Your AfuChat account is now securely linked to this Telegram.
-
-` + menu.text, menu.reply_markup);
-    
-  } catch (error: any) {
-    console.error('Error verifying code:', error);
-    await sendTelegramMessage(chatId, '❌ Verification failed. Please try again.', {
-      inline_keyboard: [[{ text: '📧 Resend Code', callback_data: 'resend_verification' }], [{ text: '⬅️ Cancel', callback_data: 'link_account' }]]
-    });
-  }
 }
 
 async function handleAdminUserSearch(chatId: number, telegramUser: any, tgUser: any, text: string) {
