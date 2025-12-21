@@ -25,17 +25,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { 
   Upload, 
-  Smartphone, 
   Globe, 
   FileText, 
   CheckCircle2,
-  AlertCircle,
-  Loader2,
   X,
   Shield,
   MapPin,
-  Download,
-  Package
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { MiniAppImageUpload } from './MiniAppImageUpload';
@@ -61,7 +57,6 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [apkUploading, setApkUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -74,8 +69,6 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
     privacyUrl: '',
     termsUrl: '',
     targetCountries: [] as string[],
-    appType: 'web' as 'web' | 'android' | 'both',
-    apkUrl: '',
     agreeTerms: false,
     agreeGuidelines: false,
   });
@@ -127,24 +120,15 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
 
   const validateStep2 = () => {
     // Web apps require URL
-    if (formData.appType === 'web' || formData.appType === 'both') {
-      if (!formData.url.trim()) {
-        toast.error('App URL is required for web apps');
-        return false;
-      }
-      try {
-        new URL(formData.url);
-      } catch {
-        toast.error('Please enter a valid URL');
-        return false;
-      }
+    if (!formData.url.trim()) {
+      toast.error('App URL is required');
+      return false;
     }
-    // Android apps require APK
-    if (formData.appType === 'android' || formData.appType === 'both') {
-      if (!formData.apkUrl.trim()) {
-        toast.error('APK file is required for Android apps');
-        return false;
-      }
+    try {
+      new URL(formData.url);
+    } catch {
+      toast.error('Please enter a valid URL');
+      return false;
     }
     if (!formData.iconUrl.trim()) {
       toast.error('App icon is required');
@@ -201,7 +185,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
           name: formData.name.trim(),
           description: formData.description.trim(),
           category: formData.category,
-          url: formData.appType === 'android' ? null : formData.url.trim(),
+          url: formData.url.trim(),
           icon_url: formData.iconUrl.trim(),
           screenshots: formData.screenshots,
           features: formData.features.trim() || null,
@@ -210,8 +194,8 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
           privacy_url: formData.privacyUrl.trim() || null,
           terms_url: formData.termsUrl.trim() || null,
           target_countries: formData.targetCountries.length > 0 ? formData.targetCountries : null,
-          app_type: formData.appType,
-          apk_url: formData.apkUrl || null,
+          app_type: 'web',
+          apk_url: null,
           status: 'pending',
           is_published: false,
         });
@@ -233,8 +217,6 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
         privacyUrl: '',
         termsUrl: '',
         targetCountries: [],
-        appType: 'web',
-        apkUrl: '',
         agreeTerms: false,
         agreeGuidelines: false,
       });
@@ -302,7 +284,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
               <div className="space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="flex items-center gap-2 text-sm font-medium">
-                    <Smartphone className="h-4 w-4 text-primary" />
+                    <Globe className="h-4 w-4 text-primary" />
                     App Name <span className="text-destructive">*</span>
                   </Label>
                   <Input
@@ -362,184 +344,37 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
             {/* Step 2: Assets & Links */}
             {step === 2 && (
               <div className="space-y-5">
-                {/* App Type Selection */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">App Type <span className="text-destructive">*</span></Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleInputChange('appType', 'web')}
-                      className={`p-3 rounded-xl border-2 transition-all ${
-                        formData.appType === 'web' 
-                          ? 'border-primary bg-primary/5' 
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <Globe className="h-5 w-5 mx-auto mb-1 text-primary" />
-                      <p className="text-xs font-medium">Web App</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleInputChange('appType', 'android')}
-                      className={`p-3 rounded-xl border-2 transition-all ${
-                        formData.appType === 'android' 
-                          ? 'border-green-500 bg-green-500/5' 
-                          : 'border-border hover:border-green-500/50'
-                      }`}
-                    >
-                      <Package className="h-5 w-5 mx-auto mb-1 text-green-500" />
-                      <p className="text-xs font-medium">Android APK</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleInputChange('appType', 'both')}
-                      className={`p-3 rounded-xl border-2 transition-all ${
-                        formData.appType === 'both' 
-                          ? 'border-purple-500 bg-purple-500/5' 
-                          : 'border-border hover:border-purple-500/50'
-                      }`}
-                    >
-                      <Smartphone className="h-5 w-5 mx-auto mb-1 text-purple-500" />
-                      <p className="text-xs font-medium">Both</p>
-                    </button>
-                  </div>
-                </div>
-
                 {/* Info Box */}
                 <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg shrink-0">
-                      <AlertCircle className="h-4 w-4 text-primary" />
+                      <Globe className="h-4 w-4 text-primary" />
                     </div>
                     <div className="text-xs text-muted-foreground space-y-1">
-                      {formData.appType === 'web' && (
-                        <>
-                          <p className="font-semibold text-foreground">📱 Web App</p>
-                          <p>Your app will open inside AfuChat. Host it on any web hosting service.</p>
-                        </>
-                      )}
-                      {formData.appType === 'android' && (
-                        <>
-                          <p className="font-semibold text-foreground">📦 Android APK</p>
-                          <p>Upload your APK file. Users will download and install it on their Android devices.</p>
-                        </>
-                      )}
-                      {formData.appType === 'both' && (
-                        <>
-                          <p className="font-semibold text-foreground">🔄 Web + Android</p>
-                          <p>Provide both web URL and APK for maximum reach across all devices.</p>
-                        </>
-                      )}
+                      <p className="font-semibold text-foreground">📱 Web App</p>
+                      <p>Your app will open inside AfuChat. Host it on any web hosting service.</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Web URL Input */}
-                {(formData.appType === 'web' || formData.appType === 'both') && (
-                  <div className="space-y-2">
-                    <Label htmlFor="url" className="flex items-center gap-2 text-sm font-medium">
-                      <Globe className="h-4 w-4 text-primary" />
-                      App URL <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="url"
-                      type="url"
-                      placeholder="https://myapp.example.com"
-                      value={formData.url}
-                      onChange={(e) => handleInputChange('url', e.target.value)}
-                      className="h-11"
-                    />
-                  </div>
-                )}
-
-                {/* APK Upload */}
-                {(formData.appType === 'android' || formData.appType === 'both') && (
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-sm font-medium">
-                      <Package className="h-4 w-4 text-green-500" />
-                      APK File <span className="text-destructive">*</span>
-                    </Label>
-                    {formData.apkUrl ? (
-                      <div className="flex items-center gap-3 p-3 border border-green-500/30 rounded-lg bg-green-500/5">
-                        <div className="p-2 bg-green-500/10 rounded-lg">
-                          <Download className="h-5 w-5 text-green-500" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">APK Uploaded</p>
-                          <p className="text-xs text-muted-foreground">Ready for review</p>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleInputChange('apkUrl', '')}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        <input
-                          type="file"
-                          accept=".apk,application/vnd.android.package-archive"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            
-                            if (file.size > 100 * 1024 * 1024) {
-                              toast.error('APK file must be less than 100MB');
-                              return;
-                            }
-                            
-                            setApkUploading(true);
-                            try {
-                              const fileName = `${user!.id}/${Date.now()}-${file.name}`;
-                              const { data, error } = await supabase.storage
-                                .from('mini-app-apks')
-                                .upload(fileName, file, {
-                                  cacheControl: '3600',
-                                  upsert: false
-                                });
-                              
-                              if (error) throw error;
-                              
-                              const { data: urlData } = supabase.storage
-                                .from('mini-app-apks')
-                                .getPublicUrl(data.path);
-                              
-                              handleInputChange('apkUrl', urlData.publicUrl);
-                              toast.success('APK uploaded successfully!');
-                            } catch (error: any) {
-                              console.error('APK upload error:', error);
-                              toast.error(error.message || 'Failed to upload APK');
-                            } finally {
-                              setApkUploading(false);
-                            }
-                          }}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                          disabled={apkUploading}
-                        />
-                        <div className={`flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-xl transition-colors ${
-                          apkUploading ? 'border-green-500/50 bg-green-500/5' : 'border-border hover:border-green-500/50'
-                        }`}>
-                          {apkUploading ? (
-                            <>
-                              <Loader2 className="h-8 w-8 text-green-500 animate-spin" />
-                              <p className="text-sm text-muted-foreground">Uploading APK...</p>
-                            </>
-                          ) : (
-                            <>
-                              <Upload className="h-8 w-8 text-muted-foreground" />
-                              <p className="text-sm text-muted-foreground">Click to upload APK file</p>
-                              <p className="text-xs text-muted-foreground">Max 100MB</p>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label htmlFor="url" className="flex items-center gap-2 text-sm font-medium">
+                    <Globe className="h-4 w-4 text-primary" />
+                    App URL <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="url"
+                    type="url"
+                    placeholder="https://myapp.example.com"
+                    value={formData.url}
+                    onChange={(e) => handleInputChange('url', e.target.value)}
+                    className="h-11"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Your web app must be hosted and accessible via HTTPS
+                  </p>
+                </div>
 
                 {/* Icon Upload */}
                 <div className="space-y-2">
