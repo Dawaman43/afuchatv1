@@ -159,6 +159,7 @@ export const SeasonalGiftDetailSheet = ({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent 
           side="bottom" 
+          onOpenChange={onOpenChange}
           className="h-auto max-h-[90vh] overflow-y-auto p-0 rounded-t-3xl border-t-0"
         >
           {/* Background gradient */}
