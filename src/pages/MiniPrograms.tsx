@@ -1082,12 +1082,15 @@ const MiniPrograms = () => {
                 <h2 className="text-lg font-bold">Shopping</h2>
                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </div>
-              <AppGrid 
-                apps={builtInServices.filter(s => 
-                  s.category === 'shopping' &&
-                  (!searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+              <AppGrid
+                apps={builtInServices.filter(
+                  (s) =>
+                    s.category === 'shopping' &&
+                    (!searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase()))
                 )}
-                thirdPartyApps={filteredMiniPrograms.filter(app => app.category === 'shopping')}
+                thirdPartyApps={filteredMiniPrograms.filter(
+                  (app) => app.category?.toLowerCase().trim() === 'shopping'
+                )}
               />
             </section>
           )}
@@ -1100,9 +1103,9 @@ const MiniPrograms = () => {
                   <h2 className="text-lg font-bold">Games</h2>
                   <p className="text-xs text-muted-foreground">Play & earn Nexa</p>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="gap-1.5 h-8 px-3 rounded-full"
                   onClick={() => toast.info('Leaderboard coming soon')}
                 >
@@ -1110,11 +1113,33 @@ const MiniPrograms = () => {
                   <span className="text-xs font-semibold">Leaderboard</span>
                 </Button>
               </div>
-              <AppGrid 
-                apps={builtInGames.filter(g => 
-                  !searchQuery || g.name.toLowerCase().includes(searchQuery.toLowerCase())
+              <AppGrid
+                apps={builtInGames.filter(
+                  (g) => !searchQuery || g.name.toLowerCase().includes(searchQuery.toLowerCase())
                 )}
-                thirdPartyApps={filteredMiniPrograms.filter(app => app.category === 'games')}
+                thirdPartyApps={filteredMiniPrograms.filter(
+                  (app) => app.category?.toLowerCase().trim() === 'games'
+                )}
+              />
+            </section>
+          )}
+
+          {/* Finance Section */}
+          {(selectedCategory === 'all' || selectedCategory === 'finance') && (
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-bold">Finance</h2>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <AppGrid
+                apps={builtInServices.filter(
+                  (s) =>
+                    s.category === 'finance' &&
+                    (!searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                )}
+                thirdPartyApps={filteredMiniPrograms.filter(
+                  (app) => app.category?.toLowerCase().trim() === 'finance'
+                )}
               />
             </section>
           )}
@@ -1131,29 +1156,52 @@ const MiniPrograms = () => {
                   </Badge>
                 )}
               </div>
-              <AppGrid 
-                apps={builtInServices.filter(s => 
-                  s.category === 'services' &&
-                  (!searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+              <AppGrid
+                apps={builtInServices.filter(
+                  (s) =>
+                    s.category === 'services' &&
+                    (!searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase()))
                 )}
-                thirdPartyApps={filteredMiniPrograms.filter(app => app.category === 'services')}
+                thirdPartyApps={filteredMiniPrograms.filter(
+                  (app) => app.category?.toLowerCase().trim() === 'services'
+                )}
               />
             </section>
           )}
 
           {/* Entertainment Section */}
-          {(selectedCategory === 'all' || selectedCategory === 'entertainment') && filteredMiniPrograms.filter(app => app.category === 'entertainment').length > 0 && (
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-bold">Entertainment</h2>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <AppGrid 
-                apps={[]}
-                thirdPartyApps={filteredMiniPrograms.filter(app => app.category === 'entertainment')}
-              />
-            </section>
-          )}
+          {(selectedCategory === 'all' || selectedCategory === 'entertainment') &&
+            filteredMiniPrograms.filter((app) => app.category?.toLowerCase().trim() === 'entertainment').length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-bold">Entertainment</h2>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <AppGrid
+                  apps={[]}
+                  thirdPartyApps={filteredMiniPrograms.filter(
+                    (app) => app.category?.toLowerCase().trim() === 'entertainment'
+                  )}
+                />
+              </section>
+            )}
+
+          {/* Dynamic Categories (approved apps) */}
+          {selectedCategory !== 'all' &&
+            !['shopping', 'games', 'services', 'entertainment', 'finance'].includes(selectedCategory) && (
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-bold capitalize">{selectedCategory}</h2>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <AppGrid
+                  apps={[]}
+                  thirdPartyApps={filteredMiniPrograms.filter(
+                    (app) => app.category?.toLowerCase().trim() === selectedCategory.toLowerCase().trim()
+                  )}
+                />
+              </section>
+            )}
 
           {/* Empty state */}
           {searchQuery && filteredBuiltInApps.length === 0 && filteredMiniPrograms.length === 0 && (
