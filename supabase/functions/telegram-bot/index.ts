@@ -2960,33 +2960,50 @@ async function handleRedEnvelopeCount(chatId: number, telegramUser: any, tgUser:
     return;
   }
   
-  // Deduct from user
-  await supabase.from('profiles').update({ xp: userProfile.xp - amount }).eq('id', tgUser.user_id);
+  // Use RPC to create red envelope (handles deduction)
+  const { data: result, error: rpcError } = await supabase.rpc('create_red_envelope', {
+    p_total_amount: amount,
+    p_recipient_count: count,
+    p_message: null,
+    p_envelope_type: 'random'
+  });
   
-  // Create red envelope
-  const expiresAt = new Date();
-  expiresAt.setHours(expiresAt.getHours() + 24);
+  if (rpcError) {
+    await sendTelegramMessage(chatId, '❌ Failed to create red envelope. Please try again.', {
+      inline_keyboard: [[{ text: '🧧 Try Again', callback_data: 'create_red_envelope' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+    });
+    return;
+  }
   
-  const { data: envelope } = await supabase.from('red_envelopes').insert({
-    sender_id: tgUser.user_id,
-    total_amount: amount,
-    remaining_amount: amount,
-    total_count: count,
-    remaining_count: count,
-    expires_at: expiresAt.toISOString()
-  }).select().single();
+  const envelopeResult = result as { success: boolean; message: string; envelope_id?: string };
+  
+  if (!envelopeResult.success) {
+    await sendTelegramMessage(chatId, `❌ ${envelopeResult.message}`, {
+      inline_keyboard: [[{ text: '🧧 Try Again', callback_data: 'create_red_envelope' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+    });
+    return;
+  }
   
   await supabase.from('telegram_users').update({ current_menu: 'main', menu_data: {} }).eq('telegram_id', telegramUser.id);
   
+  const shareUrl = `https://afuchat.com/red-envelope?claim=${envelopeResult.envelope_id}`;
+  const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent('🧧 I\'m sharing a Red Envelope on AfuChat! Claim your lucky Nexa!')}`;
+  
   await sendTelegramMessage(chatId, `🧧 <b>Red Envelope Created!</b>
 
-Amount: ${amount.toLocaleString()} Nexa
-Can claim: ${count} people
-Expires: 24 hours
+💰 Amount: ${amount.toLocaleString()} Nexa
+👥 Can claim: ${count} people
+⏰ Expires: 24 hours
 
-Share this link:
-https://afuchat.com/red-envelope/${envelope?.id}`, {
-    inline_keyboard: [[{ text: '🧧 Create Another', callback_data: 'create_red_envelope' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+<b>Share with friends:</b>
+${shareUrl}
+
+Tap the button below to share on Telegram!`, {
+    inline_keyboard: [
+      [{ text: '📤 Share on Telegram', url: telegramShareUrl }],
+      [{ text: '🧧 Create Another', callback_data: 'create_red_envelope' }],
+      [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]
+    ]
   });
 }
 
