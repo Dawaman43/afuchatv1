@@ -487,12 +487,17 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                             const file = e.target.files?.[0];
                             if (!file) return;
                             
-                            if (file.size > 100 * 1024 * 1024) {
-                              toast.error('APK file must be less than 100MB');
+                            const maxSizeBytes = 100 * 1024 * 1024; // 100MB
+                            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                            
+                            if (file.size > maxSizeBytes) {
+                              toast.error(`APK file (${fileSizeMB}MB) exceeds the 100MB limit`);
                               return;
                             }
                             
                             setApkUploading(true);
+                            toast.info(`Uploading APK (${fileSizeMB}MB)... This may take a while.`);
+                            
                             try {
                               const fileName = `${user!.id}/${Date.now()}-${file.name}`;
                               const { data, error } = await supabase.storage
@@ -502,7 +507,13 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                                   upsert: false
                                 });
                               
-                              if (error) throw error;
+                              if (error) {
+                                // Provide more helpful error messages
+                                if (error.message?.includes('size') || error.message?.includes('limit')) {
+                                  throw new Error(`Upload failed: File size (${fileSizeMB}MB) may exceed server limits. Try compressing your APK.`);
+                                }
+                                throw error;
+                              }
                               
                               const { data: urlData } = supabase.storage
                                 .from('mini-app-apks')
@@ -512,7 +523,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                               toast.success('APK uploaded successfully!');
                             } catch (error: any) {
                               console.error('APK upload error:', error);
-                              toast.error(error.message || 'Failed to upload APK');
+                              toast.error(error.message || 'Failed to upload APK. Please try again.');
                             } finally {
                               setApkUploading(false);
                             }
