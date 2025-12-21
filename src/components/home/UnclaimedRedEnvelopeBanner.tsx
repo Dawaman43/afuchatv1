@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { X, Sparkles, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { X, ChevronRight, Clock } from 'lucide-react';
 
 interface RedEnvelope {
   id: string;
   total_amount: number;
   recipient_count: number;
   claimed_count: number;
+  expires_at: string;
   sender: {
     display_name: string;
     avatar_url: string | null;
@@ -23,6 +23,7 @@ export const UnclaimedRedEnvelopeBanner = () => {
   const [envelopes, setEnvelopes] = useState<RedEnvelope[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dismissed, setDismissed] = useState(false);
+  const [countdown, setCountdown] = useState('');
 
   useEffect(() => {
     const dismissedUntil = sessionStorage.getItem('redEnvelopeBannerDismissed');
@@ -45,6 +46,22 @@ export const UnclaimedRedEnvelopeBanner = () => {
     }
   }, [envelopes.length]);
 
+  // Countdown timer for current envelope
+  useEffect(() => {
+    if (envelopes.length === 0) return;
+    const updateCountdown = () => {
+      const expires = new Date(envelopes[currentIndex]?.expires_at || '');
+      const diff = Math.max(0, expires.getTime() - Date.now());
+      const h = Math.floor(diff / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+      setCountdown(`${h}h ${m}m ${s}s`);
+    };
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [envelopes, currentIndex]);
+
   const fetchUnclaimedEnvelopes = async () => {
     try {
       const { data, error } = await supabase
@@ -54,6 +71,7 @@ export const UnclaimedRedEnvelopeBanner = () => {
           total_amount,
           recipient_count,
           claimed_count,
+          expires_at,
           sender_id,
           profiles!red_envelopes_sender_id_fkey (
             display_name,
@@ -64,21 +82,16 @@ export const UnclaimedRedEnvelopeBanner = () => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (error) {
-        console.error('Error fetching red envelopes:', error);
-        return;
-      }
+      if (error) return;
 
       if (data) {
-        const unclaimed = data
-          .filter((e: any) => (e.claimed_count || 0) < e.recipient_count)
-          .slice(0, 5);
-        
+        const unclaimed = data.filter((e: any) => (e.claimed_count || 0) < e.recipient_count).slice(0, 5);
         setEnvelopes(unclaimed.map((e: any) => ({
           id: e.id,
           total_amount: e.total_amount,
           recipient_count: e.recipient_count,
           claimed_count: e.claimed_count || 0,
+          expires_at: e.expires_at,
           sender: {
             display_name: e.profiles?.display_name || 'Someone',
             avatar_url: e.profiles?.avatar_url
@@ -92,7 +105,6 @@ export const UnclaimedRedEnvelopeBanner = () => {
 
   const handleDismiss = () => {
     setDismissed(true);
-    // Dismiss for 2 hours
     const dismissUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
     sessionStorage.setItem('redEnvelopeBannerDismissed', dismissUntil.toISOString());
   };
@@ -123,9 +135,13 @@ export const UnclaimedRedEnvelopeBanner = () => {
                 <p className="text-white font-medium text-xs truncate">
                   {currentEnvelope.sender.display_name} shared a Red Envelope
                 </p>
-                <p className="text-white/70 text-[10px]">
-                  {remaining} left • {currentEnvelope.total_amount} Nexa
-                </p>
+                <div className="flex items-center gap-2 text-white/70 text-[10px]">
+                  <span>{remaining} left • {currentEnvelope.total_amount} Nexa</span>
+                  <span className="flex items-center gap-0.5 bg-white/20 rounded px-1">
+                    <Clock className="w-2.5 h-2.5" />
+                    {countdown}
+                  </span>
+                </div>
               </div>
               
               <ChevronRight className="w-4 h-4 text-white/70 flex-shrink-0" />
