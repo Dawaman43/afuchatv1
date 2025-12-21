@@ -74,7 +74,7 @@ export const ChristmasGiftsBanner = () => {
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }}
-      className="px-3 pt-2"
+      className="mx-3 mt-3 mb-2"
     >
       <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-green-700 via-red-600 to-green-700 shadow-sm">
         <div className="flex items-center justify-between p-2.5 gap-2">

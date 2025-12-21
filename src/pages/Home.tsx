@@ -8,8 +8,6 @@ import FloatingActionButton from '@/components/ui/FloatingActionButton';
 import { CustomLoader } from '@/components/ui/CustomLoader';
 import { ProfileCompletionBanner } from '@/components/ProfileCompletionBanner';
 import { GuestAuthBanner } from '@/components/GuestAuthBanner';
-import { UnclaimedRedEnvelopeBanner } from '@/components/home/UnclaimedRedEnvelopeBanner';
-import { ChristmasGiftsBanner } from '@/components/home/ChristmasGiftsBanner';
 
 const Home = () => {
   const { user, loading } = useAuth();
@@ -82,8 +80,6 @@ const Home = () => {
   return (
     <>
       {user ? <ProfileCompletionBanner /> : <GuestAuthBanner />}
-      <ChristmasGiftsBanner />
-      <UnclaimedRedEnvelopeBanner />
       <Feed />
       {user && <FloatingActionButton />}
       {user && (

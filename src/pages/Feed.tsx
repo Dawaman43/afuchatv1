@@ -50,6 +50,8 @@ import { AIPostSummary } from '@/components/feed/AIPostSummary';
 import FeaturedProducts from '@/components/home/FeaturedProducts';
 import { FeedSkeleton } from '@/components/feed/FeedSkeleton';
 import { SubscriptionExpiryBanner } from '@/components/SubscriptionExpiryBanner';
+import { ChristmasGiftsBanner } from '@/components/home/ChristmasGiftsBanner';
+import { UnclaimedRedEnvelopeBanner } from '@/components/home/UnclaimedRedEnvelopeBanner';
 // --- INTERFACES ---
 
 // NEW: Define AuthUser interface for type safety (must match the one in PostActionsSheet.tsx)
@@ -2426,6 +2428,10 @@ const Feed = ({ defaultTab = 'foryou', guestMode = false }: FeedProps = {}) => {
 
         {/* Spacer for fixed header */}
         <div className="h-[108px]" />
+
+        {/* Promotional Banners */}
+        <ChristmasGiftsBanner />
+        <UnclaimedRedEnvelopeBanner />
 
         {/* Subscription Expiry Reminder Banner */}
         {user && <SubscriptionExpiryBanner daysThreshold={7} />}
