@@ -2960,33 +2960,54 @@ async function handleRedEnvelopeCount(chatId: number, telegramUser: any, tgUser:
     return;
   }
   
-  // Use RPC to create red envelope (handles deduction)
-  const { data: result, error: rpcError } = await supabase.rpc('create_red_envelope', {
-    p_total_amount: amount,
-    p_recipient_count: count,
-    p_message: null,
-    p_envelope_type: 'random'
-  });
+  // Deduct XP from sender first
+  const { error: deductError } = await supabase
+    .from('profiles')
+    .update({ xp: userProfile.xp - amount })
+    .eq('id', tgUser.user_id);
   
-  if (rpcError) {
+  if (deductError) {
+    console.error('Failed to deduct XP:', deductError);
     await sendTelegramMessage(chatId, '❌ Failed to create red envelope. Please try again.', {
       inline_keyboard: [[{ text: '🧧 Try Again', callback_data: 'create_red_envelope' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
     });
     return;
   }
   
-  const envelopeResult = result as { success: boolean; message: string; envelope_id?: string };
+  // Create red envelope directly
+  const { data: envelope, error: envelopeError } = await supabase
+    .from('red_envelopes')
+    .insert({
+      sender_id: tgUser.user_id,
+      total_amount: amount,
+      recipient_count: count,
+      envelope_type: 'random',
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    })
+    .select('id')
+    .single();
   
-  if (!envelopeResult.success) {
-    await sendTelegramMessage(chatId, `❌ ${envelopeResult.message}`, {
+  if (envelopeError || !envelope) {
+    console.error('Failed to create envelope:', envelopeError);
+    // Refund the XP
+    await supabase.from('profiles').update({ xp: userProfile.xp }).eq('id', tgUser.user_id);
+    await sendTelegramMessage(chatId, '❌ Failed to create red envelope. Please try again.', {
       inline_keyboard: [[{ text: '🧧 Try Again', callback_data: 'create_red_envelope' }], [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
     });
     return;
   }
   
+  // Log activity
+  await supabase.from('user_activity_log').insert({
+    user_id: tgUser.user_id,
+    action_type: 'red_envelope_sent',
+    xp_earned: -amount,
+    metadata: { envelope_id: envelope.id, recipients: count, source: 'telegram' }
+  });
+  
   await supabase.from('telegram_users').update({ current_menu: 'main', menu_data: {} }).eq('telegram_id', telegramUser.id);
   
-  const shareUrl = `https://afuchat.com/red-envelope?claim=${envelopeResult.envelope_id}`;
+  const shareUrl = `https://afuchat.com/red-envelope?claim=${envelope.id}`;
   const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent('🧧 I\'m sharing a Red Envelope on AfuChat! Claim your lucky Nexa!')}`;
   
   await sendTelegramMessage(chatId, `🧧 <b>Red Envelope Created!</b>
