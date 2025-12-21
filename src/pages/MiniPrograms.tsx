@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -175,13 +175,36 @@ const MiniPrograms = () => {
     return app.target_countries.includes(userCountry);
   };
 
-  const categories = [
+  // Base categories - always shown
+  const baseCategories = [
     { id: 'all', name: 'For you', icon: Zap },
     { id: 'games', name: 'Games', icon: Gamepad2 },
     { id: 'services', name: 'Services', icon: Star },
     { id: 'shopping', name: 'Shopping', icon: ShoppingBag },
+    { id: 'finance', name: 'Finance', icon: Wallet },
     { id: 'entertainment', name: 'Entertainment', icon: Music },
   ];
+
+  // Dynamically add categories from approved apps that aren't in base categories
+  const dynamicCategories = useMemo(() => {
+    const baseCategoryIds = new Set(baseCategories.map(c => c.id));
+    const appCategories = new Set(miniPrograms.map(app => app.category.toLowerCase()));
+    
+    const newCategories: { id: string; name: string; icon: any }[] = [];
+    appCategories.forEach(cat => {
+      if (!baseCategoryIds.has(cat)) {
+        newCategories.push({
+          id: cat,
+          name: cat.charAt(0).toUpperCase() + cat.slice(1),
+          icon: Star, // Default icon for dynamic categories
+        });
+      }
+    });
+    
+    return newCategories;
+  }, [miniPrograms]);
+
+  const categories = [...baseCategories, ...dynamicCategories];
 
   // Built-in games - all system apps that can be edited by admin
   const builtInGames: BuiltInApp[] = [
@@ -340,7 +363,7 @@ const MiniPrograms = () => {
       description: 'Manage your wallet',
       icon: Wallet,
       logo: financeLogo,
-      category: 'services',
+      category: 'finance',
       route: '/wallet',
       url: '/wallet',
       color: 'bg-emerald-500',
