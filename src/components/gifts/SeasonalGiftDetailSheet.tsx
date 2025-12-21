@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Sparkles, TrendingUp, Gift as GiftIcon, Star, Clock, Snowflake, Send } from 'lucide-react';
+import { Sparkles, TrendingUp, Coins, Star, Clock, Snowflake, Send, TreePine, Gift as GiftIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { SelectRecipientDialog } from './SelectRecipientDialog';
 import { toast } from 'sonner';
@@ -90,18 +90,18 @@ export const SeasonalGiftDetailSheet = ({
 
   useEffect(() => {
     if (user && open) {
-      fetchUserNexa();
+      fetchUserAcoin();
     }
   }, [user, open]);
 
-  const fetchUserNexa = async () => {
+  const fetchUserAcoin = async () => {
     if (!user) return;
     const { data } = await supabase
       .from('profiles')
-      .select('xp')
+      .select('acoin')
       .eq('id', user.id)
       .single();
-    if (data) setUserNexa(data.xp || 0);
+    if (data) setUserNexa(data.acoin || 0);
   };
 
   if (!gift) return null;
@@ -112,16 +112,16 @@ export const SeasonalGiftDetailSheet = ({
     if (!user || !gift) return;
     
     if (userNexa < currentPrice) {
-      toast.error('Insufficient Nexa balance');
+      toast.error('Insufficient ACoin balance');
       return;
     }
 
     setSending(true);
     try {
-      // Deduct Nexa and create transaction in one go
+      // Deduct ACoin and create transaction
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ xp: userNexa - currentPrice })
+        .update({ acoin: userNexa - currentPrice })
         .eq('id', user.id);
 
       if (updateError) throw updateError;
@@ -138,12 +138,12 @@ export const SeasonalGiftDetailSheet = ({
 
       if (giftError) throw giftError;
 
-      toast.success('Gift sent successfully!', {
-        description: `You sent ${gift.name} to ${recipient.name} for ${currentPrice} Nexa`,
+      toast.success('🎄 Gift sent successfully!', {
+        description: `You sent ${gift.name} to ${recipient.name} for ${currentPrice} ACoin`,
         icon: '🎁',
       });
 
-      fetchUserNexa();
+      fetchUserAcoin();
       setShowRecipientDialog(false);
       onOpenChange(false);
     } catch (error) {
@@ -193,24 +193,20 @@ export const SeasonalGiftDetailSheet = ({
                 ))}
               </div>
 
-              {/* Gift image with glow */}
+              {/* Gift emoji with glow - always show emoji for seasonal */}
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
                 className={`relative ${config.glow} rounded-3xl`}
               >
-                <div className="relative w-40 h-40 flex items-center justify-center">
-                  {gift.image_url ? (
-                    <img 
-                      src={gift.image_url} 
-                      alt={gift.name}
-                      className="w-full h-full object-contain drop-shadow-2xl"
-                    />
-                  ) : (
-                    <span className="text-8xl drop-shadow-2xl">{gift.emoji}</span>
-                  )}
-                </div>
+                <motion.div 
+                  className="relative w-40 h-40 flex items-center justify-center"
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <span className="text-8xl drop-shadow-2xl">{gift.emoji}</span>
+                </motion.div>
               </motion.div>
 
               {/* Season badge */}
@@ -263,16 +259,16 @@ export const SeasonalGiftDetailSheet = ({
                 className="grid grid-cols-2 gap-4"
               >
                 {/* Price card */}
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-yellow-500/10 to-amber-500/5 border border-yellow-500/20">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                    <GiftIcon className="w-3.5 h-3.5" />
+                    <Coins className="w-3.5 h-3.5 text-yellow-500" />
                     <span>Price</span>
                   </div>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-2xl font-bold text-primary">
+                    <span className="text-2xl font-bold text-yellow-500">
                       {currentPrice.toLocaleString()}
                     </span>
-                    <span className="text-sm text-muted-foreground">Nexa</span>
+                    <span className="text-sm text-yellow-500/70">ACoin</span>
                   </div>
                   {priceMultiplier !== 1 && (
                     <div className="flex items-center gap-1 mt-1">
@@ -350,8 +346,9 @@ export const SeasonalGiftDetailSheet = ({
                 </Button>
                 
                 {user && (
-                  <p className="text-xs text-center text-muted-foreground mt-2">
-                    Your balance: <span className="font-medium text-foreground">{userNexa.toLocaleString()} Nexa</span>
+                  <p className="text-xs text-center text-muted-foreground mt-2 flex items-center justify-center gap-1">
+                    Your balance: <Coins className="w-3 h-3 text-yellow-500" />
+                    <span className="font-medium text-yellow-500">{userNexa.toLocaleString()} ACoin</span>
                   </p>
                 )}
               </motion.div>

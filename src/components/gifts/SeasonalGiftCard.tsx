@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Badge } from '@/components/ui/badge';
+import { Coins } from 'lucide-react';
 
 interface SeasonalGiftCardProps {
   gift: {
@@ -25,7 +25,7 @@ const getRarityGradient = (rarity: string) => {
     case 'uncommon':
       return 'from-green-500/30 via-emerald-400/20 to-green-600/30';
     default:
-      return 'from-muted/50 via-muted/30 to-muted/50';
+      return 'from-red-500/20 via-green-500/10 to-red-500/20';
   }
 };
 
@@ -40,7 +40,7 @@ const getRarityBorder = (rarity: string) => {
     case 'uncommon':
       return 'border-green-500/50 hover:border-green-400';
     default:
-      return 'border-border/50 hover:border-border';
+      return 'border-red-500/30 hover:border-green-400/50';
   }
 };
 
@@ -55,7 +55,7 @@ const getRarityShadow = (rarity: string) => {
     case 'uncommon':
       return 'shadow-[0_0_15px_rgba(34,197,94,0.2)]';
     default:
-      return '';
+      return 'shadow-[0_0_15px_rgba(220,38,38,0.15)]';
   }
 };
 
@@ -71,7 +71,7 @@ export const SeasonalGiftCard = ({ gift, price, onClick, index = 0 }: SeasonalGi
       className={`
         relative cursor-pointer rounded-2xl p-3
         bg-gradient-to-br ${getRarityGradient(gift.rarity)}
-        border ${getRarityBorder(gift.rarity)}
+        border-2 ${getRarityBorder(gift.rarity)}
         ${getRarityShadow(gift.rarity)}
         backdrop-blur-sm transition-all duration-300
         group overflow-hidden
@@ -82,31 +82,31 @@ export const SeasonalGiftCard = ({ gift, price, onClick, index = 0 }: SeasonalGi
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
       </div>
 
-      {/* Gift image/emoji container */}
+      {/* Christmas sparkle decorations */}
+      <div className="absolute top-1 right-1 text-[8px] opacity-60">✨</div>
+      <div className="absolute bottom-1 left-1 text-[8px] opacity-60">❄️</div>
+
+      {/* Gift emoji container - no images, just emoji */}
       <div className="relative aspect-square flex items-center justify-center mb-2 rounded-xl bg-background/30 overflow-hidden">
-        {gift.image_url ? (
-          <img 
-            src={gift.image_url} 
-            alt={gift.name}
-            className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-300"
-            loading="lazy"
-          />
-        ) : (
-          <span className="text-4xl group-hover:scale-125 transition-transform duration-300">
-            {gift.emoji}
-          </span>
-        )}
+        <motion.span 
+          className="text-4xl drop-shadow-lg"
+          whileHover={{ scale: 1.2, rotate: [0, -10, 10, 0] }}
+          transition={{ duration: 0.4 }}
+        >
+          {gift.emoji}
+        </motion.span>
         
         {/* Subtle glow effect */}
         <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
 
-      {/* Price - no name shown */}
-      <div className="flex items-center justify-center">
+      {/* Price in ACoin - no name shown */}
+      <div className="flex items-center justify-center gap-1 bg-background/40 rounded-lg py-1.5 px-2">
+        <Coins className="w-3.5 h-3.5 text-yellow-500" />
         <span className="text-sm font-bold text-foreground">
           {price.toLocaleString()}
         </span>
-        <span className="text-xs text-muted-foreground ml-1">Nexa</span>
+        <span className="text-[10px] text-yellow-500/80 font-medium">ACoin</span>
       </div>
     </motion.div>
   );
