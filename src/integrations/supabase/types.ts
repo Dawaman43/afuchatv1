@@ -3488,6 +3488,39 @@ export type Database = {
           },
         ]
       }
+      telegram_verification_codes: {
+        Row: {
+          attempts: number
+          created_at: string
+          expires_at: string
+          id: string
+          telegram_chat_id: string
+          user_id: string
+          verification_code: string
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          expires_at: string
+          id?: string
+          telegram_chat_id: string
+          user_id: string
+          verification_code: string
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          expires_at?: string
+          id?: string
+          telegram_chat_id?: string
+          user_id?: string
+          verification_code?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       tips: {
         Row: {
           created_at: string | null
@@ -4110,6 +4143,7 @@ export type Database = {
       claim_red_envelope: { Args: { p_envelope_id: string }; Returns: Json }
       cleanup_expired_sessions: { Args: never; Returns: number }
       cleanup_expired_subscriptions: { Args: never; Returns: undefined }
+      cleanup_expired_verification_codes: { Args: never; Returns: undefined }
       convert_nexa_to_acoin: { Args: { p_nexa_amount: number }; Returns: Json }
       create_ad_campaign: {
         Args: {
@@ -4155,6 +4189,10 @@ export type Database = {
       distribute_daily_creator_rewards: { Args: never; Returns: Json }
       expire_subscriptions: { Args: never; Returns: number }
       generate_order_number: { Args: never; Returns: string }
+      generate_telegram_verification_code: {
+        Args: { p_telegram_chat_id: string; p_user_id: string }
+        Returns: string
+      }
       get_ads_for_placement: {
         Args: { p_limit?: number; p_placement: string }
         Returns: {
@@ -4415,6 +4453,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      verify_telegram_link: {
+        Args: { p_telegram_chat_id: string; p_verification_code: string }
+        Returns: Json
       }
     }
     Enums: {
