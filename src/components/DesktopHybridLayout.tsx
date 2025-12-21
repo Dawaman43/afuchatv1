@@ -225,8 +225,8 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
       </header>
 
       {/* Main Layout with Sidebar */}
-      <div className="pt-16 flex max-w-screen-2xl mx-auto">
-        {/* Left Sidebar */}
+      <div className="pt-16 flex max-w-screen-2xl mx-auto min-h-screen">
+        {/* Left Sidebar - Fixed position with independent scroll */}
         <AnimatePresence mode="wait">
           {!sidebarCollapsed && (
             <motion.aside
@@ -234,9 +234,9 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
               animate={{ width: 280, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="flex-shrink-0 border-r border-border overflow-hidden"
+              className="flex-shrink-0 border-r border-border overflow-hidden sticky top-16 h-[calc(100vh-4rem)] self-start"
             >
-              <ScrollArea className="h-[calc(100vh-4rem)]">
+              <ScrollArea className="h-full">
                 <div className="p-4 space-y-6">
                   {/* Account Mode Switcher */}
                   <AccountModeSwitcher />
@@ -320,12 +320,10 @@ export const DesktopHybridLayout = ({ children }: DesktopHybridLayoutProps) => {
           </div>
         </main>
 
-        {/* Right Sidebar - Hidden on certain pages */}
+        {/* Right Sidebar - Fixed position with independent scroll */}
         {!hideRightSidebar && (
-          <div className="hidden xl:block flex-shrink-0 border-l border-border">
-            <div className="sticky top-16">
-              <DesktopRightSidebar />
-            </div>
+          <div className="hidden xl:block flex-shrink-0 border-l border-border sticky top-16 h-[calc(100vh-4rem)] self-start overflow-hidden">
+            <DesktopRightSidebar className="h-full" />
           </div>
         )}
       </div>
