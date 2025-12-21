@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,28 @@ import { Progress } from '@/components/ui/progress';
 import { Star, Download, ExternalLink, Play, User, Calendar, Shield, MoreVertical, Package, Globe, CheckCircle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+
+// Local storage key for tracking downloaded APKs
+const DOWNLOADED_APPS_KEY = 'afuchat_downloaded_apps';
+
+const getDownloadedApps = (): Set<string> => {
+  try {
+    const stored = localStorage.getItem(DOWNLOADED_APPS_KEY);
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  } catch {
+    return new Set();
+  }
+};
+
+const markAppAsDownloaded = (appId: string) => {
+  const apps = getDownloadedApps();
+  apps.add(appId);
+  localStorage.setItem(DOWNLOADED_APPS_KEY, JSON.stringify([...apps]));
+};
+
+const isAppDownloaded = (appId: string): boolean => {
+  return getDownloadedApps().has(appId);
+};
 
 interface AppPreviewDialogProps {
   open: boolean;
@@ -48,13 +70,29 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadComplete, setDownloadComplete] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  // Check if app is already downloaded when dialog opens
+  useEffect(() => {
+    if (app?.id) {
+      setIsInstalled(isAppDownloaded(app.id));
+    }
+  }, [app?.id, open]);
 
   if (!app) return null;
 
   const screenshots = app.screenshots || [];
   const featuresList = app.features?.split('\n').filter(f => f.trim()) || [];
 
-  // Internal APK download handler
+  // Handle "Open" for already downloaded APK apps
+  const handleOpenInstalledApp = () => {
+    toast.success(`Opening ${app.name}...`, {
+      description: 'The app should launch on your device. If not, check your app drawer.',
+    });
+    onOpenChange(false);
+  };
+
+  // Internal APK download handler - stores file in browser and marks as installed
   const handleDownloadApk = async () => {
     if (!app.apk_url) {
       toast.error('APK file not available');
@@ -68,59 +106,49 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
     try {
       // Fetch the APK file
       const response = await fetch(app.apk_url);
-      
+
       if (!response.ok) {
         throw new Error('Failed to download APK');
       }
 
       const contentLength = response.headers.get('content-length');
       const total = contentLength ? parseInt(contentLength, 10) : 0;
-      
-      // Get the blob directly and track progress via intervals
-      if (total > 0) {
-        // Simulate progress while downloading
-        const progressInterval = setInterval(() => {
-          setDownloadProgress(prev => Math.min(prev + 5, 90));
-        }, 200);
-        
-        const blob = await response.blob();
-        clearInterval(progressInterval);
-        setDownloadProgress(100);
-        
-        // Create download link
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${app.name.replace(/[^a-zA-Z0-9]/g, '_')}.apk`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      } else {
-        // Fallback for no content-length
-        const blob = await response.blob();
-        setDownloadProgress(100);
-        
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${app.name.replace(/[^a-zA-Z0-9]/g, '_')}.apk`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
 
+      // Simulate progress while downloading
+      const progressInterval = setInterval(() => {
+        setDownloadProgress((prev) => Math.min(prev + 5, 90));
+      }, 200);
+
+      const blob = await response.blob();
+      clearInterval(progressInterval);
+      setDownloadProgress(100);
+
+      // Create download link for internal browser download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${app.name.replace(/[^a-zA-Z0-9]/g, '_')}.apk`;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // Mark app as downloaded/installed
+      markAppAsDownloaded(app.id);
+      setIsInstalled(true);
       setDownloadComplete(true);
-      toast.success(`${app.name} downloaded successfully!`);
-      
-      // Reset after delay
+
+      toast.success(`${app.name} downloaded successfully!`, {
+        description: 'Open your Downloads folder to install the app.',
+      });
+
+      // Reset download state after delay
       setTimeout(() => {
         setIsDownloading(false);
         setDownloadProgress(0);
         setDownloadComplete(false);
       }, 2000);
-
     } catch (error) {
       console.error('Download error:', error);
       toast.error('Failed to download APK. Please try again.');
@@ -139,8 +167,8 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
                 {/* App Icon */}
                 <div className="h-20 w-20 rounded-2xl shadow-lg overflow-hidden flex-shrink-0 bg-muted">
                   {app.icon_url ? (
-                    <img 
-                      src={app.icon_url} 
+                    <img
+                      src={app.icon_url}
                       alt={app.name}
                       className="h-full w-full object-cover"
                     />
@@ -150,7 +178,7 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
                     </div>
                   )}
                 </div>
-                
+
                 {/* App Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between">
@@ -177,20 +205,39 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
                       {app.category}
                     </Badge>
                     {app.app_type === 'android' && (
-                      <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-green-500/10 text-green-600 border-green-500/30"
+                      >
                         <Package className="h-3 w-3 mr-1" />
                         Android
                       </Badge>
                     )}
                     {app.app_type === 'both' && (
-                      <Badge variant="secondary" className="text-xs bg-purple-500/10 text-purple-600 border-purple-500/30">
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-purple-500/10 text-purple-600 border-purple-500/30"
+                      >
                         Web + APK
                       </Badge>
                     )}
                     {app.app_type === 'web' && (
-                      <Badge variant="secondary" className="text-xs bg-blue-500/10 text-blue-600 border-blue-500/30">
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-blue-500/10 text-blue-600 border-blue-500/30"
+                      >
                         <Globe className="h-3 w-3 mr-1" />
                         Web
+                      </Badge>
+                    )}
+                    {/* Installed badge for APK apps */}
+                    {isInstalled && (app.app_type === 'android' || app.app_type === 'both') && (
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-primary/10 text-primary border-primary/30"
+                      >
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Installed
                       </Badge>
                     )}
                   </div>
@@ -224,8 +271,8 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
                           selectedScreenshot === index ? 'border-primary' : 'border-transparent'
                         }`}
                       >
-                        <img 
-                          src={screenshot} 
+                        <img
+                          src={screenshot}
                           alt={`Screenshot ${index + 1}`}
                           className="h-32 w-auto object-cover"
                         />
@@ -234,12 +281,12 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
                   </div>
                   <ScrollBar orientation="horizontal" className="invisible" />
                 </ScrollArea>
-                
+
                 {/* Selected Screenshot Preview */}
                 {screenshots[selectedScreenshot] && (
                   <div className="mt-2 rounded-xl overflow-hidden border border-border">
-                    <img 
-                      src={screenshots[selectedScreenshot]} 
+                    <img
+                      src={screenshots[selectedScreenshot]}
                       alt="Preview"
                       className="w-full h-auto object-contain max-h-64"
                     />
@@ -295,10 +342,9 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
                 <div className="text-xs text-muted-foreground">
                   <p className="font-medium text-foreground mb-1">Safety Notice</p>
                   <p>
-                    {app.app_type === 'android' 
+                    {app.app_type === 'android'
                       ? 'This APK will be downloaded through AfuChat. Install at your own discretion.'
-                      : 'This app runs inside AfuChat. Your data is protected by our security policies.'
-                    }
+                      : 'This app runs inside AfuChat. Your data is protected by our security policies.'}
                   </p>
                 </div>
               </div>
@@ -321,7 +367,7 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
             <div className="space-y-2">
               {/* Web App Button */}
               {(app.app_type === 'web' || app.app_type === 'both' || !app.app_type) && app.url && (
-                <Button 
+                <Button
                   className="w-full"
                   onClick={() => {
                     onOpenChange(false);
@@ -332,34 +378,47 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
                   Open App
                 </Button>
               )}
-              
-              {/* APK Download Button - Internal Download */}
+
+              {/* APK Button - Show "Open" if installed, otherwise "Download" */}
               {(app.app_type === 'android' || app.app_type === 'both') && app.apk_url && (
-                <Button 
-                  variant={app.app_type === 'android' ? 'default' : 'outline'}
-                  className={`w-full ${app.app_type === 'android' ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                  onClick={handleDownloadApk}
-                  disabled={isDownloading}
-                >
-                  {isDownloading ? (
-                    downloadComplete ? (
-                      <>
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Downloaded!
-                      </>
-                    ) : (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Downloading... {downloadProgress}%
-                      </>
-                    )
+                <>
+                  {isInstalled ? (
+                    <Button
+                      variant={app.app_type === 'android' ? 'default' : 'outline'}
+                      className={`w-full ${app.app_type === 'android' ? 'bg-primary hover:bg-primary/90' : ''}`}
+                      onClick={handleOpenInstalledApp}
+                    >
+                      <Play className="h-4 w-4 mr-2" />
+                      Open
+                    </Button>
                   ) : (
-                    <>
-                      <Download className="h-4 w-4 mr-2" />
-                      Download APK
-                    </>
+                    <Button
+                      variant={app.app_type === 'android' ? 'default' : 'outline'}
+                      className={`w-full ${app.app_type === 'android' ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                      onClick={handleDownloadApk}
+                      disabled={isDownloading}
+                    >
+                      {isDownloading ? (
+                        downloadComplete ? (
+                          <>
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Downloaded!
+                          </>
+                        ) : (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Downloading... {downloadProgress}%
+                          </>
+                        )
+                      ) : (
+                        <>
+                          <Download className="h-4 w-4 mr-2" />
+                          Download APK
+                        </>
+                      )}
+                    </Button>
                   )}
-                </Button>
+                </>
               )}
             </div>
           </div>
