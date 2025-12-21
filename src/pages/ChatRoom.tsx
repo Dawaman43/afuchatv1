@@ -25,6 +25,7 @@ import { WarningBadge } from '@/components/WarningBadge';
 import { useChatPreferences } from '@/hooks/useChatPreferences';
 import { SendGiftDialog } from '@/components/gifts/SendGiftDialog';
 import { ClearHistoryDialog } from '@/components/chat/ClearHistoryDialog';
+import { GifPicker } from '@/components/chat/GifPicker';
 
 interface ChatTheme {
   id: string;
@@ -204,6 +205,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [isClearHistoryOpen, setIsClearHistoryOpen] = useState(false);
   const [afuAIProcessing, setAfuAIProcessing] = useState(false);
+  const [isGifPickerOpen, setIsGifPickerOpen] = useState(false);
 
   // Improved scroll behavior - scroll to bottom on new messages
   const scrollToBottom = (smooth = true) => {
@@ -1255,6 +1257,35 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
     }
   };
 
+  // Handle GIF selection from GIF picker
+  const handleGifSelect = async (gifUrl: string) => {
+    if (!user || !chatId || sending) return;
+    
+    setSending(true);
+    
+    try {
+      // Send the GIF as a message with attachment URL pointing to the external GIF
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          chat_id: chatId,
+          sender_id: user.id,
+          encrypted_content: '',
+          attachment_url: gifUrl,
+          attachment_type: 'image/gif',
+          attachment_name: 'GIF',
+        });
+
+      if (error) {
+        toast.error('Failed to send GIF');
+      }
+    } catch (error) {
+      toast.error('Failed to send GIF');
+    }
+    
+    setSending(false);
+  };
+
   const handleInputChange = (value: string) => {
     setNewMessage(value);
     
@@ -1975,7 +2006,7 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
               ref={fileInputRef}
               type="file"
               className="hidden"
-              accept="image/*,.pdf,.doc,.docx,.txt"
+              accept="image/*,image/gif,.pdf,.doc,.docx,.txt"
               onChange={handleFileSelect}
             />
             <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-center gap-2">
@@ -2052,6 +2083,18 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
                   >
                     <Paperclip className="h-5 w-5 text-foreground" />
                   </Button>
+
+                  {/* GIF button */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-full hover:bg-muted/50 flex-shrink-0"
+                    onClick={() => setIsGifPickerOpen(true)}
+                  >
+                    <span className="text-xs font-bold text-foreground">GIF</span>
+                  </Button>
+
 
                   {/* Gift button - only for 1-on-1 chats */}
                   {!chatInfo?.is_group && !chatInfo?.is_channel && otherUser && (
@@ -2143,6 +2186,13 @@ const ChatRoom = ({ isEmbedded = false }: ChatRoomProps) => {
           isAdmin={isGroupAdmin}
         />
       )}
+
+      {/* GIF Picker */}
+      <GifPicker
+        open={isGifPickerOpen}
+        onOpenChange={setIsGifPickerOpen}
+        onSelect={handleGifSelect}
+      />
     </TooltipProvider>
   );
 };

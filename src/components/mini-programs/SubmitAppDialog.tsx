@@ -86,7 +86,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
   };
 
   const addScreenshot = (url: string) => {
-    if (url && formData.screenshots.length < 5) {
+    if (url && formData.screenshots.length < 6) {
       setFormData(prev => ({ 
         ...prev, 
         screenshots: [...prev.screenshots, url] 
@@ -559,7 +559,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                 {/* Screenshots Upload */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Screenshots <span className="text-muted-foreground">(optional)</span></Label>
-                  <p className="text-xs text-muted-foreground mb-2">Add up to 5 screenshots to showcase your app</p>
+                  <p className="text-xs text-muted-foreground mb-2">Add up to 6 screenshots to showcase your app</p>
                   
                   <div className="grid grid-cols-3 gap-3">
                     {formData.screenshots.map((screenshot, index) => (
@@ -580,7 +580,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                         </Button>
                       </div>
                     ))}
-                    {formData.screenshots.length < 5 && (
+                    {formData.screenshots.length < 6 && (
                       <MiniAppImageUpload
                         type="screenshot"
                         onUploadComplete={addScreenshot}

@@ -11,6 +11,13 @@ export const useAttachmentUrl = (storagePath: string | null | undefined) => {
       return;
     }
 
+    // If it's already a full URL (external URL like Tenor GIFs), use it directly
+    if (storagePath.startsWith('http://') || storagePath.startsWith('https://')) {
+      setUrl(storagePath);
+      setLoading(false);
+      return;
+    }
+
     const getSignedUrl = async () => {
       try {
         const { data, error } = await supabase.storage

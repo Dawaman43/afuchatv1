@@ -413,7 +413,7 @@ export const AppPreviewDialog = ({ open, onOpenChange, app, onOpen }: AppPreview
                       ) : (
                         <>
                           <Download className="h-4 w-4 mr-2" />
-                          Download APK
+                          Download
                         </>
                       )}
                     </Button>
