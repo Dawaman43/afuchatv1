@@ -46,7 +46,8 @@ const christmasImages: Record<string, string> = {
 
 // Get a Christmas image for a gift (cycle through available images)
 const getGiftImage = (gift: Gift, index: number): string => {
-  if (gift.image_url) return gift.image_url;
+  // Only use image_url if it's a valid URL (not empty or placeholder)
+  if (gift.image_url && gift.image_url.startsWith('http')) return gift.image_url;
   const images = Object.values(christmasImages);
   return images[index % images.length];
 };
