@@ -21,74 +21,38 @@ import snowflakeOrnament from '@/assets/gifts/snowflake-ornament.png';
 import candyCaneTreat from '@/assets/gifts/candy-cane-treat.png';
 import santaHat from '@/assets/gifts/santa-hat.png';
 
-// Gift type with real images
-interface FeaturedGift {
+// Database Gift type
+interface DatabaseGift {
   id: string;
   name: string;
-  image: string;
-  price: number;
-  originalPrice: number;
-  rarity: 'legendary' | 'epic' | 'rare' | 'uncommon' | 'common';
-  description: string;
+  emoji: string;
+  description: string | null;
+  base_xp_cost: number;
+  rarity: string;
+  season: string | null;
+  image_url: string | null;
+  available_from: string | null;
+  available_until: string | null;
 }
 
-// Static featured gifts with real images
-const featuredGifts: FeaturedGift[] = [
-  { 
-    id: 'gift-box', 
-    name: 'Gift Box', 
-    image: giftBoxImg, 
-    price: 400, 
-    originalPrice: 500,
-    rarity: 'rare',
-    description: 'A beautifully wrapped gift box with golden bow'
-  },
-  { 
-    id: 'golden-ornament', 
-    name: 'Golden Ornament', 
-    image: goldenOrnament, 
-    price: 600, 
-    originalPrice: 750,
-    rarity: 'epic',
-    description: 'Elegant golden Christmas ornament with intricate patterns'
-  },
-  { 
-    id: 'reindeer-plush', 
-    name: 'Reindeer Plush', 
-    image: reindeerPlush, 
-    price: 960, 
-    originalPrice: 1200,
-    rarity: 'legendary',
-    description: 'Adorable Rudolph plush toy with red nose'
-  },
-  { 
-    id: 'snowflake-crystal', 
-    name: 'Crystal Snowflake', 
-    image: snowflakeOrnament, 
-    price: 680, 
-    originalPrice: 850,
-    rarity: 'epic',
-    description: 'Beautiful ice-blue crystal snowflake ornament'
-  },
-  { 
-    id: 'candy-cane', 
-    name: 'Candy Cane', 
-    image: candyCaneTreat, 
-    price: 240, 
-    originalPrice: 300,
-    rarity: 'uncommon',
-    description: 'Classic red and white striped candy cane'
-  },
-  { 
-    id: 'santa-hat', 
-    name: 'Santa Hat', 
-    image: santaHat, 
-    price: 520, 
-    originalPrice: 650,
-    rarity: 'rare',
-    description: 'Cozy red velvet Santa hat with fluffy white trim'
-  },
-];
+// Image mapping for display
+const giftImageMap: Record<string, string> = {
+  'gift box': giftBoxImg,
+  'golden ornament': goldenOrnament,
+  'reindeer plush': reindeerPlush,
+  'crystal snowflake': snowflakeOrnament,
+  'snowflake': snowflakeOrnament,
+  'candy cane': candyCaneTreat,
+  'santa hat': santaHat,
+};
+
+const getGiftImage = (giftName: string): string => {
+  const lowerName = giftName.toLowerCase();
+  for (const [key, image] of Object.entries(giftImageMap)) {
+    if (lowerName.includes(key)) return image;
+  }
+  return giftBoxImg; // Default fallback
+};
 
 const getRarityColor = (rarity: string) => {
   switch (rarity) {
@@ -112,20 +76,33 @@ const getRarityBadge = (rarity: string) => {
 
 const ChristmasGifts = () => {
   const [loading, setLoading] = useState(true);
-  const [selectedGift, setSelectedGift] = useState<FeaturedGift | null>(null);
+  const [selectedGift, setSelectedGift] = useState<DatabaseGift | null>(null);
+  const [gifts, setGifts] = useState<DatabaseGift[]>([]);
   const { getPrice } = useAllGiftPricing();
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [stats, setStats] = useState({ totalGifts: 0, totalSent: 0, totalUsers: 0 });
 
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
+    fetchGifts();
     fetchStats();
   }, []);
+
+  const fetchGifts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gifts')
+        .select('*')
+        .order('base_xp_cost', { ascending: false })
+        .limit(12);
+
+      if (error) throw error;
+      setGifts(data || []);
+    } catch (error) {
+      console.error('Error fetching gifts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const calculateCountdown = () => {
@@ -187,18 +164,15 @@ const ChristmasGifts = () => {
       delay: i * 0.12,
     })), []);
 
-  // Convert featured gift to sheet format
-  const getSheetGift = (gift: FeaturedGift) => ({
-    id: gift.id,
-    name: gift.name,
-    emoji: '🎁',
-    description: gift.description,
-    base_xp_cost: gift.price,
-    rarity: gift.rarity,
-    season: 'christmas',
-    image_url: gift.image,
-    available_until: null,
-  });
+  // Get display image for a gift (use real image or fallback to generated)
+  const getDisplayImage = (gift: DatabaseGift) => {
+    if (gift.image_url) return gift.image_url;
+    return getGiftImage(gift.name);
+  };
+
+  // Calculate discounted price (20% off)
+  const getDiscountedPrice = (basePrice: number) => Math.round(basePrice * 0.8);
+  const getOriginalPrice = (basePrice: number) => basePrice;
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-red-950/20 to-green-950/20">
@@ -349,7 +323,7 @@ const ChristmasGifts = () => {
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {featuredGifts.map((gift, i) => (
+            {gifts.slice(0, 6).map((gift, i) => (
               <motion.div
                 key={gift.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -373,7 +347,7 @@ const ChristmasGifts = () => {
                 {/* Gift image */}
                 <div className="p-3 pb-2">
                   <motion.img 
-                    src={gift.image} 
+                    src={getDisplayImage(gift)} 
                     alt={gift.name}
                     className="w-full aspect-square object-contain"
                     whileHover={{ scale: 1.08, rotate: 3 }}
@@ -391,11 +365,11 @@ const ChristmasGifts = () => {
                   
                   <div className="flex items-center justify-center gap-1.5">
                     <span className="text-[10px] line-through text-muted-foreground">
-                      {gift.originalPrice}
+                      {getOriginalPrice(gift.base_xp_cost)}
                     </span>
                     <div className="flex items-center gap-0.5">
                       <Coins className="w-3 h-3 text-yellow-500" />
-                      <span className="text-sm font-bold text-yellow-500">{gift.price}</span>
+                      <span className="text-sm font-bold text-yellow-500">{getDiscountedPrice(gift.base_xp_cost)}</span>
                     </div>
                   </div>
 
@@ -426,7 +400,7 @@ const ChristmasGifts = () => {
           <div className="grid grid-cols-2 gap-3">
             <Card 
               className="p-4 bg-gradient-to-br from-red-500/20 to-red-600/10 border-red-500/30 cursor-pointer hover:border-red-400/50 transition-colors"
-              onClick={() => setSelectedGift(featuredGifts[2])}
+              onClick={() => gifts[2] && setSelectedGift(gifts[2])}
             >
               <img src={reindeerPlush} alt="Bundle" className="w-14 h-14 mx-auto mb-2" />
               <h4 className="font-bold text-sm text-center">Holiday Bundle</h4>
@@ -442,7 +416,7 @@ const ChristmasGifts = () => {
             
             <Card 
               className="p-4 bg-gradient-to-br from-green-500/20 to-green-600/10 border-green-500/30 cursor-pointer hover:border-green-400/50 transition-colors"
-              onClick={() => setSelectedGift(featuredGifts[4])}
+              onClick={() => gifts[4] && setSelectedGift(gifts[4])}
             >
               <img src={candyCaneTreat} alt="Daily" className="w-14 h-14 mx-auto mb-2" />
               <h4 className="font-bold text-sm text-center">Daily Deal</h4>
@@ -464,7 +438,7 @@ const ChristmasGifts = () => {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4 }}
-          onClick={() => setSelectedGift(featuredGifts[1])}
+          onClick={() => gifts[1] && setSelectedGift(gifts[1])}
         >
           <div className="flex items-center gap-4">
             <motion.img 
@@ -523,10 +497,20 @@ const ChristmasGifts = () => {
       {/* Gift Detail Sheet */}
       {selectedGift && (
         <SeasonalGiftDetailSheet
-          gift={getSheetGift(selectedGift)}
+          gift={{
+            id: selectedGift.id,
+            name: selectedGift.name,
+            emoji: selectedGift.emoji,
+            description: selectedGift.description,
+            base_xp_cost: selectedGift.base_xp_cost,
+            rarity: selectedGift.rarity,
+            season: selectedGift.season,
+            image_url: getDisplayImage(selectedGift),
+            available_until: selectedGift.available_until,
+          }}
           open={!!selectedGift}
           onOpenChange={(open) => !open && setSelectedGift(null)}
-          currentPrice={selectedGift.price}
+          currentPrice={getDiscountedPrice(selectedGift.base_xp_cost)}
           totalSent={Math.floor(Math.random() * 500) + 100}
           priceMultiplier={1.2}
         />
