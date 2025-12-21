@@ -23,7 +23,6 @@ import { ProfileDrawer } from '@/components/ProfileDrawer';
 import { Search, Star, Download, Gamepad2, ShoppingBag, Music, Zap, Calendar, Plane, UtensilsCrossed, Car, CalendarCheck, Wallet, Brain, Puzzle, Trophy, ChevronRight, Clock, Shield, Gift, Mail, Send, PlusCircle, Code, Heart, MoreVertical, ExternalLink, Edit, Play, History, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import Layout from '@/components/Layout';
 import { SubmitAppDialog } from '@/components/mini-programs/SubmitAppDialog';
 import { EmbeddedAppViewer } from '@/components/mini-programs/EmbeddedAppViewer';
 import { AppPreviewDialog } from '@/components/mini-programs/AppPreviewDialog';
@@ -889,7 +888,7 @@ const MiniPrograms = () => {
   const showMobileHeader = isMobile && !isInIframe;
 
   return (
-    <Layout>
+    <>
       <div className="min-h-screen bg-background pb-safe">
         {/* Header - Only show on mobile */}
         {showMobileHeader && (
@@ -1296,7 +1295,7 @@ const MiniPrograms = () => {
           onShowAbout={handleShowAbout}
         />
       )}
-    </Layout>
+    </>
   );
 };
 
