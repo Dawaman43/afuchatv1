@@ -487,11 +487,11 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                             const file = e.target.files?.[0];
                             if (!file) return;
                             
-                            const maxSizeBytes = 100 * 1024 * 1024; // 100MB
+                            const maxSizeBytes = 50 * 1024 * 1024; // 50MB (Supabase free tier limit)
                             const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
                             
                             if (file.size > maxSizeBytes) {
-                              toast.error(`APK file (${fileSizeMB}MB) exceeds the 100MB limit`);
+                              toast.error(`APK file (${fileSizeMB}MB) exceeds the 50MB limit. Please compress your APK.`);
                               return;
                             }
                             
@@ -543,7 +543,7 @@ export const SubmitAppDialog = ({ open, onOpenChange }: SubmitAppDialogProps) =>
                             <>
                               <Upload className="h-8 w-8 text-muted-foreground" />
                               <p className="text-sm text-muted-foreground">Click to upload APK file</p>
-                              <p className="text-xs text-muted-foreground">Max 100MB</p>
+                              <p className="text-xs text-muted-foreground">Max 50MB</p>
                             </>
                           )}
                         </div>
