@@ -78,10 +78,58 @@ const ChristmasGifts = () => {
   const { pricingMap, getPrice } = useAllGiftPricing();
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [stats, setStats] = useState({ totalGifts: 0, totalSent: 0, totalUsers: 0 });
+  const [recentGifts, setRecentGifts] = useState<{ senderName: string; giftName: string; receiverName: string }[]>([]);
 
   useEffect(() => {
     fetchGifts();
     fetchStats();
+    fetchRecentGifts();
+
+    // Real-time subscription for live gift updates
+    const channel = supabase
+      .channel('gift-transactions-live')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'gift_transactions'
+        },
+        async (payload) => {
+          // Update stats immediately
+          setStats(prev => ({
+            ...prev,
+            totalSent: prev.totalSent + 1
+          }));
+
+          // Fetch sender, receiver, and gift info for the live feed
+          try {
+            const transaction = payload.new as { sender_id: string; receiver_id: string; gift_id: string };
+            
+            const [senderRes, receiverRes, giftRes] = await Promise.all([
+              supabase.from('profiles').select('handle, display_name').eq('id', transaction.sender_id).single(),
+              supabase.from('profiles').select('handle, display_name').eq('id', transaction.receiver_id).single(),
+              supabase.from('gifts').select('name').eq('id', transaction.gift_id).single()
+            ]);
+
+            const senderName = senderRes.data?.display_name || senderRes.data?.handle || 'Someone';
+            const receiverName = receiverRes.data?.display_name || receiverRes.data?.handle || 'Someone';
+            const giftName = giftRes.data?.name || 'a gift';
+
+            setRecentGifts(prev => [
+              { senderName, giftName, receiverName },
+              ...prev.slice(0, 4) // Keep only last 5
+            ]);
+          } catch (error) {
+            console.error('Error fetching gift details:', error);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchGifts = async () => {
@@ -100,25 +148,41 @@ const ChristmasGifts = () => {
     }
   };
 
-  useEffect(() => {
-    const calculateCountdown = () => {
-      const now = new Date();
-      let endDate = now.getMonth() === 11 
-        ? new Date(now.getFullYear() + 1, 0, 7, 0, 0, 0)
-        : new Date(now.getFullYear(), 0, 7, 0, 0, 0);
+  const fetchRecentGifts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gift_transactions')
+        .select(`
+          sender_id,
+          receiver_id,
+          gift_id,
+          gifts(name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5);
 
-      const diff = Math.max(0, endDate.getTime() - now.getTime());
-      setCountdown({
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((diff % (1000 * 60)) / 1000),
-      });
-    };
-    calculateCountdown();
-    const interval = setInterval(calculateCountdown, 1000);
-    return () => clearInterval(interval);
-  }, []);
+      if (error) throw error;
+
+      if (data) {
+        const giftsWithNames = await Promise.all(
+          data.map(async (t) => {
+            const [senderRes, receiverRes] = await Promise.all([
+              supabase.from('profiles').select('handle, display_name').eq('id', t.sender_id).single(),
+              supabase.from('profiles').select('handle, display_name').eq('id', t.receiver_id).single()
+            ]);
+            return {
+              senderName: senderRes.data?.display_name || senderRes.data?.handle || 'Someone',
+              receiverName: receiverRes.data?.display_name || receiverRes.data?.handle || 'Someone',
+              giftName: (t.gifts as any)?.name || 'a gift'
+            };
+          })
+        );
+        setRecentGifts(giftsWithNames);
+      }
+    } catch (error) {
+      console.error('Error fetching recent gifts:', error);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -306,7 +370,7 @@ const ChristmasGifts = () => {
           {[
             { icon: Gift, value: `${stats.totalGifts}+`, label: 'Gifts', color: 'text-red-400' },
             { icon: Users, value: `${Math.floor(stats.totalUsers / 1000)}K+`, label: 'Buyers', color: 'text-green-400' },
-            { icon: Heart, value: `${Math.floor(stats.totalSent / 1000)}K+`, label: 'Sent', color: 'text-pink-400' },
+            { icon: Heart, value: stats.totalSent.toLocaleString(), label: 'Sent', color: 'text-pink-400', live: true },
             { icon: Trophy, value: '#1', label: 'Rated', color: 'text-yellow-400' },
           ].map((stat, i) => (
             <motion.div
@@ -314,14 +378,49 @@ const ChristmasGifts = () => {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 + i * 0.1 }}
-              className="bg-card/50 backdrop-blur-sm rounded-xl p-2.5 text-center border border-border/50"
+              className="bg-card/50 backdrop-blur-sm rounded-xl p-2.5 text-center border border-border/50 relative"
             >
+              {'live' in stat && stat.live && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              )}
               <stat.icon className={`w-4 h-4 mx-auto mb-1 ${stat.color}`} />
               <p className="text-sm sm:text-base font-bold">{stat.value}</p>
               <p className="text-[9px] sm:text-[10px] text-muted-foreground">{stat.label}</p>
             </motion.div>
           ))}
         </div>
+
+        {/* Live Gift Feed */}
+        {recentGifts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-card/50 backdrop-blur-sm rounded-xl p-3 border border-border/50"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-xs font-semibold text-muted-foreground">Live Activity</span>
+            </div>
+            <div className="space-y-1.5 max-h-24 overflow-hidden">
+              {recentGifts.slice(0, 3).map((gift, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="flex items-center gap-1.5 text-xs"
+                >
+                  <Send className="w-3 h-3 text-green-500" />
+                  <span className="text-foreground font-medium truncate max-w-[80px]">{gift.senderName}</span>
+                  <span className="text-muted-foreground">sent</span>
+                  <span className="text-primary font-medium truncate max-w-[70px]">{gift.giftName}</span>
+                  <span className="text-muted-foreground">to</span>
+                  <span className="text-foreground font-medium truncate max-w-[80px]">{gift.receiverName}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Featured Gifts Section */}
         <div>
