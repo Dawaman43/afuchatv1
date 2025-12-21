@@ -154,7 +154,7 @@ const Gifts = () => {
     }
   };
 
-  const handleRecipientSelected = (recipient: { id: string; name: string }) => {
+  const handleRecipientSelected = async (recipient: { id: string; name: string }): Promise<void> => {
     setSelectedRecipient(recipient);
     setSelectedGiftId(selectedGift?.id || null);
     setSheetOpen(true);
