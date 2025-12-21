@@ -31,6 +31,7 @@ export const AttachmentPreview = ({
   const progressRef = useRef<HTMLDivElement>(null);
   
   const isImage = type.startsWith('image/');
+  const isGif = type === 'image/gif';
   const isAudio = type.startsWith('audio/');
   
   const formatSize = (bytes?: number) => {
@@ -113,6 +114,34 @@ export const AttachmentPreview = ({
   }
 
   if (isImage && signedUrl) {
+    // For GIFs, show them without cropping and allow animation
+    if (isGif) {
+      return (
+        <>
+          <div 
+            className="relative max-w-[280px] rounded-lg overflow-hidden cursor-pointer group"
+            onClick={handleImageClick}
+          >
+            <img 
+              src={signedUrl} 
+              alt={name}
+              className="w-full h-auto max-h-[300px] object-contain transition-transform duration-200 group-hover:scale-[1.02]"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+          </div>
+          {lightboxOpen && createPortal(
+            <ImageLightbox
+              images={[{ url: signedUrl, alt: name }]}
+              initialIndex={0}
+              onClose={() => setLightboxOpen(false)}
+            />,
+            document.body
+          )}
+        </>
+      );
+    }
+    
+    // Regular images
     return (
       <>
         <div 
