@@ -108,12 +108,14 @@ export const SeasonalGiftDetailSheet = ({
 
   const config = getRarityConfig(gift.rarity);
 
-  const handleSendGift = async (recipient: { id: string; name: string }) => {
-    if (!user || !gift) return;
+  const handleSendGift = async (recipient: { id: string; name: string }): Promise<void> => {
+    if (!user || !gift) {
+      throw new Error('User or gift not available');
+    }
     
     if (userNexa < currentPrice) {
       toast.error('Insufficient ACoin balance');
-      return;
+      throw new Error('Insufficient balance');
     }
 
     setSending(true);
@@ -143,12 +145,13 @@ export const SeasonalGiftDetailSheet = ({
         icon: '🎁',
       });
 
-      fetchUserAcoin();
+      await fetchUserAcoin();
       setShowRecipientDialog(false);
       onOpenChange(false);
     } catch (error) {
       console.error('Error sending gift:', error);
       toast.error('Failed to send gift');
+      throw error;
     } finally {
       setSending(false);
     }

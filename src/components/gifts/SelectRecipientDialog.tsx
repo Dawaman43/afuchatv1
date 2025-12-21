@@ -26,7 +26,7 @@ interface Profile {
 interface SelectRecipientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectRecipient: (recipient: { id: string; name: string }) => void;
+  onSelectRecipient: (recipient: { id: string; name: string }) => Promise<void>;
 }
 
 export const SelectRecipientDialog = ({
@@ -120,13 +120,17 @@ export const SelectRecipientDialog = ({
     }
   };
 
-  const handleConfirmSend = () => {
+  const handleConfirmSend = async () => {
     if (selectedProfile) {
       setSending(true);
-      onSelectRecipient({
-        id: selectedProfile.id,
-        name: selectedProfile.display_name,
-      });
+      try {
+        await onSelectRecipient({
+          id: selectedProfile.id,
+          name: selectedProfile.display_name,
+        });
+      } finally {
+        setSending(false);
+      }
     }
   };
 
