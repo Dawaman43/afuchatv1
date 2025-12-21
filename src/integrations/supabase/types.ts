@@ -2211,7 +2211,7 @@ export type Database = {
           target_countries: string[] | null
           terms_url: string | null
           updated_at: string
-          url: string
+          url: string | null
         }
         Insert: {
           apk_url?: string | null
@@ -2235,7 +2235,7 @@ export type Database = {
           target_countries?: string[] | null
           terms_url?: string | null
           updated_at?: string
-          url: string
+          url?: string | null
         }
         Update: {
           apk_url?: string | null
@@ -2259,7 +2259,7 @@ export type Database = {
           target_countries?: string[] | null
           terms_url?: string | null
           updated_at?: string
-          url?: string
+          url?: string | null
         }
         Relationships: [
           {
