@@ -193,7 +193,7 @@ export const SeasonalGiftDetailSheet = ({
                 ))}
               </div>
 
-              {/* Gift emoji with glow - always show emoji for seasonal */}
+              {/* Gift image with glow */}
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -205,7 +205,15 @@ export const SeasonalGiftDetailSheet = ({
                   animate={{ y: [0, -8, 0] }}
                   transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                 >
-                  <span className="text-8xl drop-shadow-2xl">{gift.emoji}</span>
+                  {gift.image_url ? (
+                    <img 
+                      src={gift.image_url} 
+                      alt={gift.name}
+                      className="w-full h-full object-contain drop-shadow-2xl"
+                    />
+                  ) : (
+                    <span className="text-8xl drop-shadow-2xl">{gift.emoji}</span>
+                  )}
                 </motion.div>
               </motion.div>
 
