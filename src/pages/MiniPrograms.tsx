@@ -51,7 +51,7 @@ interface MiniProgram {
   developer_id: string;
   developer_email?: string;
   category: string;
-  url: string;
+  url?: string | null;
   install_count: number;
   rating: number;
   screenshots?: string[];
@@ -571,15 +571,15 @@ const MiniPrograms = () => {
   const filteredBuiltInApps = allBuiltInApps.filter(app => {
     const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          app.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || app.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || app.category.toLowerCase() === selectedCategory.toLowerCase();
     return matchesSearch && matchesCategory;
   });
 
-  // Filter third-party mini programs
+  // Filter third-party mini programs (case-insensitive category matching)
   const filteredMiniPrograms = miniPrograms.filter(app => {
     const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          (app.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
-    const matchesCategory = selectedCategory === 'all' || app.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || app.category.toLowerCase() === selectedCategory.toLowerCase();
     return matchesSearch && matchesCategory;
   });
 
