@@ -3653,6 +3653,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_gifts: {
+        Row: {
+          acquired_at: string
+          gift_id: string
+          id: string
+          is_pinned: boolean | null
+          pin_order: number | null
+          transaction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          acquired_at?: string
+          gift_id: string
+          id?: string
+          is_pinned?: boolean | null
+          pin_order?: number | null
+          transaction_id?: string | null
+          user_id: string
+        }
+        Update: {
+          acquired_at?: string
+          gift_id?: string
+          id?: string
+          is_pinned?: boolean | null
+          pin_order?: number | null
+          transaction_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_gifts_gift_id_fkey"
+            columns: ["gift_id"]
+            isOneToOne: false
+            referencedRelation: "gifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_gifts_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "gift_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_mini_programs: {
         Row: {
           id: string
