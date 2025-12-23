@@ -9,29 +9,18 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { GiftImage } from './GiftImage';
 import { GiftDetailSheet } from './GiftDetailSheet';
-import { extractText } from '@/lib/textUtils';
 import { toast } from 'sonner';
 
-interface GiftTransaction {
-  id: string;
-  xp_cost: number;
-  message: string | null;
-  created_at: string;
+interface OwnedGift {
   gift_id: string;
-  is_anonymous: boolean;
-  sender_id: string;
-  sender: {
-    display_name: string;
-    handle: string;
-    avatar_url: string | null;
-  };
+  count: number;
   gift: {
     id: string;
     name: string;
     emoji: string;
     rarity: string;
     description?: string;
-    base_xp_cost?: number;
+    base_xp_cost: number;
   };
 }
 
@@ -58,9 +47,10 @@ const getRarityColor = (rarity: string) => {
 export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [gifts, setGifts] = useState<GiftTransaction[]>([]);
+  const [ownedGifts, setOwnedGifts] = useState<OwnedGift[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalValue, setTotalValue] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedGiftId, setSelectedGiftId] = useState<string | null>(null);
   const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
   const [giftStats, setGiftStats] = useState<Record<string, GiftStatistics>>({});
@@ -70,7 +60,7 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
   const isOwnProfile = user?.id === userId;
 
   useEffect(() => {
-    fetchGifts();
+    fetchOwnedGifts();
     fetchProfileName();
     if (isOwnProfile) {
       fetchPinnedGifts();
@@ -78,14 +68,14 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
 
     // Real-time subscription for new gifts
     const subscription = supabase
-      .channel('gift_transactions_changes')
+      .channel('user_gifts_changes')
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
-        table: 'gift_transactions',
-        filter: `receiver_id=eq.${userId}`
+        table: 'user_gifts',
+        filter: `user_id=eq.${userId}`
       }, () => {
-        fetchGifts();
+        fetchOwnedGifts();
       })
       .subscribe();
 
@@ -117,35 +107,30 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
     }
   };
 
-  const fetchGifts = async () => {
+  const fetchOwnedGifts = async () => {
     try {
-      // Fetch gift transactions
-      const { data: transactions, error: transError } = await supabase
-        .from('gift_transactions')
-        .select('id, xp_cost, message, created_at, sender_id, receiver_id, gift_id')
-        .eq('receiver_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(20);
+      // Fetch user's owned gifts from user_gifts table
+      const { data: userGifts, error: userGiftsError } = await supabase
+        .from('user_gifts')
+        .select('gift_id')
+        .eq('user_id', userId);
 
-      if (transError) throw transError;
-      if (!transactions || transactions.length === 0) {
-        setGifts([]);
+      if (userGiftsError) throw userGiftsError;
+      if (!userGifts || userGifts.length === 0) {
+        setOwnedGifts([]);
         setTotalValue(0);
+        setTotalCount(0);
         setLoading(false);
         return;
       }
 
-      // Get unique sender and gift IDs
-      const senderIds = [...new Set(transactions.map(t => t.sender_id))];
-      const giftIds = [...new Set(transactions.map(t => t.gift_id))];
+      // Count gifts by gift_id
+      const giftCounts = userGifts.reduce((acc, ug) => {
+        acc[ug.gift_id] = (acc[ug.gift_id] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
 
-      // Fetch sender profiles
-      const { data: senders, error: senderError } = await supabase
-        .from('profiles')
-        .select('id, display_name, handle, avatar_url')
-        .in('id', senderIds);
-
-      if (senderError) throw senderError;
+      const giftIds = Object.keys(giftCounts);
 
       // Fetch gift details
       const { data: giftDetails, error: giftError } = await supabase
@@ -173,36 +158,40 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
         setGiftStats(statsMap);
       }
 
-      // Create lookup maps
-      const senderMap = new Map(senders?.map(s => [s.id, s]) || []);
-      const giftMap = new Map(giftDetails?.map(g => [g.id, g]) || []);
+      // Format owned gifts with counts
+      const formattedGifts: OwnedGift[] = (giftDetails || []).map((gift: any) => ({
+        gift_id: gift.id,
+        count: giftCounts[gift.id] || 0,
+        gift: {
+          id: gift.id,
+          name: gift.name,
+          emoji: gift.emoji,
+          rarity: gift.rarity,
+          description: gift.description,
+          base_xp_cost: gift.base_xp_cost,
+        },
+      })).sort((a, b) => {
+        // Sort by rarity (legendary > epic > rare > uncommon > common), then by count
+        const rarityOrder: Record<string, number> = { legendary: 5, epic: 4, rare: 3, uncommon: 2, common: 1 };
+        const rarityDiff = (rarityOrder[b.gift.rarity.toLowerCase()] || 0) - (rarityOrder[a.gift.rarity.toLowerCase()] || 0);
+        if (rarityDiff !== 0) return rarityDiff;
+        return b.count - a.count;
+      });
 
-      // Format gifts with joined data
-      const formattedGifts = transactions.map((item: any) => ({
-        id: item.id,
-        xp_cost: item.xp_cost,
-        message: item.message,
-        created_at: item.created_at,
-        gift_id: item.gift_id,
-        is_anonymous: item.is_anonymous || false,
-        sender_id: item.sender_id,
-        sender: senderMap.get(item.sender_id) || { display_name: 'Unknown', handle: 'unknown', avatar_url: null },
-        gift: giftMap.get(item.gift_id) || { id: item.gift_id, name: 'Unknown Gift', emoji: '🎁', rarity: 'common' },
-      }));
+      setOwnedGifts(formattedGifts);
+      setTotalCount(userGifts.length);
 
-      setGifts(formattedGifts);
-
-      // Calculate total value using current dynamic prices (last_sale_price or base_xp_cost)
+      // Calculate total value
       const statsMap = statsData ? new Map(statsData.map((s: any) => [s.gift_id, s])) : new Map();
       const total = formattedGifts.reduce((sum, g) => {
         const stats = statsMap.get(g.gift_id);
-        const baseCost = (g.gift as any).base_xp_cost || g.xp_cost;
+        const baseCost = g.gift.base_xp_cost;
         const currentPrice = stats?.last_sale_price || baseCost;
-        return sum + currentPrice;
+        return sum + (currentPrice * g.count);
       }, 0);
       setTotalValue(total);
     } catch (error) {
-      console.error('Error fetching gifts:', error);
+      console.error('Error fetching owned gifts:', error);
     } finally {
       setLoading(false);
     }
@@ -249,18 +238,12 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
 
   const calculatePrice = (giftId: string, baseCost: number) => {
     const stats = giftStats[giftId];
-    // Use last_sale_price if available, otherwise use base cost
     if (stats?.last_sale_price) return stats.last_sale_price;
     return baseCost;
   };
 
-  const [selectedGiftSender, setSelectedGiftSender] = useState<GiftTransaction['sender'] | null>(null);
-  const [selectedGiftIsAnonymous, setSelectedGiftIsAnonymous] = useState(false);
-
-  const handleGiftClick = (gift: GiftTransaction) => {
+  const handleGiftClick = (gift: OwnedGift) => {
     setSelectedGiftId(gift.gift.id);
-    setSelectedGiftSender(gift.sender);
-    setSelectedGiftIsAnonymous(gift.is_anonymous);
     setDetailsSheetOpen(true);
   };
 
@@ -274,7 +257,7 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
     );
   }
 
-  if (gifts.length === 0) {
+  if (ownedGifts.length === 0) {
     return (
       <Card className="p-6 text-center">
         <Gift className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
@@ -291,10 +274,10 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              {t('gifts.giftsReceived', { count: gifts.length })}
+              {totalCount} Collectibles
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              {t('gifts.totalValue', { value: totalValue })}
+              {ownedGifts.length} unique • {totalValue.toLocaleString()} ACoin value
             </p>
           </div>
           <div className="relative">
@@ -305,50 +288,58 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
       </Card>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {gifts.map((gift) => (
+        {ownedGifts.map((ownedGift) => (
           <Card 
-            key={gift.id} 
-            onClick={() => handleGiftClick(gift)}
+            key={ownedGift.gift_id} 
+            onClick={() => handleGiftClick(ownedGift)}
             className="cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg group relative p-4 bg-card/50 border-border/50"
           >
             <div className="space-y-3">
               {/* Gift Image */}
               <div className="relative flex justify-center">
                 <GiftImage
-                  giftId={gift.gift.id}
-                  giftName={gift.gift.name}
-                  emoji={gift.gift.emoji}
-                  rarity={gift.gift.rarity}
+                  giftId={ownedGift.gift.id}
+                  giftName={ownedGift.gift.name}
+                  emoji={ownedGift.gift.emoji}
+                  rarity={ownedGift.gift.rarity}
                   size="lg"
                   className="mx-auto"
                 />
-                <Badge className={`absolute -top-1 -right-1 ${getRarityColor(gift.gift.rarity)} text-[10px] px-1.5 py-0.5`}>
-                  {gift.gift.rarity}
+                <Badge className={`absolute -top-1 -right-1 ${getRarityColor(ownedGift.gift.rarity)} text-[10px] px-1.5 py-0.5`}>
+                  {ownedGift.gift.rarity}
                 </Badge>
-                {isOwnProfile && isRareGift(gift.gift.rarity) && (
+                
+                {/* Count Badge */}
+                {ownedGift.count > 1 && (
+                  <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center shadow-md">
+                    x{ownedGift.count}
+                  </div>
+                )}
+                
+                {isOwnProfile && isRareGift(ownedGift.gift.rarity) && (
                   <Button
                     size="sm"
-                    variant={pinnedGiftIds.has(gift.gift.id) ? 'default' : 'ghost'}
+                    variant={pinnedGiftIds.has(ownedGift.gift.id) ? 'default' : 'ghost'}
                     className="absolute -top-1 -left-1 h-6 w-6 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => handlePinToggle(e, gift.gift.id)}
+                    onClick={(e) => handlePinToggle(e, ownedGift.gift.id)}
                   >
-                    <Pin className={`h-3 w-3 ${pinnedGiftIds.has(gift.gift.id) ? 'fill-current' : ''}`} />
+                    <Pin className={`h-3 w-3 ${pinnedGiftIds.has(ownedGift.gift.id) ? 'fill-current' : ''}`} />
                   </Button>
                 )}
               </div>
 
               {/* Gift Details */}
               <div className="text-center space-y-1">
-                <h3 className="font-semibold text-sm truncate" title={gift.gift.name}>{gift.gift.name}</h3>
+                <h3 className="font-semibold text-sm truncate" title={ownedGift.gift.name}>{ownedGift.gift.name}</h3>
                 <div className="flex items-center justify-center gap-1">
                   <span className="text-xs font-bold text-primary">
-                    {calculatePrice(gift.gift_id, gift.gift.base_xp_cost || gift.xp_cost).toLocaleString()} Nexa
+                    {calculatePrice(ownedGift.gift_id, ownedGift.gift.base_xp_cost).toLocaleString()} ACoin
                   </span>
                 </div>
                 
                 {(() => {
-                  const currentPrice = calculatePrice(gift.gift_id, gift.gift.base_xp_cost || gift.xp_cost);
-                  const basePrice = gift.gift.base_xp_cost || gift.xp_cost;
+                  const currentPrice = calculatePrice(ownedGift.gift_id, ownedGift.gift.base_xp_cost);
+                  const basePrice = ownedGift.gift.base_xp_cost;
                   const percentIncrease = ((currentPrice - basePrice) / basePrice * 100).toFixed(1);
                   
                   return currentPrice > basePrice ? (
@@ -359,10 +350,10 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
                   ) : null;
                 })()}
 
-                {giftStats[gift.gift_id] && giftStats[gift.gift_id].total_sent > 0 && (
+                {giftStats[ownedGift.gift_id] && giftStats[ownedGift.gift_id].total_sent > 0 && (
                   <div className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
                     <Sparkles className="h-2.5 w-2.5" />
-                    <span>{giftStats[gift.gift_id].total_sent.toLocaleString()} sent</span>
+                    <span>{giftStats[ownedGift.gift_id].total_sent.toLocaleString()} sent</span>
                   </div>
                 )}
               </div>
@@ -377,8 +368,6 @@ export const ReceivedGifts = ({ userId }: ReceivedGiftsProps) => {
         onOpenChange={setDetailsSheetOpen}
         recipientId={userId}
         recipientName={profileName}
-        sender={selectedGiftSender}
-        isAnonymous={selectedGiftIsAnonymous}
         isOwnProfile={isOwnProfile}
       />
     </div>
