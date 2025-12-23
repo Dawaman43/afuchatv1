@@ -15,92 +15,75 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
+      includeAssets: ['favicon.png', 'logo.jpg', 'robots.txt'],
       
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'sw.ts',
-      
-      injectManifest: {
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10 MB limit for better offline support
-        globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,webp,woff,woff2,json,webmanifest}']
-      },
-
       workbox: {
         cleanupOutdatedCaches: true,
-        sourcemap: true,
+        globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,webp,woff,woff2}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'gstatic-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/.*/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'supabase-storage-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ]
       },
 
-      // Comprehensive PWA manifest for all platforms
       manifest: {
         id: '/afuchat',
         name: 'AfuChat',
         short_name: 'AfuChat',
-        description: 'Post. Chat. Shop. AI. All in One. Fast, offline-first social platform.',
+        description: 'Post. Chat. Shop. AI. All in One.',
         theme_color: '#00C2CB',
-        background_color: '#000000',
+        background_color: '#0F1114',
         display: 'standalone',
-        display_override: ['standalone', 'minimal-ui', 'window-controls-overlay'],
         orientation: 'portrait-primary',
-        start_url: '/?source=pwa',
+        start_url: '/',
         scope: '/',
-        lang: 'en',
-        dir: 'ltr',
-        categories: ['social', 'communication', 'lifestyle', 'shopping'],
-        prefer_related_applications: false,
+        categories: ['social', 'communication', 'lifestyle'],
         
-        // Icons for all platforms and sizes
         icons: [
           {
             src: '/favicon.png',
-            sizes: '48x48',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: '/favicon.png',
-            sizes: '72x72',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: '/favicon.png',
-            sizes: '96x96',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: '/favicon.png',
-            sizes: '128x128',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: '/favicon.png',
-            sizes: '144x144',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: '/favicon.png',
-            sizes: '152x152',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: '/favicon.png',
             sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: '/favicon.png',
-            sizes: '256x256',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: '/favicon.png',
-            sizes: '384x384',
             type: 'image/png',
             purpose: 'any'
           },
@@ -118,104 +101,23 @@ export default defineConfig(({ mode }) => ({
           }
         ],
         
-        // App shortcuts for quick actions
         shortcuts: [
           {
-            name: 'Home Feed',
-            short_name: 'Home',
-            description: 'Go to your home feed',
-            url: '/home?source=shortcut',
+            name: 'Home',
+            url: '/home',
             icons: [{ src: '/favicon.png', sizes: '192x192' }]
           },
           {
-            name: 'Messages',
-            short_name: 'Chats',
-            description: 'Open your messages',
-            url: '/chats?source=shortcut',
+            name: 'Chats',
+            url: '/chats',
             icons: [{ src: '/favicon.png', sizes: '192x192' }]
-          },
-          {
-            name: 'New Post',
-            short_name: 'Post',
-            description: 'Create a new post',
-            url: '/?action=new-post&source=shortcut',
-            icons: [{ src: '/favicon.png', sizes: '192x192' }]
-          },
-          {
-            name: 'Notifications',
-            short_name: 'Alerts',
-            description: 'View your notifications',
-            url: '/notifications?source=shortcut',
-            icons: [{ src: '/favicon.png', sizes: '192x192' }]
-          }
-        ],
-
-        // Screenshots for app store presentation
-        screenshots: [
-          {
-            src: '/logo.jpg',
-            sizes: '540x720',
-            type: 'image/jpeg',
-            form_factor: 'narrow',
-            label: 'AfuChat Home Screen'
-          }
-        ],
-
-        // Handle share target for receiving shared content
-        share_target: {
-          action: '/share-target',
-          method: 'POST',
-          enctype: 'multipart/form-data',
-          params: {
-            title: 'title',
-            text: 'text',
-            url: 'url',
-            files: [
-              {
-                name: 'media',
-                accept: ['image/*', 'video/*']
-              }
-            ]
-          }
-        },
-
-        // Protocol handlers
-        protocol_handlers: [
-          {
-            protocol: 'web+afuchat',
-            url: '/%s'
-          }
-        ],
-
-        // Edge side panel
-        edge_side_panel: {
-          preferred_width: 400
-        },
-
-        // Launch handler for better native feel
-        launch_handler: {
-          client_mode: ['navigate-existing', 'auto']
-        },
-
-        // Handle links within the app scope
-        handle_links: 'preferred',
-
-        // File handlers (optional)
-        file_handlers: [
-          {
-            action: '/open-file',
-            accept: {
-              'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
-            }
           }
         ]
       },
 
-      // Dev options
       devOptions: {
         enabled: true,
-        type: 'module',
-        navigateFallback: 'index.html',
+        type: 'module'
       }
     })
   ].filter(Boolean),
