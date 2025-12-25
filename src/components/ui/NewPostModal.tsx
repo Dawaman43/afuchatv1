@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNexa } from '@/hooks/useNexa';
@@ -72,6 +72,12 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
     const { generateDescription, isGenerating } = useImageDescription();
     const { fetchPreview } = useLinkPreview();
     const [linkPreviews, setLinkPreviews] = useState<any[]>([]);
+    // Hashtag suggestions
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [suggestionMode, setSuggestionMode] = useState<'trending' | 'prefix' | null>(null);
+    const [suggestionPrefix, setSuggestionPrefix] = useState('');
+    const suggestionDebounceRef = useRef<number | null>(null);
 
     const charCount = 280 - newPost.length;
     const charCountColor = charCount < 20 ? 'text-destructive' : charCount < 50 ? 'text-warning' : 'text-muted-foreground';
@@ -348,6 +354,119 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
                 }
             }
         }
+
+        // Hashtag suggestions logic
+        const caret = (e.target as HTMLTextAreaElement).selectionStart || text.length;
+        const beforeCaret = text.slice(0, caret);
+        // detect token starting with # or a plain word to suggest hashtags
+        const hashMatch = beforeCaret.match(/(#)([\w\u0590-\u05ff\u0600-\u06ff\-]{0,50})$/);
+        const wordMatch = beforeCaret.match(/(?:\s|^)([A-Za-z0-9_\-]{2,50})$/);
+
+        if (hashMatch) {
+            const prefix = hashMatch[2] || '';
+            setSuggestionPrefix(prefix);
+            setSuggestionMode('trending');
+            // show trending suggestions (fetch immediately)
+            fetchTrendingHashtags(prefix);
+        } else if (wordMatch) {
+            const prefix = wordMatch[1];
+            setSuggestionPrefix(prefix);
+            setSuggestionMode('prefix');
+            // debounce prefix suggestions
+            if (suggestionDebounceRef.current) window.clearTimeout(suggestionDebounceRef.current);
+            suggestionDebounceRef.current = window.setTimeout(() => {
+                fetchHashtagSuggestions(prefix);
+            }, 250);
+        } else {
+            setShowSuggestions(false);
+            setSuggestions([]);
+            setSuggestionMode(null);
+        }
+    };
+
+    const fetchTrendingHashtags = useCallback(async (prefix = '') => {
+        try {
+            const { data, error } = await supabase.rpc('get_trending_topics', { hours_ago: 24, num_topics: 20 });
+            if (error) throw error;
+            const topics = (data || [])
+                .filter((t: any) => typeof t.topic === 'string')
+                .map((t: any) => t.topic.replace(/^#/, ''))
+                .filter((t: string) => t.toLowerCase().startsWith(prefix.toLowerCase()));
+            setSuggestions(topics.slice(0, 8));
+            setShowSuggestions(topics.length > 0);
+        } catch (err) {
+            console.error('Error fetching trending hashtags', err);
+            setSuggestions([]);
+            setShowSuggestions(false);
+        }
+    }, []);
+
+    const fetchHashtagSuggestions = useCallback(async (prefix: string) => {
+        try {
+            if (!prefix || prefix.length < 1) {
+                setSuggestions([]);
+                setShowSuggestions(false);
+                return;
+            }
+
+            // Simple approach: scan recent posts for matching hashtags
+            const { data: posts } = await supabase
+                .from('posts')
+                .select('content')
+                .ilike('content', `%${prefix}%`)
+                .order('created_at', { ascending: false })
+                .limit(500);
+
+            const map = new Map<string, number>();
+            if (posts) {
+                posts.forEach((p: any) => {
+                    const matches = (p.content || '').match(/#[\w\u0590-\u05ff\u0600-\u06ff\-]+/g);
+                    if (matches) {
+                        matches.forEach((tag: string) => {
+                            const normalized = tag.replace('#', '').toLowerCase();
+                            if (normalized.startsWith(prefix.toLowerCase())) {
+                                map.set(normalized, (map.get(normalized) || 0) + 1);
+                            }
+                        });
+                    }
+                });
+            }
+
+            const sorted = Array.from(map.entries())
+                .sort((a, b) => b[1] - a[1])
+                .map(([tag]) => tag)
+                .slice(0, 8);
+
+            setSuggestions(sorted);
+            setShowSuggestions(sorted.length > 0);
+        } catch (err) {
+            console.error('Error fetching hashtag suggestions', err);
+            setSuggestions([]);
+            setShowSuggestions(false);
+        }
+    }, []);
+
+    const insertHashtag = (tag: string) => {
+        // Insert or replace the current token with the selected hashtag
+        const text = newPost;
+        const caret = textareaRef.current?.selectionStart ?? text.length;
+        const before = text.slice(0, caret);
+        const after = text.slice(caret);
+
+        // Replace last token: either #token or plain word
+        const newBefore = before.replace(/(#?[\w\u0590-\u05ff\u0600-\u06ff\-]{0,50})$/, `#${tag} `);
+        const newText = newBefore + after;
+        setNewPost(newText);
+        setShowSuggestions(false);
+        setSuggestions([]);
+        setTimeout(() => {
+            // move caret after inserted tag
+            const pos = newBefore.length;
+            if (textareaRef.current) {
+                textareaRef.current.focus();
+                textareaRef.current.setSelectionRange(pos, pos);
+            }
+        }, 0);
     };
 
     if (!isOpen) return null;
@@ -397,17 +516,38 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ isOpen, onClose, quotedPost
 
                             {/* Post Content */}
                             <div className="flex-1 min-w-0">
-                                <Textarea
-                                    ref={textareaRef}
-                                    value={newPost}
-                                    onChange={handleTextChange}
-                                    placeholder="What's happening?"
-                                    className="min-h-[120px] text-lg border-0 shadow-none resize-none focus-visible:ring-0 p-0 placeholder:text-muted-foreground/50"
-                                    style={{
-                                        WebkitUserSelect: 'text',
-                                        userSelect: 'text'
-                                    }}
-                                />
+                                <div className="relative">
+                                    <Textarea
+                                        ref={textareaRef}
+                                        value={newPost}
+                                        onChange={handleTextChange}
+                                        placeholder="What's happening?"
+                                        className="min-h-[120px] text-lg border-0 shadow-none resize-none focus-visible:ring-0 p-0 placeholder:text-muted-foreground/50"
+                                        style={{
+                                            WebkitUserSelect: 'text',
+                                            userSelect: 'text'
+                                        }}
+                                    />
+
+                                    {/* Suggestion dropdown */}
+                                    {showSuggestions && suggestions.length > 0 && (
+                                        <div className="absolute left-3 top-full mt-2 w-[calc(100%-1.5rem)] z-50">
+                                            <div className="bg-popover border border-border rounded-lg shadow-lg p-1">
+                                                <div className="flex flex-col">
+                                                    {suggestions.map((s, idx) => (
+                                                        <button
+                                                            key={s + idx}
+                                                            onClick={() => insertHashtag(s)}
+                                                            className="text-left px-3 py-2 rounded hover:bg-accent/60 transition-colors flex items-center gap-2"
+                                                        >
+                                                            <span className="text-primary font-semibold">#{s}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Quoted Post Preview */}
                                 {quotedPost && (
